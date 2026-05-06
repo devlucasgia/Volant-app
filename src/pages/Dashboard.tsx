@@ -126,6 +126,37 @@ export default function Dashboard() {
             })}
           </div>
         </div>
+
+        {/* By expense category */}
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-semibold">Por gastos</div>
+          <div className="space-y-2">
+            {(Object.keys(expCats) as ExpenseCategory[]).map((k) => {
+              const v = expCats[k];
+              const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+              const Meta = EXPENSE_META[k];
+              const Icon = Meta.icon;
+              return (
+                <div key={k} className="flex items-center gap-3">
+                  <span
+                    className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                    style={{ backgroundColor: Meta.hex }}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {Meta.label}
+                  </span>
+                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{ width: `${pct}%`, backgroundColor: Meta.hex }}
+                    />
+                  </div>
+                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </>
   );
