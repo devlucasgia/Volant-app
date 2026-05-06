@@ -47,6 +47,24 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        brand: {
+          uber: { DEFAULT: "hsl(var(--brand-uber))", foreground: "hsl(var(--brand-uber-fg))" },
+          "99": { DEFAULT: "hsl(var(--brand-99))", foreground: "hsl(var(--brand-99-fg))" },
+          indriver: { DEFAULT: "hsl(var(--brand-indriver))", foreground: "hsl(var(--brand-indriver-fg))" },
+          particular: { DEFAULT: "hsl(var(--brand-particular))", foreground: "hsl(var(--brand-particular-fg))" },
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
