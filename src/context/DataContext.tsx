@@ -112,6 +112,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from("entries").select("*").order("entry_date", { ascending: false }),
         supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
+      await loadProfile(user.id);
       if (!active) return;
       setEntries((rows || []).map(rowToEntry));
       if (sRow) {
