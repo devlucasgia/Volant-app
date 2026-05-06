@@ -1,4 +1,4 @@
-import { Entry, EarningEntry, ExpenseEntry, AppName } from "@/types";
+import { Entry, EarningEntry, ExpenseEntry, AppName, ExpenseCategory } from "@/types";
 import { startOfDay, startOfWeek, startOfMonth, isAfter } from "date-fns";
 
 export type Period = "day" | "week" | "month" | "all";
