@@ -103,6 +103,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) {
       setEntries([]);
       setSettings(DEFAULT_SETTINGS);
+      setCarInitialKm(0);
       setLoading(false);
       return;
     }
