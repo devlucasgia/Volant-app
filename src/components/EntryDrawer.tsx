@@ -6,11 +6,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
 import { AppName, APP_META, ExpenseCategory, EXPENSE_META, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Props {
   open: boolean;
@@ -20,6 +24,7 @@ interface Props {
 export function EntryDrawer({ open, onOpenChange }: Props) {
   const { addEntry } = useData();
   const [tab, setTab] = useState<"earning" | "expense">("earning");
+  const [date, setDate] = useState<Date>(new Date());
 
   // earning state
   const [app, setApp] = useState<AppName>("uber");
@@ -40,23 +45,28 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
   const reset = () => {
     setKmTotal(""); setKmStart(""); setKmEnd(""); setHours(""); setGross(""); setNotes("");
     setAmount(""); setDescription("");
+    setDate(new Date());
   };
 
   const submit = () => {
     const id = crypto.randomUUID();
-    const date = new Date().toISOString();
+    // preserve current time on the chosen day so ordering stays sensible
+    const now = new Date();
+    const chosen = new Date(date);
+    chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
+    const dateIso = chosen.toISOString();
     if (tab === "earning") {
       const km = kmMode === "total" ? parseFloat(kmTotal) || 0 : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
       const h = parseFloat(hours) || 0;
       const g = parseFloat(gross) || 0;
       if (g <= 0) return toast.error("Informe o valor recebido");
-      addEntry({ id, type: "earning", date, app, km, hours: h, gross: g, notes });
+      addEntry({ id, type: "earning", date: dateIso, app, km, hours: h, gross: g, notes });
       toast.success("Ganho registrado!");
     } else {
       const a = parseFloat(amount) || 0;
       if (a <= 0) return toast.error("Informe o valor do gasto");
       addEntry({
-        id, type: "expense", date,
+        id, type: "expense", date: dateIso,
         expense: { category, amount: a, description, maintenanceType: category === "manutencao" ? maintenanceType : undefined },
       });
       toast.success("Gasto registrado!");
@@ -74,6 +84,32 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
           </DrawerHeader>
 
           <div className="px-4 pb-6">
+            <div className="mb-4 space-y-2">
+              <Label>Data do registro</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(date, "PPP", { locale: ptBR })}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(d) => d && setDate(d)}
+                    disabled={(d) => d > new Date()}
+                    initialFocus
+                    locale={ptBR}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
             <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="earning" className="gap-2">
