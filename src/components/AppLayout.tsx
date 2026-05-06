@@ -15,6 +15,7 @@ export function AppLayout() {
       <Fab onClick={() => setOpen(true)} />
       <EntryDrawer open={open} onOpenChange={setOpen} />
       <BottomNav />
+      <CarOnboardingDialog />
     </div>
   );
 }
