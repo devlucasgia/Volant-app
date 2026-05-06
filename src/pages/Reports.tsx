@@ -35,10 +35,22 @@ const APP_HEX: Record<AppName, string> = {
 
 export default function Reports() {
   const { entries } = useData();
-  const [period, setPeriod] = useState<Period>("month");
-  const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
+  const [period, setPeriod] = useState<RangeKey>("month");
+  const [specificDate, setSpecificDate] = useState<Date>(new Date());
+  const filtered = useMemo<Entry[]>(() => {
+    if (period === "specific") {
+      return entries.filter((e) => isSameDay(new Date(e.date), specificDate));
+    }
+    return filterByPeriod(entries, period);
+  }, [entries, period, specificDate]);
   const s = useMemo(() => summarize(filtered), [filtered]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
+
+  const chartData = (Object.keys(apps) as AppName[]).map((k) => ({
+    name: APP_META[k].label,
+    valor: Math.round(apps[k] * 100) / 100,
+    fill: APP_HEX[k],
+  }));
 
   const chartData = (Object.keys(apps) as AppName[]).map((k) => ({
     name: APP_META[k].label,
