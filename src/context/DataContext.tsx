@@ -80,7 +80,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [carInitialKm, setCarInitialKm] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const loadProfile = useCallback(async (uid: string) => {
+    const { data } = await supabase.from("profiles").select("car_initial_km").eq("id", uid).maybeSingle();
+    setCarInitialKm(Number(data?.car_initial_km) || 0);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) await loadProfile(user.id);
+  }, [user, loadProfile]);
 
   // theme application
   useEffect(() => {
