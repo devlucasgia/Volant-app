@@ -9,11 +9,13 @@ export const APP_META: Record<AppName, { label: string; colorClass: string; badg
 
 export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao" | "outros";
 
-export const EXPENSE_META: Record<ExpenseCategory, { label: string }> = {
-  combustivel: { label: "Combustível" },
-  alimentacao: { label: "Alimentação" },
-  manutencao: { label: "Manutenção" },
-  outros: { label: "Outros" },
+import { Fuel, UtensilsCrossed, Wrench, Package, type LucideIcon } from "lucide-react";
+
+export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; hex: string }> = {
+  combustivel: { label: "Combustível", icon: Fuel, hex: "#F59E0B" },
+  alimentacao: { label: "Alimentação", icon: UtensilsCrossed, hex: "#EF4444" },
+  manutencao: { label: "Manutenção", icon: Wrench, hex: "#3B82F6" },
+  outros: { label: "Outros", icon: Package, hex: "#8B5CF6" },
 };
 
 export type MaintenanceType = "oleo" | "bateria" | "pneus" | "outro";
