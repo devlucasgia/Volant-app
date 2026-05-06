@@ -64,10 +64,8 @@ export default function Auth() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl gradient-success text-primary-foreground shadow-elevated">
-            <Car className="h-7 w-7" />
-          </div>
-          <h1 className="text-2xl font-bold">DriveFin</h1>
+          <img src="/icon-512.png" alt="Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
+          <h1 className="text-2xl font-bold">Volant</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Entre para acessar seus registros" : "Crie sua conta"}
           </p>

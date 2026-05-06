@@ -32,7 +32,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="DriveFin" subtitle="Seu controle financeiro" />
+      <PageHeader title="Volant" subtitle="Seu controle financeiro" />
       <div className="space-y-5 px-4 pt-4">
         {/* Period switcher */}
         <div className="flex rounded-xl bg-muted p-1">

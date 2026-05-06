@@ -66,7 +66,7 @@ export default function Reports() {
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `drivefin-${period}-${format(new Date(), "yyyyMMdd")}.csv`;
+    a.href = url; a.download = `volant-${period}-${format(new Date(), "yyyyMMdd")}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado!");
@@ -75,7 +75,7 @@ export default function Reports() {
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("DriveFin · Relatório", 14, 18);
+    doc.text("Volant · Relatório", 14, 18);
     doc.setFontSize(10);
     doc.text(`Período: ${PERIODS.find((p) => p.key === period)?.label} · Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 25);
 
@@ -105,7 +105,7 @@ export default function Reports() {
       styles: { fontSize: 9 },
     });
 
-    doc.save(`drivefin-${period}-${format(new Date(), "yyyyMMdd")}.pdf`);
+    doc.save(`volant-${period}-${format(new Date(), "yyyyMMdd")}.pdf`);
     toast.success("PDF exportado!");
   };
 
