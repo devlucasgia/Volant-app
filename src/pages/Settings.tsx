@@ -122,6 +122,40 @@ export default function SettingsPage() {
           </Button>
         </section>
 
+        {/* Car */}
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2">
+            <Car className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold">Meu carro</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Marca</Label>
+              <Input value={carBrand} onChange={(e) => setCarBrand(e.target.value)} placeholder="Toyota" />
+            </div>
+            <div className="space-y-2">
+              <Label>Modelo</Label>
+              <Input value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="Corolla" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Placa</Label>
+            <Input value={carPlate} onChange={(e) => setCarPlate(e.target.value.toUpperCase())} placeholder="ABC1D23" />
+          </div>
+          <div className="space-y-2">
+            <Label>Quilometragem inicial</Label>
+            <Input
+              type="number" inputMode="decimal"
+              value={carInitialKmInput}
+              onChange={(e) => setCarInitialKmInput(e.target.value)}
+              placeholder="Ex: 45000"
+            />
+          </div>
+          <Button onClick={saveCar} disabled={savingCar} className="w-full">
+            {savingCar ? "Salvando..." : "Salvar carro"}
+          </Button>
+        </section>
+
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
