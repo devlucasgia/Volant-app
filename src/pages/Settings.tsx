@@ -10,13 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
-import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon } from "lucide-react";
+import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { settings, updateSettings, entries } = useData();
+  const { settings, updateSettings, entries, carInitialKm, refreshProfile } = useData();
   const { user, signOut } = useAuth();
-  const totalKm = totalKmAllTime(entries);
+  const totalKmDriven = totalKmAllTime(entries);
+  const realCurrentKm = carInitialKm + totalKmDriven;
 
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
