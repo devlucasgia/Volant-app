@@ -52,11 +52,6 @@ export default function Reports() {
     fill: APP_HEX[k],
   }));
 
-  const chartData = (Object.keys(apps) as AppName[]).map((k) => ({
-    name: APP_META[k].label,
-    valor: Math.round(apps[k] * 100) / 100,
-    fill: APP_HEX[k],
-  }));
 
   const exportCSV = () => {
     const rows = [
