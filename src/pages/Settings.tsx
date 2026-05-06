@@ -157,14 +157,18 @@ export default function SettingsPage() {
               onChange={(e) => updateSettings({ maintenanceIntervalKm: parseFloat(e.target.value) || 0 })}
             />
           </div>
-          <div className="rounded-lg bg-muted p-3 text-sm">
+          <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Km total</span>
-              <span className="font-semibold tabular-nums">{num(totalKm, 1)} km</span>
+              <span className="text-muted-foreground">Km atual do carro</span>
+              <span className="font-semibold tabular-nums">{num(realCurrentKm, 1)} km</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Km rodados no app</span>
+              <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Última manutenção em</span>
-              <span className="font-semibold tabular-nums">{num(settings.lastMaintenanceKm, 1)} km</span>
+              <span className="font-semibold tabular-nums">{num(settings.lastMaintenanceKm || carInitialKm, 1)} km</span>
             </div>
           </div>
           <Button variant="outline" className="w-full" onClick={resetMaintenance}>
