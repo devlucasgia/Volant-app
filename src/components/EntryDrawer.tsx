@@ -60,13 +60,13 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
       const h = parseFloat(hours) || 0;
       const g = parseFloat(gross) || 0;
       if (g <= 0) return toast.error("Informe o valor recebido");
-      addEntry({ id, type: "earning", date, app, km, hours: h, gross: g, notes });
+      addEntry({ id, type: "earning", date: dateIso, app, km, hours: h, gross: g, notes });
       toast.success("Ganho registrado!");
     } else {
       const a = parseFloat(amount) || 0;
       if (a <= 0) return toast.error("Informe o valor do gasto");
       addEntry({
-        id, type: "expense", date,
+        id, type: "expense", date: dateIso,
         expense: { category, amount: a, description, maintenanceType: category === "manutencao" ? maintenanceType : undefined },
       });
       toast.success("Gasto registrado!");
