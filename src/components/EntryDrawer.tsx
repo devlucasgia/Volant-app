@@ -45,11 +45,16 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
   const reset = () => {
     setKmTotal(""); setKmStart(""); setKmEnd(""); setHours(""); setGross(""); setNotes("");
     setAmount(""); setDescription("");
+    setDate(new Date());
   };
 
   const submit = () => {
     const id = crypto.randomUUID();
-    const date = new Date().toISOString();
+    // preserve current time on the chosen day so ordering stays sensible
+    const now = new Date();
+    const chosen = new Date(date);
+    chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
+    const dateIso = chosen.toISOString();
     if (tab === "earning") {
       const km = kmMode === "total" ? parseFloat(kmTotal) || 0 : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
       const h = parseFloat(hours) || 0;
