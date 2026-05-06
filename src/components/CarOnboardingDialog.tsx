@@ -44,6 +44,7 @@ export function CarOnboardingDialog() {
     const { error } = await supabase.from("profiles").upsert(payload);
     setSaving(false);
     if (error) return toast.error("Erro ao salvar");
+    await refreshProfile();
     setOpen(false);
     if (!skip) toast.success("Carro cadastrado!");
   };
