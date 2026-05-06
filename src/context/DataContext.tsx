@@ -118,7 +118,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const addEntry = useCallback(async (e: Entry) => {
     if (!user) return;
     setEntries((prev) => [e, ...prev]); // optimistic
-    const { error } = await supabase.from("entries").insert(entryToRow(e, user.id));
+    const { error } = await supabase.from("entries").insert(entryToRow(e, user.id) as any);
     if (error) {
       setEntries((prev) => prev.filter((x) => x.id !== e.id));
       throw error;
