@@ -1,33 +1,96 @@
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
-import { Moon, Sun, AlertTriangle } from "lucide-react";
+import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
   const { settings, updateSettings, entries } = useData();
+  const { user, signOut } = useAuth();
   const totalKm = totalKmAllTime(entries);
+
+  const [displayName, setDisplayName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setDisplayName(data.display_name || "");
+          setAvatarUrl(data.avatar_url || "");
+        }
+      });
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      display_name: displayName || null,
+      avatar_url: avatarUrl || null,
+    });
+    setSavingProfile(false);
+    if (error) return toast.error("Erro ao salvar perfil");
+    toast.success("Perfil atualizado!");
+  };
 
   const resetMaintenance = () => {
     updateSettings({ lastMaintenanceKm: totalKm });
     toast.success("Manutenção registrada!");
   };
 
-  const clearAll = () => {
-    if (!confirm("Apagar todos os registros? Esta ação é irreversível.")) return;
-    localStorage.clear();
+  const clearAll = async () => {
+    if (!confirm("Apagar todos os seus registros? Esta ação é irreversível.")) return;
+    if (!user) return;
+    const { error } = await supabase.from("entries").delete().eq("user_id", user.id);
+    if (error) return toast.error("Erro ao apagar dados");
+    toast.success("Dados apagados");
     location.reload();
   };
+
+  const initials = (displayName || user?.email || "U").slice(0, 2).toUpperCase();
 
   return (
     <>
       <PageHeader title="Ajustes" />
       <div className="space-y-4 px-4 pt-4">
+        {/* Profile */}
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-14 w-14">
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback className="bg-primary/15 text-primary"><UserIcon className="h-6 w-6" /></AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold truncate">{displayName || "Sem nome"}</div>
+              <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Nome</Label>
+            <Input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>URL do avatar (opcional)</Label>
+            <Input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
+            {savingProfile ? "Salvando..." : "Salvar perfil"}
+          </Button>
+        </section>
+
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -78,17 +141,21 @@ export default function SettingsPage() {
           </Button>
         </section>
 
+        <Button variant="outline" className="w-full" onClick={signOut}>
+          <LogOut className="mr-2 h-4 w-4" /> Sair da conta
+        </Button>
+
         <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-4">
           <div className="mb-3 flex items-center gap-2 font-semibold text-destructive">
             <AlertTriangle className="h-4 w-4" /> Zona de perigo
           </div>
           <Button variant="destructive" className="w-full" onClick={clearAll}>
-            Apagar todos os dados
+            Apagar todos os meus dados
           </Button>
         </section>
 
         <p className="pb-4 text-center text-xs text-muted-foreground">
-          DriveFin · Dados salvos localmente no seu dispositivo
+          DriveFin · Dados sincronizados na nuvem
         </p>
       </div>
     </>
