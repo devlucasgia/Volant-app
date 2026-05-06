@@ -6,10 +6,12 @@ import { useAuth } from "@/context/AuthContext";
 interface DataCtx {
   entries: Entry[];
   settings: Settings;
+  carInitialKm: number;
   loading: boolean;
   addEntry: (e: Entry) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const Ctx = createContext<DataCtx | null>(null);
