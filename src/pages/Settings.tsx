@@ -10,25 +10,40 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
-import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon } from "lucide-react";
+import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
-  const { settings, updateSettings, entries } = useData();
+  const { settings, updateSettings, entries, carInitialKm, refreshProfile } = useData();
   const { user, signOut } = useAuth();
-  const totalKm = totalKmAllTime(entries);
+  const totalKmDriven = totalKmAllTime(entries);
+  const realCurrentKm = carInitialKm + totalKmDriven;
 
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [carBrand, setCarBrand] = useState("");
+  const [carModel, setCarModel] = useState("");
+  const [carPlate, setCarPlate] = useState("");
+  const [carInitialKmInput, setCarInitialKmInput] = useState("");
+  const [savingCar, setSavingCar] = useState(false);
+
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, car_brand, car_model, car_plate, car_initial_km")
+      .eq("id", user.id)
+      .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name || "");
           setAvatarUrl(data.avatar_url || "");
+          setCarBrand(data.car_brand || "");
+          setCarModel(data.car_model || "");
+          setCarPlate(data.car_plate || "");
+          setCarInitialKmInput(data.car_initial_km != null ? String(data.car_initial_km) : "");
         }
       });
   }, [user]);
@@ -46,8 +61,24 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado!");
   };
 
+  const saveCar = async () => {
+    if (!user) return;
+    setSavingCar(true);
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      car_brand: carBrand || null,
+      car_model: carModel || null,
+      car_plate: carPlate || null,
+      car_initial_km: parseFloat(carInitialKmInput) || 0,
+    });
+    setSavingCar(false);
+    if (error) return toast.error("Erro ao salvar carro");
+    await refreshProfile();
+    toast.success("Carro atualizado!");
+  };
+
   const resetMaintenance = () => {
-    updateSettings({ lastMaintenanceKm: totalKm });
+    updateSettings({ lastMaintenanceKm: realCurrentKm });
     toast.success("Manutenção registrada!");
   };
 
@@ -91,6 +122,40 @@ export default function SettingsPage() {
           </Button>
         </section>
 
+        {/* Car */}
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2">
+            <Car className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold">Meu carro</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Marca</Label>
+              <Input value={carBrand} onChange={(e) => setCarBrand(e.target.value)} placeholder="Toyota" />
+            </div>
+            <div className="space-y-2">
+              <Label>Modelo</Label>
+              <Input value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="Corolla" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Placa</Label>
+            <Input value={carPlate} onChange={(e) => setCarPlate(e.target.value.toUpperCase())} placeholder="ABC1D23" />
+          </div>
+          <div className="space-y-2">
+            <Label>Quilometragem inicial</Label>
+            <Input
+              type="number" inputMode="decimal"
+              value={carInitialKmInput}
+              onChange={(e) => setCarInitialKmInput(e.target.value)}
+              placeholder="Ex: 45000"
+            />
+          </div>
+          <Button onClick={saveCar} disabled={savingCar} className="w-full">
+            {savingCar ? "Salvando..." : "Salvar carro"}
+          </Button>
+        </section>
+
         <section className="rounded-2xl border border-border bg-card p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -126,14 +191,18 @@ export default function SettingsPage() {
               onChange={(e) => updateSettings({ maintenanceIntervalKm: parseFloat(e.target.value) || 0 })}
             />
           </div>
-          <div className="rounded-lg bg-muted p-3 text-sm">
+          <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Km total</span>
-              <span className="font-semibold tabular-nums">{num(totalKm, 1)} km</span>
+              <span className="text-muted-foreground">Km atual do carro</span>
+              <span className="font-semibold tabular-nums">{num(realCurrentKm, 1)} km</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Km rodados no app</span>
+              <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Última manutenção em</span>
-              <span className="font-semibold tabular-nums">{num(settings.lastMaintenanceKm, 1)} km</span>
+              <span className="font-semibold tabular-nums">{num(settings.lastMaintenanceKm || carInitialKm, 1)} km</span>
             </div>
           </div>
           <Button variant="outline" className="w-full" onClick={resetMaintenance}>

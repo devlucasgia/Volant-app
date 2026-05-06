@@ -6,10 +6,12 @@ import { useAuth } from "@/context/AuthContext";
 interface DataCtx {
   entries: Entry[];
   settings: Settings;
+  carInitialKm: number;
   loading: boolean;
   addEntry: (e: Entry) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const Ctx = createContext<DataCtx | null>(null);
@@ -78,7 +80,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [carInitialKm, setCarInitialKm] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const loadProfile = useCallback(async (uid: string) => {
+    const { data } = await supabase.from("profiles").select("car_initial_km").eq("id", uid).maybeSingle();
+    setCarInitialKm(Number(data?.car_initial_km) || 0);
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    if (user) await loadProfile(user.id);
+  }, [user, loadProfile]);
 
   // theme application
   useEffect(() => {
@@ -91,6 +103,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) {
       setEntries([]);
       setSettings(DEFAULT_SETTINGS);
+      setCarInitialKm(0);
       setLoading(false);
       return;
     }
@@ -100,6 +113,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         supabase.from("entries").select("*").order("entry_date", { ascending: false }),
         supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
+      await loadProfile(user.id);
       if (!active) return;
       setEntries((rows || []).map(rowToEntry));
       if (sRow) {
@@ -144,8 +158,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user, settings]);
 
   const value = useMemo<DataCtx>(
-    () => ({ entries, settings, loading, addEntry, removeEntry, updateSettings }),
-    [entries, settings, loading, addEntry, removeEntry, updateSettings]
+    () => ({ entries, settings, carInitialKm, loading, addEntry, removeEntry, updateSettings, refreshProfile }),
+    [entries, settings, carInitialKm, loading, addEntry, removeEntry, updateSettings, refreshProfile]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

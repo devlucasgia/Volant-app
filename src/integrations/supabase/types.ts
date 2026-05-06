@@ -68,6 +68,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          car_brand: string | null
+          car_initial_km: number
+          car_model: string | null
+          car_onboarded: boolean
+          car_plate: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -75,6 +80,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          car_brand?: string | null
+          car_initial_km?: number
+          car_model?: string | null
+          car_onboarded?: boolean
+          car_plate?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -82,6 +92,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          car_brand?: string | null
+          car_initial_km?: number
+          car_model?: string | null
+          car_onboarded?: boolean
+          car_plate?: string | null
           created_at?: string
           display_name?: string | null
           id?: string

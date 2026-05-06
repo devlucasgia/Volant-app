@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
-import { byApp, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
+import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
-import { APP_META, AppName } from "@/types";
+import { APP_META, AppName, EXPENSE_META, ExpenseCategory } from "@/types";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Wrench, Target, Clock, Route } from "lucide-react";
@@ -15,18 +15,21 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 export default function Dashboard() {
-  const { entries, settings } = useData();
+  const { entries, settings, carInitialKm } = useData();
   const [period, setPeriod] = useState<Period>("day");
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
   const s = useMemo(() => summarize(filtered), [filtered]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
+  const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
   const dayEarnings = useMemo(() => summarize(filterByPeriod(entries, "day")).gross, [entries]);
   const goalPct = settings.dailyGoal > 0 ? Math.min(100, (dayEarnings / settings.dailyGoal) * 100) : 0;
 
-  const totalKm = totalKmAllTime(entries);
-  const kmSinceMaint = totalKm - settings.lastMaintenanceKm;
+  const totalKmDriven = totalKmAllTime(entries);
+  const realCurrentKm = carInitialKm + totalKmDriven;
+  const lastMaint = settings.lastMaintenanceKm > 0 ? settings.lastMaintenanceKm : carInitialKm;
+  const kmSinceMaint = realCurrentKm - lastMaint;
   const kmToNext = settings.maintenanceIntervalKm - kmSinceMaint;
   const showMaintAlert = kmToNext <= 1000;
 
@@ -116,6 +119,37 @@ export default function Dashboard() {
                   </span>
                   <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
                     <div className={cn("absolute inset-y-0 left-0 rounded-full", APP_META[k].badgeClass)} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* By expense category */}
+        <div className="rounded-2xl border border-border bg-card p-4">
+          <div className="mb-3 text-sm font-semibold">Por gastos</div>
+          <div className="space-y-2">
+            {(Object.keys(expCats) as ExpenseCategory[]).map((k) => {
+              const v = expCats[k];
+              const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+              const Meta = EXPENSE_META[k];
+              const Icon = Meta.icon;
+              return (
+                <div key={k} className="flex items-center gap-3">
+                  <span
+                    className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                    style={{ backgroundColor: Meta.hex }}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {Meta.label}
+                  </span>
+                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full"
+                      style={{ width: `${pct}%`, backgroundColor: Meta.hex }}
+                    />
                   </div>
                   <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                 </div>

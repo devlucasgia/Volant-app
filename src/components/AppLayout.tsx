@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { Fab } from "./Fab";
 import { EntryDrawer } from "./EntryDrawer";
+import { CarOnboardingDialog } from "./CarOnboardingDialog";
 
 export function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -14,6 +15,7 @@ export function AppLayout() {
       <Fab onClick={() => setOpen(true)} />
       <EntryDrawer open={open} onOpenChange={setOpen} />
       <BottomNav />
+      <CarOnboardingDialog />
     </div>
   );
 }
