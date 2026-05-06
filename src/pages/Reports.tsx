@@ -128,6 +128,28 @@ export default function Reports() {
           ))}
         </div>
 
+        {period === "specific" && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-full justify-start text-left font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(specificDate, "PPP", { locale: ptBR })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={specificDate}
+                onSelect={(d) => d && setSpecificDate(d)}
+                disabled={(d) => d > new Date()}
+                initialFocus
+                locale={ptBR}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <StatCard label="Lucro" value={brl(s.net)} accent="success" />
           <StatCard label="Bruto" value={brl(s.gross)} />
