@@ -48,31 +48,34 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
     setDate(new Date());
   };
 
-  const submit = () => {
+  const submit = async () => {
     const id = crypto.randomUUID();
-    // preserve current time on the chosen day so ordering stays sensible
     const now = new Date();
     const chosen = new Date(date);
     chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
     const dateIso = chosen.toISOString();
-    if (tab === "earning") {
-      const km = kmMode === "total" ? parseFloat(kmTotal) || 0 : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
-      const h = parseFloat(hours) || 0;
-      const g = parseFloat(gross) || 0;
-      if (g <= 0) return toast.error("Informe o valor recebido");
-      addEntry({ id, type: "earning", date: dateIso, app, km, hours: h, gross: g, notes });
-      toast.success("Ganho registrado!");
-    } else {
-      const a = parseFloat(amount) || 0;
-      if (a <= 0) return toast.error("Informe o valor do gasto");
-      addEntry({
-        id, type: "expense", date: dateIso,
-        expense: { category, amount: a, description, maintenanceType: category === "manutencao" ? maintenanceType : undefined },
-      });
-      toast.success("Gasto registrado!");
+    try {
+      if (tab === "earning") {
+        const km = kmMode === "total" ? parseFloat(kmTotal) || 0 : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
+        const h = parseFloat(hours) || 0;
+        const g = parseFloat(gross) || 0;
+        if (g <= 0) return toast.error("Informe o valor recebido");
+        await addEntry({ id, type: "earning", date: dateIso, app, km, hours: h, gross: g, notes });
+        toast.success("Ganho registrado!");
+      } else {
+        const a = parseFloat(amount) || 0;
+        if (a <= 0) return toast.error("Informe o valor do gasto");
+        await addEntry({
+          id, type: "expense", date: dateIso,
+          expense: { category, amount: a, description, maintenanceType: category === "manutencao" ? maintenanceType : undefined },
+        });
+        toast.success("Gasto registrado!");
+      }
+      reset();
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
     }
-    reset();
-    onOpenChange(false);
   };
 
   return (
