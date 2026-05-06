@@ -24,6 +24,7 @@ interface Props {
 export function EntryDrawer({ open, onOpenChange }: Props) {
   const { addEntry } = useData();
   const [tab, setTab] = useState<"earning" | "expense">("earning");
+  const [date, setDate] = useState<Date>(new Date());
 
   // earning state
   const [app, setApp] = useState<AppName>("uber");
