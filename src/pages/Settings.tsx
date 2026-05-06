@@ -155,7 +155,7 @@ export default function SettingsPage() {
         </section>
 
         <p className="pb-4 text-center text-xs text-muted-foreground">
-          DriveFin · Dados sincronizados na nuvem
+          Volant · Dados sincronizados na nuvem
         </p>
       </div>
     </>

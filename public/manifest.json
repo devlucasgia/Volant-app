@@ -1,6 +1,6 @@
 {
-  "name": "DriveFin · Controle financeiro do motorista",
-  "short_name": "DriveFin",
+  "name": "Volant · Controle financeiro do motorista",
+  "short_name": "Volant",
   "description": "App para motoristas de Uber, 99, inDriver e particulares controlarem ganhos, gastos e metas.",
   "start_url": "/",
   "scope": "/",
