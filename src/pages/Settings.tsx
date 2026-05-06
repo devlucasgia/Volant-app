@@ -23,13 +23,27 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
+  const [carBrand, setCarBrand] = useState("");
+  const [carModel, setCarModel] = useState("");
+  const [carPlate, setCarPlate] = useState("");
+  const [carInitialKmInput, setCarInitialKmInput] = useState("");
+  const [savingCar, setSavingCar] = useState(false);
+
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
+    supabase
+      .from("profiles")
+      .select("display_name, avatar_url, car_brand, car_model, car_plate, car_initial_km")
+      .eq("id", user.id)
+      .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name || "");
           setAvatarUrl(data.avatar_url || "");
+          setCarBrand(data.car_brand || "");
+          setCarModel(data.car_model || "");
+          setCarPlate(data.car_plate || "");
+          setCarInitialKmInput(data.car_initial_km != null ? String(data.car_initial_km) : "");
         }
       });
   }, [user]);
@@ -47,8 +61,24 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado!");
   };
 
+  const saveCar = async () => {
+    if (!user) return;
+    setSavingCar(true);
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      car_brand: carBrand || null,
+      car_model: carModel || null,
+      car_plate: carPlate || null,
+      car_initial_km: parseFloat(carInitialKmInput) || 0,
+    });
+    setSavingCar(false);
+    if (error) return toast.error("Erro ao salvar carro");
+    await refreshProfile();
+    toast.success("Carro atualizado!");
+  };
+
   const resetMaintenance = () => {
-    updateSettings({ lastMaintenanceKm: totalKm });
+    updateSettings({ lastMaintenanceKm: realCurrentKm });
     toast.success("Manutenção registrada!");
   };
 
