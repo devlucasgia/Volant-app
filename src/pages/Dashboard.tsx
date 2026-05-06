@@ -15,18 +15,21 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 export default function Dashboard() {
-  const { entries, settings } = useData();
+  const { entries, settings, carInitialKm } = useData();
   const [period, setPeriod] = useState<Period>("day");
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
   const s = useMemo(() => summarize(filtered), [filtered]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
+  const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
   const dayEarnings = useMemo(() => summarize(filterByPeriod(entries, "day")).gross, [entries]);
   const goalPct = settings.dailyGoal > 0 ? Math.min(100, (dayEarnings / settings.dailyGoal) * 100) : 0;
 
-  const totalKm = totalKmAllTime(entries);
-  const kmSinceMaint = totalKm - settings.lastMaintenanceKm;
+  const totalKmDriven = totalKmAllTime(entries);
+  const realCurrentKm = carInitialKm + totalKmDriven;
+  const lastMaint = settings.lastMaintenanceKm > 0 ? settings.lastMaintenanceKm : carInitialKm;
+  const kmSinceMaint = realCurrentKm - lastMaint;
   const kmToNext = settings.maintenanceIntervalKm - kmSinceMaint;
   const showMaintAlert = kmToNext <= 1000;
 
