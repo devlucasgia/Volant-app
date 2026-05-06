@@ -2,22 +2,28 @@ import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { byApp, filterByPeriod, Period, summarize } from "@/lib/stats";
-import { APP_META, AppName, EXPENSE_META } from "@/types";
+import { APP_META, AppName, EXPENSE_META, Entry } from "@/types";
 import { brl } from "@/lib/format";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
-const PERIODS: { key: Period; label: string }[] = [
+type RangeKey = Period | "specific";
+
+const PERIODS: { key: RangeKey; label: string }[] = [
   { key: "day", label: "Hoje" },
   { key: "week", label: "Semana" },
   { key: "month", label: "Mês" },
   { key: "all", label: "Tudo" },
+  { key: "specific", label: "Data" },
 ];
 
 const APP_HEX: Record<AppName, string> = {
