@@ -35,3 +35,11 @@ export function byApp(entries: Entry[]): Record<AppName, number> {
 export function totalKmAllTime(entries: Entry[]): number {
   return entries.filter((e): e is EarningEntry => e.type === "earning").reduce((s, e) => s + e.km, 0);
 }
+
+export function byExpenseCategory(entries: Entry[]): Record<ExpenseCategory, number> {
+  const out: Record<ExpenseCategory, number> = { combustivel: 0, alimentacao: 0, manutencao: 0, outros: 0 };
+  entries.forEach((e) => {
+    if (e.type === "expense") out[e.expense.category] += e.expense.amount;
+  });
+  return out;
+}
