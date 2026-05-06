@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      entries: {
+        Row: {
+          app: string | null
+          created_at: string
+          entry_date: string
+          expense_amount: number | null
+          expense_category: string | null
+          expense_description: string | null
+          gross: number | null
+          hours: number | null
+          id: string
+          km: number | null
+          maintenance_type: string | null
+          notes: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          app?: string | null
+          created_at?: string
+          entry_date: string
+          expense_amount?: number | null
+          expense_category?: string | null
+          expense_description?: string | null
+          gross?: number | null
+          hours?: number | null
+          id?: string
+          km?: number | null
+          maintenance_type?: string | null
+          notes?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          app?: string | null
+          created_at?: string
+          entry_date?: string
+          expense_amount?: number | null
+          expense_category?: string | null
+          expense_description?: string | null
+          gross?: number | null
+          hours?: number | null
+          id?: string
+          km?: number | null
+          maintenance_type?: string | null
+          notes?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          daily_goal: number
+          last_maintenance_km: number
+          maintenance_interval_km: number
+          theme: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          daily_goal?: number
+          last_maintenance_km?: number
+          maintenance_interval_km?: number
+          theme?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          daily_goal?: number
+          last_maintenance_km?: number
+          maintenance_interval_km?: number
+          theme?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
