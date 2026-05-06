@@ -4,12 +4,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Car } from "lucide-react";
 
 export function CarOnboardingDialog() {
   const { user } = useAuth();
+  const { refreshProfile } = useData();
   const [open, setOpen] = useState(false);
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
