@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { supabase } from "@/integrations/supabase/client";
+import { Car as CarType } from "@/types";
 import { toast } from "sonner";
-import { Car } from "lucide-react";
 
-export function CarOnboardingDialog() {
+interface Props {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  car?: CarType | null;
+}
+
+export function CarFormDialog({ open, onOpenChange, car }: Props) {
   const { user } = useAuth();
   const { refreshCars, cars } = useData();
-  const [open, setOpen] = useState(false);
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [plate, setPlate] = useState("");
@@ -20,48 +25,45 @@ export function CarOnboardingDialog() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("car_onboarded")
-      .eq("id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data && !data.car_onboarded && cars.length === 0) setOpen(true);
-      });
-  }, [user, cars.length]);
+    if (open) {
+      setBrand(car?.brand || "");
+      setModel(car?.model || "");
+      setPlate(car?.plate || "");
+      setInitialKm(car?.initial_km != null ? String(car.initial_km) : "");
+    }
+  }, [open, car]);
 
-  const finish = async (skip = false) => {
+  const save = async () => {
     if (!user) return;
     setSaving(true);
-    await supabase.from("profiles").upsert({ id: user.id, car_onboarded: true });
-    if (!skip) {
-      await supabase.from("cars").insert({
-        user_id: user.id,
-        brand: brand || null,
-        model: model || null,
-        plate: plate || null,
-        initial_km: parseFloat(initialKm) || 0,
-        is_active: true,
+    const payload = {
+      brand: brand || null,
+      model: model || null,
+      plate: plate || null,
+      initial_km: parseFloat(initialKm) || 0,
+    };
+    if (car) {
+      const { error } = await supabase.from("cars").update(payload).eq("id", car.id);
+      if (error) { setSaving(false); return toast.error("Erro ao salvar"); }
+    } else {
+      const isFirst = cars.length === 0;
+      const { error } = await supabase.from("cars").insert({
+        ...payload, user_id: user.id, is_active: isFirst,
       });
-      await refreshCars();
-      toast.success("Carro cadastrado!");
+      if (error) { setSaving(false); return toast.error("Erro ao salvar"); }
+      await supabase.from("profiles").upsert({ id: user.id, car_onboarded: true });
     }
+    await refreshCars();
     setSaving(false);
-    setOpen(false);
+    onOpenChange(false);
+    toast.success(car ? "Carro atualizado!" : "Carro adicionado!");
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) finish(true); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Car className="h-6 w-6" />
-          </div>
-          <DialogTitle className="text-center">Cadastre seu carro</DialogTitle>
-          <DialogDescription className="text-center">
-            Opcional, mas ajuda a manter o controle de manutenção mais preciso.
-          </DialogDescription>
+          <DialogTitle>{car ? "Editar carro" : "Adicionar carro"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
@@ -85,10 +87,8 @@ export function CarOnboardingDialog() {
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" onClick={() => finish(true)} disabled={saving}>Pular</Button>
-          <Button onClick={() => finish(false)} disabled={saving}>
-            {saving ? "Salvando..." : "Salvar"}
-          </Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>
+          <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
