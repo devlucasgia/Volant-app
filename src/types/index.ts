@@ -9,7 +9,7 @@ export const APP_META: Record<AppName, { label: string; colorClass: string; badg
 
 export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao_preventiva" | "manutencao" | "outros";
 
-import { Fuel, UtensilsCrossed, Wrench, Package, Screwdriver, type LucideIcon } from "lucide-react";
+import { Fuel, UtensilsCrossed, Wrench, Package, Hammer, type LucideIcon } from "lucide-react";
 
 export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; emoji: string; hex: string }> = {
   combustivel: { label: "Combustível", icon: Fuel, emoji: "⛽", hex: "#F59E0B" },
