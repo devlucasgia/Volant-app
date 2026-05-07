@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
-import { useUI } from "@/context/UIContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -10,21 +9,21 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
 import { CarFormDialog } from "@/components/CarFormDialog";
+import { CategoryDialog } from "@/components/CategoryDialog";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
-import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2, CheckCircle2, Wrench, Target, Palette, Database } from "lucide-react";
+import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2, CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Car as CarType } from "@/types";
 
 export default function SettingsPage() {
-  const { settings, updateSettings, entries, cars, activeCar, carInitialKm, setActiveCar, refreshCars } = useData();
+  const {
+    settings, updateSettings, entries, cars, activeCar, carInitialKm,
+    setActiveCar, refreshCars, expenseCategories, deleteCategory,
+  } = useData();
   const { user, signOut } = useAuth();
-  const { openDrawer } = useUI();
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
 
@@ -32,8 +31,7 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
-  const [intervalDialog, setIntervalDialog] = useState(false);
-  const [newInterval, setNewInterval] = useState<string>("");
+  const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
   useEffect(() => {
     if (!user) return;
@@ -69,27 +67,6 @@ export default function SettingsPage() {
     toast.success("Carro excluído");
   };
 
-  const registerPreventive = () => {
-    openDrawer({
-      tab: "expense",
-      category: "manutencao_preventiva",
-      onAfterSave: () => {
-        // Mark maintenance done at current real km, then prompt to update interval
-        updateSettings({ lastMaintenanceKm: realCurrentKm });
-        setNewInterval(String(settings.maintenanceIntervalKm));
-        setIntervalDialog(true);
-      },
-    });
-  };
-
-  const saveInterval = async () => {
-    const v = parseFloat(newInterval) || 0;
-    if (v <= 0) return toast.error("Informe um intervalo válido");
-    await updateSettings({ maintenanceIntervalKm: v });
-    setIntervalDialog(false);
-    toast.success("Manutenção registrada e intervalo atualizado!");
-  };
-
   const clearAll = async () => {
     if (!confirm("Apagar todos os seus registros? Esta ação é irreversível.")) return;
     if (!user) return;
@@ -103,6 +80,10 @@ export default function SettingsPage() {
     const parts = [c.brand, c.model].filter(Boolean).join(" ");
     return parts || "Carro sem nome";
   };
+
+  const widgets = settings.dashboardWidgets;
+  const setWidget = (k: keyof typeof widgets, v: boolean) =>
+    updateSettings({ dashboardWidgets: { ...widgets, [k]: v } });
 
   return (
     <>
@@ -140,6 +121,15 @@ export default function SettingsPage() {
               <Button onClick={saveProfile} disabled={savingProfile} className="w-full">
                 {savingProfile ? "Salvando..." : "Salvar perfil"}
               </Button>
+              <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2">
+                  {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  <span className="text-sm">Modo escuro</span>
+                </div>
+                <Switch checked={settings.theme === "dark"}
+                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
+                />
+              </div>
             </AccordionContent>
           </AccordionItem>
 
@@ -200,12 +190,12 @@ export default function SettingsPage() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Maintenance */}
+          {/* Maintenance config */}
           <AccordionItem value="maint" className="rounded-2xl border border-border bg-card px-4">
             <AccordionTrigger className="py-3 hover:no-underline">
               <div className="flex items-center gap-2">
                 <Wrench className="h-4 w-4 text-primary" />
-                <span className="font-semibold">🔧 Manutenção preventiva</span>
+                <span className="font-semibold">Manutenção preventiva</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-3">
@@ -221,6 +211,13 @@ export default function SettingsPage() {
                   onChange={(e) => updateSettings({ maintenanceIntervalKm: parseFloat(e.target.value) || 0 })}
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Última manutenção feita em (km)</Label>
+                <Input type="number" inputMode="numeric"
+                  value={settings.lastMaintenanceKm}
+                  onChange={(e) => updateSettings({ lastMaintenanceKm: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
               <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Km atual do carro</span>
@@ -230,14 +227,41 @@ export default function SettingsPage() {
                   <span className="text-muted-foreground">Km rodados no app</span>
                   <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Última manutenção em</span>
-                  <span className="font-semibold tabular-nums">{num(settings.lastMaintenanceKm || carInitialKm, 1)} km</span>
-                </div>
               </div>
-              <Button className="w-full" onClick={registerPreventive}>
-                🔧 Registrar Manutenção Preventiva
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Categories */}
+          <AccordionItem value="cats" className="rounded-2xl border border-border bg-card px-4">
+            <AccordionTrigger className="py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Tags className="h-4 w-4 text-primary" />
+                <span className="font-semibold">Categorias de gasto</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-2">
+              <Button size="sm" variant="outline" className="w-full" onClick={() => setCatDialog({ open: true, editing: null })}>
+                <Plus className="mr-1 h-4 w-4" /> Nova categoria
               </Button>
+              <div className="space-y-2">
+                {expenseCategories.map((c) => (
+                  <div key={c.key} className="flex items-center gap-2 rounded-lg border border-border p-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md text-base"
+                      style={{ backgroundColor: c.hex + "33" }}>{c.emoji}</span>
+                    <div className="flex-1 text-sm font-medium">{c.label}</div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8"
+                      onClick={() => setCatDialog({ open: true, editing: { id: c.id, key: c.key, label: c.label, emoji: c.emoji, color: c.hex } })}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {c.isCustom && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                        onClick={() => c.id && confirm(`Excluir "${c.label}"?`) && deleteCategory(c.id)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </AccordionContent>
           </AccordionItem>
 
@@ -265,16 +289,21 @@ export default function SettingsPage() {
                 <span className="font-semibold">Aparência</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                  <span className="text-sm">Modo escuro</span>
-                </div>
-                <Switch checked={settings.theme === "dark"}
-                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
-                />
+            <AccordionContent className="pb-4 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <LayoutDashboard className="h-3.5 w-3.5" /> Visualizações da tela inicial
               </div>
+              {[
+                { k: "goal" as const, label: "Meta diária" },
+                { k: "stats" as const, label: "R$/hora, R$/km, Bruto, Gastos" },
+                { k: "byApp" as const, label: "Por aplicativo" },
+                { k: "byExpense" as const, label: "Por gastos" },
+              ].map((w) => (
+                <div key={w.k} className="flex items-center justify-between rounded-lg border border-border p-3">
+                  <span className="text-sm">{w.label}</span>
+                  <Switch checked={widgets[w.k]} onCheckedChange={(v) => setWidget(w.k, v)} />
+                </div>
+              ))}
             </AccordionContent>
           </AccordionItem>
 
@@ -313,25 +342,12 @@ export default function SettingsPage() {
         car={carDialog.car}
       />
 
-      <Dialog open={intervalDialog} onOpenChange={setIntervalDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Atualizar intervalo de manutenção</DialogTitle>
-            <DialogDescription>
-              Manutenção registrada! Em quantos km a próxima manutenção preventiva deve ser feita?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label>Intervalo (km)</Label>
-            <Input type="number" inputMode="numeric" value={newInterval}
-              onChange={(e) => setNewInterval(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIntervalDialog(false)}>Manter atual</Button>
-            <Button onClick={saveInterval}>Salvar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CategoryDialog
+        open={catDialog.open}
+        onOpenChange={(o) => setCatDialog((s) => ({ ...s, open: o }))}
+        type="expense"
+        editing={catDialog.editing}
+      />
     </>
   );
 }
