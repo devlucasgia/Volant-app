@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,19 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+interface EntryDrawerPreset {
+  tab?: "earning" | "expense";
+  category?: ExpenseCategory;
+  onAfterSave?: () => void;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  preset?: EntryDrawerPreset | null;
 }
 
-export function EntryDrawer({ open, onOpenChange }: Props) {
+export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const { addEntry } = useData();
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
