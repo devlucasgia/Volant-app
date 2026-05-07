@@ -103,12 +103,16 @@ export default function Dashboard() {
 
         {/* Maintenance alert */}
         {showMaintAlert && (
-          <div className={cn(
-            "flex items-start gap-3 rounded-2xl border p-4",
-            kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
-          )}>
+          <button
+            type="button"
+            onClick={() => navigate("/ajustes")}
+            className={cn(
+              "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
+              kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
+            )}
+          >
             <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext <= 0 ? "text-destructive" : "text-warning")} />
-            <div className="text-sm">
+            <div className="text-sm flex-1">
               <div className="font-semibold">
                 {kmToNext <= 0 ? "Manutenção atrasada!" : "Manutenção próxima"}
               </div>
@@ -117,8 +121,9 @@ export default function Dashboard() {
                   ? `Você ultrapassou em ${num(Math.abs(kmToNext), 0)} km`
                   : `Faltam ${num(kmToNext, 0)} km para a próxima revisão`}
               </div>
+              <div className="mt-1 text-[11px] font-medium text-primary">Toque para registrar →</div>
             </div>
-          </div>
+          </button>
         )}
 
         {/* Stats grid */}
