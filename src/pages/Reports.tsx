@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
-import { byApp, summarize } from "@/lib/stats";
-import { APP_META, AppName, EXPENSE_META, Entry, EarningEntry } from "@/types";
-import { brl } from "@/lib/format";
+import { byApp, byExpenseCategory, summarize } from "@/lib/stats";
+import { APP_META, AppName, Entry, EarningEntry } from "@/types";
+import { brl, num } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select";
 import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  Line, LineChart,
+  Line, LineChart, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { Download, FileText, CalendarIcon } from "lucide-react";
+import { Download, FileText, CalendarIcon, TrendingUp, TrendingDown, Clock, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
@@ -26,18 +26,20 @@ import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
 type RangeMode = "range" | "month";
-type ChartKey = "apps" | "perHour" | "perKm" | "kmTotal" | "hoursTotal";
+type ChartKey = "apps" | "expenses" | "perHour" | "perKm" | "kmTotal" | "hoursTotal" | "netDaily";
 
 const APP_HEX: Record<AppName, string> = {
   uber: "#000000", "99": "#FFCC00", indriver: "#A4E333", particular: "#3B82F6",
 };
 
 const CHARTS: { key: ChartKey; label: string }[] = [
-  { key: "apps", label: "Comparativo entre apps" },
-  { key: "perHour", label: "Média de R$ por hora" },
-  { key: "perKm", label: "Média de R$ por km" },
-  { key: "kmTotal", label: "Km rodados (média diária)" },
-  { key: "hoursTotal", label: "Horas trabalhadas (média diária)" },
+  { key: "netDaily", label: "Lucro líquido por dia" },
+  { key: "apps", label: "Comparativo entre apps (pizza)" },
+  { key: "expenses", label: "Distribuição de gastos (pizza)" },
+  { key: "perHour", label: "R$ por hora (linha)" },
+  { key: "perKm", label: "R$ por km (linha)" },
+  { key: "kmTotal", label: "Km rodados por dia (barras)" },
+  { key: "hoursTotal", label: "Horas trabalhadas por dia (barras)" },
 ];
 
 export default function Reports() {
