@@ -288,8 +288,12 @@ export default function Reports() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Lucro" value={brl(s.net)} accent="success" />
+          <StatCard label="Lucro líquido" value={brl(s.net)} accent="success" hint={<><TrendingUp className="mr-1 inline h-3 w-3" />{s.count} corridas</>} />
           <StatCard label="Bruto" value={brl(s.gross)} />
+          <StatCard label="Gastos" value={brl(s.totalExpenses)} accent="destructive" hint={<TrendingDown className="mr-1 inline h-3 w-3" />} />
+          <StatCard label="R$ / hora" value={brl(s.perHour)} accent="info" hint={<><Clock className="mr-1 inline h-3 w-3" />{num(s.totalHours,1)}h</>} />
+          <StatCard label="R$ / km" value={brl(s.perKm)} hint={<><Route className="mr-1 inline h-3 w-3" />{num(s.totalKm,1)} km</>} />
+          <StatCard label="Média/dia" value={brl(days.length > 0 ? s.net / days.length : 0)} />
         </div>
 
         {/* Chart selector + chart */}
