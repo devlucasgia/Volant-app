@@ -11,12 +11,21 @@ export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao" | "ou
 
 import { Fuel, UtensilsCrossed, Wrench, Package, type LucideIcon } from "lucide-react";
 
-export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; hex: string }> = {
-  combustivel: { label: "Combustível", icon: Fuel, hex: "#F59E0B" },
-  alimentacao: { label: "Alimentação", icon: UtensilsCrossed, hex: "#EF4444" },
-  manutencao: { label: "Manutenção", icon: Wrench, hex: "#3B82F6" },
-  outros: { label: "Outros", icon: Package, hex: "#8B5CF6" },
+export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; emoji: string; hex: string }> = {
+  combustivel: { label: "Combustível", icon: Fuel, emoji: "⛽", hex: "#F59E0B" },
+  alimentacao: { label: "Alimentação", icon: UtensilsCrossed, emoji: "🍔", hex: "#EF4444" },
+  manutencao: { label: "Manutenção", icon: Wrench, emoji: "🔧", hex: "#3B82F6" },
+  outros: { label: "Outros", icon: Package, emoji: "📦", hex: "#8B5CF6" },
 };
+
+export interface Car {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  plate: string | null;
+  initial_km: number;
+  is_active: boolean;
+}
 
 export type MaintenanceType = "oleo" | "bateria" | "pneus" | "outro";
 
