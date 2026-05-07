@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
-import { byApp, summarize } from "@/lib/stats";
-import { APP_META, AppName, EXPENSE_META, Entry, EarningEntry } from "@/types";
-import { brl } from "@/lib/format";
+import { byApp, byExpenseCategory, summarize } from "@/lib/stats";
+import { APP_META, AppName, Entry, EarningEntry } from "@/types";
+import { brl, num } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,9 +12,9 @@ import {
 } from "@/components/ui/select";
 import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  Line, LineChart,
+  Line, LineChart, PieChart, Pie, Cell, Legend,
 } from "recharts";
-import { Download, FileText, CalendarIcon } from "lucide-react";
+import { Download, FileText, CalendarIcon, TrendingUp, TrendingDown, Clock, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
@@ -26,27 +26,29 @@ import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
 type RangeMode = "range" | "month";
-type ChartKey = "apps" | "perHour" | "perKm" | "kmTotal" | "hoursTotal";
+type ChartKey = "apps" | "expenses" | "perHour" | "perKm" | "kmTotal" | "hoursTotal" | "netDaily";
 
 const APP_HEX: Record<AppName, string> = {
   uber: "#000000", "99": "#FFCC00", indriver: "#A4E333", particular: "#3B82F6",
 };
 
 const CHARTS: { key: ChartKey; label: string }[] = [
-  { key: "apps", label: "Comparativo entre apps" },
-  { key: "perHour", label: "Média de R$ por hora" },
-  { key: "perKm", label: "Média de R$ por km" },
-  { key: "kmTotal", label: "Km rodados (média diária)" },
-  { key: "hoursTotal", label: "Horas trabalhadas (média diária)" },
+  { key: "netDaily", label: "Lucro líquido por dia" },
+  { key: "apps", label: "Comparativo entre apps (pizza)" },
+  { key: "expenses", label: "Distribuição de gastos (pizza)" },
+  { key: "perHour", label: "R$ por hora (linha)" },
+  { key: "perKm", label: "R$ por km (linha)" },
+  { key: "kmTotal", label: "Km rodados por dia (barras)" },
+  { key: "hoursTotal", label: "Horas trabalhadas por dia (barras)" },
 ];
 
 export default function Reports() {
-  const { entries } = useData();
+  const { entries, expenseMetaFor } = useData();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
-  const [chart, setChart] = useState<ChartKey>("apps");
+  const [chart, setChart] = useState<ChartKey>("netDaily");
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
@@ -60,6 +62,7 @@ export default function Reports() {
 
   const s = useMemo(() => summarize(filtered), [filtered]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
+  const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
   // Per-day series
   const days = useMemo(() => eachDayOfInterval(interval), [interval]);
@@ -67,23 +70,30 @@ export default function Reports() {
     return days.map((d) => {
       const dayEntries = filtered.filter((e) => format(new Date(e.date), "yyyy-MM-dd") === format(d, "yyyy-MM-dd"));
       const earns = dayEntries.filter((e): e is EarningEntry => e.type === "earning");
+      const exps = dayEntries.filter((e) => e.type === "expense");
       const km = earns.reduce((a, e) => a + e.km, 0);
       const hours = earns.reduce((a, e) => a + e.hours, 0);
       const gross = earns.reduce((a, e) => a + e.gross, 0);
+      const expense = exps.reduce((a, e: any) => a + (e.expense?.amount || 0), 0);
       return {
         name: format(d, "dd/MM"),
-        km, hours, gross,
+        km, hours, gross, expense, net: gross - expense,
         perHour: hours > 0 ? Math.round((gross / hours) * 100) / 100 : 0,
         perKm: km > 0 ? Math.round((gross / km) * 100) / 100 : 0,
       };
     });
   }, [days, filtered]);
 
-  const appsChartData = (Object.keys(apps) as AppName[]).map((k) => ({
-    name: APP_META[k].label,
-    valor: Math.round(apps[k] * 100) / 100,
-    fill: APP_HEX[k],
-  }));
+  const appsChartData = (Object.keys(apps) as AppName[])
+    .filter((k) => apps[k] > 0)
+    .map((k) => ({ name: APP_META[k].label, value: Math.round(apps[k] * 100) / 100, fill: APP_HEX[k] }));
+
+  const expensesChartData = Object.keys(expCats)
+    .filter((k) => expCats[k] > 0)
+    .map((k) => {
+      const m = expenseMetaFor(k);
+      return { name: `${m.emoji} ${m.label}`, value: Math.round(expCats[k] * 100) / 100, fill: m.hex };
+    });
 
   const periodLabel = mode === "month"
     ? format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })
@@ -95,7 +105,7 @@ export default function Reports() {
       ...filtered.map((e) =>
         e.type === "earning"
           ? [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), e.gross.toFixed(2), e.notes || ""]
-          : [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Gasto", EXPENSE_META[e.expense.category].label, "", "", e.expense.amount.toFixed(2), e.expense.description || ""]
+          : [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "", "", e.expense.amount.toFixed(2), e.expense.description || ""]
       ),
     ];
     const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -133,7 +143,7 @@ export default function Reports() {
       body: filtered.map((e) =>
         e.type === "earning"
           ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), brl(e.gross)]
-          : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", EXPENSE_META[e.expense.category].label, "-", "-", brl(e.expense.amount)]
+          : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
       ),
       theme: "grid",
       styles: { fontSize: 9 },
@@ -146,14 +156,34 @@ export default function Reports() {
 
   const renderChart = () => {
     const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 };
-    if (chart === "apps") {
+
+    if (chart === "apps" || chart === "expenses") {
+      const data = chart === "apps" ? appsChartData : expensesChartData;
+      if (data.length === 0) {
+        return (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            Sem dados no período
+          </div>
+        );
+      }
       return (
-        <BarChart data={appsChartData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="name" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-          <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+        <PieChart>
+          <Pie data={data} dataKey="value" nameKey="name" outerRadius={80} innerRadius={40} paddingAngle={2}>
+            {data.map((d, i) => <Cell key={i} fill={d.fill} />)}
+          </Pie>
           <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => brl(v)} />
-          <Bar dataKey="valor" radius={[8, 8, 0, 0]} />
+          <Legend wrapperStyle={{ fontSize: 11 }} />
+        </PieChart>
+      );
+    }
+    if (chart === "netDaily") {
+      return (
+        <BarChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+          <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+          <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => brl(v)} />
+          <Bar dataKey="net" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
         </BarChart>
       );
     }
@@ -258,8 +288,12 @@ export default function Reports() {
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Lucro" value={brl(s.net)} accent="success" />
+          <StatCard label="Lucro líquido" value={brl(s.net)} accent="success" hint={<><TrendingUp className="mr-1 inline h-3 w-3" />{s.count} corridas</>} />
           <StatCard label="Bruto" value={brl(s.gross)} />
+          <StatCard label="Gastos" value={brl(s.totalExpenses)} accent="destructive" hint={<TrendingDown className="mr-1 inline h-3 w-3" />} />
+          <StatCard label="R$ / hora" value={brl(s.perHour)} accent="info" hint={<><Clock className="mr-1 inline h-3 w-3" />{num(s.totalHours,1)}h</>} />
+          <StatCard label="R$ / km" value={brl(s.perKm)} hint={<><Route className="mr-1 inline h-3 w-3" />{num(s.totalKm,1)} km</>} />
+          <StatCard label="Média/dia" value={brl(days.length > 0 ? s.net / days.length : 0)} />
         </div>
 
         {/* Chart selector + chart */}

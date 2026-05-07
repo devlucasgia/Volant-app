@@ -36,10 +36,13 @@ export function totalKmAllTime(entries: Entry[]): number {
   return entries.filter((e): e is EarningEntry => e.type === "earning").reduce((s, e) => s + e.km, 0);
 }
 
-export function byExpenseCategory(entries: Entry[]): Record<ExpenseCategory, number> {
-  const out: Record<ExpenseCategory, number> = { combustivel: 0, alimentacao: 0, manutencao_preventiva: 0, manutencao: 0, outros: 0 };
+export function byExpenseCategory(entries: Entry[]): Record<string, number> {
+  const out: Record<string, number> = {};
   entries.forEach((e) => {
-    if (e.type === "expense") out[e.expense.category] += e.expense.amount;
+    if (e.type === "expense") {
+      const k = e.expense.category === "manutencao_preventiva" ? "manutencao" : e.expense.category;
+      out[k] = (out[k] || 0) + e.expense.amount;
+    }
   });
   return out;
 }

@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          emoji: string
+          id: string
+          is_custom: boolean
+          key: string
+          label: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          is_custom?: boolean
+          key: string
+          label: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          emoji?: string
+          id?: string
+          is_custom?: boolean
+          key?: string
+          label?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       entries: {
         Row: {
           app: string | null
@@ -143,6 +179,7 @@ export type Database = {
       user_settings: {
         Row: {
           daily_goal: number
+          dashboard_widgets: Json
           last_maintenance_km: number
           maintenance_interval_km: number
           theme: string
@@ -151,6 +188,7 @@ export type Database = {
         }
         Insert: {
           daily_goal?: number
+          dashboard_widgets?: Json
           last_maintenance_km?: number
           maintenance_interval_km?: number
           theme?: string
@@ -159,6 +197,7 @@ export type Database = {
         }
         Update: {
           daily_goal?: number
+          dashboard_widgets?: Json
           last_maintenance_km?: number
           maintenance_interval_km?: number
           theme?: string

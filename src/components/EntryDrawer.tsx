@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
-import { AppName, APP_META, ExpenseCategory, EXPENSE_META, MaintenanceType } from "@/types";
+import { AppName, APP_META, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, CalendarIcon } from "lucide-react";
+import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
+import { CategoryDialog } from "@/components/CategoryDialog";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -29,7 +30,8 @@ interface Props {
 }
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
-  const { addEntry } = useData();
+  const { addEntry, expenseCategories } = useData();
+  const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
 
@@ -93,7 +95,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         }));
       }
       if (hasExpense) {
-        const isMaint = category === "manutencao" || category === "manutencao_preventiva";
+        const isMaint = category === "manutencao";
         tasks.push(addEntry({
           id: crypto.randomUUID(), type: "expense", date: dateIso,
           expense: { category, amount: a, description,
@@ -106,10 +108,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         hasEarning ? "Ganho registrado!" : "Gasto registrado!"
       );
       const cb = preset?.onAfterSave;
-      const wasPreventive = hasExpense && category === "manutencao_preventiva";
+      const wasMaint = hasExpense && category === "manutencao";
       reset();
       onOpenChange(false);
-      if (wasPreventive && cb) cb();
+      if (wasMaint && cb) cb();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
     }
@@ -226,18 +228,26 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
               <TabsContent value="expense" className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <Label>Categoria</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Categoria</Label>
+                    <button type="button" onClick={() => setCatDialogOpen(true)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                      <Plus className="h-3 w-3" /> Nova categoria
+                    </button>
+                  </div>
                   <Select value={category} onValueChange={(v) => setCategory(v as ExpenseCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {(Object.keys(EXPENSE_META) as ExpenseCategory[]).map((k) => (
-                        <SelectItem key={k} value={k}>{EXPENSE_META[k].label}</SelectItem>
+                      {expenseCategories.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>
+                          <span className="mr-2">{c.emoji}</span>{c.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {(category === "manutencao" || category === "manutencao_preventiva") && (
+                {category === "manutencao" && (
                   <div className="space-y-2">
                     <Label>Tipo de manutenção</Label>
                     <Select value={maintenanceType} onValueChange={(v) => setMaintenanceType(v as MaintenanceType)}>
@@ -271,6 +281,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           </div>
         </div>
       </DrawerContent>
+      <CategoryDialog
+        open={catDialogOpen}
+        onOpenChange={setCatDialogOpen}
+        type="expense"
+        onCreated={(key) => setCategory(key as ExpenseCategory)}
+      />
     </Drawer>
   );
 }

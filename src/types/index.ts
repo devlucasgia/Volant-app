@@ -7,17 +7,28 @@ export const APP_META: Record<AppName, { label: string; colorClass: string; badg
   particular: { label: "Particular", colorClass: "bg-brand-particular text-brand-particular-foreground", badgeClass: "bg-brand-particular text-brand-particular-foreground" },
 };
 
-export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao_preventiva" | "manutencao" | "outros";
+export type ExpenseCategory = string;
 
-import { Fuel, UtensilsCrossed, Wrench, Package, Hammer, type LucideIcon } from "lucide-react";
+export interface CategoryMeta { label: string; emoji: string; hex: string }
 
-export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; emoji: string; hex: string }> = {
-  combustivel: { label: "Combustível", icon: Fuel, emoji: "⛽", hex: "#F59E0B" },
-  alimentacao: { label: "Alimentação", icon: UtensilsCrossed, emoji: "🍔", hex: "#EF4444" },
-  manutencao_preventiva: { label: "Manutenção preventiva", icon: Wrench, emoji: "🔧", hex: "#10B981" },
-  manutencao: { label: "Reparo", icon: Hammer, emoji: "🪛", hex: "#3B82F6" },
-  outros: { label: "Outros", icon: Package, emoji: "📦", hex: "#8B5CF6" },
+export const BUILTIN_EXPENSE_META: Record<string, CategoryMeta> = {
+  combustivel: { label: "Combustível", emoji: "⛽", hex: "#F59E0B" },
+  alimentacao: { label: "Alimentação", emoji: "🍔", hex: "#EF4444" },
+  manutencao: { label: "Manutenção", emoji: "🔧", hex: "#10B981" },
+  outros: { label: "Outros", emoji: "📦", hex: "#8B5CF6" },
 };
+
+// Back-compat: components still import EXPENSE_META. It is now a Proxy that
+// falls back to a generic record for unknown / custom keys (resolved at runtime
+// by useCategories where possible).
+export const EXPENSE_META: Record<string, CategoryMeta> = new Proxy(BUILTIN_EXPENSE_META, {
+  get(target, prop: string) {
+    if (prop in target) return (target as any)[prop];
+    // legacy mapping
+    if (prop === "manutencao_preventiva") return target.manutencao;
+    return { label: String(prop), emoji: "📌", hex: "#6B7280" };
+  },
+}) as any;
 
 export interface Car {
   id: string;
@@ -57,9 +68,27 @@ export interface ExpenseEntry {
 
 export type Entry = EarningEntry | ExpenseEntry;
 
+export interface DashboardWidgets {
+  goal: boolean;
+  stats: boolean;
+  byApp: boolean;
+  byExpense: boolean;
+}
+
 export interface Settings {
   dailyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
   theme: "light" | "dark";
+  dashboardWidgets: DashboardWidgets;
+}
+
+export interface CustomCategory {
+  id: string;
+  type: "earning" | "expense";
+  key: string;
+  label: string;
+  emoji: string;
+  color: string;
+  is_custom: boolean;
 }
