@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      cars: {
+        Row: {
+          brand: string | null
+          created_at: string
+          id: string
+          initial_km: number
+          is_active: boolean
+          model: string | null
+          plate: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          id?: string
+          initial_km?: number
+          is_active?: boolean
+          model?: string | null
+          plate?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          id?: string
+          initial_km?: number
+          is_active?: boolean
+          model?: string | null
+          plate?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       entries: {
         Row: {
           app: string | null

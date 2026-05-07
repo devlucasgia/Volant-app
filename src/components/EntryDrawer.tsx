@@ -49,28 +49,46 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
   };
 
   const submit = async () => {
-    const id = crypto.randomUUID();
     const now = new Date();
     const chosen = new Date(date);
     chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
     const dateIso = chosen.toISOString();
+
+    const km = kmMode === "total"
+      ? parseFloat(kmTotal) || 0
+      : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
+    const h = parseFloat(hours) || 0;
+    const g = parseFloat(gross) || 0;
+    const a = parseFloat(amount) || 0;
+
+    const hasEarning = g > 0 || km > 0 || h > 0;
+    const hasExpense = a > 0;
+
+    if (!hasEarning && !hasExpense) {
+      return toast.error("Preencha um ganho ou um gasto");
+    }
+
     try {
-      if (tab === "earning") {
-        const km = kmMode === "total" ? parseFloat(kmTotal) || 0 : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
-        const h = parseFloat(hours) || 0;
-        const g = parseFloat(gross) || 0;
+      const tasks: Promise<void>[] = [];
+      if (hasEarning) {
         if (g <= 0) return toast.error("Informe o valor recebido");
-        await addEntry({ id, type: "earning", date: dateIso, app, km, hours: h, gross: g, notes });
-        toast.success("Ganho registrado!");
-      } else {
-        const a = parseFloat(amount) || 0;
-        if (a <= 0) return toast.error("Informe o valor do gasto");
-        await addEntry({
-          id, type: "expense", date: dateIso,
-          expense: { category, amount: a, description, maintenanceType: category === "manutencao" ? maintenanceType : undefined },
-        });
-        toast.success("Gasto registrado!");
+        tasks.push(addEntry({
+          id: crypto.randomUUID(), type: "earning", date: dateIso,
+          app, km, hours: h, gross: g, notes,
+        }));
       }
+      if (hasExpense) {
+        tasks.push(addEntry({
+          id: crypto.randomUUID(), type: "expense", date: dateIso,
+          expense: { category, amount: a, description,
+            maintenanceType: category === "manutencao" ? maintenanceType : undefined },
+        }));
+      }
+      await Promise.all(tasks);
+      toast.success(
+        hasEarning && hasExpense ? "Ganho e gasto registrados!" :
+        hasEarning ? "Ganho registrado!" : "Gasto registrado!"
+      );
       reset();
       onOpenChange(false);
     } catch (err: any) {

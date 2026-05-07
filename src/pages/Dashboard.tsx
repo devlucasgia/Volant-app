@@ -135,14 +135,13 @@ export default function Dashboard() {
               const v = expCats[k];
               const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
               const Meta = EXPENSE_META[k];
-              const Icon = Meta.icon;
               return (
                 <div key={k} className="flex items-center gap-3">
                   <span
-                    className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                    className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
                     style={{ backgroundColor: Meta.hex }}
                   >
-                    <Icon className="h-3.5 w-3.5" />
+                    <span className="text-base leading-none">{Meta.emoji}</span>
                     {Meta.label}
                   </span>
                   <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
