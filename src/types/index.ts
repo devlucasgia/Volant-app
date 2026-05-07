@@ -7,14 +7,15 @@ export const APP_META: Record<AppName, { label: string; colorClass: string; badg
   particular: { label: "Particular", colorClass: "bg-brand-particular text-brand-particular-foreground", badgeClass: "bg-brand-particular text-brand-particular-foreground" },
 };
 
-export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao" | "outros";
+export type ExpenseCategory = "combustivel" | "alimentacao" | "manutencao_preventiva" | "manutencao" | "outros";
 
-import { Fuel, UtensilsCrossed, Wrench, Package, type LucideIcon } from "lucide-react";
+import { Fuel, UtensilsCrossed, Wrench, Package, Screwdriver, type LucideIcon } from "lucide-react";
 
 export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: LucideIcon; emoji: string; hex: string }> = {
   combustivel: { label: "Combustível", icon: Fuel, emoji: "⛽", hex: "#F59E0B" },
   alimentacao: { label: "Alimentação", icon: UtensilsCrossed, emoji: "🍔", hex: "#EF4444" },
-  manutencao: { label: "Manutenção", icon: Wrench, emoji: "🔧", hex: "#3B82F6" },
+  manutencao_preventiva: { label: "Manutenção preventiva", icon: Wrench, emoji: "🔧", hex: "#10B981" },
+  manutencao: { label: "Reparo", icon: Screwdriver, emoji: "🪛", hex: "#3B82F6" },
   outros: { label: "Outros", icon: Package, emoji: "📦", hex: "#8B5CF6" },
 };
 
