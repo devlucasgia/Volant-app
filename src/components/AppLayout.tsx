@@ -4,6 +4,7 @@ import { BottomNav } from "./BottomNav";
 import { Fab } from "./Fab";
 import { EntryDrawer } from "./EntryDrawer";
 import { CarOnboardingDialog } from "./CarOnboardingDialog";
+import { TimerFab } from "./TimerFab";
 
 export function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -12,6 +13,7 @@ export function AppLayout() {
       <main className="mx-auto max-w-md pb-24">
         <Outlet />
       </main>
+      <TimerFab />
       <Fab onClick={() => setOpen(true)} />
       <EntryDrawer open={open} onOpenChange={setOpen} />
       <BottomNav />
