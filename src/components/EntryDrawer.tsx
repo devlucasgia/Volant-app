@@ -237,7 +237,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   </Select>
                 </div>
 
-                {category === "manutencao" && (
+                {(category === "manutencao" || category === "manutencao_preventiva") && (
                   <div className="space-y-2">
                     <Label>Tipo de manutenção</Label>
                     <Select value={maintenanceType} onValueChange={(v) => setMaintenanceType(v as MaintenanceType)}>
