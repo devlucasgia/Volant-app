@@ -228,18 +228,26 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
               <TabsContent value="expense" className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <Label>Categoria</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Categoria</Label>
+                    <button type="button" onClick={() => setCatDialogOpen(true)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                      <Plus className="h-3 w-3" /> Nova categoria
+                    </button>
+                  </div>
                   <Select value={category} onValueChange={(v) => setCategory(v as ExpenseCategory)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {(Object.keys(EXPENSE_META) as ExpenseCategory[]).map((k) => (
-                        <SelectItem key={k} value={k}>{EXPENSE_META[k].label}</SelectItem>
+                      {expenseCategories.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>
+                          <span className="mr-2">{c.emoji}</span>{c.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
-                {(category === "manutencao" || category === "manutencao_preventiva") && (
+                {category === "manutencao" && (
                   <div className="space-y-2">
                     <Label>Tipo de manutenção</Label>
                     <Select value={maintenanceType} onValueChange={(v) => setMaintenanceType(v as MaintenanceType)}>
