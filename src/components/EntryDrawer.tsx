@@ -49,6 +49,14 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const [maintenanceType, setMaintenanceType] = useState<MaintenanceType>("oleo");
   const [description, setDescription] = useState("");
 
+  // Apply preset when drawer opens
+  useEffect(() => {
+    if (open && preset) {
+      if (preset.tab) setTab(preset.tab);
+      if (preset.category) setCategory(preset.category);
+    }
+  }, [open, preset]);
+
   const reset = () => {
     setKmTotal(""); setKmStart(""); setKmEnd(""); setHours(""); setGross(""); setNotes("");
     setAmount(""); setDescription("");
