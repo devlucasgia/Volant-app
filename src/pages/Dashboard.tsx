@@ -50,7 +50,16 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Volant" subtitle="Seu controle financeiro" />
+      <PageHeader
+        title="Volant"
+        subtitle="Seu controle financeiro"
+        right={
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span className="capitalize">{periodRangeLabel}</span>
+          </div>
+        }
+      />
       <div className="space-y-5 px-4 pt-4">
         {/* Period switcher */}
         <div className="flex rounded-xl bg-muted p-1">
