@@ -18,9 +18,10 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm } = useData();
-  const navigate = useNavigate();
+  const { entries, settings, carInitialKm, expenseMetaFor } = useData();
+  const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
+  const widgets = settings.dashboardWidgets;
 
   const periodRangeLabel = useMemo(() => {
     const now = new Date();
