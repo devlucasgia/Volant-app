@@ -68,9 +68,27 @@ export interface ExpenseEntry {
 
 export type Entry = EarningEntry | ExpenseEntry;
 
+export interface DashboardWidgets {
+  goal: boolean;
+  stats: boolean;
+  byApp: boolean;
+  byExpense: boolean;
+}
+
 export interface Settings {
   dailyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
   theme: "light" | "dark";
+  dashboardWidgets: DashboardWidgets;
+}
+
+export interface CustomCategory {
+  id: string;
+  type: "earning" | "expense";
+  key: string;
+  label: string;
+  emoji: string;
+  color: string;
+  is_custom: boolean;
 }
