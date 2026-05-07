@@ -25,27 +25,29 @@ const App = () => (
       <AuthProvider>
         <DataProvider>
           <TimerProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route
-                  element={
-                    <RequireAuth>
-                      <AppLayout />
-                    </RequireAuth>
-                  }
-                >
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/historico" element={<History />} />
-                  <Route path="/relatorios" element={<Reports />} />
-                  <Route path="/jornada" element={<Journey />} />
-                  <Route path="/ajustes" element={<SettingsPage />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <UIProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route
+                    element={
+                      <RequireAuth>
+                        <AppLayout />
+                      </RequireAuth>
+                    }
+                  >
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/historico" element={<History />} />
+                    <Route path="/relatorios" element={<Reports />} />
+                    <Route path="/jornada" element={<Journey />} />
+                    <Route path="/ajustes" element={<SettingsPage />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </UIProvider>
           </TimerProvider>
         </DataProvider>
       </AuthProvider>
