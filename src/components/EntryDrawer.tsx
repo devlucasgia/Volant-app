@@ -95,7 +95,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         }));
       }
       if (hasExpense) {
-        const isMaint = category === "manutencao" || category === "manutencao_preventiva";
+        const isMaint = category === "manutencao";
         tasks.push(addEntry({
           id: crypto.randomUUID(), type: "expense", date: dateIso,
           expense: { category, amount: a, description,
@@ -108,10 +108,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         hasEarning ? "Ganho registrado!" : "Gasto registrado!"
       );
       const cb = preset?.onAfterSave;
-      const wasPreventive = hasExpense && category === "manutencao_preventiva";
+      const wasMaint = hasExpense && category === "manutencao";
       reset();
       onOpenChange(false);
-      if (wasPreventive && cb) cb();
+      if (wasMaint && cb) cb();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
     }
