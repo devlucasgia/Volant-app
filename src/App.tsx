@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/AuthContext";
 import { DataProvider } from "@/context/DataContext";
 import { TimerProvider } from "@/context/TimerContext";
+import { UIProvider } from "@/context/UIContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import Auth from "./pages/Auth";
