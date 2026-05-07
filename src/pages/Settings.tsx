@@ -8,13 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CarFormDialog } from "@/components/CarFormDialog";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
-import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car } from "lucide-react";
+import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import type { Car as CarType } from "@/types";
 
 export default function SettingsPage() {
-  const { settings, updateSettings, entries, carInitialKm, refreshProfile } = useData();
+  const { settings, updateSettings, entries, cars, activeCar, carInitialKm, setActiveCar, refreshCars } = useData();
   const { user, signOut } = useAuth();
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
@@ -23,27 +26,15 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  const [carBrand, setCarBrand] = useState("");
-  const [carModel, setCarModel] = useState("");
-  const [carPlate, setCarPlate] = useState("");
-  const [carInitialKmInput, setCarInitialKmInput] = useState("");
-  const [savingCar, setSavingCar] = useState(false);
+  const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("display_name, avatar_url, car_brand, car_model, car_plate, car_initial_km")
-      .eq("id", user.id)
-      .maybeSingle()
+    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
       .then(({ data }) => {
         if (data) {
           setDisplayName(data.display_name || "");
           setAvatarUrl(data.avatar_url || "");
-          setCarBrand(data.car_brand || "");
-          setCarModel(data.car_model || "");
-          setCarPlate(data.car_plate || "");
-          setCarInitialKmInput(data.car_initial_km != null ? String(data.car_initial_km) : "");
         }
       });
   }, [user]);
@@ -52,29 +43,24 @@ export default function SettingsPage() {
     if (!user) return;
     setSavingProfile(true);
     const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      display_name: displayName || null,
-      avatar_url: avatarUrl || null,
+      id: user.id, display_name: displayName || null, avatar_url: avatarUrl || null,
     });
     setSavingProfile(false);
     if (error) return toast.error("Erro ao salvar perfil");
     toast.success("Perfil atualizado!");
   };
 
-  const saveCar = async () => {
-    if (!user) return;
-    setSavingCar(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      car_brand: carBrand || null,
-      car_model: carModel || null,
-      car_plate: carPlate || null,
-      car_initial_km: parseFloat(carInitialKmInput) || 0,
-    });
-    setSavingCar(false);
-    if (error) return toast.error("Erro ao salvar carro");
-    await refreshProfile();
-    toast.success("Carro atualizado!");
+  const deleteCar = async (car: CarType) => {
+    if (!confirm(`Excluir o carro ${car.brand || ""} ${car.model || ""}?`)) return;
+    const { error } = await supabase.from("cars").delete().eq("id", car.id);
+    if (error) return toast.error("Erro ao excluir");
+    // if it was active, activate another
+    if (car.is_active) {
+      const next = cars.find((c) => c.id !== car.id);
+      if (next) await supabase.from("cars").update({ is_active: true }).eq("id", next.id);
+    }
+    await refreshCars();
+    toast.success("Carro excluído");
   };
 
   const resetMaintenance = () => {
@@ -91,7 +77,10 @@ export default function SettingsPage() {
     location.reload();
   };
 
-  const initials = (displayName || user?.email || "U").slice(0, 2).toUpperCase();
+  const carLabel = (c: CarType) => {
+    const parts = [c.brand, c.model].filter(Boolean).join(" ");
+    return parts || "Carro sem nome";
+  };
 
   return (
     <>
@@ -122,38 +111,68 @@ export default function SettingsPage() {
           </Button>
         </section>
 
-        {/* Car */}
+        {/* Cars */}
         <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2">
-            <Car className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold">Meu carro</h2>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Marca</Label>
-              <Input value={carBrand} onChange={(e) => setCarBrand(e.target.value)} placeholder="Toyota" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Car className="h-4 w-4 text-primary" />
+              <h2 className="font-semibold">Meus carros</h2>
             </div>
-            <div className="space-y-2">
-              <Label>Modelo</Label>
-              <Input value={carModel} onChange={(e) => setCarModel(e.target.value)} placeholder="Corolla" />
+            <Button size="sm" variant="outline" onClick={() => setCarDialog({ open: true, car: null })}>
+              <Plus className="mr-1 h-4 w-4" /> Adicionar
+            </Button>
+          </div>
+
+          {cars.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+              Nenhum carro cadastrado.
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label>Placa</Label>
-            <Input value={carPlate} onChange={(e) => setCarPlate(e.target.value.toUpperCase())} placeholder="ABC1D23" />
-          </div>
-          <div className="space-y-2">
-            <Label>Quilometragem inicial</Label>
-            <Input
-              type="number" inputMode="decimal"
-              value={carInitialKmInput}
-              onChange={(e) => setCarInitialKmInput(e.target.value)}
-              placeholder="Ex: 45000"
-            />
-          </div>
-          <Button onClick={saveCar} disabled={savingCar} className="w-full">
-            {savingCar ? "Salvando..." : "Salvar carro"}
-          </Button>
+          ) : (
+            <div className="space-y-2">
+              {cars.map((c) => (
+                <div
+                  key={c.id}
+                  className={cn(
+                    "rounded-lg border p-3 transition-colors",
+                    c.is_active ? "border-primary bg-primary/5" : "border-border"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => !c.is_active && setActiveCar(c.id)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold">{carLabel(c)}</div>
+                        {c.is_active && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground">
+                            <CheckCircle2 className="h-3 w-3" /> ATIVO
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">
+                        {c.plate ? `${c.plate} · ` : ""}{num(c.initial_km, 0)} km iniciais
+                      </div>
+                      {!c.is_active && (
+                        <div className="mt-1 text-[11px] text-primary">Toque para ativar</div>
+                      )}
+                    </button>
+                    <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" className="h-8 w-8"
+                        onClick={() => setCarDialog({ open: true, car: c })}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                        onClick={() => deleteCar(c)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-4">
@@ -183,6 +202,11 @@ export default function SettingsPage() {
 
         <section className="space-y-3 rounded-2xl border border-border bg-card p-4">
           <h2 className="font-semibold">Manutenção preventiva</h2>
+          {activeCar && (
+            <div className="text-xs text-muted-foreground">
+              Carro ativo: <span className="font-semibold text-foreground">{carLabel(activeCar)}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Intervalo (km)</Label>
             <Input
@@ -227,6 +251,12 @@ export default function SettingsPage() {
           Volant · Dados sincronizados na nuvem
         </p>
       </div>
+
+      <CarFormDialog
+        open={carDialog.open}
+        onOpenChange={(o) => setCarDialog((s) => ({ ...s, open: o }))}
+        car={carDialog.car}
+      />
     </>
   );
 }
