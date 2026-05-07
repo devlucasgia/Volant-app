@@ -19,7 +19,19 @@ const PERIODS: { key: Period; label: string }[] = [
 
 export default function Dashboard() {
   const { entries, settings, carInitialKm } = useData();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("day");
+
+  const periodRangeLabel = useMemo(() => {
+    const now = new Date();
+    if (period === "day") return format(startOfDay(now), "d 'de' MMMM", { locale: ptBR });
+    if (period === "week") {
+      const s = startOfWeek(now, { weekStartsOn: 1 });
+      const e = endOfWeek(now, { weekStartsOn: 1 });
+      return `${format(s, "d MMM", { locale: ptBR })} – ${format(e, "d MMM", { locale: ptBR })}`;
+    }
+    return format(now, "MMMM 'de' yyyy", { locale: ptBR });
+  }, [period]);
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
   const s = useMemo(() => summarize(filtered), [filtered]);
