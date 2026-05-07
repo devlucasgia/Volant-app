@@ -15,7 +15,7 @@ export const EXPENSE_META: Record<ExpenseCategory, { label: string; icon: Lucide
   combustivel: { label: "Combustível", icon: Fuel, emoji: "⛽", hex: "#F59E0B" },
   alimentacao: { label: "Alimentação", icon: UtensilsCrossed, emoji: "🍔", hex: "#EF4444" },
   manutencao_preventiva: { label: "Manutenção preventiva", icon: Wrench, emoji: "🔧", hex: "#10B981" },
-  manutencao: { label: "Reparo", icon: Screwdriver, emoji: "🪛", hex: "#3B82F6" },
+  manutencao: { label: "Reparo", icon: Hammer, emoji: "🪛", hex: "#3B82F6" },
   outros: { label: "Outros", icon: Package, emoji: "📦", hex: "#8B5CF6" },
 };
 
