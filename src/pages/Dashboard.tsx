@@ -89,24 +89,26 @@ export default function Dashboard() {
         </div>
 
         {/* Goal */}
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Target className="h-4 w-4 text-primary" /> Meta diária
+        {widgets.goal && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <Target className="h-4 w-4 text-primary" /> Meta diária
+              </div>
+              <div className="text-sm tabular-nums text-muted-foreground">
+                {brl(dayEarnings)} / {brl(settings.dailyGoal)}
+              </div>
             </div>
-            <div className="text-sm tabular-nums text-muted-foreground">
-              {brl(dayEarnings)} / {brl(settings.dailyGoal)}
-            </div>
+            <Progress value={goalPct} className="mt-3 h-2" />
+            <div className="mt-1 text-right text-xs text-muted-foreground">{num(goalPct, 0)}%</div>
           </div>
-          <Progress value={goalPct} className="mt-3 h-2" />
-          <div className="mt-1 text-right text-xs text-muted-foreground">{num(goalPct, 0)}%</div>
-        </div>
+        )}
 
         {/* Maintenance alert */}
         {showMaintAlert && (
           <button
             type="button"
-            onClick={() => navigate("/ajustes")}
+            onClick={() => openDrawer({ tab: "expense", category: "manutencao" })}
             className={cn(
               "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
               kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
@@ -128,64 +130,70 @@ export default function Dashboard() {
         )}
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="R$ / hora" value={brl(s.perHour)} hint={<><Clock className="mr-1 inline h-3 w-3" />{num(s.totalHours, 1)}h</>} accent="success" />
-          <StatCard label="R$ / km" value={brl(s.perKm)} hint={<><Route className="mr-1 inline h-3 w-3" />{num(s.totalKm, 1)} km</>} accent="info" />
-          <StatCard label="Bruto" value={brl(s.gross)} hint={`${s.count} corrida${s.count === 1 ? "" : "s"}`} />
-          <StatCard label="Gastos" value={brl(s.totalExpenses)} accent="destructive" />
-        </div>
+        {widgets.stats && (
+          <div className="grid grid-cols-2 gap-3">
+            <StatCard label="R$ / hora" value={brl(s.perHour)} hint={<><Clock className="mr-1 inline h-3 w-3" />{num(s.totalHours, 1)}h</>} accent="success" />
+            <StatCard label="R$ / km" value={brl(s.perKm)} hint={<><Route className="mr-1 inline h-3 w-3" />{num(s.totalKm, 1)} km</>} accent="info" />
+            <StatCard label="Bruto" value={brl(s.gross)} hint={`${s.count} corrida${s.count === 1 ? "" : "s"}`} />
+            <StatCard label="Gastos" value={brl(s.totalExpenses)} accent="destructive" />
+          </div>
+        )}
 
         {/* By app */}
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-semibold">Por aplicativo</div>
-          <div className="space-y-2">
-            {(Object.keys(apps) as AppName[]).map((k) => {
-              const v = apps[k];
-              const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <span className={cn("inline-flex h-7 min-w-[68px] items-center justify-center rounded-md px-2 text-xs font-bold", APP_META[k].badgeClass)}>
-                    {APP_META[k].label}
-                  </span>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className={cn("absolute inset-y-0 left-0 rounded-full", APP_META[k].badgeClass)} style={{ width: `${pct}%` }} />
+        {widgets.byApp && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3 text-sm font-semibold">Por aplicativo</div>
+            <div className="space-y-2">
+              {(Object.keys(apps) as AppName[]).map((k) => {
+                const v = apps[k];
+                const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span className={cn("inline-flex h-7 min-w-[68px] items-center justify-center rounded-md px-2 text-xs font-bold", APP_META[k].badgeClass)}>
+                      {APP_META[k].label}
+                    </span>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className={cn("absolute inset-y-0 left-0 rounded-full", APP_META[k].badgeClass)} style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* By expense category */}
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-3 text-sm font-semibold">Por gastos</div>
-          <div className="space-y-2">
-            {(Object.keys(expCats) as ExpenseCategory[]).map((k) => {
-              const v = expCats[k];
-              const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
-              const Meta = EXPENSE_META[k];
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <span
-                    className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                    style={{ backgroundColor: Meta.hex }}
-                  >
-                    <span className="text-base leading-none">{Meta.emoji}</span>
-                    {Meta.label}
-                  </span>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full"
-                      style={{ width: `${pct}%`, backgroundColor: Meta.hex }}
-                    />
+        {widgets.byExpense && (
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-3 text-sm font-semibold">Por gastos</div>
+            <div className="space-y-2">
+              {Object.keys(expCats).map((k) => {
+                const v = expCats[k];
+                const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+                const Meta = expenseMetaFor(k);
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <span
+                      className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                      style={{ backgroundColor: Meta.hex }}
+                    >
+                      <span className="text-base leading-none">{Meta.emoji}</span>
+                      {Meta.label}
+                    </span>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: Meta.hex }}
+                      />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );
