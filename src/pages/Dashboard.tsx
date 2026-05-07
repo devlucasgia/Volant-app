@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
-import { APP_META, AppName, EXPENSE_META, ExpenseCategory } from "@/types";
+import { APP_META, AppName } from "@/types";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Wrench, Target, Clock, Route, CalendarDays } from "lucide-react";
