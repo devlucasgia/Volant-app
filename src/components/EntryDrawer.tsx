@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,19 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+interface EntryDrawerPreset {
+  tab?: "earning" | "expense";
+  category?: ExpenseCategory;
+  onAfterSave?: () => void;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  preset?: EntryDrawerPreset | null;
 }
 
-export function EntryDrawer({ open, onOpenChange }: Props) {
+export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const { addEntry } = useData();
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
@@ -41,6 +48,14 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
   const [amount, setAmount] = useState("");
   const [maintenanceType, setMaintenanceType] = useState<MaintenanceType>("oleo");
   const [description, setDescription] = useState("");
+
+  // Apply preset when drawer opens
+  useEffect(() => {
+    if (open && preset) {
+      if (preset.tab) setTab(preset.tab);
+      if (preset.category) setCategory(preset.category);
+    }
+  }, [open, preset]);
 
   const reset = () => {
     setKmTotal(""); setKmStart(""); setKmEnd(""); setHours(""); setGross(""); setNotes("");
@@ -78,10 +93,11 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
         }));
       }
       if (hasExpense) {
+        const isMaint = category === "manutencao" || category === "manutencao_preventiva";
         tasks.push(addEntry({
           id: crypto.randomUUID(), type: "expense", date: dateIso,
           expense: { category, amount: a, description,
-            maintenanceType: category === "manutencao" ? maintenanceType : undefined },
+            maintenanceType: isMaint ? maintenanceType : undefined },
         }));
       }
       await Promise.all(tasks);
@@ -89,8 +105,11 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
         hasEarning && hasExpense ? "Ganho e gasto registrados!" :
         hasEarning ? "Ganho registrado!" : "Gasto registrado!"
       );
+      const cb = preset?.onAfterSave;
+      const wasPreventive = hasExpense && category === "manutencao_preventiva";
       reset();
       onOpenChange(false);
+      if (wasPreventive && cb) cb();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
     }
@@ -218,7 +237,7 @@ export function EntryDrawer({ open, onOpenChange }: Props) {
                   </Select>
                 </div>
 
-                {category === "manutencao" && (
+                {(category === "manutencao" || category === "manutencao_preventiva") && (
                   <div className="space-y-2">
                     <Label>Tipo de manutenção</Label>
                     <Select value={maintenanceType} onValueChange={(v) => setMaintenanceType(v as MaintenanceType)}>

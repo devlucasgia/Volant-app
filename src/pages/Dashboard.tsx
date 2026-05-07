@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
@@ -6,7 +7,9 @@ import { brl, num } from "@/lib/format";
 import { APP_META, AppName, EXPENSE_META, ExpenseCategory } from "@/types";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route } from "lucide-react";
+import { Wrench, Target, Clock, Route, CalendarDays } from "lucide-react";
+import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
@@ -16,7 +19,19 @@ const PERIODS: { key: Period; label: string }[] = [
 
 export default function Dashboard() {
   const { entries, settings, carInitialKm } = useData();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>("day");
+
+  const periodRangeLabel = useMemo(() => {
+    const now = new Date();
+    if (period === "day") return format(startOfDay(now), "d 'de' MMMM", { locale: ptBR });
+    if (period === "week") {
+      const s = startOfWeek(now, { weekStartsOn: 1 });
+      const e = endOfWeek(now, { weekStartsOn: 1 });
+      return `${format(s, "d MMM", { locale: ptBR })} – ${format(e, "d MMM", { locale: ptBR })}`;
+    }
+    return format(now, "MMMM 'de' yyyy", { locale: ptBR });
+  }, [period]);
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
   const s = useMemo(() => summarize(filtered), [filtered]);
@@ -35,7 +50,16 @@ export default function Dashboard() {
 
   return (
     <>
-      <PageHeader title="Volant" subtitle="Seu controle financeiro" />
+      <PageHeader
+        title="Volant"
+        subtitle="Seu controle financeiro"
+        right={
+          <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span className="capitalize">{periodRangeLabel}</span>
+          </div>
+        }
+      />
       <div className="space-y-5 px-4 pt-4">
         {/* Period switcher */}
         <div className="flex rounded-xl bg-muted p-1">
@@ -79,12 +103,16 @@ export default function Dashboard() {
 
         {/* Maintenance alert */}
         {showMaintAlert && (
-          <div className={cn(
-            "flex items-start gap-3 rounded-2xl border p-4",
-            kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
-          )}>
+          <button
+            type="button"
+            onClick={() => navigate("/ajustes")}
+            className={cn(
+              "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
+              kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
+            )}
+          >
             <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext <= 0 ? "text-destructive" : "text-warning")} />
-            <div className="text-sm">
+            <div className="text-sm flex-1">
               <div className="font-semibold">
                 {kmToNext <= 0 ? "Manutenção atrasada!" : "Manutenção próxima"}
               </div>
@@ -93,8 +121,9 @@ export default function Dashboard() {
                   ? `Você ultrapassou em ${num(Math.abs(kmToNext), 0)} km`
                   : `Faltam ${num(kmToNext, 0)} km para a próxima revisão`}
               </div>
+              <div className="mt-1 text-[11px] font-medium text-primary">Toque para registrar →</div>
             </div>
-          </div>
+          </button>
         )}
 
         {/* Stats grid */}
