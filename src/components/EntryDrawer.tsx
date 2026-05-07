@@ -281,6 +281,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           </div>
         </div>
       </DrawerContent>
+      <CategoryDialog
+        open={catDialogOpen}
+        onOpenChange={setCatDialogOpen}
+        type="expense"
+        onCreated={(key) => setCategory(key as ExpenseCategory)}
+      />
     </Drawer>
   );
 }
