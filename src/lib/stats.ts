@@ -37,7 +37,7 @@ export function totalKmAllTime(entries: Entry[]): number {
 }
 
 export function byExpenseCategory(entries: Entry[]): Record<ExpenseCategory, number> {
-  const out: Record<ExpenseCategory, number> = { combustivel: 0, alimentacao: 0, manutencao: 0, outros: 0 };
+  const out: Record<ExpenseCategory, number> = { combustivel: 0, alimentacao: 0, manutencao_preventiva: 0, manutencao: 0, outros: 0 };
   entries.forEach((e) => {
     if (e.type === "expense") out[e.expense.category] += e.expense.amount;
   });
