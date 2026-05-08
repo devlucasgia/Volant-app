@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
-import { APP_META, EXPENSE_META, Entry } from "@/types";
+import { Entry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function History() {
-  const { entries, removeEntry } = useData();
+  const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
 
   const grouped = entries.reduce<Record<string, Entry[]>>((acc, e) => {
     const day = format(new Date(e.date), "yyyy-MM-dd");
