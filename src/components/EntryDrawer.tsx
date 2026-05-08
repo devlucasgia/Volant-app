@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
-import { AppName, APP_META, ExpenseCategory, MaintenanceType } from "@/types";
+import { AppName, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
