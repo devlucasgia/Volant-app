@@ -47,9 +47,14 @@ export default function History() {
                     {e.type === "earning" ? (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold", APP_META[e.app].badgeClass)}>
-                            {APP_META[e.app].label}
-                          </span>
+                          {(() => {
+                            const m = platformMetaFor(e.app);
+                            return (
+                              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ backgroundColor: m.hex }}>
+                                <span className="leading-none">{m.emoji}</span>{m.label}
+                              </span>
+                            );
+                          })()}
                           <span className="text-xs text-muted-foreground">
                             {e.km}km · {e.hours}h
                           </span>
@@ -58,7 +63,7 @@ export default function History() {
                       </>
                     ) : (
                       <>
-                        <div className="text-sm font-medium">{EXPENSE_META[e.expense.category].label}</div>
+                        <div className="text-sm font-medium">{expenseMetaFor(e.expense.category).label}</div>
                         {e.expense.description && <div className="truncate text-xs text-muted-foreground">{e.expense.description}</div>}
                       </>
                     )}
