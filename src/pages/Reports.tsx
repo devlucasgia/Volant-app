@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { byApp, byExpenseCategory, summarize } from "@/lib/stats";
-import { APP_META, AppName, Entry, EarningEntry } from "@/types";
+import { Entry, EarningEntry } from "@/types";
 import { brl, num } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
