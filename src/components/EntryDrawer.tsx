@@ -298,6 +298,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         type="expense"
         onCreated={(key) => setCategory(key as ExpenseCategory)}
       />
+      <CategoryDialog
+        open={platDialogOpen}
+        onOpenChange={setPlatDialogOpen}
+        type="earning"
+        onCreated={(key) => setApp(key as AppName)}
+      />
     </Drawer>
   );
 }
