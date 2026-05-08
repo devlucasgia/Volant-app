@@ -104,7 +104,7 @@ export default function Reports() {
       ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor", "Observações"],
       ...filtered.map((e) =>
         e.type === "earning"
-          ? [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), e.gross.toFixed(2), e.notes || ""]
+          ? [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), e.gross.toFixed(2), e.notes || ""]
           : [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "", "", e.expense.amount.toFixed(2), e.expense.description || ""]
       ),
     ];
@@ -142,7 +142,7 @@ export default function Reports() {
       head: [["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor"]],
       body: filtered.map((e) =>
         e.type === "earning"
-          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), brl(e.gross)]
+          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), brl(e.gross)]
           : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
       ),
       theme: "grid",
