@@ -81,9 +81,12 @@ export default function Reports() {
     });
   }, [days, filtered]);
 
-  const appsChartData = (Object.keys(apps) as AppName[])
+  const appsChartData = Object.keys(apps)
     .filter((k) => apps[k] > 0)
-    .map((k) => ({ name: APP_META[k].label, value: Math.round(apps[k] * 100) / 100, fill: APP_HEX[k] }));
+    .map((k) => {
+      const m = platformMetaFor(k);
+      return { name: m.label, value: Math.round(apps[k] * 100) / 100, fill: m.hex };
+    });
 
   const expensesChartData = Object.keys(expCats)
     .filter((k) => expCats[k] > 0)
