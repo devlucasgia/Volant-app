@@ -28,9 +28,6 @@ import { toast } from "sonner";
 type RangeMode = "range" | "month";
 type ChartKey = "apps" | "expenses" | "perHour" | "perKm" | "kmTotal" | "hoursTotal" | "netDaily";
 
-const APP_HEX: Record<AppName, string> = {
-  uber: "#000000", "99": "#FFCC00", indriver: "#A4E333", particular: "#3B82F6",
-};
 
 const CHARTS: { key: ChartKey; label: string }[] = [
   { key: "netDaily", label: "Lucro líquido por dia" },
