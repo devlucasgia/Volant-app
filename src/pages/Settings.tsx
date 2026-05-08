@@ -32,6 +32,7 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
+  const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
   useEffect(() => {
     if (!user) return;
