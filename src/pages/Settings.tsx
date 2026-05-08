@@ -342,7 +342,7 @@ export default function SettingsPage() {
               </div>
               {[
                 { k: "goal" as const, label: "Meta diária" },
-                { k: "stats" as const, label: "R$/hora, R$/km, Bruto, Gastos" },
+                { k: "stats" as const, label: "Performance (R$/hora, R$/km)" },
                 { k: "byApp" as const, label: "Por aplicativo" },
                 { k: "byExpense" as const, label: "Por gastos" },
               ].map((w) => (
