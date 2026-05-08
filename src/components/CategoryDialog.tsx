@@ -58,7 +58,11 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editing ? "Editar categoria" : "Nova categoria"}</DialogTitle>
+          <DialogTitle>
+            {editing
+              ? (type === "earning" ? "Editar plataforma" : "Editar categoria")
+              : (type === "earning" ? "Nova plataforma" : "Nova categoria")}
+          </DialogTitle>
           <DialogDescription>
             Personalize com nome, ícone e cor.
           </DialogDescription>
