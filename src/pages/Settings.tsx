@@ -244,6 +244,40 @@ export default function SettingsPage() {
             </AccordionContent>
           </AccordionItem>
 
+          {/* Earning platforms */}
+          <AccordionItem value="plats" className="rounded-2xl border border-border bg-card px-4">
+            <AccordionTrigger className="py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Tags className="h-4 w-4 text-primary" />
+                <span className="font-semibold">Plataformas de lucro</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-2">
+              <Button size="sm" variant="outline" className="w-full" onClick={() => setPlatDialog({ open: true, editing: null })}>
+                <Plus className="mr-1 h-4 w-4" /> Nova plataforma
+              </Button>
+              <div className="space-y-2">
+                {earningPlatforms.map((p) => (
+                  <div key={p.key} className="flex items-center gap-2 rounded-lg border border-border p-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md text-base"
+                      style={{ backgroundColor: p.hex + "33" }}>{p.emoji}</span>
+                    <div className="flex-1 text-sm font-medium">{p.label}</div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8"
+                      onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex } })}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {p.isCustom && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                        onClick={() => tryDeletePlatform(p)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Categories */}
           <AccordionItem value="cats" className="rounded-2xl border border-border bg-card px-4">
             <AccordionTrigger className="py-3 hover:no-underline">
