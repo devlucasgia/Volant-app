@@ -30,7 +30,8 @@ interface Props {
 }
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
-  const { addEntry, expenseCategories } = useData();
+  const { addEntry, expenseCategories, earningPlatforms } = useData();
+  const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
