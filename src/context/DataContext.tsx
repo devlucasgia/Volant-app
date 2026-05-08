@@ -25,10 +25,13 @@ interface DataCtx {
   refreshCars: () => Promise<void>;
   setActiveCar: (id: string) => Promise<void>;
 
-  // categories
+  // categories (expenses)
   earningCategories: CustomCategory[];
   expenseCategories: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
   expenseMetaFor: (key: string) => CategoryMeta;
+  // earning platforms
+  earningPlatforms: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
+  platformMetaFor: (key: string) => PlatformMeta;
   addCategory: (c: CategoryInput) => Promise<void>;
   updateCategory: (id: string, patch: Partial<CategoryInput>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
