@@ -165,22 +165,32 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
               <TabsContent value="earning" className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <Label>Aplicativo</Label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {(Object.keys(APP_META) as AppName[]).map((k) => (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => setApp(k)}
-                        className={cn(
-                          "rounded-lg border-2 px-2 py-2.5 text-xs font-semibold transition-all",
-                          APP_META[k].colorClass,
-                          app === k ? "border-primary ring-2 ring-primary/40" : "border-transparent opacity-60"
-                        )}
-                      >
-                        {APP_META[k].label}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between">
+                    <Label>Plataforma</Label>
+                    <button type="button" onClick={() => setPlatDialogOpen(true)}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary">
+                      <Plus className="h-3 w-3" /> Nova plataforma
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {earningPlatforms.map((p) => {
+                      const selected = app === p.key;
+                      return (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => setApp(p.key)}
+                          className={cn(
+                            "flex items-center justify-center gap-1 rounded-lg border-2 px-2 py-2.5 text-xs font-semibold transition-all",
+                            selected ? "border-primary ring-2 ring-primary/40 text-white" : "border-transparent text-white opacity-70"
+                          )}
+                          style={{ backgroundColor: p.hex }}
+                        >
+                          <span className="text-base leading-none">{p.emoji}</span>
+                          <span className="truncate">{p.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
