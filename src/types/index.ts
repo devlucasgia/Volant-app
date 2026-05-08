@@ -1,11 +1,27 @@
-export type AppName = "uber" | "99" | "indriver" | "particular";
+// Platforms are now dynamic. AppName is a string key resolved via DataContext.platformMetaFor
+export type AppName = string;
 
-export const APP_META: Record<AppName, { label: string; colorClass: string; badgeClass: string }> = {
-  uber: { label: "Uber", colorClass: "bg-brand-uber text-brand-uber-foreground", badgeClass: "bg-brand-uber text-brand-uber-foreground" },
-  "99": { label: "99", colorClass: "bg-brand-99 text-brand-99-foreground", badgeClass: "bg-brand-99 text-brand-99-foreground" },
-  indriver: { label: "inDriver", colorClass: "bg-brand-indriver text-brand-indriver-foreground", badgeClass: "bg-brand-indriver text-brand-indriver-foreground" },
-  particular: { label: "Particular", colorClass: "bg-brand-particular text-brand-particular-foreground", badgeClass: "bg-brand-particular text-brand-particular-foreground" },
+export interface PlatformMeta { label: string; emoji: string; hex: string }
+
+export const BUILTIN_PLATFORM_META: Record<string, PlatformMeta> = {
+  uber:       { label: "Uber",       emoji: "🚗", hex: "#000000" },
+  "99":       { label: "99",         emoji: "🚕", hex: "#FFCC00" },
+  indriver:   { label: "inDrive",    emoji: "🟢", hex: "#A4E333" },
+  particular: { label: "Particular", emoji: "👤", hex: "#3B82F6" },
 };
+
+// Back-compat shim. Components increasingly use `platformMetaFor` from DataContext.
+export const APP_META: Record<string, { label: string; colorClass: string; badgeClass: string }> = new Proxy(
+  {} as any,
+  {
+    get(_t, prop: string) {
+      const m = BUILTIN_PLATFORM_META[prop] || { label: String(prop), emoji: "🚗", hex: "#6B7280" };
+      // Tailwind cannot consume runtime hex via class; consumers prefer platformMetaFor for styling.
+      const cls = "bg-muted text-foreground";
+      return { label: m.label, colorClass: cls, badgeClass: cls };
+    },
+  },
+);
 
 export type ExpenseCategory = string;
 
