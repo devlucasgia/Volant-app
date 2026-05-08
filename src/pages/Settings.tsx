@@ -21,7 +21,7 @@ import type { Car as CarType } from "@/types";
 export default function SettingsPage() {
   const {
     settings, updateSettings, entries, cars, activeCar, carInitialKm,
-    setActiveCar, refreshCars, expenseCategories, deleteCategory,
+    setActiveCar, refreshCars, expenseCategories, earningPlatforms, deleteCategory,
   } = useData();
   const { user, signOut } = useAuth();
   const totalKmDriven = totalKmAllTime(entries);
