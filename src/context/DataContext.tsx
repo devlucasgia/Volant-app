@@ -231,7 +231,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const key = c.key || `cat_${Date.now()}`;
     const { error } = await supabase.from("categories").insert({
       user_id: user.id, type: c.type, key, label: c.label, emoji: c.emoji, color: c.color,
-      is_custom: !(c.type === "expense" && key in BUILTIN_EXPENSE_META),
+      is_custom: !((c.type === "expense" && key in BUILTIN_EXPENSE_META) || (c.type === "earning" && key in BUILTIN_PLATFORM_META)),
     });
     if (error) throw error;
     await loadCategories(user.id);
