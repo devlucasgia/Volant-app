@@ -70,7 +70,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Nome</Label>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ex: Pedágio" />
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={type === "earning" ? "Ex: Cabify" : "Ex: Pedágio"} />
           </div>
           <div className="space-y-2">
             <Label>Ícone</Label>
