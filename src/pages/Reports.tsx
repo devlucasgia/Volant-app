@@ -40,7 +40,7 @@ const CHARTS: { key: ChartKey; label: string }[] = [
 ];
 
 export default function Reports() {
-  const { entries, expenseMetaFor } = useData();
+  const { entries, expenseMetaFor, platformMetaFor } = useData();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
