@@ -24,10 +24,10 @@ export function summarize(entries: Entry[]) {
   return { gross, totalExpenses, net, totalKm, totalHours, perHour, perKm, count: earnings.length };
 }
 
-export function byApp(entries: Entry[]): Record<AppName, number> {
-  const out: Record<AppName, number> = { uber: 0, "99": 0, indriver: 0, particular: 0 };
+export function byApp(entries: Entry[]): Record<string, number> {
+  const out: Record<string, number> = {};
   entries.forEach((e) => {
-    if (e.type === "earning") out[e.app] += e.gross;
+    if (e.type === "earning") out[e.app] = (out[e.app] || 0) + e.gross;
   });
   return out;
 }

@@ -21,7 +21,7 @@ import type { Car as CarType } from "@/types";
 export default function SettingsPage() {
   const {
     settings, updateSettings, entries, cars, activeCar, carInitialKm,
-    setActiveCar, refreshCars, expenseCategories, deleteCategory,
+    setActiveCar, refreshCars, expenseCategories, earningPlatforms, deleteCategory,
   } = useData();
   const { user, signOut } = useAuth();
   const totalKmDriven = totalKmAllTime(entries);
@@ -32,6 +32,7 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
+  const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
   useEffect(() => {
     if (!user) return;
@@ -65,6 +66,18 @@ export default function SettingsPage() {
     }
     await refreshCars();
     toast.success("Carro excluído");
+  };
+
+  const tryDeletePlatform = async (p: { id?: string; key: string; label: string }) => {
+    if (!p.id) return;
+    const used = entries.some((e) => e.type === "earning" && e.app === p.key);
+    if (used) {
+      if (!confirm(`A plataforma "${p.label}" possui ganhos registrados. Excluir mesmo assim manterá os registros antigos com o nome atual. Continuar?`)) return;
+    } else {
+      if (!confirm(`Excluir "${p.label}"?`)) return;
+    }
+    await deleteCategory(p.id);
+    toast.success("Plataforma excluída");
   };
 
   const clearAll = async () => {
@@ -231,6 +244,40 @@ export default function SettingsPage() {
             </AccordionContent>
           </AccordionItem>
 
+          {/* Earning platforms */}
+          <AccordionItem value="plats" className="rounded-2xl border border-border bg-card px-4">
+            <AccordionTrigger className="py-3 hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Tags className="h-4 w-4 text-primary" />
+                <span className="font-semibold">Plataformas de lucro</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 space-y-2">
+              <Button size="sm" variant="outline" className="w-full" onClick={() => setPlatDialog({ open: true, editing: null })}>
+                <Plus className="mr-1 h-4 w-4" /> Nova plataforma
+              </Button>
+              <div className="space-y-2">
+                {earningPlatforms.map((p) => (
+                  <div key={p.key} className="flex items-center gap-2 rounded-lg border border-border p-2.5">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-md text-base"
+                      style={{ backgroundColor: p.hex + "33" }}>{p.emoji}</span>
+                    <div className="flex-1 text-sm font-medium">{p.label}</div>
+                    <Button size="icon" variant="ghost" className="h-8 w-8"
+                      onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex } })}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    {p.isCustom && (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                        onClick={() => tryDeletePlatform(p)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
           {/* Categories */}
           <AccordionItem value="cats" className="rounded-2xl border border-border bg-card px-4">
             <AccordionTrigger className="py-3 hover:no-underline">
@@ -295,7 +342,7 @@ export default function SettingsPage() {
               </div>
               {[
                 { k: "goal" as const, label: "Meta diária" },
-                { k: "stats" as const, label: "R$/hora, R$/km, Bruto, Gastos" },
+                { k: "stats" as const, label: "Performance (R$/hora, R$/km)" },
                 { k: "byApp" as const, label: "Por aplicativo" },
                 { k: "byExpense" as const, label: "Por gastos" },
               ].map((w) => (
@@ -347,6 +394,13 @@ export default function SettingsPage() {
         onOpenChange={(o) => setCatDialog((s) => ({ ...s, open: o }))}
         type="expense"
         editing={catDialog.editing}
+      />
+
+      <CategoryDialog
+        open={platDialog.open}
+        onOpenChange={(o) => setPlatDialog((s) => ({ ...s, open: o }))}
+        type="earning"
+        editing={platDialog.editing}
       />
     </>
   );

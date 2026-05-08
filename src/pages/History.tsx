@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
-import { APP_META, EXPENSE_META, Entry } from "@/types";
+import { Entry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export default function History() {
-  const { entries, removeEntry } = useData();
+  const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
 
   const grouped = entries.reduce<Record<string, Entry[]>>((acc, e) => {
     const day = format(new Date(e.date), "yyyy-MM-dd");
@@ -47,9 +47,14 @@ export default function History() {
                     {e.type === "earning" ? (
                       <>
                         <div className="flex items-center gap-2">
-                          <span className={cn("inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold", APP_META[e.app].badgeClass)}>
-                            {APP_META[e.app].label}
-                          </span>
+                          {(() => {
+                            const m = platformMetaFor(e.app);
+                            return (
+                              <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold text-white" style={{ backgroundColor: m.hex }}>
+                                <span className="leading-none">{m.emoji}</span>{m.label}
+                              </span>
+                            );
+                          })()}
                           <span className="text-xs text-muted-foreground">
                             {e.km}km · {e.hours}h
                           </span>
@@ -58,7 +63,7 @@ export default function History() {
                       </>
                     ) : (
                       <>
-                        <div className="text-sm font-medium">{EXPENSE_META[e.expense.category].label}</div>
+                        <div className="text-sm font-medium">{expenseMetaFor(e.expense.category).label}</div>
                         {e.expense.description && <div className="truncate text-xs text-muted-foreground">{e.expense.description}</div>}
                       </>
                     )}

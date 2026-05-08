@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
-import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, CategoryMeta, DashboardWidgets } from "@/types";
+import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, BUILTIN_PLATFORM_META, CategoryMeta, PlatformMeta, DashboardWidgets } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -25,10 +25,13 @@ interface DataCtx {
   refreshCars: () => Promise<void>;
   setActiveCar: (id: string) => Promise<void>;
 
-  // categories
+  // categories (expenses)
   earningCategories: CustomCategory[];
   expenseCategories: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
   expenseMetaFor: (key: string) => CategoryMeta;
+  // earning platforms
+  earningPlatforms: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
+  platformMetaFor: (key: string) => PlatformMeta;
   addCategory: (c: CategoryInput) => Promise<void>;
   updateCategory: (id: string, patch: Partial<CategoryInput>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -196,12 +199,39 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const earningCategories = useMemo(() => categories.filter((c) => c.type === "earning"), [categories]);
 
+  // ---- Earning platforms (mirrors expense category pattern)
+  const platformOverrides = useMemo(() => {
+    const map: Record<string, CustomCategory> = {};
+    for (const c of categories) if (c.type === "earning") map[c.key] = c;
+    return map;
+  }, [categories]);
+
+  const platformMetaFor = useCallback((key: string): PlatformMeta => {
+    const ov = platformOverrides[key];
+    if (ov) return { label: ov.label, emoji: ov.emoji, hex: ov.color };
+    if (BUILTIN_PLATFORM_META[key]) return BUILTIN_PLATFORM_META[key];
+    return { label: key, emoji: "🚗", hex: "#6B7280" };
+  }, [platformOverrides]);
+
+  const earningPlatforms = useMemo(() => {
+    const builtinKeys = Object.keys(BUILTIN_PLATFORM_META);
+    const builtins = builtinKeys.map((k) => {
+      const m = platformMetaFor(k);
+      const ov = platformOverrides[k];
+      return { key: k, label: m.label, emoji: m.emoji, hex: m.hex, isCustom: false, id: ov?.id };
+    });
+    const customs = categories
+      .filter((c) => c.type === "earning" && !builtinKeys.includes(c.key))
+      .map((c) => ({ key: c.key, label: c.label, emoji: c.emoji, hex: c.color, isCustom: true, id: c.id }));
+    return [...builtins, ...customs];
+  }, [categories, platformOverrides, platformMetaFor]);
+
   const addCategory = useCallback(async (c: CategoryInput) => {
     if (!user) return;
     const key = c.key || `cat_${Date.now()}`;
     const { error } = await supabase.from("categories").insert({
       user_id: user.id, type: c.type, key, label: c.label, emoji: c.emoji, color: c.color,
-      is_custom: !(c.type === "expense" && key in BUILTIN_EXPENSE_META),
+      is_custom: !((c.type === "expense" && key in BUILTIN_EXPENSE_META) || (c.type === "earning" && key in BUILTIN_PLATFORM_META)),
     });
     if (error) throw error;
     await loadCategories(user.id);
@@ -230,9 +260,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
       addEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
-      earningCategories, expenseCategories, expenseMetaFor, addCategory, updateCategory, deleteCategory }),
+      earningCategories, expenseCategories, expenseMetaFor,
+      earningPlatforms, platformMetaFor,
+      addCategory, updateCategory, deleteCategory }),
     [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
-      earningCategories, expenseCategories, expenseMetaFor, addCategory, updateCategory, deleteCategory]
+      earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor,
+      addCategory, updateCategory, deleteCategory]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -7,8 +7,8 @@ import { useData } from "@/context/DataContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const EMOJI_OPTIONS = ["⛽","🍔","🔧","📦","💰","🚗","🛞","🪛","💡","☕","🍕","🛒","🏥","🎁","📱","🧾","🚿","🅿️","🛣️","💸"];
-const COLOR_OPTIONS = ["#F59E0B","#EF4444","#10B981","#3B82F6","#8B5CF6","#EC4899","#14B8A6","#6366F1","#F97316","#6B7280"];
+const EMOJI_OPTIONS = ["⛽","🍔","🔧","📦","💰","🚗","🚕","🛞","🪛","💡","☕","🍕","🛒","🏥","🎁","📱","🧾","🚿","🅿️","🛣️","💸","🟢","👤","🏍️","🚙"];
+const COLOR_OPTIONS = ["#F59E0B","#EF4444","#10B981","#3B82F6","#8B5CF6","#EC4899","#14B8A6","#6366F1","#F97316","#6B7280","#000000","#FFCC00","#A4E333"];
 
 interface Props {
   open: boolean;
@@ -58,7 +58,11 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editing ? "Editar categoria" : "Nova categoria"}</DialogTitle>
+          <DialogTitle>
+            {editing
+              ? (type === "earning" ? "Editar plataforma" : "Editar categoria")
+              : (type === "earning" ? "Nova plataforma" : "Nova categoria")}
+          </DialogTitle>
           <DialogDescription>
             Personalize com nome, ícone e cor.
           </DialogDescription>
@@ -66,7 +70,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Nome</Label>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Ex: Pedágio" />
+            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder={type === "earning" ? "Ex: Cabify" : "Ex: Pedágio"} />
           </div>
           <div className="space-y-2">
             <Label>Ícone</Label>

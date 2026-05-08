@@ -1,13 +1,12 @@
 import { useMemo, useState } from "react";
-import { PageHeader, StatCard } from "@/components/ui-bits";
+import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
-import { APP_META, AppName } from "@/types";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, CalendarDays } from "lucide-react";
+import { Wrench, Target, Clock, Route, CalendarDays, Gauge } from "lucide-react";
 import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,7 +17,7 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, expenseMetaFor } = useData();
+  const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor } = useData();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
   const widgets = settings.dashboardWidgets;
@@ -49,6 +48,13 @@ export default function Dashboard() {
   const kmToNext = settings.maintenanceIntervalKm - kmSinceMaint;
   const showMaintAlert = kmToNext <= 1000;
 
+  const activeApps = Object.keys(apps)
+    .filter((k) => apps[k] > 0)
+    .sort((a, b) => apps[b] - apps[a]);
+  const activeExp = Object.keys(expCats)
+    .filter((k) => expCats[k] > 0)
+    .sort((a, b) => expCats[b] - expCats[a]);
+
   return (
     <>
       <PageHeader
@@ -78,13 +84,26 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Net highlight */}
-        <div className="overflow-hidden rounded-2xl gradient-success p-5 text-primary-foreground shadow-elevated">
-          <div className="text-xs font-medium uppercase tracking-wider opacity-90">Lucro líquido</div>
-          <div className="mt-1 text-4xl font-bold tabular-nums">{brl(s.net)}</div>
-          <div className="mt-3 flex justify-between text-xs opacity-90">
-            <span>Bruto: {brl(s.gross)}</span>
-            <span>Gastos: {brl(s.totalExpenses)}</span>
+        {/* Net highlight — refined card */}
+        <div className="relative overflow-hidden rounded-2xl border border-success/20 bg-gradient-to-br from-success/15 via-success/8 to-transparent p-5 shadow-elevated">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-success/15 blur-3xl" />
+          <div className="relative">
+            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-success">
+              <Gauge className="h-3.5 w-3.5" /> Lucro líquido
+            </div>
+            <div className="mt-1 text-4xl font-bold tabular-nums text-foreground">
+              {brl(s.net)}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bruto</div>
+                <div className="mt-0.5 text-base font-bold tabular-nums text-foreground">{brl(s.gross)}</div>
+              </div>
+              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Gastos</div>
+                <div className="mt-0.5 text-base font-bold tabular-nums text-destructive">{brl(s.totalExpenses)}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -129,37 +148,63 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Stats grid */}
+        {/* Performance — compact dual indicator */}
         {widgets.stats && (
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="R$ / hora" value={brl(s.perHour)} hint={<><Clock className="mr-1 inline h-3 w-3" />{num(s.totalHours, 1)}h</>} accent="success" />
-            <StatCard label="R$ / km" value={brl(s.perKm)} hint={<><Route className="mr-1 inline h-3 w-3" />{num(s.totalKm, 1)} km</>} accent="info" />
-            <StatCard label="Bruto" value={brl(s.gross)} hint={`${s.count} corrida${s.count === 1 ? "" : "s"}`} />
-            <StatCard label="Gastos" value={brl(s.totalExpenses)} accent="destructive" />
-          </div>
+          <section>
+            <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Gauge className="h-3.5 w-3.5" /> Performance
+            </div>
+            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-3">
+              <div className="rounded-xl bg-success/8 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+                  <Clock className="h-3 w-3" /> R$ / hora
+                </div>
+                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalHours, 1)}h trabalhadas</div>
+              </div>
+              <div className="rounded-xl bg-info/10 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+                  <Route className="h-3 w-3" /> R$ / km
+                </div>
+                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perKm)}</div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalKm, 1)} km rodados</div>
+              </div>
+            </div>
+          </section>
         )}
 
-        {/* By app */}
+        {/* By app — dynamic + empty state */}
         {widgets.byApp && (
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 text-sm font-semibold">Por aplicativo</div>
-            <div className="space-y-2">
-              {(Object.keys(apps) as AppName[]).map((k) => {
-                const v = apps[k];
-                const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
-                return (
-                  <div key={k} className="flex items-center gap-3">
-                    <span className={cn("inline-flex h-7 min-w-[68px] items-center justify-center rounded-md px-2 text-xs font-bold", APP_META[k].badgeClass)}>
-                      {APP_META[k].label}
-                    </span>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div className={cn("absolute inset-y-0 left-0 rounded-full", APP_META[k].badgeClass)} style={{ width: `${pct}%` }} />
+            {activeApps.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+                Nenhum ganho registrado neste período.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activeApps.map((k) => {
+                  const v = apps[k];
+                  const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
+                  const meta = platformMetaFor(k);
+                  return (
+                    <div key={k} className="flex items-center gap-3">
+                      <span
+                        className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                        style={{ backgroundColor: meta.hex }}
+                      >
+                        <span className="text-base leading-none">{meta.emoji}</span>
+                        {meta.label}
+                      </span>
+                      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
+                      </div>
+                      <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                     </div>
-                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -167,31 +212,34 @@ export default function Dashboard() {
         {widgets.byExpense && (
           <div className="rounded-2xl border border-border bg-card p-4">
             <div className="mb-3 text-sm font-semibold">Por gastos</div>
-            <div className="space-y-2">
-              {Object.keys(expCats).map((k) => {
-                const v = expCats[k];
-                const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
-                const Meta = expenseMetaFor(k);
-                return (
-                  <div key={k} className="flex items-center gap-3">
-                    <span
-                      className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                      style={{ backgroundColor: Meta.hex }}
-                    >
-                      <span className="text-base leading-none">{Meta.emoji}</span>
-                      {Meta.label}
-                    </span>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-full"
-                        style={{ width: `${pct}%`, backgroundColor: Meta.hex }}
-                      />
+            {activeExp.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+                Nenhum gasto registrado neste período.
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {activeExp.map((k) => {
+                  const v = expCats[k];
+                  const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+                  const Meta = expenseMetaFor(k);
+                  return (
+                    <div key={k} className="flex items-center gap-3">
+                      <span
+                        className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
+                        style={{ backgroundColor: Meta.hex }}
+                      >
+                        <span className="text-base leading-none">{Meta.emoji}</span>
+                        {Meta.label}
+                      </span>
+                      <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                        <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
+                      </div>
+                      <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                     </div>
-                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

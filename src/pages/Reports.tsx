@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { PageHeader, StatCard } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { byApp, byExpenseCategory, summarize } from "@/lib/stats";
-import { APP_META, AppName, Entry, EarningEntry } from "@/types";
+import { Entry, EarningEntry } from "@/types";
 import { brl, num } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -28,9 +28,6 @@ import { toast } from "sonner";
 type RangeMode = "range" | "month";
 type ChartKey = "apps" | "expenses" | "perHour" | "perKm" | "kmTotal" | "hoursTotal" | "netDaily";
 
-const APP_HEX: Record<AppName, string> = {
-  uber: "#000000", "99": "#FFCC00", indriver: "#A4E333", particular: "#3B82F6",
-};
 
 const CHARTS: { key: ChartKey; label: string }[] = [
   { key: "netDaily", label: "Lucro líquido por dia" },
@@ -43,7 +40,7 @@ const CHARTS: { key: ChartKey; label: string }[] = [
 ];
 
 export default function Reports() {
-  const { entries, expenseMetaFor } = useData();
+  const { entries, expenseMetaFor, platformMetaFor } = useData();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
@@ -84,9 +81,12 @@ export default function Reports() {
     });
   }, [days, filtered]);
 
-  const appsChartData = (Object.keys(apps) as AppName[])
+  const appsChartData = Object.keys(apps)
     .filter((k) => apps[k] > 0)
-    .map((k) => ({ name: APP_META[k].label, value: Math.round(apps[k] * 100) / 100, fill: APP_HEX[k] }));
+    .map((k) => {
+      const m = platformMetaFor(k);
+      return { name: m.label, value: Math.round(apps[k] * 100) / 100, fill: m.hex };
+    });
 
   const expensesChartData = Object.keys(expCats)
     .filter((k) => expCats[k] > 0)
@@ -104,7 +104,7 @@ export default function Reports() {
       ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor", "Observações"],
       ...filtered.map((e) =>
         e.type === "earning"
-          ? [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), e.gross.toFixed(2), e.notes || ""]
+          ? [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), e.gross.toFixed(2), e.notes || ""]
           : [format(new Date(e.date), "yyyy-MM-dd HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "", "", e.expense.amount.toFixed(2), e.expense.description || ""]
       ),
     ];
@@ -142,7 +142,7 @@ export default function Reports() {
       head: [["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor"]],
       body: filtered.map((e) =>
         e.type === "earning"
-          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", APP_META[e.app].label, String(e.km), String(e.hours), brl(e.gross)]
+          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), brl(e.gross)]
           : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
       ),
       theme: "grid",
