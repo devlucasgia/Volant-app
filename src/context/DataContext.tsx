@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
-import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, CategoryMeta, DashboardWidgets } from "@/types";
+import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, BUILTIN_PLATFORM_META, CategoryMeta, PlatformMeta, DashboardWidgets } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
