@@ -395,6 +395,13 @@ export default function SettingsPage() {
         type="expense"
         editing={catDialog.editing}
       />
+
+      <CategoryDialog
+        open={platDialog.open}
+        onOpenChange={(o) => setPlatDialog((s) => ({ ...s, open: o }))}
+        type="earning"
+        editing={platDialog.editing}
+      />
     </>
   );
 }
