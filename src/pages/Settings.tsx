@@ -68,6 +68,18 @@ export default function SettingsPage() {
     toast.success("Carro excluído");
   };
 
+  const tryDeletePlatform = async (p: { id?: string; key: string; label: string }) => {
+    if (!p.id) return;
+    const used = entries.some((e) => e.type === "earning" && e.app === p.key);
+    if (used) {
+      if (!confirm(`A plataforma "${p.label}" possui ganhos registrados. Excluir mesmo assim manterá os registros antigos com o nome atual. Continuar?`)) return;
+    } else {
+      if (!confirm(`Excluir "${p.label}"?`)) return;
+    }
+    await deleteCategory(p.id);
+    toast.success("Plataforma excluída");
+  };
+
   const clearAll = async () => {
     if (!confirm("Apagar todos os seus registros? Esta ação é irreversível.")) return;
     if (!user) return;
