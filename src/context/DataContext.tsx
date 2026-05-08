@@ -199,6 +199,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const earningCategories = useMemo(() => categories.filter((c) => c.type === "earning"), [categories]);
 
+  // ---- Earning platforms (mirrors expense category pattern)
+  const platformOverrides = useMemo(() => {
+    const map: Record<string, CustomCategory> = {};
+    for (const c of categories) if (c.type === "earning") map[c.key] = c;
+    return map;
+  }, [categories]);
+
+  const platformMetaFor = useCallback((key: string): PlatformMeta => {
+    const ov = platformOverrides[key];
+    if (ov) return { label: ov.label, emoji: ov.emoji, hex: ov.color };
+    if (BUILTIN_PLATFORM_META[key]) return BUILTIN_PLATFORM_META[key];
+    return { label: key, emoji: "🚗", hex: "#6B7280" };
+  }, [platformOverrides]);
+
+  const earningPlatforms = useMemo(() => {
+    const builtinKeys = Object.keys(BUILTIN_PLATFORM_META);
+    const builtins = builtinKeys.map((k) => {
+      const m = platformMetaFor(k);
+      const ov = platformOverrides[k];
+      return { key: k, label: m.label, emoji: m.emoji, hex: m.hex, isCustom: false, id: ov?.id };
+    });
+    const customs = categories
+      .filter((c) => c.type === "earning" && !builtinKeys.includes(c.key))
+      .map((c) => ({ key: c.key, label: c.label, emoji: c.emoji, hex: c.color, isCustom: true, id: c.id }));
+    return [...builtins, ...customs];
+  }, [categories, platformOverrides, platformMetaFor]);
+
   const addCategory = useCallback(async (c: CategoryInput) => {
     if (!user) return;
     const key = c.key || `cat_${Date.now()}`;
