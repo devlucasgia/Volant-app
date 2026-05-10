@@ -85,24 +85,28 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Net highlight — refined card */}
-        <div className="relative overflow-hidden rounded-2xl border border-success/20 bg-gradient-to-br from-success/15 via-success/8 to-transparent p-5 shadow-elevated">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-success/15 blur-3xl" />
+        {/* Net highlight — refined premium card */}
+        <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
+          <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
+          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
           <div className="relative">
-            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-success">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
               <Gauge className="h-3.5 w-3.5" /> Lucro líquido
             </div>
-            <div className="mt-1 text-4xl font-bold tabular-nums text-foreground">
+            <div className="mt-1.5 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground">
               {brl(s.net)}
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bruto</div>
-                <div className="mt-0.5 text-base font-bold tabular-nums text-foreground">{brl(s.gross)}</div>
+            <div className="mt-4 flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-success/70" />
+                <span className="text-muted-foreground">Bruto</span>
+                <span className="font-semibold tabular-nums text-foreground/90">{brl(s.gross)}</span>
               </div>
-              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Gastos</div>
-                <div className="mt-0.5 text-base font-bold tabular-nums text-destructive">{brl(s.totalExpenses)}</div>
+              <div className="h-3 w-px bg-border" />
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive/70" />
+                <span className="text-muted-foreground">Gastos</span>
+                <span className="font-semibold tabular-nums text-foreground/90">{brl(s.totalExpenses)}</span>
               </div>
             </div>
           </div>
