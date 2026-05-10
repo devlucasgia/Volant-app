@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import { PlatformLogo } from "@/components/PlatformLogo";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
 import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2, CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard } from "lucide-react";
@@ -259,8 +260,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 {earningPlatforms.map((p) => (
                   <div key={p.key} className="flex items-center gap-2 rounded-lg border border-border p-2.5">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-md text-base"
-                      style={{ backgroundColor: p.hex + "33" }}>{p.emoji}</span>
+                    <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" />
                     <div className="flex-1 text-sm font-medium">{p.label}</div>
                     <Button size="icon" variant="ghost" className="h-8 w-8"
                       onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex } })}>

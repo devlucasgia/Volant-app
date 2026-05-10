@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 
-type State = "idle" | "running" | "resting";
+type State = "idle" | "running" | "resting" | "ended";
 
 interface Persisted {
   state: State;
@@ -29,6 +29,7 @@ interface TimerCtx {
   start: () => void;
   pauseRest: () => void;
   resumeWork: () => void;
+  endJourney: () => void;
   reset: () => void;
 }
 
@@ -40,9 +41,9 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { localStorage.setItem(KEY, JSON.stringify(data)); }, [data]);
 
-  // tick to refresh derived values
+  // tick to refresh derived values only while actively counting
   useEffect(() => {
-    if (data.state === "idle") return;
+    if (data.state !== "running" && data.state !== "resting") return;
     const id = setInterval(() => force((n) => n + 1), 1000);
     return () => clearInterval(id);
   }, [data.state]);
@@ -53,8 +54,8 @@ export function TimerProvider({ children }: { children: ReactNode }) {
 
   const start = useCallback(() => {
     setData((d) => {
-      if (d.state === "running") return d;
-      // closeout previous segment if was resting
+      // From "ended" we don't resume — caller should reset() first.
+      if (d.state === "running" || d.state === "ended") return d;
       const addRest = d.state === "resting" && d.segmentStart ? Date.now() - d.segmentStart : 0;
       return { ...d, state: "running", restMs: d.restMs + addRest, segmentStart: Date.now() };
     });
@@ -76,11 +77,26 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const endJourney = useCallback(() => {
+    setData((d) => {
+      if (d.state === "idle" || d.state === "ended") return d;
+      const elapsed = d.segmentStart ? Date.now() - d.segmentStart : 0;
+      const addWork = d.state === "running" ? elapsed : 0;
+      const addRest = d.state === "resting" ? elapsed : 0;
+      return {
+        state: "ended",
+        workMs: d.workMs + addWork,
+        restMs: d.restMs + addRest,
+        segmentStart: null,
+      };
+    });
+  }, []);
+
   const reset = useCallback(() => setData(DEFAULT), []);
 
   const value = useMemo<TimerCtx>(() => ({
-    state: data.state, workMs, restMs, start, pauseRest, resumeWork, reset,
-  }), [data.state, workMs, restMs, start, pauseRest, resumeWork, reset]);
+    state: data.state, workMs, restMs, start, pauseRest, resumeWork, endJourney, reset,
+  }), [data.state, workMs, restMs, start, pauseRest, resumeWork, endJourney, reset]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

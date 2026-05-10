@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Wrench, Target, Clock, Route, CalendarDays, Gauge } from "lucide-react";
 import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PlatformLogo } from "@/components/PlatformLogo";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
@@ -84,24 +85,28 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Net highlight — refined card */}
-        <div className="relative overflow-hidden rounded-2xl border border-success/20 bg-gradient-to-br from-success/15 via-success/8 to-transparent p-5 shadow-elevated">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-success/15 blur-3xl" />
+        {/* Net highlight — refined premium card */}
+        <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
+          <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
+          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
           <div className="relative">
-            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-success">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
               <Gauge className="h-3.5 w-3.5" /> Lucro líquido
             </div>
-            <div className="mt-1 text-4xl font-bold tabular-nums text-foreground">
+            <div className="mt-1.5 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground">
               {brl(s.net)}
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Bruto</div>
-                <div className="mt-0.5 text-base font-bold tabular-nums text-foreground">{brl(s.gross)}</div>
+            <div className="mt-4 flex items-center gap-4 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-success/70" />
+                <span className="text-muted-foreground">Bruto</span>
+                <span className="font-semibold tabular-nums text-foreground/90">{brl(s.gross)}</span>
               </div>
-              <div className="rounded-xl border border-border/60 bg-card/60 p-3 backdrop-blur">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Gastos</div>
-                <div className="mt-0.5 text-base font-bold tabular-nums text-destructive">{brl(s.totalExpenses)}</div>
+              <div className="h-3 w-px bg-border" />
+              <div className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-destructive/70" />
+                <span className="text-muted-foreground">Gastos</span>
+                <span className="font-semibold tabular-nums text-foreground/90">{brl(s.totalExpenses)}</span>
               </div>
             </div>
           </div>
@@ -148,26 +153,26 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Performance — compact dual indicator */}
+        {/* Performance — uniform dual indicator */}
         {widgets.stats && (
           <section>
-            <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               <Gauge className="h-3.5 w-3.5" /> Performance
             </div>
-            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-3">
-              <div className="rounded-xl bg-success/8 p-3">
+            <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
+              <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
                   <Clock className="h-3 w-3" /> R$ / hora
                 </div>
-                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalHours, 1)}h trabalhadas</div>
+                <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
+                <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
               </div>
-              <div className="rounded-xl bg-info/10 p-3">
+              <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
                   <Route className="h-3 w-3" /> R$ / km
                 </div>
-                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perKm)}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalKm, 1)} km rodados</div>
+                <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
+                <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
               </div>
             </div>
           </section>
@@ -189,13 +194,10 @@ export default function Dashboard() {
                   const meta = platformMetaFor(k);
                   return (
                     <div key={k} className="flex items-center gap-3">
-                      <span
-                        className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                        style={{ backgroundColor: meta.hex }}
-                      >
-                        <span className="text-base leading-none">{meta.emoji}</span>
-                        {meta.label}
-                      </span>
+                      <div className="flex min-w-[120px] items-center gap-2">
+                        <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" />
+                        <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+                      </div>
                       <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
                         <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
                       </div>

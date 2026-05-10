@@ -8,7 +8,7 @@ export function TimerFab() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  if (state === "idle") return null;
+  if (state === "idle" || state === "ended") return null;
   if (location.pathname === "/jornada") return null;
 
   const isRest = state === "resting";

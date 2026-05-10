@@ -13,6 +13,7 @@ import { AppName, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import { PlatformLogo } from "@/components/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -181,13 +182,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                           type="button"
                           onClick={() => setApp(p.key)}
                           className={cn(
-                            "flex items-center justify-center gap-1 rounded-lg border-2 px-2 py-2.5 text-xs font-semibold transition-all",
-                            selected ? "border-primary ring-2 ring-primary/40 text-white" : "border-transparent text-white opacity-70"
+                            "flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-2.5 text-xs font-semibold transition-all bg-card",
+                            selected ? "border-primary ring-2 ring-primary/30" : "border-border opacity-80"
                           )}
-                          style={{ backgroundColor: p.hex }}
                         >
-                          <span className="text-base leading-none">{p.emoji}</span>
-                          <span className="truncate">{p.label}</span>
+                          <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" />
+                          <span className="truncate text-foreground">{p.label}</span>
                         </button>
                       );
                     })}
