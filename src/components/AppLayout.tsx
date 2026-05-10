@@ -10,7 +10,7 @@ export function AppLayout() {
   const { drawerOpen, setDrawerOpen, openDrawer, drawerPreset } = useUI();
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-md pb-24">
+      <main className="mx-auto max-w-md pb-32">
         <Outlet />
       </main>
       <TimerFab />
