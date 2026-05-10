@@ -153,26 +153,26 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Performance — compact dual indicator */}
+        {/* Performance — uniform dual indicator */}
         {widgets.stats && (
           <section>
-            <div className="mb-2 flex items-center gap-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               <Gauge className="h-3.5 w-3.5" /> Performance
             </div>
-            <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border bg-card p-3">
-              <div className="rounded-xl bg-success/8 p-3">
+            <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
+              <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
                   <Clock className="h-3 w-3" /> R$ / hora
                 </div>
-                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalHours, 1)}h trabalhadas</div>
+                <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
+                <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
               </div>
-              <div className="rounded-xl bg-info/10 p-3">
+              <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
                 <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
                   <Route className="h-3 w-3" /> R$ / km
                 </div>
-                <div className="mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perKm)}</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{num(s.totalKm, 1)} km rodados</div>
+                <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
+                <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
               </div>
             </div>
           </section>
