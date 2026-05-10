@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Wrench, Target, Clock, Route, CalendarDays, Gauge } from "lucide-react";
 import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { PlatformLogo } from "@/components/PlatformLogo";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
