@@ -13,6 +13,7 @@ import { AppName, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import { PlatformLogo } from "@/components/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
