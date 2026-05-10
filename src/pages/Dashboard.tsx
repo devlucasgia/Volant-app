@@ -194,13 +194,10 @@ export default function Dashboard() {
                   const meta = platformMetaFor(k);
                   return (
                     <div key={k} className="flex items-center gap-3">
-                      <span
-                        className="inline-flex h-7 min-w-[110px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                        style={{ backgroundColor: meta.hex }}
-                      >
-                        <span className="text-base leading-none">{meta.emoji}</span>
-                        {meta.label}
-                      </span>
+                      <div className="flex min-w-[120px] items-center gap-2">
+                        <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" />
+                        <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+                      </div>
                       <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
                         <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
                       </div>
