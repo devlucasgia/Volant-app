@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import { PlatformLogo } from "@/components/PlatformLogo";
 import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
 import { Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2, CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard } from "lucide-react";
