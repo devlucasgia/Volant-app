@@ -1,11 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
+import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
 import { Entry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MoreVertical, Search, ShieldCheck, Trash2, X } from "lucide-react";
+import { MoreVertical, Pencil, Search, ShieldCheck, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,20 +18,130 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Filter = "all" | "earning" | "expense";
 
-const FILTERS: { key: Filter; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "earning", label: "Ganhos" },
-  { key: "expense", label: "Gastos" },
+const FILTERS = [
+  { key: "all" as const, label: "Todos" },
+  { key: "earning" as const, label: "Ganhos" },
+  { key: "expense" as const, label: "Gastos" },
 ];
+
+const SWIPE_REVEAL = 92; // px
+
+interface SwipeRowProps {
+  entry: Entry;
+  children: React.ReactNode;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function SwipeRow({ entry, children, onEdit, onDelete }: SwipeRowProps) {
+  const [dx, setDx] = useState(0);
+  const startX = useRef<number | null>(null);
+  const startY = useRef<number | null>(null);
+  const dragging = useRef(false);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+    startY.current = e.touches[0].clientY;
+    dragging.current = false;
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (startX.current == null || startY.current == null) return;
+    const x = e.touches[0].clientX - startX.current;
+    const y = e.touches[0].clientY - (startY.current as number);
+    if (!dragging.current) {
+      if (Math.abs(x) > 8 && Math.abs(x) > Math.abs(y)) dragging.current = true;
+      else return;
+    }
+    const clamped = Math.max(-140, Math.min(140, x));
+    setDx(clamped);
+  };
+  const onTouchEnd = () => {
+    if (Math.abs(dx) >= SWIPE_REVEAL * 0.95) {
+      if (dx < 0) {
+        // swipe left -> delete
+        onDelete();
+      } else {
+        // swipe right -> edit
+        onEdit();
+      }
+    }
+    setDx(0);
+    startX.current = null;
+    startY.current = null;
+    dragging.current = false;
+  };
+
+  const revealLeft = dx > 0;   // edit revealed (right side action)
+  const revealRight = dx < 0;  // delete revealed
+  const intensity = Math.min(1, Math.abs(dx) / SWIPE_REVEAL);
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl">
+      {/* Edit underlay (revealed when swiping right) */}
+      <div
+        className="absolute inset-y-0 left-0 flex items-center justify-start pl-4 transition-opacity"
+        style={{ opacity: revealLeft ? intensity : 0, backgroundColor: "hsl(var(--info) / 0.18)" }}
+      >
+        <span className="flex items-center gap-2 rounded-full bg-info px-3 py-1.5 text-xs font-bold text-info-foreground">
+          <Pencil className="h-3.5 w-3.5" /> Editar
+        </span>
+      </div>
+      {/* Delete underlay (revealed when swiping left) */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-center justify-end pr-4 transition-opacity"
+        style={{ opacity: revealRight ? intensity : 0, backgroundColor: "hsl(var(--destructive) / 0.18)" }}
+      >
+        <span className="flex items-center gap-2 rounded-full bg-destructive px-3 py-1.5 text-xs font-bold text-destructive-foreground">
+          <Trash2 className="h-3.5 w-3.5" /> Excluir
+        </span>
+      </div>
+
+      <div
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        style={{
+          transform: `translateX(${dx}px)`,
+          transition: dx === 0 ? "transform 200ms ease" : "none",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function History() {
   const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
+  const { openDrawer } = useUI();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
+
+  // Group ALL day entries (independent of filter) so saldo always reflects
+  // the real net result for the day.
+  const allByDay = useMemo(() => {
+    const acc: Record<string, Entry[]> = {};
+    for (const e of entries) {
+      const day = format(new Date(e.date), "yyyy-MM-dd");
+      (acc[day] ||= []).push(e);
+    }
+    return acc;
+  }, [entries]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -64,6 +176,8 @@ export default function History() {
 
   const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
+  const handleEdit = (e: Entry) => openDrawer({ editing: e });
+
   return (
     <>
       <PageHeader
@@ -86,7 +200,6 @@ export default function History() {
       />
 
       <div className="space-y-4 px-4 pt-4">
-        {/* Search input */}
         {searchOpen && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -109,23 +222,7 @@ export default function History() {
           </div>
         )}
 
-        {/* Filter tabs */}
-        <div className="flex rounded-xl bg-muted p-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium transition-all",
-                filter === f.key
-                  ? "bg-success text-success-foreground shadow-sm"
-                  : "text-muted-foreground"
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <Segmented<Filter> options={FILTERS} value={filter} onChange={setFilter} />
 
         {filtered.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
@@ -137,7 +234,8 @@ export default function History() {
 
         {days.map((day) => {
           const items = grouped[day];
-          const dayBalance = items.reduce(
+          const allItems = allByDay[day] || items;
+          const dayBalance = allItems.reduce(
             (sum, e) => sum + (e.type === "earning" ? e.gross : -e.expense.amount),
             0
           );
@@ -165,11 +263,8 @@ export default function History() {
               <div className="space-y-2">
                 {items.map((e) => {
                   const isEarn = e.type === "earning";
-                  return (
-                    <div
-                      key={e.id}
-                      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm"
-                    >
+                  const card = (
+                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
                       {isEarn ? (
                         <PlatformLogo
                           platformKey={e.app}
@@ -206,8 +301,10 @@ export default function History() {
                           >
                             {isEarn ? "Ganho" : "Gasto"}
                           </span>
-                          {isEarn && (e.km > 0 || e.hours > 0) && (
+                          {isEarn && (e.km > 0 || e.hours > 0 || (e.rides ?? 0) > 0) && (
                             <span className="text-[11px] text-muted-foreground">
+                              {(e.rides ?? 0) > 0 ? `${e.rides} corr.` : ""}
+                              {(e.rides ?? 0) > 0 && (e.km > 0 || e.hours > 0) ? " · " : ""}
                               {e.km > 0 ? `${e.km} km` : ""}
                               {e.km > 0 && e.hours > 0 ? " · " : ""}
                               {e.hours > 0 ? `${e.hours}h` : ""}
@@ -248,11 +345,12 @@ export default function History() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(e)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Editar
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => {
-                              if (confirm("Excluir este registro?")) removeEntry(e.id);
-                            }}
+                            onClick={() => setConfirmDelete(e)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
@@ -260,6 +358,16 @@ export default function History() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+                  );
+                  return (
+                    <SwipeRow
+                      key={e.id}
+                      entry={e}
+                      onEdit={() => handleEdit(e)}
+                      onDelete={() => setConfirmDelete(e)}
+                    >
+                      {card}
+                    </SwipeRow>
                   );
                 })}
               </div>
@@ -274,6 +382,29 @@ export default function History() {
           </div>
         )}
       </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deseja excluir este registro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Essa ação não pode ser desfeita. O registro será removido do seu histórico.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDelete) removeEntry(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
