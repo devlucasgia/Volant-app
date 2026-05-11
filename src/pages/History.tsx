@@ -223,30 +223,12 @@ export default function History() {
 
         {days.map((day) => {
           const items = grouped[day];
-          const allItems = allByDay[day] || items;
-          const dayBalance = allItems.reduce(
-            (sum, e) => sum + (e.type === "earning" ? e.gross : -e.expense.amount),
-            0
-          );
-          const positive = dayBalance >= 0;
           return (
             <section key={day}>
-              <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="mb-2">
                 <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                  {format(new Date(day), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                  {format(new Date(day + "T12:00:00"), "EEEE, d 'de' MMMM", { locale: ptBR })}
                 </h2>
-                <div className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-medium">
-                  <span className="text-muted-foreground">Saldo do dia: </span>
-                  <span
-                    className={cn(
-                      "font-bold tabular-nums",
-                      positive ? "text-success" : "text-destructive"
-                    )}
-                  >
-                    {positive ? "+ " : "− "}
-                    {brl(Math.abs(dayBalance))}
-                  </span>
-                </div>
               </div>
 
               <div className="space-y-2">
