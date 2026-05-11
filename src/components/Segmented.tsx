@@ -22,7 +22,7 @@ export function Segmented<T extends string>({ options, value, onChange, classNam
     <div
       role="tablist"
       className={cn(
-        "flex w-full rounded-xl bg-muted p-1",
+        "flex w-full rounded-xl border border-border/60 bg-muted/60 p-1",
         className
       )}
     >
@@ -38,7 +38,7 @@ export function Segmented<T extends string>({ options, value, onChange, classNam
               "flex-1 rounded-lg font-medium transition-all duration-200",
               size === "sm" ? "py-1.5 text-xs" : "py-2 text-sm",
               active
-                ? "bg-success text-success-foreground shadow-[0_2px_8px_-2px_hsl(var(--success)/0.45)]"
+                ? "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
