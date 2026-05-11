@@ -342,14 +342,6 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-12 gap-2" onClick={exportCSV}>
-            <Download className="h-4 w-4" /> Excel (CSV)
-          </Button>
-          <Button variant="outline" className="h-12 gap-2" onClick={exportPDF}>
-            <FileText className="h-4 w-4" /> PDF
-          </Button>
-        </div>
       </div>
     </>
   );
