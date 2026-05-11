@@ -100,6 +100,7 @@ export type Database = {
           km: number | null
           maintenance_type: string | null
           notes: string | null
+          rides: number | null
           type: string
           user_id: string
         }
@@ -116,6 +117,7 @@ export type Database = {
           km?: number | null
           maintenance_type?: string | null
           notes?: string | null
+          rides?: number | null
           type: string
           user_id: string
         }
@@ -132,6 +134,7 @@ export type Database = {
           km?: number | null
           maintenance_type?: string | null
           notes?: string | null
+          rides?: number | null
           type?: string
           user_id?: string
         }
