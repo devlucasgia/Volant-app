@@ -94,14 +94,6 @@ export default function Reports() {
     ? format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })
     : `${format(from, "dd/MM/yy")} – ${format(to, "dd/MM/yy")}`;
 
-  const prevPeriodLabel = mode === "month"
-    ? format(subMonths(monthRef, 1), "MMM/yy", { locale: ptBR })
-    : "período anterior";
-
-  // Comparison
-  const compHasData = sPrev.gross + sPrev.totalExpenses > 0 || sPrev.net !== 0;
-  const compDelta = sPrev.net !== 0 ? ((s.net - sPrev.net) / Math.abs(sPrev.net)) * 100 : (s.net !== 0 ? 100 : 0);
-  const compPositive = compDelta >= 0;
 
   // Worked days (days with at least one earning)
   const workedDays = useMemo(() => {
