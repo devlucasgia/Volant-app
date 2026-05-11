@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
+import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
@@ -45,9 +46,12 @@ export default function Dashboard() {
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
   const lastMaint = settings.lastMaintenanceKm > 0 ? settings.lastMaintenanceKm : carInitialKm;
-  const kmSinceMaint = realCurrentKm - lastMaint;
-  const kmToNext = settings.maintenanceIntervalKm - kmSinceMaint;
-  const showMaintAlert = kmToNext <= 1000;
+  const kmSinceMaint = Math.max(0, realCurrentKm - lastMaint);
+  const interval = settings.maintenanceIntervalKm || 0;
+  const kmToNext = interval - kmSinceMaint;
+  // Show alert when within 10% of the interval (or at least 500 km), or already due/overdue.
+  const threshold = interval > 0 ? Math.max(500, Math.round(interval * 0.1)) : 0;
+  const showMaintAlert = interval > 0 && kmToNext <= threshold;
 
   const activeApps = Object.keys(apps)
     .filter((k) => apps[k] > 0)
@@ -70,20 +74,7 @@ export default function Dashboard() {
       />
       <div className="space-y-5 px-4 pt-4">
         {/* Period switcher */}
-        <div className="flex rounded-xl bg-muted p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              onClick={() => setPeriod(p.key)}
-              className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium transition-all",
-                period === p.key ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <Segmented options={PERIODS} value={period} onChange={setPeriod} />
 
         {/* Net highlight — refined premium card */}
         <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
