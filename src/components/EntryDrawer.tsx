@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { NumberField } from "@/components/NumberField";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
-import { AppName, ExpenseCategory, MaintenanceType } from "@/types";
+import { AppName, Entry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
@@ -21,6 +21,7 @@ import { ptBR } from "date-fns/locale";
 interface EntryDrawerPreset {
   tab?: "earning" | "expense";
   category?: ExpenseCategory;
+  editing?: Entry | null;
   onAfterSave?: () => void;
 }
 
@@ -31,69 +32,114 @@ interface Props {
 }
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
-  const { addEntry, expenseCategories, earningPlatforms } = useData();
+  const { addEntry, updateEntry, expenseCategories, earningPlatforms } = useData();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
+  const editing = preset?.editing || null;
+  const isEditing = !!editing;
 
   // earning state
   const [app, setApp] = useState<AppName>("uber");
   const [kmMode, setKmMode] = useState<"total" | "range">("total");
-  const [kmTotal, setKmTotal] = useState("");
-  const [kmStart, setKmStart] = useState("");
-  const [kmEnd, setKmEnd] = useState("");
-  const [hours, setHours] = useState("");
-  const [gross, setGross] = useState("");
+  const [kmTotal, setKmTotal] = useState<number | null>(null);
+  const [kmStart, setKmStart] = useState<number | null>(null);
+  const [kmEnd, setKmEnd] = useState<number | null>(null);
+  const [hours, setHours] = useState<number | null>(null);
+  const [gross, setGross] = useState<number | null>(null);
+  const [rides, setRides] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
 
   // expense state
   const [category, setCategory] = useState<ExpenseCategory>("combustivel");
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState<number | null>(null);
   const [maintenanceType, setMaintenanceType] = useState<MaintenanceType>("oleo");
   const [description, setDescription] = useState("");
 
-  // Apply preset when drawer opens
+  // Apply preset / editing on open
   useEffect(() => {
-    if (open && preset) {
-      if (preset.tab) setTab(preset.tab);
-      if (preset.category) setCategory(preset.category);
+    if (!open) return;
+    if (editing) {
+      setDate(new Date(editing.date));
+      if (editing.type === "earning") {
+        setTab("earning");
+        setApp(editing.app);
+        setKmMode("total");
+        setKmTotal(editing.km || null);
+        setKmStart(null); setKmEnd(null);
+        setHours(editing.hours || null);
+        setGross(editing.gross || null);
+        setRides(editing.rides ?? null);
+        setNotes(editing.notes || "");
+      } else {
+        setTab("expense");
+        setCategory(editing.expense.category);
+        setAmount(editing.expense.amount || null);
+        setMaintenanceType(editing.expense.maintenanceType || "oleo");
+        setDescription(editing.expense.description || "");
+      }
+      return;
     }
-  }, [open, preset]);
+    if (preset?.tab) setTab(preset.tab);
+    if (preset?.category) setCategory(preset.category);
+  }, [open, preset, editing]);
 
   const reset = () => {
-    setKmTotal(""); setKmStart(""); setKmEnd(""); setHours(""); setGross(""); setNotes("");
-    setAmount(""); setDescription("");
+    setKmTotal(null); setKmStart(null); setKmEnd(null);
+    setHours(null); setGross(null); setRides(null); setNotes("");
+    setAmount(null); setDescription("");
     setDate(new Date());
   };
 
   const submit = async () => {
     const now = new Date();
     const chosen = new Date(date);
-    chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
+    if (!isEditing) chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
     const dateIso = chosen.toISOString();
 
     const km = kmMode === "total"
-      ? parseFloat(kmTotal) || 0
-      : Math.max(0, (parseFloat(kmEnd) || 0) - (parseFloat(kmStart) || 0));
-    const h = parseFloat(hours) || 0;
-    const g = parseFloat(gross) || 0;
-    const a = parseFloat(amount) || 0;
-
-    const hasEarning = g > 0 || km > 0 || h > 0;
-    const hasExpense = a > 0;
-
-    if (!hasEarning && !hasExpense) {
-      return toast.error("Preencha um ganho ou um gasto");
-    }
+      ? (kmTotal ?? 0)
+      : Math.max(0, (kmEnd ?? 0) - (kmStart ?? 0));
+    const h = hours ?? 0;
+    const g = gross ?? 0;
+    const r = rides ?? 0;
+    const a = amount ?? 0;
 
     try {
+      if (isEditing && editing) {
+        if (editing.type === "earning") {
+          if (g <= 0) return toast.error("Informe o valor recebido");
+          await updateEntry({
+            ...editing, date: dateIso, app, km, hours: h, gross: g,
+            rides: r > 0 ? r : undefined, notes,
+          });
+        } else {
+          if (a <= 0) return toast.error("Informe o valor do gasto");
+          const isMaint = category === "manutencao";
+          await updateEntry({
+            ...editing, date: dateIso,
+            expense: { category, amount: a, description, maintenanceType: isMaint ? maintenanceType : undefined },
+          });
+        }
+        toast.success("Registro atualizado!");
+        reset();
+        onOpenChange(false);
+        return;
+      }
+
+      const hasEarning = g > 0 || km > 0 || h > 0;
+      const hasExpense = a > 0;
+
+      if (!hasEarning && !hasExpense) {
+        return toast.error("Preencha um ganho ou um gasto");
+      }
       const tasks: Promise<void>[] = [];
       if (hasEarning) {
         if (g <= 0) return toast.error("Informe o valor recebido");
         tasks.push(addEntry({
           id: crypto.randomUUID(), type: "earning", date: dateIso,
-          app, km, hours: h, gross: g, notes,
+          app, km, hours: h, gross: g, rides: r > 0 ? r : undefined, notes,
         }));
       }
       if (hasExpense) {
@@ -120,11 +166,11 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
       <DrawerContent className="max-h-[92vh]">
         <div className="mx-auto w-full max-w-md">
           <DrawerHeader className="pb-2">
-            <DrawerTitle>Novo registro</DrawerTitle>
+            <DrawerTitle>{isEditing ? "Editar registro" : "Novo registro"}</DrawerTitle>
           </DrawerHeader>
 
           <div className="px-4 pb-6">
@@ -154,12 +200,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
               </Popover>
             </div>
 
-            <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
+            <Tabs value={tab} onValueChange={(v) => !isEditing && setTab(v as any)}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="earning" className="gap-2">
+                <TabsTrigger value="earning" className="gap-2" disabled={isEditing && editing?.type !== "earning"}>
                   <TrendingUp className="h-4 w-4" /> Lucro
                 </TabsTrigger>
-                <TabsTrigger value="expense" className="gap-2">
+                <TabsTrigger value="expense" className="gap-2" disabled={isEditing && editing?.type !== "expense"}>
                   <TrendingDown className="h-4 w-4" /> Gasto
                 </TabsTrigger>
               </TabsList>
@@ -211,11 +257,11 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     </div>
                   </div>
                   {kmMode === "total" ? (
-                    <Input type="number" inputMode="decimal" placeholder="Km rodados" value={kmTotal} onChange={(e) => setKmTotal(e.target.value)} />
+                    <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
                   ) : (
                     <div className="grid grid-cols-2 gap-2">
-                      <Input type="number" inputMode="decimal" placeholder="Km inicial" value={kmStart} onChange={(e) => setKmStart(e.target.value)} />
-                      <Input type="number" inputMode="decimal" placeholder="Km final" value={kmEnd} onChange={(e) => setKmEnd(e.target.value)} />
+                      <NumberField placeholder="Km inicial" value={kmStart} onChange={setKmStart} />
+                      <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
                     </div>
                   )}
                 </div>
@@ -223,12 +269,17 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-2">
                     <Label>Horas trabalhadas</Label>
-                    <Input type="number" inputMode="decimal" placeholder="Ex: 6.5" value={hours} onChange={(e) => setHours(e.target.value)} />
+                    <NumberField placeholder="Ex: 6.5" value={hours} onChange={setHours} />
                   </div>
                   <div className="space-y-2">
                     <Label>Valor recebido</Label>
-                    <Input type="number" inputMode="decimal" placeholder="R$" value={gross} onChange={(e) => setGross(e.target.value)} />
+                    <NumberField placeholder="R$" value={gross} onChange={setGross} />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Quantidade de corridas</Label>
+                  <NumberField placeholder="Opcional" value={rides} onChange={setRides} decimal={false} />
                 </div>
 
                 <div className="space-y-2">
@@ -275,7 +326,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
                 <div className="space-y-2">
                   <Label>Valor</Label>
-                  <Input type="number" inputMode="decimal" placeholder="R$" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                  <NumberField placeholder="R$" value={amount} onChange={setAmount} />
                 </div>
 
                 <div className="space-y-2">
@@ -287,7 +338,9 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
             <div className="mt-6 flex gap-2">
               <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit}>Salvar</Button>
+              <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit}>
+                {isEditing ? "Salvar alterações" : "Salvar"}
+              </Button>
             </div>
           </div>
         </div>
