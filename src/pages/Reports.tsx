@@ -15,7 +15,7 @@ import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList,
 } from "recharts";
 import {
-  Download, FileText, CalendarIcon, TrendingUp, TrendingDown,
+  Download, FileText, CalendarIcon,
   Wallet, Receipt, CalendarDays, Route, Hash, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
