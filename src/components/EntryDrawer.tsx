@@ -167,13 +167,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
   return (
     <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DrawerContent className="max-h-[92vh]">
-        <div className="mx-auto w-full max-w-md">
-          <DrawerHeader className="pb-2">
+      <DrawerContent className="max-h-[92dvh] flex flex-col">
+        <div className="mx-auto flex w-full max-w-md flex-1 min-h-0 flex-col">
+          <DrawerHeader className="pb-2 shrink-0">
             <DrawerTitle>{isEditing ? "Editar registro" : "Novo registro"}</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-6">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="mb-4 space-y-2">
               <Label>Data do registro</Label>
               <Popover>
