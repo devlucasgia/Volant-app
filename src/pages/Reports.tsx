@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import {
   Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList,
+  Area, AreaChart,
 } from "recharts";
 import {
   CalendarIcon,
