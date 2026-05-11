@@ -132,17 +132,6 @@ export default function History() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
 
-  // Group ALL day entries (independent of filter) so saldo always reflects
-  // the real net result for the day.
-  const allByDay = useMemo(() => {
-    const acc: Record<string, Entry[]> = {};
-    for (const e of entries) {
-      const day = format(new Date(e.date), "yyyy-MM-dd");
-      (acc[day] ||= []).push(e);
-    }
-    return acc;
-  }, [entries]);
-
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return entries.filter((e) => {
