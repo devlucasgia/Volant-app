@@ -18,6 +18,11 @@ export function PageHeader({ title, subtitle, right, brand = false }: PageHeader
             <img
               src="/volant-symbol-header.png"
               alt="Volant"
+              width={40}
+              height={40}
+              decoding="sync"
+              loading="eager"
+              fetchPriority="high"
               className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_2px_10px_-2px_hsl(var(--success)/0.45)] ring-1 ring-success/20"
             />
           )}
