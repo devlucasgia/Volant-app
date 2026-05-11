@@ -74,7 +74,7 @@ export default function Dashboard() {
       />
       <div className="space-y-5 px-4 pt-4">
         {/* Period switcher */}
-        <Segmented options={PERIODS} value={period} onChange={setPeriod} />
+        <Segmented<Period> options={PERIODS} value={period} onChange={setPeriod} />
 
         {/* Net highlight — refined premium card */}
         <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
