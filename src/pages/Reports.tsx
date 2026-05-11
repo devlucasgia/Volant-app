@@ -51,29 +51,12 @@ export default function Reports() {
     return { start: startOfDay(from), end: endOfDay(to) };
   }, [mode, monthRef, from, to]);
 
-  // Equivalent previous period (same length, immediately before)
-  const prevInterval = useMemo(() => {
-    if (mode === "month") {
-      const prev = subMonths(monthRef, 1);
-      return { start: startOfDay(startOfMonth(prev)), end: endOfDay(endOfMonth(prev)) };
-    }
-    const days = differenceInCalendarDays(interval.end, interval.start) + 1;
-    const end = new Date(interval.start.getTime() - 1);
-    const start = new Date(end.getTime() - (days - 1) * 86400000);
-    return { start: startOfDay(start), end: endOfDay(end) };
-  }, [mode, monthRef, interval]);
-
   const filtered = useMemo<Entry[]>(
     () => entries.filter((e) => isWithinInterval(new Date(e.date), interval)),
     [entries, interval]
   );
-  const prevFiltered = useMemo<Entry[]>(
-    () => entries.filter((e) => isWithinInterval(new Date(e.date), prevInterval)),
-    [entries, prevInterval]
-  );
 
   const s = useMemo(() => summarize(filtered), [filtered]);
-  const sPrev = useMemo(() => summarize(prevFiltered), [prevFiltered]);
 
   // Per-day series (also adapts grouping if too long → weekly buckets)
   const days = useMemo(() => eachDayOfInterval(interval), [interval]);
