@@ -335,13 +335,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                 </div>
               </TabsContent>
             </Tabs>
+          </div>
 
-            <div className="mt-6 flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-              <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit}>
-                {isEditing ? "Salvar alterações" : "Salvar"}
-              </Button>
-            </div>
+          <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit}>
+              {isEditing ? "Salvar alterações" : "Salvar"}
+            </Button>
           </div>
         </div>
       </DrawerContent>
