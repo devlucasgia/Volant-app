@@ -1,13 +1,22 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { VolantLogo } from "@/components/VolantLogo";
 
 export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
-      <div className="flex items-center justify-between px-5 py-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <VolantLogo size={26} />
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold tracking-tight leading-tight">
+              <span className="text-foreground">Volant</span>
+              {title && title !== "Volant" && (
+                <span className="ml-2 text-muted-foreground/70 font-semibold">· {title}</span>
+              )}
+            </h1>
+            {subtitle && <p className="text-[11px] text-muted-foreground leading-tight">{subtitle}</p>}
+          </div>
         </div>
         {right}
       </div>

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { NumberField } from "@/components/NumberField";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -220,16 +221,18 @@ export default function SettingsPage() {
               )}
               <div className="space-y-2">
                 <Label>Intervalo (km)</Label>
-                <Input type="number" inputMode="numeric"
-                  value={settings.maintenanceIntervalKm}
-                  onChange={(e) => updateSettings({ maintenanceIntervalKm: parseFloat(e.target.value) || 0 })}
+                <NumberField
+                  value={settings.maintenanceIntervalKm || null}
+                  onChange={(v) => updateSettings({ maintenanceIntervalKm: v ?? 0 })}
+                  decimal={false}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Última manutenção feita em (km)</Label>
-                <Input type="number" inputMode="numeric"
-                  value={settings.lastMaintenanceKm}
-                  onChange={(e) => updateSettings({ lastMaintenanceKm: parseFloat(e.target.value) || 0 })}
+                <NumberField
+                  value={settings.lastMaintenanceKm || null}
+                  onChange={(v) => updateSettings({ lastMaintenanceKm: v ?? 0 })}
+                  decimal={false}
                 />
               </div>
               <div className="rounded-lg bg-muted p-3 text-sm space-y-1">
@@ -322,8 +325,9 @@ export default function SettingsPage() {
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-2">
               <Label>Valor (R$)</Label>
-              <Input type="number" inputMode="decimal" value={settings.dailyGoal}
-                onChange={(e) => updateSettings({ dailyGoal: parseFloat(e.target.value) || 0 })}
+              <NumberField
+                value={settings.dailyGoal || null}
+                onChange={(v) => updateSettings({ dailyGoal: v ?? 0 })}
               />
             </AccordionContent>
           </AccordionItem>

@@ -1,9 +1,11 @@
 import { createContext, useCallback, useContext, useMemo, useState, ReactNode } from "react";
-import { ExpenseCategory } from "@/types";
+import { Entry, ExpenseCategory } from "@/types";
 
 interface EntryDrawerPreset {
   tab?: "earning" | "expense";
   category?: ExpenseCategory;
+  /** When provided, the drawer opens in edit mode for this entry. */
+  editing?: Entry | null;
   onAfterSave?: () => void;
 }
 
