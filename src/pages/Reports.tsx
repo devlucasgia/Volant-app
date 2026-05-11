@@ -267,80 +267,95 @@ export default function Reports() {
 
         {/* Main cards: Lucro líquido (large) + Bruto + Gastos (stacked right) */}
         <div className="grid grid-cols-5 gap-3">
-          <div className="col-span-3 relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-4 shadow-elevated">
-            <div className="absolute -right-10 -top-12 h-36 w-36 rounded-full bg-success/25 blur-3xl" />
+          <div className="col-span-3 relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/30 via-success/12 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.55)]">
+            <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/30 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 -bottom-16 h-36 w-36 rounded-full bg-success/20 blur-3xl" />
             <div className="relative">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-success">Lucro líquido</div>
-              <div className="mt-1 text-3xl font-bold leading-tight tabular-nums text-foreground">{brl(s.net)}</div>
-              {/* Mini sparkline */}
-              <div className="mt-3 h-10">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
+              <div className="mt-1 text-[26px] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.35)]">{brl(s.net)}</div>
+              <div className="mt-3 h-16">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={dailySeries}>
-                    <Bar dataKey="net" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
-                  </BarChart>
+                  <AreaChart data={dailySeries} margin={{ top: 4, right: 2, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.55} />
+                        <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2.2} fill="url(#netGlow)" dot={false} />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
           <div className="col-span-2 flex flex-col gap-3">
-            <div className="flex-1 rounded-2xl border border-info/30 bg-info/10 p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
-                <Wallet className="h-3 w-3" /> Bruto
+            <div className="relative flex-1 overflow-hidden rounded-2xl border border-info/40 bg-gradient-to-br from-info/20 via-info/10 to-info/5 p-3 shadow-[0_8px_30px_-12px_hsl(var(--info)/0.5)]">
+              <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-info/25 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-info">Bruto</div>
+                  <div className="mt-1 text-lg font-bold tabular-nums truncate">{brl(s.gross)}</div>
+                </div>
+                <Wallet className="h-5 w-5 text-info/80 shrink-0" />
               </div>
-              <div className="mt-1 text-lg font-bold tabular-nums">{brl(s.gross)}</div>
             </div>
-            <div className="flex-1 rounded-2xl border border-destructive/30 bg-destructive/10 p-3">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-destructive">
-                <Receipt className="h-3 w-3" /> Gastos
+            <div className="relative flex-1 overflow-hidden rounded-2xl border border-destructive/40 bg-gradient-to-br from-destructive/20 via-destructive/10 to-destructive/5 p-3 shadow-[0_8px_30px_-12px_hsl(var(--destructive)/0.5)]">
+              <div className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full bg-destructive/25 blur-2xl" />
+              <div className="relative flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-destructive">Gastos</div>
+                  <div className="mt-1 text-lg font-bold tabular-nums truncate">{brl(s.totalExpenses)}</div>
+                </div>
+                <Receipt className="h-5 w-5 text-destructive/80 shrink-0" />
               </div>
-              <div className="mt-1 text-lg font-bold tabular-nums">{brl(s.totalExpenses)}</div>
             </div>
           </div>
         </div>
 
-        {/* Highlight: Média por hora */}
-        <div className="rounded-2xl border border-success/30 bg-gradient-to-br from-success/15 to-success/5 p-4">
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
-            <Clock className="h-3 w-3" /> Média por hora
+        {/* Performance grid: 3 totals + averages on the left, Média por hora on the right */}
+        <div className="grid grid-cols-4 gap-3">
+          <div className="col-span-3 grid grid-cols-3 gap-3">
+            <MiniCard icon={<CalendarDays className="h-3 w-3" />} label="Dias trabalhados" value={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`} accent="muted" />
+            <MiniCard icon={<Route className="h-3 w-3" />} label="KM total" value={`${num(s.totalKm, 0)} km`} accent="info" />
+            <MiniCard icon={<Flag className="h-3 w-3" />} label="Corridas total" value={String(s.totalRides)} accent="muted" />
+            <MiniCard icon={<Clock className="h-3 w-3" />} label="Média / dia" value={brl(avgPerDay)} accent="success" />
+            <MiniCard icon={<Route className="h-3 w-3" />} label="Média / km" value={brl(s.perKm)} accent="info" />
+            <MiniCard icon={<Flag className="h-3 w-3" />} label="Média / corrida" value={brl(s.perRide)} accent="purple" />
           </div>
-          <div className="mt-1 text-3xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">com {num(s.totalHours, 1)}h trabalhadas</div>
-        </div>
-
-        {/* Paired totals + averages */}
-        <div className="grid grid-cols-2 gap-3">
-          <MiniCard icon={<CalendarDays className="h-3 w-3" />} label="Dias trabalhados" value={String(workedDays)} accent="muted" />
-          <MiniCard icon={null} label="Média / dia" value={brl(avgPerDay)} accent="success" />
-
-          <MiniCard icon={<Route className="h-3 w-3" />} label="KM total" value={num(s.totalKm, 0)} accent="info" />
-          <MiniCard icon={null} label="R$ / km" value={brl(s.perKm)} accent="info" />
-
-          <MiniCard icon={<Hash className="h-3 w-3" />} label="Corridas total" value={String(s.totalRides)} accent="muted" />
-          <MiniCard icon={null} label="R$ / corrida" value={brl(s.perRide)} accent="purple" />
+          <div className="relative col-span-1 overflow-hidden rounded-2xl border border-success/50 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-3 shadow-[0_10px_30px_-12px_hsl(var(--success)/0.55)] flex flex-col items-center text-center">
+            <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-success/30 blur-2xl" />
+            <Gauge className="relative h-4 w-4 text-success" />
+            <div className="relative mt-1 text-[9px] font-semibold uppercase tracking-wider text-success">Média / hora</div>
+            <div className="relative mt-1 text-xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
+            <div className="relative mt-auto pt-3 text-[10px] leading-tight text-muted-foreground">
+              com {num(s.totalHours, 1)}h<br />trabalhadas
+            </div>
+          </div>
         </div>
 
         {/* Chart selector + chart */}
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between gap-3">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visualização</div>
+            <div className="min-w-[160px]">
+              <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
+                <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CHARTS.map((c) => (
+                    <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="mb-3">
-            <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CHARTS.map((c) => (
-                  <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="mb-2 text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
-          <div className="h-64">
+          <div className="mb-1 text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
             </ResponsiveContainer>
           </div>
         </div>
+
 
       </div>
     </>
