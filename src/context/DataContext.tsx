@@ -19,6 +19,7 @@ interface DataCtx {
   carInitialKm: number;
   loading: boolean;
   addEntry: (e: Entry) => Promise<void>;
+  updateEntry: (e: Entry) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -53,6 +54,7 @@ function rowToEntry(r: any): Entry {
     return {
       id: r.id, type: "earning", date: r.entry_date, app: r.app as AppName,
       km: Number(r.km) || 0, hours: Number(r.hours) || 0, gross: Number(r.gross) || 0,
+      rides: r.rides == null ? undefined : Number(r.rides),
       notes: r.notes ?? undefined,
     };
   }
@@ -70,7 +72,9 @@ function rowToEntry(r: any): Entry {
 function entryToRow(e: Entry, userId: string) {
   if (e.type === "earning") {
     return { id: e.id, user_id: userId, type: "earning", entry_date: e.date,
-      app: e.app, km: e.km, hours: e.hours, gross: e.gross, notes: e.notes ?? null };
+      app: e.app, km: e.km, hours: e.hours, gross: e.gross,
+      rides: e.rides ?? null,
+      notes: e.notes ?? null };
   }
   return { id: e.id, user_id: userId, type: "expense", entry_date: e.date,
     expense_category: e.expense.category, expense_amount: e.expense.amount,
@@ -156,6 +160,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setEntries((prev) => prev.filter((x) => x.id !== id));
     await supabase.from("entries").delete().eq("id", id);
   }, []);
+
+  const updateEntry = useCallback(async (e: Entry) => {
+    if (!user) return;
+    setEntries((prev) => prev.map((x) => (x.id === e.id ? e : x)));
+    const row = entryToRow(e, user.id) as any;
+    delete row.id;
+    delete row.user_id;
+    const { error } = await supabase.from("entries").update(row).eq("id", e.id);
+    if (error) throw error;
+  }, [user]);
 
   const updateSettings = useCallback(async (patch: Partial<Settings>) => {
     if (!user) return;
@@ -259,11 +273,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
-      addEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
       earningCategories, expenseCategories, expenseMetaFor,
       earningPlatforms, platformMetaFor,
       addCategory, updateCategory, deleteCategory }),
-    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
       earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor,
       addCategory, updateCategory, deleteCategory]
   );

@@ -72,6 +72,7 @@ export interface EarningEntry {
   km: number;
   hours: number;
   gross: number;
+  rides?: number;
   notes?: string;
 }
 
