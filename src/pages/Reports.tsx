@@ -318,11 +318,6 @@ export default function Reports() {
           <MiniCard icon={null} label="R$ / corrida" value={brl(s.perRide)} accent="purple" />
         </div>
 
-        {/* Horas trabalhadas */}
-        <div className="grid grid-cols-1 gap-3">
-          <MiniCard icon={<Clock className="h-3 w-3" />} label="Horas trabalhadas" value={num(s.totalHours, 1)} accent="muted" />
-        </div>
-
         {/* Chart selector + chart */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
