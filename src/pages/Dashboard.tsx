@@ -63,6 +63,7 @@ export default function Dashboard() {
   return (
     <>
       <PageHeader
+        brand
         title="Volant"
         subtitle="Seu controle financeiro"
         right={
