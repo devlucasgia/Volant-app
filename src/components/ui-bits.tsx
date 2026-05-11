@@ -1,21 +1,33 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { VolantLogo } from "@/components/VolantLogo";
 
-export function PageHeader({ title, subtitle, right }: { title: string; subtitle?: string; right?: ReactNode }) {
+interface PageHeaderProps {
+  title: string;
+  subtitle?: string;
+  right?: ReactNode;
+  /** When true, renders the official Volant brand symbol next to the title (Home only). */
+  brand?: boolean;
+}
+
+export function PageHeader({ title, subtitle, right, brand = false }: PageHeaderProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
       <div className="flex items-center justify-between gap-3 px-5 py-3.5">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <VolantLogo size={26} />
+        <div className="flex items-center gap-3 min-w-0">
+          {brand && (
+            <img
+              src="/volant-symbol-header.png"
+              alt="Volant"
+              className="h-10 w-10 shrink-0 rounded-xl object-cover shadow-[0_2px_10px_-2px_hsl(var(--success)/0.45)] ring-1 ring-success/20"
+            />
+          )}
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold tracking-tight leading-tight">
-              <span className="text-foreground">Volant</span>
-              {title && title !== "Volant" && (
-                <span className="ml-2 text-muted-foreground/70 font-semibold">· {title}</span>
-              )}
+            <h1 className="truncate text-lg font-bold tracking-tight leading-tight text-foreground">
+              {title}
             </h1>
-            {subtitle && <p className="text-[11px] text-muted-foreground leading-tight">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-[11px] text-muted-foreground leading-tight">{subtitle}</p>
+            )}
           </div>
         </div>
         {right}
