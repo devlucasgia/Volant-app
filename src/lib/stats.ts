@@ -19,9 +19,11 @@ export function summarize(entries: Entry[]) {
   const net = gross - totalExpenses;
   const totalKm = earnings.reduce((s, e) => s + e.km, 0);
   const totalHours = earnings.reduce((s, e) => s + e.hours, 0);
+  const totalRides = earnings.reduce((s, e) => s + (e.rides || 0), 0);
   const perHour = totalHours > 0 ? gross / totalHours : 0;
   const perKm = totalKm > 0 ? gross / totalKm : 0;
-  return { gross, totalExpenses, net, totalKm, totalHours, perHour, perKm, count: earnings.length };
+  const perRide = totalRides > 0 ? gross / totalRides : 0;
+  return { gross, totalExpenses, net, totalKm, totalHours, totalRides, perHour, perKm, perRide, count: earnings.length };
 }
 
 export function byApp(entries: Entry[]): Record<string, number> {
