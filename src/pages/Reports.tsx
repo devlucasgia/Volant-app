@@ -271,21 +271,8 @@ export default function Reports() {
             <div className="relative">
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-success">Lucro líquido</div>
               <div className="mt-1 text-3xl font-bold leading-tight tabular-nums text-foreground">{brl(s.net)}</div>
-              {compHasData ? (
-                <div className={cn(
-                  "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                  compPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
-                )}>
-                  {compPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                  {compPositive ? "+" : ""}{num(compDelta, 1)}% vs {prevPeriodLabel}
-                </div>
-              ) : (
-                <div className="mt-2 inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
-                  Sem dados para comparação
-                </div>
-              )}
               {/* Mini sparkline */}
-              <div className="mt-2 h-10">
+              <div className="mt-3 h-10">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dailySeries}>
                     <Bar dataKey="net" fill="hsl(var(--success))" radius={[3, 3, 0, 0]} />
@@ -310,45 +297,36 @@ export default function Reports() {
           </div>
         </div>
 
-        {/* Top metrics row: dias / km / corridas / R$ por hora (taller) */}
-        <div className="grid grid-cols-4 gap-3">
-          <div className="col-span-1 grid grid-rows-2 gap-3">
-            <MiniCard icon={<CalendarDays className="h-3 w-3" />} label="Dias" value={String(workedDays)} accent="muted" />
-            <MiniCard icon={<Route className="h-3 w-3" />} label="KM total" value={num(s.totalKm, 0)} accent="info" />
+        {/* Highlight: Média por hora */}
+        <div className="rounded-2xl border border-success/30 bg-gradient-to-br from-success/15 to-success/5 p-4">
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+            <Clock className="h-3 w-3" /> Média por hora
           </div>
-          <div className="col-span-1 grid grid-rows-2 gap-3">
-            <MiniCard icon={<Hash className="h-3 w-3" />} label="Corridas" value={String(s.totalRides)} accent="muted" />
-            <MiniCard icon={<Clock className="h-3 w-3" />} label="Horas" value={num(s.totalHours, 1)} accent="muted" />
-          </div>
-          {/* Tall card for R$/hora */}
-          <div className="col-span-2 rounded-2xl border border-success/30 bg-gradient-to-br from-success/15 to-success/5 p-3 flex flex-col justify-center">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
-              <Clock className="h-3 w-3" /> Média por hora
-            </div>
-            <div className="mt-1 text-3xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground">com {num(s.totalHours, 1)}h trabalhadas</div>
-          </div>
+          <div className="mt-1 text-3xl font-bold tabular-nums text-foreground">{brl(s.perHour)}</div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">com {num(s.totalHours, 1)}h trabalhadas</div>
         </div>
 
-        {/* Bottom metrics row: média/dia, R$/km, R$/corrida */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* Paired totals + averages */}
+        <div className="grid grid-cols-2 gap-3">
+          <MiniCard icon={<CalendarDays className="h-3 w-3" />} label="Dias trabalhados" value={String(workedDays)} accent="muted" />
           <MiniCard icon={null} label="Média / dia" value={brl(avgPerDay)} accent="success" />
+
+          <MiniCard icon={<Route className="h-3 w-3" />} label="KM total" value={num(s.totalKm, 0)} accent="info" />
           <MiniCard icon={null} label="R$ / km" value={brl(s.perKm)} accent="info" />
+
+          <MiniCard icon={<Hash className="h-3 w-3" />} label="Corridas total" value={String(s.totalRides)} accent="muted" />
           <MiniCard icon={null} label="R$ / corrida" value={brl(s.perRide)} accent="purple" />
+        </div>
+
+        {/* Horas trabalhadas */}
+        <div className="grid grid-cols-1 gap-3">
+          <MiniCard icon={<Clock className="h-3 w-3" />} label="Horas trabalhadas" value={num(s.totalHours, 1)} accent="muted" />
         </div>
 
         {/* Chart selector + chart */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visualização</div>
-            {compHasData && (
-              <span className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-bold",
-                compPositive ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
-              )}>
-                {compPositive ? "+" : ""}{num(compDelta, 1)}% vs {prevPeriodLabel}
-              </span>
-            )}
           </div>
           <div className="mb-3">
             <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
