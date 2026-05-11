@@ -367,27 +367,78 @@ export default function Reports() {
   );
 }
 
-function MiniCard({
-  icon, label, value, accent,
-}: { icon: React.ReactNode; label: string; value: string; accent?: "muted" | "success" | "info" | "purple" }) {
-  const accentMap: Record<string, string> = {
-    muted: "text-muted-foreground",
-    success: "text-success",
-    info: "text-info",
-    purple: "text-[hsl(265_85%_70%)]",
-  };
-  const borderMap: Record<string, string> = {
-    muted: "border-border",
-    success: "border-success/30",
-    info: "border-info/30",
-    purple: "border-[hsl(265_85%_70%/0.3)]",
-  };
+function SideStatCard({
+  label, value, icon, tone,
+}: { label: string; value: string; icon: React.ReactNode; tone: "info" | "destructive" }) {
+  const toneMap = {
+    info: {
+      border: "border-info/40",
+      bg: "from-info/20 via-info/10 to-info/5",
+      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--info)/0.5)]",
+      blob: "bg-info/25",
+      label: "text-info",
+      icon: "text-info",
+    },
+    destructive: {
+      border: "border-destructive/40",
+      bg: "from-destructive/20 via-destructive/10 to-destructive/5",
+      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--destructive)/0.5)]",
+      blob: "bg-destructive/25",
+      label: "text-destructive",
+      icon: "text-destructive",
+    },
+  }[tone];
   return (
-    <div className={cn("rounded-2xl border bg-card p-3 flex flex-col justify-center min-h-[64px]", borderMap[accent || "muted"])}>
-      <div className={cn("flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider", accentMap[accent || "muted"])}>
-        {icon}{label}
+    <div className={cn("relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3", toneMap.border, toneMap.bg, toneMap.shadow)}>
+      <div className={cn("pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl", toneMap.blob)} />
+      <div className="relative flex items-center gap-2">
+        <span className={cn(toneMap.icon)}>{icon}</span>
+        <div className={cn("text-[10px] font-semibold uppercase tracking-wider", toneMap.label)}>{label}</div>
       </div>
-      <div className="mt-1 text-base font-bold tabular-nums text-foreground">{value}</div>
+      <div className="relative mt-2 text-[clamp(16px,3.6vw,20px)] font-bold tabular-nums text-foreground break-words leading-tight">
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function PairCard({
+  totalIcon, totalLabel, totalValue,
+  avgIcon, avgLabel, avgValue,
+  accent = "muted",
+}: {
+  totalIcon: React.ReactNode; totalLabel: string; totalValue: string;
+  avgIcon: React.ReactNode; avgLabel: string; avgValue: string;
+  accent?: "success" | "info" | "purple" | "muted";
+}) {
+  const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
+    muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
+    success: { text: "text-success",            border: "border-success/30",              line: "via-success/40",                   dot: "bg-success/60" },
+    info:    { text: "text-info",               border: "border-info/30",                 line: "via-info/40",                      dot: "bg-info/60" },
+    purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.3)]",  line: "via-[hsl(265_85%_70%/0.4)]",       dot: "bg-[hsl(265_85%_70%/0.6)]" },
+  };
+  const a = accentMap[accent];
+  return (
+    <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
+      <div className="grid grid-cols-2 items-stretch">
+        <div className="p-3">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+            {totalIcon}<span className="truncate">{totalLabel}</span>
+          </div>
+          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{totalValue}</div>
+        </div>
+        <div className="p-3 bg-muted/20">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+            {avgIcon}<span className="truncate">{avgLabel}</span>
+          </div>
+          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{avgValue}</div>
+        </div>
+      </div>
+      {/* Subtle connector between total and average */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
+        <div className={cn("h-px w-7 bg-gradient-to-r from-transparent to-transparent", a.line)} />
+      </div>
+      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full ring-2 ring-card", a.dot)} />
     </div>
   );
 }
