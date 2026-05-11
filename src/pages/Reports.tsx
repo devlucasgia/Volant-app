@@ -21,7 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
-  startOfDay, endOfDay, subMonths, addMonths, differenceInCalendarDays,
+  startOfDay, endOfDay, subMonths, addMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
