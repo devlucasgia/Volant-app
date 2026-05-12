@@ -29,7 +29,7 @@ interface TimerCtx {
   start: () => void;
   pauseRest: () => void;
   resumeWork: () => void;
-  endJourney: () => void;
+  endJourney: () => { workMs: number; restMs: number };
   reset: () => void;
 }
 
