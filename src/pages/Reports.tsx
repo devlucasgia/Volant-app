@@ -290,6 +290,27 @@ export default function Reports() {
               disabled={endOfMonth(monthRef) >= endOfMonth(new Date())}
               onClick={() => setMonthRef(addMonths(monthRef, 1))}>›</Button>
           </div>
+        ) : mode === "year" ? (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
+            <Select
+              value={String(getYear(yearRef))}
+              onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
+            >
+              <SelectTrigger className="flex-1 justify-start font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                <SelectValue>{format(yearRef, "yyyy")}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 8 }, (_, i) => getYear(new Date()) - i).map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon"
+              disabled={getYear(yearRef) >= getYear(new Date())}
+              onClick={() => setYearRef(addYears(yearRef, 1))}>›</Button>
+          </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
             <Popover>
