@@ -75,7 +75,7 @@ export function BottomNav() {
       <div
         ref={fabRef}
         className="fixed left-1/2 z-50 -translate-x-1/2"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 64px)" }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}
       >
         {/* Radial action: Novo ganho (diagonal above-left) */}
         <button
