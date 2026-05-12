@@ -294,39 +294,43 @@ export default function Reports() {
         {/* Top hierarchy: Lucro líquido + Média por hora share equal weight */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {/* Lucro líquido */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/30 via-success/12 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.55)]">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-success/30 blur-3xl" />
-            <div className="pointer-events-none absolute -left-10 -bottom-16 h-32 w-32 rounded-full bg-success/20 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
+            <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
             <div className="relative flex items-center gap-2">
               <Wallet className="h-4 w-4 text-success" />
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
             </div>
-            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.35)]">{brl(s.net)}</div>
-            <div className="relative mt-2 h-12">
+            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+              {brl(s.net)}
+            </div>
+            <div className="relative mt-3 h-14">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.55} />
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
                       <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2.2} fill="url(#netGlow)" dot={false} />
+                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlow)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Média por hora */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/25 via-success/10 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.5)] flex flex-col">
-            <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-success/25 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
+            <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
             <div className="relative flex items-center gap-2">
               <Gauge className="h-4 w-4 text-success" />
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
             </div>
-            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.3)]">{brl(s.perHour)}</div>
-            <div className="relative mt-auto pt-2 text-[11px] leading-snug text-muted-foreground">
-              com {num(s.totalHours, 1)}h trabalhadas
+            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+              {brl(s.perHour)}
+            </div>
+            <div className="relative mt-auto pt-3 text-[11.5px] leading-snug text-muted-foreground/90">
+              com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
             </div>
           </div>
         </div>
