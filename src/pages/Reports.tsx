@@ -384,7 +384,7 @@ export default function Reports() {
         <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-            totalLabel="Dias trab."
+            totalLabel="Dias ativos"
             totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
             avgIcon={<Clock className="h-3.5 w-3.5" />}
             avgLabel="Média / dia"
