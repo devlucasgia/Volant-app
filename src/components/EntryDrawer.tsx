@@ -82,9 +82,16 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       }
       return;
     }
-    if (preset?.tab) setTab(preset.tab);
-    if (preset?.category) setCategory(preset.category);
-    if (preset?.prefillHours !== undefined) {
+    // Fresh new record — clear any stale state from previous sessions.
+    setDate(new Date());
+    setApp("uber");
+    setKmMode("total");
+    setKmTotal(null); setKmStart(null); setKmEnd(null);
+    setHours(null); setGross(null); setRides(null); setNotes("");
+    setAmount(null); setDescription(""); setMaintenanceType("oleo");
+    if (preset?.tab) setTab(preset.tab); else setTab("earning");
+    if (preset?.category) setCategory(preset.category); else setCategory("combustivel");
+    if (preset?.prefillHours !== undefined && preset.prefillHours > 0) {
       setHours(Math.round(preset.prefillHours * 100) / 100);
     }
   }, [open, preset, editing]);
