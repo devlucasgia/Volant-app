@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
 import { AppName, Entry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
+import { TrendingUp, TrendingDown, CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { cn } from "@/lib/utils";
