@@ -58,13 +58,17 @@ export function BottomNav() {
                 end={end}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors",
+                    "flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-all duration-200 active:scale-95",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                   )
                 }
               >
-                <Icon className="h-5 w-5" />
-                <span>{label}</span>
+                {({ isActive }) => (
+                  <>
+                    <Icon className={cn("h-5 w-5 transition-transform duration-200 ease-premium", isActive && "scale-110")} />
+                    <span>{label}</span>
+                  </>
+                )}
               </NavLink>
             </li>
           ))}

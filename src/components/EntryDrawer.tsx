@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
 import { AppName, Entry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, CalendarIcon, Plus } from "lucide-react";
+import { TrendingUp, TrendingDown, CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
+  const [submitting, setSubmitting] = useState(false);
   const editing = preset?.editing || null;
   const isEditing = !!editing;
 
@@ -104,6 +105,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   };
 
   const submit = async () => {
+    if (submitting) return;
     const now = new Date();
     const chosen = new Date(date);
     if (!isEditing) chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
@@ -117,16 +119,17 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     const r = rides ?? 0;
     const a = amount ?? 0;
 
+    setSubmitting(true);
     try {
       if (isEditing && editing) {
         if (editing.type === "earning") {
-          if (g <= 0) return toast.error("Informe o valor recebido");
+          if (g <= 0) { toast.error("Informe o valor recebido"); return; }
           await updateEntry({
             ...editing, date: dateIso, app, km, hours: h, gross: g,
             rides: r > 0 ? r : undefined, notes,
           });
         } else {
-          if (a <= 0) return toast.error("Informe o valor do gasto");
+          if (a <= 0) { toast.error("Informe o valor do gasto"); return; }
           const isMaint = category === "manutencao";
           await updateEntry({
             ...editing, date: dateIso,
@@ -143,11 +146,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       const hasExpense = a > 0;
 
       if (!hasEarning && !hasExpense) {
-        return toast.error("Preencha um ganho ou um gasto");
+        toast.error("Preencha um ganho ou um gasto");
+        return;
       }
       const tasks: Promise<void>[] = [];
       if (hasEarning) {
-        if (g <= 0) return toast.error("Informe o valor recebido");
+        if (g <= 0) { toast.error("Informe o valor recebido"); return; }
         tasks.push(addEntry({
           id: crypto.randomUUID(), type: "earning", date: dateIso,
           app, km, hours: h, gross: g, rides: r > 0 ? r : undefined, notes,
@@ -173,6 +177,8 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       if (wasMaint && cb) cb();
     } catch (err: any) {
       toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -349,9 +355,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           </div>
 
           <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit}>
-              {isEditing ? "Salvar alterações" : "Salvar"}
+            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+            <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit} disabled={submitting}>
+              {submitting ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</>
+              ) : (
+                isEditing ? "Salvar alterações" : "Salvar"
+              )}
             </Button>
           </div>
         </div>
