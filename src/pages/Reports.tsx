@@ -168,16 +168,42 @@ export default function Reports() {
   const isMoney = chart === "net" || chart === "expenses";
 
   const renderChart = () => {
-    const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 };
+    const tooltipStyle = {
+      background: "hsl(var(--card))",
+      border: "1px solid hsl(var(--border))",
+      borderRadius: 12,
+      fontSize: 12,
+      boxShadow: "0 10px 30px -12px hsl(var(--background) / 0.6)",
+      padding: "8px 12px",
+    };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
+    const count = dailySeries.length;
+    // Adaptive bar sizing: fewer points → wider, more points → slimmer
+    const barSize = Math.max(10, Math.min(46, Math.round(220 / Math.max(count, 1))));
+    const showLabels = count <= 12;
+    const tickInterval = count > 24 ? Math.ceil(count / 12) : "preserveStartEnd";
     return (
-      <BarChart data={dailySeries} margin={{ top: 24, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
-        <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-        <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]}>
-          <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+      <BarChart data={dailySeries} margin={{ top: 24, right: 12, bottom: 4, left: -12 }} barCategoryGap="22%">
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          interval={tickInterval as any}
+          tickMargin={6}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={false}
+          tickLine={false}
+          width={42}
+        />
+        <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]} maxBarSize={barSize}>
+          {showLabels && (
+            <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+          )}
         </Bar>
       </BarChart>
     );
@@ -268,39 +294,43 @@ export default function Reports() {
         {/* Top hierarchy: Lucro líquido + Média por hora share equal weight */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {/* Lucro líquido */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/30 via-success/12 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.55)]">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-success/30 blur-3xl" />
-            <div className="pointer-events-none absolute -left-10 -bottom-16 h-32 w-32 rounded-full bg-success/20 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
+            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
+            <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
             <div className="relative flex items-center gap-2">
               <Wallet className="h-4 w-4 text-success" />
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
             </div>
-            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.35)]">{brl(s.net)}</div>
-            <div className="relative mt-2 h-12">
+            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+              {brl(s.net)}
+            </div>
+            <div className="relative mt-3 h-14">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
                   <defs>
                     <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.55} />
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
                       <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2.2} fill="url(#netGlow)" dot={false} />
+                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlow)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
 
           {/* Média por hora */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/25 via-success/10 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.5)] flex flex-col">
-            <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-success/25 blur-3xl" />
+          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
+            <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
             <div className="relative flex items-center gap-2">
               <Gauge className="h-4 w-4 text-success" />
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
             </div>
-            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.3)]">{brl(s.perHour)}</div>
-            <div className="relative mt-auto pt-2 text-[11px] leading-snug text-muted-foreground">
-              com {num(s.totalHours, 1)}h trabalhadas
+            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+              {brl(s.perHour)}
+            </div>
+            <div className="relative mt-auto pt-3 text-[11.5px] leading-snug text-muted-foreground/90">
+              com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
             </div>
           </div>
         </div>
@@ -343,10 +373,13 @@ export default function Reports() {
         </div>
 
         {/* Chart selector + chart */}
-        <div className="rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visualização</div>
-            <div className="min-w-[160px]">
+        <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+              <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+            </div>
+            <div className="min-w-[150px]">
               <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
                 <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -357,7 +390,6 @@ export default function Reports() {
               </Select>
             </div>
           </div>
-          <div className="mb-1 text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
@@ -376,30 +408,30 @@ function SideStatCard({
 }: { label: string; value: string; icon: React.ReactNode; tone: "info" | "destructive" }) {
   const toneMap = {
     info: {
-      border: "border-info/40",
-      bg: "from-info/20 via-info/10 to-info/5",
-      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--info)/0.5)]",
-      blob: "bg-info/25",
+      border: "border-info/25",
+      bg: "from-info/12 via-info/6 to-info/[0.03]",
+      shadow: "shadow-[0_6px_24px_-14px_hsl(var(--info)/0.4)]",
+      blob: "bg-info/15",
       label: "text-info",
       icon: "text-info",
     },
     destructive: {
-      border: "border-destructive/40",
-      bg: "from-destructive/20 via-destructive/10 to-destructive/5",
-      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--destructive)/0.5)]",
-      blob: "bg-destructive/25",
+      border: "border-destructive/25",
+      bg: "from-destructive/12 via-destructive/6 to-destructive/[0.03]",
+      shadow: "shadow-[0_6px_24px_-14px_hsl(var(--destructive)/0.4)]",
+      blob: "bg-destructive/15",
       label: "text-destructive",
       icon: "text-destructive",
     },
   }[tone];
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3", toneMap.border, toneMap.bg, toneMap.shadow)}>
-      <div className={cn("pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl", toneMap.blob)} />
+    <div className={cn("relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5", toneMap.border, toneMap.bg, toneMap.shadow)}>
+      <div className={cn("pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-[40px]", toneMap.blob)} />
       <div className="relative flex items-center gap-2">
         <span className={cn(toneMap.icon)}>{icon}</span>
-        <div className={cn("text-[10px] font-semibold uppercase tracking-wider", toneMap.label)}>{label}</div>
+        <div className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", toneMap.label)}>{label}</div>
       </div>
-      <div className="relative mt-2 text-[clamp(16px,3.6vw,20px)] font-bold tabular-nums text-foreground break-words leading-tight">
+      <div className="relative mt-2 text-[clamp(17px,3.8vw,21px)] font-bold tabular-nums text-foreground break-words leading-tight tracking-tight">
         {value}
       </div>
     </div>
@@ -417,30 +449,30 @@ function PairCard({
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
-    success: { text: "text-success",            border: "border-success/30",              line: "via-success/40",                   dot: "bg-success/60" },
-    info:    { text: "text-info",               border: "border-info/30",                 line: "via-info/40",                      dot: "bg-info/60" },
-    purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.3)]",  line: "via-[hsl(265_85%_70%/0.4)]",       dot: "bg-[hsl(265_85%_70%/0.6)]" },
+    success: { text: "text-success",            border: "border-success/25",              line: "via-success/35",                   dot: "bg-success/70" },
+    info:    { text: "text-info",               border: "border-info/25",                 line: "via-info/35",                      dot: "bg-info/70" },
+    purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.25)]", line: "via-[hsl(265_85%_70%/0.35)]",      dot: "bg-[hsl(265_85%_70%/0.7)]" },
   };
   const a = accentMap[accent];
   return (
     <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
-        <div className="p-3 pr-4">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+        <div className="flex flex-col justify-center p-3.5 pr-5 min-w-0">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
             {totalIcon}<span className="truncate">{totalLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight">{totalValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight">{totalValue}</div>
         </div>
-        <div className="p-3 pl-4 bg-muted/20">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider justify-end", a.text)}>
+        <div className="flex flex-col justify-center p-3.5 pl-5 min-w-0 bg-muted/15 items-end">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
             {avgIcon}<span className="truncate">{avgLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight text-right">{avgValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight text-right w-full">{avgValue}</div>
         </div>
       </div>
-      {/* Structural seam between total and average */}
-      <div className={cn("pointer-events-none absolute inset-y-3 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
-      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full ring-2 ring-card", a.dot)} />
+      {/* Integrated structural seam */}
+      <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
+      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
     </div>
   );
 }
