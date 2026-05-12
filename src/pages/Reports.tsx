@@ -238,22 +238,6 @@ export default function Reports() {
       <PageHeader
         title="Relatórios"
         subtitle={periodLabel}
-        right={
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="icon" variant="outline" className="h-9 w-9 rounded-xl" aria-label="Selecionar período">
-                <CalendarIcon className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
-              <Calendar mode="single" selected={mode === "month" ? monthRef : from}
-                onSelect={(d) => { if (!d) return; if (mode === "month") setMonthRef(startOfMonth(d)); else setFrom(d); }}
-                disabled={(d) => d > new Date()}
-                initialFocus locale={ptBR}
-                className={cn("p-3 pointer-events-auto")} />
-            </PopoverContent>
-          </Popover>
-        }
       />
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
         {/* Mode switch */}
@@ -297,9 +281,11 @@ export default function Reports() {
               value={String(getYear(yearRef))}
               onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
             >
-              <SelectTrigger className="flex-1 justify-start font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                <SelectValue>{format(yearRef, "yyyy")}</SelectValue>
+              <SelectTrigger className="flex-1 justify-center font-normal [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
+                <SelectValue>
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>{format(yearRef, "yyyy")}</span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 8 }, (_, i) => getYear(new Date()) - i).map((y) => (
