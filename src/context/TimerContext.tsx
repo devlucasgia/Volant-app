@@ -78,18 +78,21 @@ export function TimerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const endJourney = useCallback(() => {
+    let finalWork = 0;
+    let finalRest = 0;
     setData((d) => {
-      if (d.state === "idle" || d.state === "ended") return d;
+      if (d.state === "idle" || d.state === "ended") {
+        finalWork = d.workMs; finalRest = d.restMs;
+        return d;
+      }
       const elapsed = d.segmentStart ? Date.now() - d.segmentStart : 0;
       const addWork = d.state === "running" ? elapsed : 0;
       const addRest = d.state === "resting" ? elapsed : 0;
-      return {
-        state: "ended",
-        workMs: d.workMs + addWork,
-        restMs: d.restMs + addRest,
-        segmentStart: null,
-      };
+      finalWork = d.workMs + addWork;
+      finalRest = d.restMs + addRest;
+      return { state: "ended", workMs: finalWork, restMs: finalRest, segmentStart: null };
     });
+    return { workMs: finalWork, restMs: finalRest };
   }, []);
 
   const reset = useCallback(() => setData(DEFAULT), []);
