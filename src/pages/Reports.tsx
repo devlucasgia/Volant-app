@@ -281,9 +281,11 @@ export default function Reports() {
               value={String(getYear(yearRef))}
               onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
             >
-              <SelectTrigger className="flex-1 justify-start font-normal">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                <SelectValue>{format(yearRef, "yyyy")}</SelectValue>
+              <SelectTrigger className="flex-1 justify-center font-normal [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
+                <SelectValue>
+                  <CalendarIcon className="h-4 w-4" />
+                  <span>{format(yearRef, "yyyy")}</span>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {Array.from({ length: 8 }, (_, i) => getYear(new Date()) - i).map((y) => (
