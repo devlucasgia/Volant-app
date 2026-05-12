@@ -257,7 +257,7 @@ export default function Reports() {
             <Button variant="outline" size="icon" onClick={() => setMonthRef(subMonths(monthRef, 1))}>‹</Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex-1 justify-start font-normal">
+                <Button variant="outline" className="flex-1 justify-center font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   <span className="capitalize">{format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })}</span>
                 </Button>
