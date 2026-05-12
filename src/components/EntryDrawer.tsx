@@ -284,7 +284,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   </div>
                   <div className="space-y-2">
                     <Label>Valor recebido</Label>
-                    <NumberField placeholder="R$" value={gross} onChange={setGross} />
+                    <NumberField currency value={gross} onChange={setGross} />
                   </div>
                 </div>
 
