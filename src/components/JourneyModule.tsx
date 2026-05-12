@@ -76,10 +76,10 @@ export function JourneyModule() {
         </div>
       </div>
 
-      {/* Compact timer row */}
-      <div className="flex items-baseline justify-between gap-3 rounded-xl bg-muted/40 px-4 py-3">
+      {/* Compact timer — visually centered */}
+      <div className="flex flex-col items-center justify-center rounded-xl bg-muted/40 px-4 py-4">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tempo</span>
-        <span className="text-3xl font-bold tabular-nums leading-none">{formatHMS(workMs)}</span>
+        <span className="mt-1 text-4xl font-bold tabular-nums leading-none">{formatHMS(workMs)}</span>
       </div>
 
       {/* Mini stats */}

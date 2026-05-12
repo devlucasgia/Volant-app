@@ -85,7 +85,7 @@ export function BottomNav() {
             "absolute left-1/2 top-1/2 flex items-center gap-2 rounded-full border border-border/60 bg-card/95 px-3.5 py-2 text-sm font-semibold shadow-elevated backdrop-blur-md whitespace-nowrap",
             "transition-all duration-300 ease-out origin-bottom-right",
             open
-              ? "opacity-100 scale-100 -translate-x-[calc(100%+38px)] -translate-y-[calc(100%+22px)]"
+              ? "opacity-100 scale-100 -translate-x-[calc(100%+18px)] -translate-y-[calc(100%+44px)]"
               : "pointer-events-none opacity-0 scale-75 -translate-x-1/2 -translate-y-1/2"
           )}
         >
@@ -103,7 +103,7 @@ export function BottomNav() {
             "absolute left-1/2 top-1/2 flex items-center gap-2 rounded-full border border-border/60 bg-card/95 px-3.5 py-2 text-sm font-semibold shadow-elevated backdrop-blur-md whitespace-nowrap",
             "transition-all duration-300 ease-out origin-bottom-left",
             open
-              ? "opacity-100 scale-100 translate-x-[38px] -translate-y-[calc(100%+22px)]"
+              ? "opacity-100 scale-100 translate-x-[18px] -translate-y-[calc(100%+44px)]"
               : "pointer-events-none opacity-0 scale-75 -translate-x-1/2 -translate-y-1/2"
           )}
         >
