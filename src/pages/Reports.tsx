@@ -258,7 +258,11 @@ export default function Reports() {
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
         {/* Mode switch */}
         <Segmented<RangeMode>
-          options={[{ key: "month", label: "Por mês" }, { key: "range", label: "Período personalizado" }]}
+          options={[
+            { key: "month", label: "Por mês" },
+            { key: "year", label: "Por ano" },
+            { key: "range", label: "Personalizado" },
+          ]}
           value={mode}
           onChange={setMode}
           size="sm"
