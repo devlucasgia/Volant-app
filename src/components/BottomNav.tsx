@@ -89,7 +89,7 @@ export function BottomNav() {
             </button>
           </div>
 
-          <ul className="grid grid-cols-5 items-end">
+          <ul className="grid grid-cols-6 items-end">
             {leftItems.map(({ to, label, icon: Icon }) => (
               <li key={to}>
                 <NavLink
