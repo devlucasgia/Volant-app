@@ -66,14 +66,11 @@ export function JourneyModule() {
   return (
     <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          {isEnded ? <CheckCircle2 className="h-4 w-4 text-success" /> : <TimerIcon className="h-4 w-4 text-primary" />}
-          Jornada
-        </div>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className={cn("h-1.5 w-1.5 rounded-full", statusDot)} />
           {statusLabel}
         </div>
+        {isEnded && <CheckCircle2 className="h-4 w-4 text-success" />}
       </div>
 
       {/* Compact timer — visually centered */}
