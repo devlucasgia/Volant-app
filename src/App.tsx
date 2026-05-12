@@ -41,7 +41,6 @@ const App = () => (
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/historico" element={<History />} />
                     <Route path="/relatorios" element={<Reports />} />
-                    <Route path="/jornada" element={<Journey />} />
                     <Route path="/ajustes" element={<SettingsPage />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
