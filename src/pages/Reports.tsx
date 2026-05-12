@@ -425,23 +425,21 @@ function PairCard({
   return (
     <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
-        <div className="p-3">
+        <div className="p-3 pr-4">
           <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
             {totalIcon}<span className="truncate">{totalLabel}</span>
           </div>
-          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{totalValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight">{totalValue}</div>
         </div>
-        <div className="p-3 bg-muted/20">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+        <div className="p-3 pl-4 bg-muted/20">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider justify-end", a.text)}>
             {avgIcon}<span className="truncate">{avgLabel}</span>
           </div>
-          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{avgValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight text-right">{avgValue}</div>
         </div>
       </div>
-      {/* Subtle connector between total and average */}
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
-        <div className={cn("h-px w-7 bg-gradient-to-r from-transparent to-transparent", a.line)} />
-      </div>
+      {/* Structural seam between total and average */}
+      <div className={cn("pointer-events-none absolute inset-y-3 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
       <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full ring-2 ring-card", a.dot)} />
     </div>
   );
