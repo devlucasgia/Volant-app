@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
   startOfDay, endOfDay, subMonths, addMonths,
+  startOfYear, endOfYear, eachMonthOfInterval, subYears, addYears, getYear,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
