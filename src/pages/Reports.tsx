@@ -346,10 +346,11 @@ export default function Reports() {
             - <md (mobile/small tablet): 1 column, full-width pair per row
             - md–xl (tablet/small desktop): 2 columns, ~min 340px each
             - ≥xl (wide desktop/PWA): 3 columns */}
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
             totalLabel="Dias trabalhados"
+            totalLabelClassName="max-[420px]:max-w-[10ch]"
             totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
             avgIcon={<Clock className="h-3.5 w-3.5" />}
             avgLabel="Média / dia"
@@ -446,10 +447,14 @@ function PairCard({
   totalIcon, totalLabel, totalValue,
   avgIcon, avgLabel, avgValue,
   accent = "muted",
+  totalLabelClassName,
+  avgLabelClassName,
 }: {
   totalIcon: React.ReactNode; totalLabel: string; totalValue: string;
   avgIcon: React.ReactNode; avgLabel: string; avgValue: string;
   accent?: "success" | "info" | "purple" | "muted";
+  totalLabelClassName?: string;
+  avgLabelClassName?: string;
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
@@ -459,24 +464,23 @@ function PairCard({
   };
   const a = accentMap[accent];
   return (
-    <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
-      <div className="grid grid-cols-2 items-stretch">
-        <div className="flex flex-col justify-center gap-1.5 p-4 pr-5 min-w-0">
-          <div className={cn("flex items-start gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-tight", a.text)}>
+    <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
+      <div className="grid min-h-[104px] grid-cols-2 items-stretch sm:min-h-[108px]">
+        <div className="flex min-w-0 flex-col justify-between gap-2 p-4 pr-5">
+          <div className={cn("flex min-h-[2.6rem] items-start gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-[1.15] sm:min-h-[2.3rem]", a.text)}>
             <span className="mt-px shrink-0">{totalIcon}</span>
-            <span className="break-words">{totalLabel}</span>
+            <span className={cn("block text-left text-balance", totalLabelClassName)}>{totalLabel}</span>
           </div>
-          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums text-foreground leading-tight tracking-tight break-words">{totalValue}</div>
+          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground break-words">{totalValue}</div>
         </div>
-        <div className="flex flex-col justify-center gap-1.5 p-4 pl-5 min-w-0 bg-muted/15 items-end text-right">
-          <div className={cn("flex items-start justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-tight w-full", a.text)}>
+        <div className="flex min-w-0 flex-col justify-between gap-2 bg-muted/15 p-4 pl-5 text-right">
+          <div className={cn("ml-auto flex min-h-[2.6rem] max-w-full items-start justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-[1.15] sm:min-h-[2.3rem]", a.text)}>
             <span className="mt-px shrink-0">{avgIcon}</span>
-            <span className="break-words">{avgLabel}</span>
+            <span className={cn("block text-right text-balance", avgLabelClassName)}>{avgLabel}</span>
           </div>
-          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums text-foreground leading-tight tracking-tight break-words w-full">{avgValue}</div>
+          <div className="w-full text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground break-words">{avgValue}</div>
         </div>
       </div>
-      {/* Integrated structural seam */}
       <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
       <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
     </div>
