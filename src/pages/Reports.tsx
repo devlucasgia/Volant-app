@@ -341,8 +341,12 @@ export default function Reports() {
           <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
         </div>
 
-        {/* Performance: paired totals/averages with subtle connector */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Performance: paired totals/averages with subtle connector.
+            Breakpoints chosen to guarantee a safe minimum width per pair card:
+            - <md (mobile/small tablet): 1 column, full-width pair per row
+            - md–xl (tablet/small desktop): 2 columns, ~min 340px each
+            - ≥xl (wide desktop/PWA): 3 columns */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
             totalLabel="Dias trabalhados"
