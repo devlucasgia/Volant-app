@@ -265,77 +265,81 @@ export default function Reports() {
           </div>
         )}
 
-        {/* Main cards: Lucro líquido (large) + Bruto + Gastos */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
-          <div className="sm:col-span-3 relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/30 via-success/12 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.55)]">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/30 blur-3xl" />
-            <div className="pointer-events-none absolute -left-10 -bottom-16 h-36 w-36 rounded-full bg-success/20 blur-3xl" />
-            <div className="relative">
+        {/* Top hierarchy: Lucro líquido + Média por hora share equal weight */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* Lucro líquido */}
+          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/30 via-success/12 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.55)]">
+            <div className="pointer-events-none absolute -right-12 -top-16 h-40 w-40 rounded-full bg-success/30 blur-3xl" />
+            <div className="pointer-events-none absolute -left-10 -bottom-16 h-32 w-32 rounded-full bg-success/20 blur-3xl" />
+            <div className="relative flex items-center gap-2">
+              <Wallet className="h-4 w-4 text-success" />
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
-              <div className="mt-1 text-[clamp(22px,5vw,30px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.35)]">{brl(s.net)}</div>
-              <div className="mt-3 h-16">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={dailySeries} margin={{ top: 4, right: 2, bottom: 0, left: 0 }}>
-                    <defs>
-                      <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.55} />
-                        <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2.2} fill="url(#netGlow)" dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+            </div>
+            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.35)]">{brl(s.net)}</div>
+            <div className="relative mt-2 h-12">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+                  <defs>
+                    <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.55} />
+                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2.2} fill="url(#netGlow)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:col-span-2 sm:grid-cols-1">
-            <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-5 w-5" />} tone="info" />
-            <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-5 w-5" />} tone="destructive" />
-          </div>
-        </div>
 
-        {/* Performance: paired totals/averages with subtle connector + Média por hora */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <div className="grid grid-cols-1 gap-3 sm:col-span-3 sm:grid-cols-3">
-            <PairCard
-              totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-              totalLabel="Dias trabalhados"
-              totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
-              avgIcon={<Clock className="h-3.5 w-3.5" />}
-              avgLabel="Média / dia"
-              avgValue={brl(avgPerDay)}
-              accent="success"
-            />
-            <PairCard
-              totalIcon={<Route className="h-3.5 w-3.5" />}
-              totalLabel="KM total"
-              totalValue={`${num(s.totalKm, 0)} km`}
-              avgIcon={<Route className="h-3.5 w-3.5" />}
-              avgLabel="Média / km"
-              avgValue={brl(s.perKm)}
-              accent="info"
-            />
-            <PairCard
-              totalIcon={<Flag className="h-3.5 w-3.5" />}
-              totalLabel="Corridas total"
-              totalValue={String(s.totalRides)}
-              avgIcon={<Flag className="h-3.5 w-3.5" />}
-              avgLabel="Média / corrida"
-              avgValue={brl(s.perRide)}
-              accent="purple"
-            />
-          </div>
-          <div className="relative sm:col-span-1 overflow-hidden rounded-2xl border border-success/50 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-4 shadow-[0_10px_30px_-12px_hsl(var(--success)/0.55)] flex flex-col">
-            <div className="pointer-events-none absolute -right-8 -top-10 h-24 w-24 rounded-full bg-success/30 blur-2xl" />
+          {/* Média por hora */}
+          <div className="relative overflow-hidden rounded-2xl border border-success/40 bg-gradient-to-br from-success/25 via-success/10 to-success/5 p-4 shadow-[0_10px_40px_-12px_hsl(var(--success)/0.5)] flex flex-col">
+            <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-success/25 blur-3xl" />
             <div className="relative flex items-center gap-2">
               <Gauge className="h-4 w-4 text-success" />
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-success">Média / hora</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
             </div>
-            <div className="relative mt-2 text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
-            <div className="relative mt-2 text-[11px] leading-snug text-muted-foreground">
+            <div className="relative mt-1.5 text-[clamp(22px,4.6vw,28px)] font-bold leading-tight tabular-nums text-foreground drop-shadow-[0_0_18px_hsl(var(--success)/0.3)]">{brl(s.perHour)}</div>
+            <div className="relative mt-auto pt-2 text-[11px] leading-snug text-muted-foreground">
               com {num(s.totalHours, 1)}h trabalhadas
             </div>
           </div>
+        </div>
+
+        {/* Secondary KPIs: Bruto + Gastos */}
+        <div className="grid grid-cols-2 gap-3">
+          <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
+          <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+        </div>
+
+        {/* Performance: paired totals/averages with subtle connector */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <PairCard
+            totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
+            totalLabel="Dias trabalhados"
+            totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
+            avgIcon={<Clock className="h-3.5 w-3.5" />}
+            avgLabel="Média / dia"
+            avgValue={brl(avgPerDay)}
+            accent="success"
+          />
+          <PairCard
+            totalIcon={<Route className="h-3.5 w-3.5" />}
+            totalLabel="KM total"
+            totalValue={`${num(s.totalKm, 0)} km`}
+            avgIcon={<Route className="h-3.5 w-3.5" />}
+            avgLabel="Média / km"
+            avgValue={brl(s.perKm)}
+            accent="info"
+          />
+          <PairCard
+            totalIcon={<Flag className="h-3.5 w-3.5" />}
+            totalLabel="Corridas total"
+            totalValue={String(s.totalRides)}
+            avgIcon={<Flag className="h-3.5 w-3.5" />}
+            avgLabel="Média / corrida"
+            avgValue={brl(s.perRide)}
+            accent="purple"
+          />
         </div>
 
         {/* Chart selector + chart */}
@@ -421,23 +425,21 @@ function PairCard({
   return (
     <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
-        <div className="p-3">
+        <div className="p-3 pr-4">
           <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
             {totalIcon}<span className="truncate">{totalLabel}</span>
           </div>
-          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{totalValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight">{totalValue}</div>
         </div>
-        <div className="p-3 bg-muted/20">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+        <div className="p-3 pl-4 bg-muted/20">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider justify-end", a.text)}>
             {avgIcon}<span className="truncate">{avgLabel}</span>
           </div>
-          <div className="mt-1 text-base font-bold tabular-nums text-foreground truncate">{avgValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight text-right">{avgValue}</div>
         </div>
       </div>
-      {/* Subtle connector between total and average */}
-      <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 flex items-center">
-        <div className={cn("h-px w-7 bg-gradient-to-r from-transparent to-transparent", a.line)} />
-      </div>
+      {/* Structural seam between total and average */}
+      <div className={cn("pointer-events-none absolute inset-y-3 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
       <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full ring-2 ring-card", a.dot)} />
     </div>
   );
