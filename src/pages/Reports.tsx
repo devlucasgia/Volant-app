@@ -292,7 +292,7 @@ export default function Reports() {
         )}
 
         {/* Top hierarchy: Lucro líquido + Média por hora share equal weight */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {/* Lucro líquido */}
           <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
             <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
@@ -336,7 +336,7 @@ export default function Reports() {
         </div>
 
         {/* Secondary KPIs: Bruto + Gastos */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-2">
           <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
           <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
         </div>
@@ -346,7 +346,7 @@ export default function Reports() {
             - <md (mobile/small tablet): 1 column, full-width pair per row
             - md–xl (tablet/small desktop): 2 columns, ~min 340px each
             - ≥xl (wide desktop/PWA): 3 columns */}
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
             totalLabel="Dias trab."
@@ -458,26 +458,26 @@ function PairCard({
     purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.25)]", line: "via-[hsl(265_85%_70%/0.35)]",      dot: "bg-[hsl(265_85%_70%/0.7)]" },
   };
   const a = accentMap[accent];
-  const half = "flex min-w-0 flex-col items-center justify-center gap-1.5 px-3 py-3";
+  const half = "flex min-w-0 flex-col items-center justify-center gap-1 px-2.5 py-2.5 sm:px-3 sm:py-3";
   const labelCls = cn(
-    "flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-none whitespace-nowrap",
+    "flex min-w-0 items-center justify-center gap-1 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.12em] leading-none whitespace-nowrap",
     a.text
   );
-  const valueCls = "text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
+  const valueCls = "text-center text-[clamp(15px,2vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
         <div className={half}>
           <div className={labelCls}>
             <span className="shrink-0">{totalIcon}</span>
-            <span>{totalLabel}</span>
+            <span className="min-w-0">{totalLabel}</span>
           </div>
           <div className={valueCls}>{totalValue}</div>
         </div>
         <div className={cn(half, "bg-muted/15")}>
           <div className={labelCls}>
             <span className="shrink-0">{avgIcon}</span>
-            <span>{avgLabel}</span>
+            <span className="min-w-0">{avgLabel}</span>
           </div>
           <div className={valueCls}>{avgValue}</div>
         </div>
