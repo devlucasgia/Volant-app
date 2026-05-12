@@ -346,11 +346,10 @@ export default function Reports() {
             - <md (mobile/small tablet): 1 column, full-width pair per row
             - md–xl (tablet/small desktop): 2 columns, ~min 340px each
             - ≥xl (wide desktop/PWA): 3 columns */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-            totalLabel="Dias trabalhados"
-            totalLabelClassName="max-[420px]:max-w-[10ch]"
+            totalLabel="Dias trab."
             totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
             avgIcon={<Clock className="h-3.5 w-3.5" />}
             avgLabel="Média / dia"
@@ -368,10 +367,10 @@ export default function Reports() {
           />
           <PairCard
             totalIcon={<Flag className="h-3.5 w-3.5" />}
-            totalLabel="Corridas total"
+            totalLabel="Corridas"
             totalValue={String(s.totalRides)}
             avgIcon={<Flag className="h-3.5 w-3.5" />}
-            avgLabel="Média / corrida"
+            avgLabel="R$ / corrida"
             avgValue={brl(s.perRide)}
             accent="purple"
           />
