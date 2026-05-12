@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useTimer, formatHMS } from "@/context/TimerContext";
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
-import { Play, RotateCcw, Coffee, Timer as TimerIcon, StopCircle, CheckCircle2, Target } from "lucide-react";
+import { Play, RotateCcw, Coffee, StopCircle, CheckCircle2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
