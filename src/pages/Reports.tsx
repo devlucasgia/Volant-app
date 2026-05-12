@@ -346,11 +346,10 @@ export default function Reports() {
             - <md (mobile/small tablet): 1 column, full-width pair per row
             - md–xl (tablet/small desktop): 2 columns, ~min 340px each
             - ≥xl (wide desktop/PWA): 3 columns */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-            totalLabel="Dias trabalhados"
-            totalLabelClassName="max-[420px]:max-w-[10ch]"
+            totalLabel="Dias trab."
             totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
             avgIcon={<Clock className="h-3.5 w-3.5" />}
             avgLabel="Média / dia"
@@ -368,10 +367,10 @@ export default function Reports() {
           />
           <PairCard
             totalIcon={<Flag className="h-3.5 w-3.5" />}
-            totalLabel="Corridas total"
+            totalLabel="Corridas"
             totalValue={String(s.totalRides)}
             avgIcon={<Flag className="h-3.5 w-3.5" />}
-            avgLabel="Média / corrida"
+            avgLabel="R$ / corrida"
             avgValue={brl(s.perRide)}
             accent="purple"
           />
@@ -447,14 +446,10 @@ function PairCard({
   totalIcon, totalLabel, totalValue,
   avgIcon, avgLabel, avgValue,
   accent = "muted",
-  totalLabelClassName,
-  avgLabelClassName,
 }: {
   totalIcon: React.ReactNode; totalLabel: string; totalValue: string;
   avgIcon: React.ReactNode; avgLabel: string; avgValue: string;
   accent?: "success" | "info" | "purple" | "muted";
-  totalLabelClassName?: string;
-  avgLabelClassName?: string;
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
@@ -463,22 +458,28 @@ function PairCard({
     purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.25)]", line: "via-[hsl(265_85%_70%/0.35)]",      dot: "bg-[hsl(265_85%_70%/0.7)]" },
   };
   const a = accentMap[accent];
+  const half = "flex min-w-0 flex-col items-center justify-center gap-1.5 px-3 py-3";
+  const labelCls = cn(
+    "flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-none whitespace-nowrap",
+    a.text
+  );
+  const valueCls = "text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
-      <div className="grid min-h-[104px] grid-cols-2 items-stretch sm:min-h-[108px]">
-        <div className="flex min-w-0 flex-col justify-between gap-2 p-4 pr-5">
-          <div className={cn("flex min-h-[2.6rem] items-start gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-[1.15] sm:min-h-[2.3rem]", a.text)}>
-            <span className="mt-px shrink-0">{totalIcon}</span>
-            <span className={cn("block text-left text-balance", totalLabelClassName)}>{totalLabel}</span>
+      <div className="grid grid-cols-2 items-stretch">
+        <div className={half}>
+          <div className={labelCls}>
+            <span className="shrink-0">{totalIcon}</span>
+            <span>{totalLabel}</span>
           </div>
-          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground break-words">{totalValue}</div>
+          <div className={valueCls}>{totalValue}</div>
         </div>
-        <div className="flex min-w-0 flex-col justify-between gap-2 bg-muted/15 p-4 pl-5 text-right">
-          <div className={cn("ml-auto flex min-h-[2.6rem] max-w-full items-start justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-[1.15] sm:min-h-[2.3rem]", a.text)}>
-            <span className="mt-px shrink-0">{avgIcon}</span>
-            <span className={cn("block text-right text-balance", avgLabelClassName)}>{avgLabel}</span>
+        <div className={cn(half, "bg-muted/15")}>
+          <div className={labelCls}>
+            <span className="shrink-0">{avgIcon}</span>
+            <span>{avgLabel}</span>
           </div>
-          <div className="w-full text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground break-words">{avgValue}</div>
+          <div className={valueCls}>{avgValue}</div>
         </div>
       </div>
       <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
