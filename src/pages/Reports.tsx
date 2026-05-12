@@ -373,10 +373,13 @@ export default function Reports() {
         </div>
 
         {/* Chart selector + chart */}
-        <div className="rounded-2xl border border-border bg-card/80 p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visualização</div>
-            <div className="min-w-[160px]">
+        <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-0.5">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+              <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+            </div>
+            <div className="min-w-[150px]">
               <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
                 <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -387,7 +390,6 @@ export default function Reports() {
               </Select>
             </div>
           </div>
-          <div className="mb-1 text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}
