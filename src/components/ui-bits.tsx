@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import volantSymbol from "@/assets/volant-symbol-header.png";
 
 interface PageHeaderProps {
   title: string;
@@ -16,7 +17,7 @@ export function PageHeader({ title, subtitle, right, brand = false }: PageHeader
         <div className="flex items-center gap-3 min-w-0">
           {brand && (
             <img
-              src="/volant-symbol-header.png"
+              src={volantSymbol}
               alt="Volant"
               width={40}
               height={40}
