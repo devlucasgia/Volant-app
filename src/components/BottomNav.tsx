@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
-  Home, History, BarChart3, Settings as SettingsIcon, Timer,
+  Home, History, BarChart3, Settings as SettingsIcon,
   Plus, TrendingUp, TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,6 @@ import { useUI } from "@/context/UIContext";
 
 const navItems = [
   { to: "/", label: "Início", icon: Home, end: true },
-  { to: "/jornada", label: "Jornada", icon: Timer },
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/ajustes", label: "Ajustes", icon: SettingsIcon },
