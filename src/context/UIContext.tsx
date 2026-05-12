@@ -7,6 +7,8 @@ interface EntryDrawerPreset {
   /** When provided, the drawer opens in edit mode for this entry. */
   editing?: Entry | null;
   onAfterSave?: () => void;
+  /** Prefill worked hours (used after ending a journey). */
+  prefillHours?: number;
 }
 
 interface UICtx {

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
-  Home, History, BarChart3, Settings as SettingsIcon, Timer,
+  Home, History, BarChart3, Settings as SettingsIcon,
   Plus, TrendingUp, TrendingDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,6 @@ import { useUI } from "@/context/UIContext";
 
 const navItems = [
   { to: "/", label: "Início", icon: Home, end: true },
-  { to: "/jornada", label: "Jornada", icon: Timer },
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/ajustes", label: "Ajustes", icon: SettingsIcon },
@@ -49,11 +48,11 @@ export function BottomNav() {
         onClick={() => setOpen(false)}
       />
 
-      {/* Bottom navigation — 5 evenly spaced items, untouched by FAB */}
+      {/* Bottom navigation — 4 items + center slot reserved for the FAB */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg safe-bottom">
         <ul className="mx-auto grid max-w-md grid-cols-5">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
-            <li key={to}>
+          {navItems.map(({ to, label, icon: Icon, end }, i) => (
+            <li key={to} className={cn(i === 2 && "col-start-4")}>
               <NavLink
                 to={to}
                 end={end}
@@ -76,7 +75,7 @@ export function BottomNav() {
       <div
         ref={fabRef}
         className="fixed left-1/2 z-50 -translate-x-1/2"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 64px)" }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 14px)" }}
       >
         {/* Radial action: Novo ganho (diagonal above-left) */}
         <button

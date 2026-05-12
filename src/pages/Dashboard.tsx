@@ -11,6 +11,7 @@ import { Wrench, Target, Clock, Route, CalendarDays, Gauge } from "lucide-react"
 import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
+import { JourneyModule } from "@/components/JourneyModule";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
@@ -236,6 +237,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Jornada — compact, integrated module */}
+        <JourneyModule />
       </div>
     </>
   );
