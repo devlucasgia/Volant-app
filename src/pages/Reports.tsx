@@ -23,13 +23,14 @@ import { cn } from "@/lib/utils";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
   startOfDay, endOfDay, subMonths, addMonths,
+  startOfYear, endOfYear, eachMonthOfInterval, subYears, addYears, getYear,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
-type RangeMode = "range" | "month";
+type RangeMode = "range" | "month" | "year";
 type ChartKey = "net" | "expenses" | "km" | "hours";
 
 const CHARTS: { key: ChartKey; label: string; color: string }[] = [
@@ -43,14 +44,16 @@ export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor } = useData();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
+  const [yearRef, setYearRef] = useState<Date>(startOfYear(new Date()));
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
+    if (mode === "year") return { start: startOfDay(startOfYear(yearRef)), end: endOfDay(endOfYear(yearRef)) };
     return { start: startOfDay(from), end: endOfDay(to) };
-  }, [mode, monthRef, from, to]);
+  }, [mode, monthRef, yearRef, from, to]);
 
   const filtered = useMemo<Entry[]>(
     () => entries.filter((e) => isWithinInterval(new Date(e.date), interval)),
@@ -59,11 +62,30 @@ export default function Reports() {
 
   const s = useMemo(() => summarize(filtered), [filtered]);
 
-  // Per-day series (also adapts grouping if too long → weekly buckets)
+  // Per-day series (also adapts grouping if too long → weekly buckets, or monthly when in year mode)
   const days = useMemo(() => eachDayOfInterval(interval), [interval]);
-  const useWeekly = days.length > 35;
+  const useWeekly = mode !== "year" && days.length > 35;
+  const useMonthly = mode === "year";
 
   const dailySeries = useMemo(() => {
+    if (useMonthly) {
+      const months = eachMonthOfInterval(interval);
+      return months.map((m) => {
+        const monthStart = startOfMonth(m);
+        const monthEnd = endOfMonth(m);
+        const monthEntries = filtered.filter((e) => {
+          const d = new Date(e.date);
+          return d >= monthStart && d <= monthEnd;
+        });
+        const earns = monthEntries.filter((e): e is EarningEntry => e.type === "earning");
+        const exps = monthEntries.filter((e) => e.type === "expense");
+        const km = earns.reduce((a, e) => a + e.km, 0);
+        const hours = earns.reduce((a, e) => a + e.hours, 0);
+        const gross = earns.reduce((a, e) => a + e.gross, 0);
+        const expense = exps.reduce((a, e: any) => a + (e.expense?.amount || 0), 0);
+        return { d: m, name: format(m, "MMM", { locale: ptBR }), km, hours, gross, expense, net: gross - expense };
+      });
+    }
     const buckets = days.map((d) => {
       const dayEntries = filtered.filter((e) => format(new Date(e.date), "yyyy-MM-dd") === format(d, "yyyy-MM-dd"));
       const earns = dayEntries.filter((e): e is EarningEntry => e.type === "earning");
@@ -89,11 +111,13 @@ export default function Reports() {
       });
     }
     return weekly;
-  }, [days, filtered, useWeekly]);
+  }, [days, filtered, useWeekly, useMonthly, interval]);
 
   const periodLabel = mode === "month"
     ? format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })
-    : `${format(from, "dd/MM/yy")} – ${format(to, "dd/MM/yy")}`;
+    : mode === "year"
+      ? format(yearRef, "yyyy")
+      : `${format(from, "dd/MM/yy")} – ${format(to, "dd/MM/yy")}`;
 
 
   // Worked days (days with at least one earning)
@@ -234,7 +258,11 @@ export default function Reports() {
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
         {/* Mode switch */}
         <Segmented<RangeMode>
-          options={[{ key: "month", label: "Por mês" }, { key: "range", label: "Período personalizado" }]}
+          options={[
+            { key: "month", label: "Por mês" },
+            { key: "year", label: "Por ano" },
+            { key: "range", label: "Personalizado" },
+          ]}
           value={mode}
           onChange={setMode}
           size="sm"
@@ -261,6 +289,27 @@ export default function Reports() {
             <Button variant="outline" size="icon"
               disabled={endOfMonth(monthRef) >= endOfMonth(new Date())}
               onClick={() => setMonthRef(addMonths(monthRef, 1))}>›</Button>
+          </div>
+        ) : mode === "year" ? (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
+            <Select
+              value={String(getYear(yearRef))}
+              onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
+            >
+              <SelectTrigger className="flex-1 justify-start font-normal">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                <SelectValue>{format(yearRef, "yyyy")}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 8 }, (_, i) => getYear(new Date()) - i).map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon"
+              disabled={getYear(yearRef) >= getYear(new Date())}
+              onClick={() => setYearRef(addYears(yearRef, 1))}>›</Button>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
