@@ -84,6 +84,9 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     }
     if (preset?.tab) setTab(preset.tab);
     if (preset?.category) setCategory(preset.category);
+    if (preset?.prefillHours !== undefined) {
+      setHours(Math.round(preset.prefillHours * 100) / 100);
+    }
   }, [open, preset, editing]);
 
   const reset = () => {
