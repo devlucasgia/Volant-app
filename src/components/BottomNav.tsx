@@ -48,11 +48,11 @@ export function BottomNav() {
         onClick={() => setOpen(false)}
       />
 
-      {/* Bottom navigation — 5 evenly spaced items, untouched by FAB */}
+      {/* Bottom navigation — 4 items + center slot reserved for the FAB */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg safe-bottom">
         <ul className="mx-auto grid max-w-md grid-cols-5">
-          {navItems.map(({ to, label, icon: Icon, end }) => (
-            <li key={to}>
+          {navItems.map(({ to, label, icon: Icon, end }, i) => (
+            <li key={to} className={cn(i === 2 && "col-start-4")}>
               <NavLink
                 to={to}
                 end={end}
