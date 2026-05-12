@@ -324,8 +324,9 @@ export default function SettingsPage() {
               </div>
             </AccordionTrigger>
             <AccordionContent className="pb-4 space-y-2">
-              <Label>Valor (R$)</Label>
+              <Label>Valor</Label>
               <NumberField
+                currency
                 value={settings.dailyGoal || null}
                 onChange={(v) => updateSettings({ dailyGoal: v ?? 0 })}
               />
