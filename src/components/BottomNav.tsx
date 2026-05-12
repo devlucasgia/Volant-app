@@ -72,10 +72,11 @@ export function BottomNav() {
         </ul>
       </nav>
 
-      {/* Independent floating action button — perfectly centered */}
+      {/* Independent floating action button — sits above the navbar, never overlaps items */}
       <div
         ref={fabRef}
-        className="fixed bottom-7 left-1/2 z-50 -translate-x-1/2 safe-bottom"
+        className="fixed left-1/2 z-50 -translate-x-1/2"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 64px)" }}
       >
         {/* Radial action: Novo ganho (diagonal above-left) */}
         <button
