@@ -458,26 +458,26 @@ function PairCard({
     purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.25)]", line: "via-[hsl(265_85%_70%/0.35)]",      dot: "bg-[hsl(265_85%_70%/0.7)]" },
   };
   const a = accentMap[accent];
-  const half = "flex min-w-0 flex-col items-center justify-center gap-1.5 px-3 py-3";
+  const half = "flex min-w-0 flex-col items-center justify-center gap-1 px-2.5 py-2.5 sm:px-3 sm:py-3";
   const labelCls = cn(
-    "flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-none whitespace-nowrap",
+    "flex min-w-0 items-center justify-center gap-1 text-center text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.12em] leading-none whitespace-nowrap",
     a.text
   );
-  const valueCls = "text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
+  const valueCls = "text-center text-[clamp(15px,2vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
         <div className={half}>
           <div className={labelCls}>
             <span className="shrink-0">{totalIcon}</span>
-            <span>{totalLabel}</span>
+            <span className="min-w-0">{totalLabel}</span>
           </div>
           <div className={valueCls}>{totalValue}</div>
         </div>
         <div className={cn(half, "bg-muted/15")}>
           <div className={labelCls}>
             <span className="shrink-0">{avgIcon}</span>
-            <span>{avgLabel}</span>
+            <span className="min-w-0">{avgLabel}</span>
           </div>
           <div className={valueCls}>{avgValue}</div>
         </div>
