@@ -7,7 +7,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, CalendarDays, Gauge } from "lucide-react";
+import { Wrench, Target, Clock, Route, CalendarDays, Gauge, Timer as TimerIcon } from "lucide-react";
 import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -238,8 +238,13 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Jornada — compact, integrated module */}
-        <JourneyModule />
+        {/* Jornada — separate section */}
+        <section>
+          <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <TimerIcon className="h-3.5 w-3.5" /> Jornada
+          </div>
+          <JourneyModule />
+        </section>
       </div>
     </>
   );

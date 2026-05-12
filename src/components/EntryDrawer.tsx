@@ -82,9 +82,16 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       }
       return;
     }
-    if (preset?.tab) setTab(preset.tab);
-    if (preset?.category) setCategory(preset.category);
-    if (preset?.prefillHours !== undefined) {
+    // Fresh new record — clear any stale state from previous sessions.
+    setDate(new Date());
+    setApp("uber");
+    setKmMode("total");
+    setKmTotal(null); setKmStart(null); setKmEnd(null);
+    setHours(null); setGross(null); setRides(null); setNotes("");
+    setAmount(null); setDescription(""); setMaintenanceType("oleo");
+    if (preset?.tab) setTab(preset.tab); else setTab("earning");
+    if (preset?.category) setCategory(preset.category); else setCategory("combustivel");
+    if (preset?.prefillHours !== undefined && preset.prefillHours > 0) {
       setHours(Math.round(preset.prefillHours * 100) / 100);
     }
   }, [open, preset, editing]);
@@ -277,7 +284,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   </div>
                   <div className="space-y-2">
                     <Label>Valor recebido</Label>
-                    <NumberField placeholder="R$" value={gross} onChange={setGross} />
+                    <NumberField currency value={gross} onChange={setGross} />
                   </div>
                 </div>
 
@@ -330,7 +337,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
                 <div className="space-y-2">
                   <Label>Valor</Label>
-                  <NumberField placeholder="R$" value={amount} onChange={setAmount} />
+                  <NumberField currency value={amount} onChange={setAmount} />
                 </div>
 
                 <div className="space-y-2">
