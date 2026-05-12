@@ -231,7 +231,7 @@ export default function Reports() {
           </Popover>
         }
       />
-      <div className="space-y-5 px-4 pt-4">
+      <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
         {/* Mode switch */}
         <Segmented<RangeMode>
           options={[{ key: "month", label: "Por mês" }, { key: "range", label: "Período personalizado" }]}
@@ -342,7 +342,7 @@ export default function Reports() {
         </div>
 
         {/* Performance: paired totals/averages with subtle connector */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <PairCard
             totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
             totalLabel="Dias trabalhados"
@@ -457,17 +457,19 @@ function PairCard({
   return (
     <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
-        <div className="flex flex-col justify-center p-3.5 pr-5 min-w-0">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
-            {totalIcon}<span className="truncate">{totalLabel}</span>
+        <div className="flex flex-col justify-center gap-1.5 p-4 pr-5 min-w-0">
+          <div className={cn("flex items-start gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-tight", a.text)}>
+            <span className="mt-px shrink-0">{totalIcon}</span>
+            <span className="break-words">{totalLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight">{totalValue}</div>
+          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums text-foreground leading-tight tracking-tight break-words">{totalValue}</div>
         </div>
-        <div className="flex flex-col justify-center p-3.5 pl-5 min-w-0 bg-muted/15 items-end">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
-            {avgIcon}<span className="truncate">{avgLabel}</span>
+        <div className="flex flex-col justify-center gap-1.5 p-4 pl-5 min-w-0 bg-muted/15 items-end text-right">
+          <div className={cn("flex items-start justify-end gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] leading-tight w-full", a.text)}>
+            <span className="mt-px shrink-0">{avgIcon}</span>
+            <span className="break-words">{avgLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight text-right w-full">{avgValue}</div>
+          <div className="text-[clamp(15px,3.6vw,18px)] font-bold tabular-nums text-foreground leading-tight tracking-tight break-words w-full">{avgValue}</div>
         </div>
       </div>
       {/* Integrated structural seam */}
