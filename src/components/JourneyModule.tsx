@@ -175,7 +175,7 @@ export function JourneyModule() {
             <div className="space-y-2 px-4 pb-2">
               <Label>Meta (R$)</Label>
               <NumberField
-                placeholder="Ex: 250"
+                currency
                 value={goalValue}
                 onChange={setGoalValue}
                 autoFocus
