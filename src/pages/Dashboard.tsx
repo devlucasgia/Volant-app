@@ -237,6 +237,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Jornada — compact, integrated module */}
+        <JourneyModule />
       </div>
     </>
   );
