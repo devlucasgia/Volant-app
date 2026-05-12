@@ -168,16 +168,42 @@ export default function Reports() {
   const isMoney = chart === "net" || chart === "expenses";
 
   const renderChart = () => {
-    const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 };
+    const tooltipStyle = {
+      background: "hsl(var(--card))",
+      border: "1px solid hsl(var(--border))",
+      borderRadius: 12,
+      fontSize: 12,
+      boxShadow: "0 10px 30px -12px hsl(var(--background) / 0.6)",
+      padding: "8px 12px",
+    };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
+    const count = dailySeries.length;
+    // Adaptive bar sizing: fewer points → wider, more points → slimmer
+    const barSize = Math.max(10, Math.min(46, Math.round(220 / Math.max(count, 1))));
+    const showLabels = count <= 12;
+    const tickInterval = count > 24 ? Math.ceil(count / 12) : "preserveStartEnd";
     return (
-      <BarChart data={dailySeries} margin={{ top: 24, right: 8, bottom: 0, left: -16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-        <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} interval="preserveStartEnd" />
-        <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-        <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]}>
-          <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+      <BarChart data={dailySeries} margin={{ top: 24, right: 12, bottom: 4, left: -12 }} barCategoryGap="22%">
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <XAxis
+          dataKey="name"
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          interval={tickInterval as any}
+          tickMargin={6}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={false}
+          tickLine={false}
+          width={42}
+        />
+        <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]} maxBarSize={barSize}>
+          {showLabels && (
+            <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+          )}
         </Bar>
       </BarChart>
     );
