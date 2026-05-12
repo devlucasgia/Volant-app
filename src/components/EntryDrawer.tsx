@@ -38,6 +38,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
+  const [submitting, setSubmitting] = useState(false);
   const editing = preset?.editing || null;
   const isEditing = !!editing;
 
