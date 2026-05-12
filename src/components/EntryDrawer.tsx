@@ -23,6 +23,7 @@ interface EntryDrawerPreset {
   category?: ExpenseCategory;
   editing?: Entry | null;
   onAfterSave?: () => void;
+  prefillHours?: number;
 }
 
 interface Props {
