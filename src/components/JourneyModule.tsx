@@ -55,9 +55,8 @@ export function JourneyModule() {
   };
 
   const handleEndConfirmed = () => {
-    const workedHours = workMs / (1000 * 60 * 60);
-    endJourney();
-    // open new earning form with worked hours prefilled
+    const final = endJourney();
+    const workedHours = final.workMs / (1000 * 60 * 60);
     setTimeout(() => {
       openDrawer({ tab: "earning", prefillHours: workedHours });
     }, 200);
