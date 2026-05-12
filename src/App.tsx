@@ -13,7 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Reports from "./pages/Reports";
-import Journey from "./pages/Journey";
+
 import SettingsPage from "./pages/Settings";
 import NotFound from "./pages/NotFound.tsx";
 
