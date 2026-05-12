@@ -408,30 +408,30 @@ function SideStatCard({
 }: { label: string; value: string; icon: React.ReactNode; tone: "info" | "destructive" }) {
   const toneMap = {
     info: {
-      border: "border-info/40",
-      bg: "from-info/20 via-info/10 to-info/5",
-      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--info)/0.5)]",
-      blob: "bg-info/25",
+      border: "border-info/25",
+      bg: "from-info/12 via-info/6 to-info/[0.03]",
+      shadow: "shadow-[0_6px_24px_-14px_hsl(var(--info)/0.4)]",
+      blob: "bg-info/15",
       label: "text-info",
       icon: "text-info",
     },
     destructive: {
-      border: "border-destructive/40",
-      bg: "from-destructive/20 via-destructive/10 to-destructive/5",
-      shadow: "shadow-[0_8px_30px_-12px_hsl(var(--destructive)/0.5)]",
-      blob: "bg-destructive/25",
+      border: "border-destructive/25",
+      bg: "from-destructive/12 via-destructive/6 to-destructive/[0.03]",
+      shadow: "shadow-[0_6px_24px_-14px_hsl(var(--destructive)/0.4)]",
+      blob: "bg-destructive/15",
       label: "text-destructive",
       icon: "text-destructive",
     },
   }[tone];
   return (
-    <div className={cn("relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3", toneMap.border, toneMap.bg, toneMap.shadow)}>
-      <div className={cn("pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl", toneMap.blob)} />
+    <div className={cn("relative overflow-hidden rounded-2xl border bg-gradient-to-br p-3.5", toneMap.border, toneMap.bg, toneMap.shadow)}>
+      <div className={cn("pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-[40px]", toneMap.blob)} />
       <div className="relative flex items-center gap-2">
         <span className={cn(toneMap.icon)}>{icon}</span>
-        <div className={cn("text-[10px] font-semibold uppercase tracking-wider", toneMap.label)}>{label}</div>
+        <div className={cn("text-[10px] font-semibold uppercase tracking-[0.16em]", toneMap.label)}>{label}</div>
       </div>
-      <div className="relative mt-2 text-[clamp(16px,3.6vw,20px)] font-bold tabular-nums text-foreground break-words leading-tight">
+      <div className="relative mt-2 text-[clamp(17px,3.8vw,21px)] font-bold tabular-nums text-foreground break-words leading-tight tracking-tight">
         {value}
       </div>
     </div>
@@ -449,30 +449,30 @@ function PairCard({
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
-    success: { text: "text-success",            border: "border-success/30",              line: "via-success/40",                   dot: "bg-success/60" },
-    info:    { text: "text-info",               border: "border-info/30",                 line: "via-info/40",                      dot: "bg-info/60" },
-    purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.3)]",  line: "via-[hsl(265_85%_70%/0.4)]",       dot: "bg-[hsl(265_85%_70%/0.6)]" },
+    success: { text: "text-success",            border: "border-success/25",              line: "via-success/35",                   dot: "bg-success/70" },
+    info:    { text: "text-info",               border: "border-info/25",                 line: "via-info/35",                      dot: "bg-info/70" },
+    purple:  { text: "text-[hsl(265_85%_70%)]", border: "border-[hsl(265_85%_70%/0.25)]", line: "via-[hsl(265_85%_70%/0.35)]",      dot: "bg-[hsl(265_85%_70%/0.7)]" },
   };
   const a = accentMap[accent];
   return (
     <div className={cn("relative rounded-2xl border bg-card overflow-hidden", a.border)}>
       <div className="grid grid-cols-2 items-stretch">
-        <div className="p-3 pr-4">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider", a.text)}>
+        <div className="flex flex-col justify-center p-3.5 pr-5 min-w-0">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
             {totalIcon}<span className="truncate">{totalLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight">{totalValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight">{totalValue}</div>
         </div>
-        <div className="p-3 pl-4 bg-muted/20">
-          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider justify-end", a.text)}>
+        <div className="flex flex-col justify-center p-3.5 pl-5 min-w-0 bg-muted/15 items-end">
+          <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em]", a.text)}>
             {avgIcon}<span className="truncate">{avgLabel}</span>
           </div>
-          <div className="mt-1.5 text-[clamp(15px,3.4vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight text-right">{avgValue}</div>
+          <div className="mt-1.5 text-[clamp(15px,3.5vw,18px)] font-bold tabular-nums text-foreground truncate leading-tight tracking-tight text-right w-full">{avgValue}</div>
         </div>
       </div>
-      {/* Structural seam between total and average */}
-      <div className={cn("pointer-events-none absolute inset-y-3 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
-      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1.5 w-1.5 rounded-full ring-2 ring-card", a.dot)} />
+      {/* Integrated structural seam */}
+      <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
+      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
     </div>
   );
 }
