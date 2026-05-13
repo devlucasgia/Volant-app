@@ -33,7 +33,7 @@ interface Props {
 }
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
-  const { addEntry, updateEntry, expenseCategories, earningPlatforms } = useData();
+  const { addEntry, updateEntry, expenseCategories, earningPlatforms, isSimplePlatform } = useData();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
@@ -111,12 +111,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     if (!isEditing) chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
     const dateIso = chosen.toISOString();
 
-    const km = kmMode === "total"
+    const isSimple = isSimplePlatform(app);
+    const km = isSimple ? 0 : (kmMode === "total"
       ? (kmTotal ?? 0)
-      : Math.max(0, (kmEnd ?? 0) - (kmStart ?? 0));
-    const h = hours ?? 0;
+      : Math.max(0, (kmEnd ?? 0) - (kmStart ?? 0)));
+    const h = isSimple ? 0 : (hours ?? 0);
     const g = gross ?? 0;
-    const r = rides ?? 0;
+    const r = isSimple ? 0 : (rides ?? 0);
     const a = amount ?? 0;
 
     setSubmitting(true);
@@ -236,68 +237,91 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                       <Plus className="h-3 w-3" /> Nova plataforma
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {earningPlatforms.map((p) => {
-                      const selected = app === p.key;
-                      return (
-                        <button
-                          key={p.key}
-                          type="button"
-                          onClick={() => setApp(p.key)}
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 px-2 py-2.5 text-xs font-semibold transition-all bg-card",
-                            selected ? "border-primary ring-2 ring-primary/30" : "border-border opacity-80"
-                          )}
-                        >
-                          <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" />
-                          <span className="truncate text-foreground">{p.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <Select value={app} onValueChange={(v) => setApp(v as AppName)}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue>
+                        {(() => {
+                          const p = earningPlatforms.find((x) => x.key === app);
+                          if (!p) return null;
+                          return (
+                            <div className="flex items-center gap-2.5">
+                              <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} imageUrl={p.imageUrl} size="sm" />
+                              <span className="font-semibold">{p.label}</span>
+                              {p.type === "simple" && (
+                                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                                  Receita
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {earningPlatforms.map((p) => (
+                        <SelectItem key={p.key} value={p.key}>
+                          <div className="flex items-center gap-2.5">
+                            <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} imageUrl={p.imageUrl} size="sm" />
+                            <span>{p.label}</span>
+                            {p.type === "simple" && (
+                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
+                                Receita
+                              </span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Quilometragem</Label>
-                    <div className="flex rounded-md bg-muted p-0.5 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setKmMode("total")}
-                        className={cn("rounded px-2 py-1", kmMode === "total" && "bg-card shadow-sm")}
-                      >Total</button>
-                      <button
-                        type="button"
-                        onClick={() => setKmMode("range")}
-                        className={cn("rounded px-2 py-1", kmMode === "range" && "bg-card shadow-sm")}
-                      >Inicial/Final</button>
+                {!isSimplePlatform(app) && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Quilometragem</Label>
+                      <div className="flex rounded-md bg-muted p-0.5 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setKmMode("total")}
+                          className={cn("rounded px-2 py-1", kmMode === "total" && "bg-card shadow-sm")}
+                        >Total</button>
+                        <button
+                          type="button"
+                          onClick={() => setKmMode("range")}
+                          className={cn("rounded px-2 py-1", kmMode === "range" && "bg-card shadow-sm")}
+                        >Inicial/Final</button>
+                      </div>
                     </div>
+                    {kmMode === "total" ? (
+                      <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        <NumberField placeholder="Km inicial" value={kmStart} onChange={setKmStart} />
+                        <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
+                      </div>
+                    )}
                   </div>
-                  {kmMode === "total" ? (
-                    <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      <NumberField placeholder="Km inicial" value={kmStart} onChange={setKmStart} />
-                      <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
+                )}
+
+                <div className={cn("gap-2", isSimplePlatform(app) ? "" : "grid grid-cols-2")}>
+                  {!isSimplePlatform(app) && (
+                    <div className="space-y-2">
+                      <Label>Horas trabalhadas</Label>
+                      <NumberField placeholder="Ex: 6.5" value={hours} onChange={setHours} />
                     </div>
                   )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-2">
-                    <Label>Horas trabalhadas</Label>
-                    <NumberField placeholder="Ex: 6.5" value={hours} onChange={setHours} />
-                  </div>
                   <div className="space-y-2">
                     <Label>Valor recebido</Label>
                     <NumberField currency value={gross} onChange={setGross} />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Quantidade de corridas</Label>
-                  <NumberField placeholder="Opcional" value={rides} onChange={setRides} decimal={false} />
-                </div>
+                {!isSimplePlatform(app) && (
+                  <div className="space-y-2">
+                    <Label>Quantidade de corridas</Label>
+                    <NumberField placeholder="Opcional" value={rides} onChange={setRides} decimal={false} />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label>Observações</Label>

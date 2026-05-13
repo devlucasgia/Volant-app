@@ -1,13 +1,21 @@
 // Platforms are now dynamic. AppName is a string key resolved via DataContext.platformMetaFor
 export type AppName = string;
 
-export interface PlatformMeta { label: string; emoji: string; hex: string }
+export type PlatformType = "ride" | "simple";
+
+export interface PlatformMeta {
+  label: string;
+  emoji: string;
+  hex: string;
+  type: PlatformType;
+  imageUrl?: string | null;
+}
 
 export const BUILTIN_PLATFORM_META: Record<string, PlatformMeta> = {
-  uber:       { label: "Uber",       emoji: "🚗", hex: "#000000" },
-  "99":       { label: "99",         emoji: "🚕", hex: "#FFCC00" },
-  indriver:   { label: "inDrive",    emoji: "🟢", hex: "#A4E333" },
-  particular: { label: "Particular", emoji: "👤", hex: "#3B82F6" },
+  uber:       { label: "Uber",       emoji: "🚗", hex: "#000000", type: "ride" },
+  "99":       { label: "99",         emoji: "🚕", hex: "#FFCC00", type: "ride" },
+  indriver:   { label: "inDrive",    emoji: "🟢", hex: "#A4E333", type: "ride" },
+  particular: { label: "Particular", emoji: "👤", hex: "#3B82F6", type: "ride" },
 };
 
 // Back-compat shim. Components increasingly use `platformMetaFor` from DataContext.
@@ -108,4 +116,6 @@ export interface CustomCategory {
   emoji: string;
   color: string;
   is_custom: boolean;
+  platform_type?: PlatformType;
+  image_url?: string | null;
 }

@@ -20,7 +20,7 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor } = useData();
+  const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
   const widgets = settings.dashboardWidgets;
@@ -37,7 +37,7 @@ export default function Dashboard() {
   }, [period]);
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
-  const s = useMemo(() => summarize(filtered), [filtered]);
+  const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
   const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
@@ -188,7 +188,7 @@ export default function Dashboard() {
                   return (
                     <div key={k} className="flex items-center gap-3">
                       <div className="flex min-w-[120px] items-center gap-2">
-                        <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" />
+                        <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
                         <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
                       </div>
                       <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">

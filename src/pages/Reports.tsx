@@ -41,7 +41,7 @@ const CHARTS: { key: ChartKey; label: string; color: string }[] = [
 ];
 
 export default function Reports() {
-  const { entries, expenseMetaFor, platformMetaFor } = useData();
+  const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [yearRef, setYearRef] = useState<Date>(startOfYear(new Date()));
@@ -60,7 +60,7 @@ export default function Reports() {
     [entries, interval]
   );
 
-  const s = useMemo(() => summarize(filtered), [filtered]);
+  const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
 
   // Per-day series (also adapts grouping if too long → weekly buckets, or monthly when in year mode)
   const days = useMemo(() => eachDayOfInterval(interval), [interval]);
