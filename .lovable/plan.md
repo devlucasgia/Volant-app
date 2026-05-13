@@ -1,46 +1,55 @@
-## Plano de implementação
+## O que descobri reproduzindo
 
-### 1. Múltiplos carros + seleção
-**DB:** Nova tabela `cars` (user_id, brand, model, plate, initial_km, is_active, created_at). Migrar dados atuais de `profiles.car_*` para a nova tabela (1 carro por usuário existente, marcado como ativo). Manter `car_onboarded` em `profiles`. RLS por owner.
+Cliquei em **"Continuar com Google"** no Preview (`https://id-preview--185df6ff-9e46-459a-a25d-323f7411f3f9.lovable.app/auth`) e o navegador foi redirecionado para:
 
-**UI (Ajustes → Meus carros):**
-- Lista de carros cadastrados como cards, cada um com selo "Ativo" (radio para selecionar), botões editar/excluir.
-- Botão "Adicionar carro" abre dialog com os campos atuais.
-- Edição abre o mesmo dialog pré-preenchido.
-- Exclusão pede confirmação. Se excluir o ativo, ativa outro automaticamente (ou nenhum).
+```
+https://lovable.dev/auth-bridge?project_id=...&return_url=https://id-preview--.../auth
+```
 
-**Lógica:** `DataContext` passa a expor `cars`, `activeCar`, `carInitialKm` derivado do carro ativo. Manutenção preventiva usa o carro ativo.
+…que por sua vez exigiu login na conta Lovable e jogou para `https://lovable.dev/login`. É exatamente nesse ponto que o fluxo trava e a UI mostra **"Falha ao entrar com Google"**.
 
-### 2. Nova tela "Jornada" (controle de tempo rodando)
-- Rota nova `/jornada` posicionada **antes** de Ajustes na bottom nav.
-- Ícone: `Timer` (lucide).
-- Tela com:
-  - Timer grande HH:MM:SS
-  - Estado: parado / rodando / em descanso
-  - Botões: Iniciar, Pausar (descanso), Retomar, Zerar
-  - Cards de resumo: tempo trabalhado, tempo em descanso
-- **Estado global** em novo `TimerContext` (persistido em `localStorage` para sobreviver a reloads, contando tempo via `startedAt` timestamp para precisão mesmo com app fechado).
-- **FAB flutuante** visível em todas as telas (exceto na própria `/jornada`) quando timer está ativo: mostra HH:MM:SS atualizando, ao clicar navega para `/jornada`. Posicionado para não conflitar com o FAB de novo registro existente (acima dele, à esquerda, ou no topo).
+Em paralelo, conferi os logs de Auth do backend: o seu último login Google **bem-sucedido** veio do referer `https://usevolant.lovable.app` (URL publicada). Não há nenhum login Google partindo do `id-preview--...` — eles falham antes de chegar no Supabase.
 
-### 3. Bug: salvar ganho + gasto juntos
-No `EntryDrawer`, atualmente o submit aparentemente trata como exclusivo. Ajustar para criar **dois entries** (um earning, um expense) na mesma submissão quando ambas as seções estiverem preenchidas. Validar separadamente.
+## Causa real
 
-### 4. Dashboard "Por gastos" com emojis
-Em `EXPENSE_META`, adicionar campo `emoji` (🍔, ⛽, 🔧, 📦). No componente da seção "Por gastos" no Dashboard, substituir o ícone Lucide pelo emoji (mantém cor do gráfico).
+O Google OAuth gerenciado pelo Lovable Cloud usa um "auth-bridge" hospedado em `lovable.dev`. Esse bridge:
 
-### Arquivos a alterar/criar
-- Migration: cria `cars`, copia dados de `profiles`
-- `src/context/DataContext.tsx` — gerenciar carros e ativo
-- `src/context/TimerContext.tsx` (novo)
-- `src/pages/Journey.tsx` (novo) — tela do timer
-- `src/components/TimerFab.tsx` (novo) — FAB global
-- `src/components/CarOnboardingDialog.tsx` — usar nova tabela
-- `src/components/CarFormDialog.tsx` (novo) — adicionar/editar carro
-- `src/pages/Settings.tsx` — UI de múltiplos carros
-- `src/pages/Dashboard.tsx` — emojis na seção por gastos
-- `src/components/EntryDrawer.tsx` — salvar 2 entries
-- `src/components/BottomNav.tsx` + `App.tsx` — nova rota
-- `src/components/AppLayout.tsx` — montar TimerFab
-- `src/types/index.ts` — adicionar emoji em EXPENSE_META, tipo Car
+1. Requer **sessão ativa do dono do projeto em `lovable.dev`** no mesmo navegador.
+2. Depende de **cookies de terceiros para `lovable.dev`** estarem permitidos.
+3. Funciona normalmente no domínio publicado (`usevolant.lovable.app`, `usevolant.app`) porque ali o redirecionamento ocorre na própria origem do app.
 
-Confirma para eu seguir?
+No domínio do Preview (`id-preview--...lovable.app`), o bridge é cross-origin em relação ao `lovable.dev`, então qualquer um destes quebra:
+
+- Sessão Lovable expirada/encerrada no navegador.
+- Bloqueio de cookies de terceiros (Brave, Safari ITP, modo anônimo, extensões de privacidade).
+- Abrir o Preview em janela anônima/outro perfil sem estar logado em `lovable.dev`.
+
+Isso bate com o cenário que você descreveu: "tinha entrado, mas agora voltou a falhar" — clássico de sessão Lovable expirando ou cookies sendo limpos.
+
+## Por que NÃO vou mexer no código
+
+- O código em `src/pages/Auth.tsx` segue o padrão correto (`lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`).
+- O mesmo código funciona em produção (logs confirmam).
+- A URL de Preview é gerenciada pelo sistema e **não pode** ser adicionada manualmente no allowlist do Google (você já viu o erro "System-managed URLs cannot be added manually").
+- Mexer em `redirect_uri`, provider ou config do Supabase iria **quebrar produção** sem resolver o Preview.
+
+## O que fazer agora (sem alterar código)
+
+Para validar a Sprint no Preview com Google, na ordem de menor esforço:
+
+1. **Faça login em `https://lovable.dev`** no mesmo navegador/perfil onde está abrindo o Preview, depois recarregue a Preview e tente o Google de novo.
+2. **Permita cookies de terceiros para `lovable.dev`** nas configurações do navegador (ou desative bloqueios de rastreamento/extensões só para esse domínio).
+3. **Não use janela anônima** para testar Google no Preview.
+4. **Alternativa imediata para validar a Sprint:** entre no Preview por **email + senha** (esse fluxo não passa pelo auth-bridge e funciona normalmente) e teste tudo. Use o Google só no domínio publicado, onde já está confirmado que funciona.
+
+## Caso queira mesmo um diagnóstico mais profundo
+
+Posso, **só se você autorizar**, fazer uma alteração mínima e temporária em `src/pages/Auth.tsx` para logar `result.error` no console e exibir a mensagem real no toast — assim conseguimos ver se é "popup_closed", "third_party_cookies_blocked", "session_expired" etc. Reverto depois. Mas, pelo padrão do erro e pelos logs, tenho alta confiança de que é o item 1 ou 2 acima.
+
+## Resumo técnico
+
+- **Sintoma:** toast "Falha ao entrar com Google" no Preview.
+- **Origem:** `lovable.auth.signInWithOAuth("google")` → redireciona para `lovable.dev/auth-bridge` → este redireciona para `lovable.dev/login` (sessão Lovable ausente/expirada ou cookie 3rd-party bloqueado) → callback nunca volta para o app → `result.error` setado → toast disparado.
+- **Produção:** OK (login Google de `usevolant.lovable.app` registrado nos auth_logs com status 200).
+- **Backend (Lovable Cloud):** saudável, sem incidente.
+- **Ação no código:** nenhuma necessária.
