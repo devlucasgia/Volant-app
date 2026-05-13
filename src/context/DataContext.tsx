@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
-import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, BUILTIN_PLATFORM_META, CategoryMeta, PlatformMeta, DashboardWidgets } from "@/types";
+import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, BUILTIN_PLATFORM_META, CategoryMeta, PlatformMeta, PlatformType, DashboardWidgets } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
@@ -9,6 +9,8 @@ interface CategoryInput {
   label: string;
   emoji: string;
   color: string;
+  platformType?: PlatformType;
+  imageUrl?: string | null;
 }
 
 interface DataCtx {
@@ -31,8 +33,9 @@ interface DataCtx {
   expenseCategories: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
   expenseMetaFor: (key: string) => CategoryMeta;
   // earning platforms
-  earningPlatforms: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string }[];
+  earningPlatforms: { key: string; label: string; emoji: string; hex: string; isCustom: boolean; id?: string; type: PlatformType; imageUrl?: string | null }[];
   platformMetaFor: (key: string) => PlatformMeta;
+  isSimplePlatform: (key: string) => boolean;
   addCategory: (c: CategoryInput) => Promise<void>;
   updateCategory: (id: string, patch: Partial<CategoryInput>) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
@@ -102,6 +105,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase.from("categories").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     setCategories((data || []).map((c: any) => ({
       id: c.id, type: c.type, key: c.key, label: c.label, emoji: c.emoji, color: c.color, is_custom: !!c.is_custom,
+      platform_type: (c.platform_type as PlatformType) || "ride",
+      image_url: c.image_url ?? null,
     })));
   }, []);
 
@@ -222,21 +227,33 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const platformMetaFor = useCallback((key: string): PlatformMeta => {
     const ov = platformOverrides[key];
-    if (ov) return { label: ov.label, emoji: ov.emoji, hex: ov.color };
+    if (ov) return {
+      label: ov.label,
+      emoji: ov.emoji,
+      hex: ov.color,
+      type: (ov.platform_type as PlatformType) || "ride",
+      imageUrl: ov.image_url ?? null,
+    };
     if (BUILTIN_PLATFORM_META[key]) return BUILTIN_PLATFORM_META[key];
-    return { label: key, emoji: "🚗", hex: "#6B7280" };
+    return { label: key, emoji: "🚗", hex: "#6B7280", type: "ride" };
   }, [platformOverrides]);
+
+  const isSimplePlatform = useCallback((key: string) => platformMetaFor(key).type === "simple", [platformMetaFor]);
 
   const earningPlatforms = useMemo(() => {
     const builtinKeys = Object.keys(BUILTIN_PLATFORM_META);
     const builtins = builtinKeys.map((k) => {
       const m = platformMetaFor(k);
       const ov = platformOverrides[k];
-      return { key: k, label: m.label, emoji: m.emoji, hex: m.hex, isCustom: false, id: ov?.id };
+      return { key: k, label: m.label, emoji: m.emoji, hex: m.hex, isCustom: false, id: ov?.id, type: m.type, imageUrl: m.imageUrl ?? null };
     });
     const customs = categories
       .filter((c) => c.type === "earning" && !builtinKeys.includes(c.key))
-      .map((c) => ({ key: c.key, label: c.label, emoji: c.emoji, hex: c.color, isCustom: true, id: c.id }));
+      .map((c) => ({
+        key: c.key, label: c.label, emoji: c.emoji, hex: c.color, isCustom: true, id: c.id,
+        type: (c.platform_type as PlatformType) || "ride",
+        imageUrl: c.image_url ?? null,
+      }));
     return [...builtins, ...customs];
   }, [categories, platformOverrides, platformMetaFor]);
 
@@ -246,7 +263,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.from("categories").insert({
       user_id: user.id, type: c.type, key, label: c.label, emoji: c.emoji, color: c.color,
       is_custom: !((c.type === "expense" && key in BUILTIN_EXPENSE_META) || (c.type === "earning" && key in BUILTIN_PLATFORM_META)),
-    });
+      platform_type: c.type === "earning" ? (c.platformType || "ride") : "ride",
+      image_url: c.imageUrl ?? null,
+    } as any);
     if (error) throw error;
     await loadCategories(user.id);
   }, [user, loadCategories]);
@@ -257,7 +276,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ...(patch.label !== undefined ? { label: patch.label } : {}),
       ...(patch.emoji !== undefined ? { emoji: patch.emoji } : {}),
       ...(patch.color !== undefined ? { color: patch.color } : {}),
-    }).eq("id", id);
+      ...(patch.platformType !== undefined ? { platform_type: patch.platformType } : {}),
+      ...(patch.imageUrl !== undefined ? { image_url: patch.imageUrl } : {}),
+    } as any).eq("id", id);
     if (error) throw error;
     await loadCategories(user.id);
   }, [user, loadCategories]);
@@ -275,10 +296,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
       addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
       earningCategories, expenseCategories, expenseMetaFor,
-      earningPlatforms, platformMetaFor,
+      earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory }),
     [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
-      earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor,
+      earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory]
   );
 
