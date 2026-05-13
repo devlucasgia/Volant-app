@@ -435,7 +435,7 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 {earningPlatforms.map((p) => (
                   <div key={p.key} className="flex items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:bg-muted/30">
-                    <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" />
+                    <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" imageUrl={p.imageUrl} />
                     <div className="min-w-0 flex-1 truncate text-sm font-medium">{p.label}</div>
                     <div className="flex shrink-0 items-center gap-0.5">
                       <Button size="icon" variant="ghost" className="h-8 w-8"

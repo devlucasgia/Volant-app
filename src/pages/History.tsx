@@ -241,6 +241,7 @@ export default function History() {
                           platformKey={e.app}
                           label={platformMetaFor(e.app).label}
                           hex={platformMetaFor(e.app).hex}
+                          imageUrl={platformMetaFor(e.app).imageUrl}
                           size="md"
                         />
                       ) : (
