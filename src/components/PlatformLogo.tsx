@@ -15,20 +15,30 @@ interface Props {
   hex: string;
   size?: Size;
   className?: string;
+  imageUrl?: string | null;
 }
 
 /**
  * Renders an "official" looking logo for built-in platforms,
- * and a colored letter avatar for custom platforms.
+ * a custom uploaded image when present, or a colored letter avatar fallback.
  */
-export function PlatformLogo({ platformKey, label, hex, size = "md", className }: Props) {
+export function PlatformLogo({ platformKey, label, hex, size = "md", className, imageUrl }: Props) {
   const s = sizeMap[size];
   const base = cn(
-    "grid place-items-center rounded-full font-bold tracking-tight shrink-0",
+    "grid place-items-center rounded-full font-bold tracking-tight shrink-0 overflow-hidden",
     s.box,
     s.text,
     className
   );
+
+  // Custom uploaded logo takes priority for non-builtin platforms
+  if (imageUrl && !["uber", "99", "indriver", "particular"].includes(platformKey)) {
+    return (
+      <div className={cn(base, "bg-muted")}>
+        <img src={imageUrl} alt={label} className="h-full w-full object-cover" />
+      </div>
+    );
+  }
 
   if (platformKey === "uber") {
     return (
@@ -59,7 +69,7 @@ export function PlatformLogo({ platformKey, label, hex, size = "md", className }
     );
   }
 
-  // Custom platform: use the user-defined color and first letter
+  // Custom platform without image: colored letter
   const letter = (label || "?").trim().charAt(0).toUpperCase();
   return (
     <div className={cn(base, "text-white")} style={{ backgroundColor: hex }}>

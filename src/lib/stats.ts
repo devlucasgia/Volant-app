@@ -11,18 +11,21 @@ export function filterByPeriod(entries: Entry[], period: Period): Entry[] {
   return entries.filter((e) => isAfter(new Date(e.date), start) || +new Date(e.date) === +start);
 }
 
-export function summarize(entries: Entry[]) {
+export function summarize(entries: Entry[], isSimplePlatform?: (key: string) => boolean) {
   const earnings = entries.filter((e): e is EarningEntry => e.type === "earning");
   const expenses = entries.filter((e): e is ExpenseEntry => e.type === "expense");
+  // Operational earnings: only ride-type platforms contribute to R$/h, R$/km, R$/corrida
+  const operational = isSimplePlatform ? earnings.filter((e) => !isSimplePlatform(e.app)) : earnings;
   const gross = earnings.reduce((s, e) => s + e.gross, 0);
+  const operationalGross = operational.reduce((s, e) => s + e.gross, 0);
   const totalExpenses = expenses.reduce((s, e) => s + e.expense.amount, 0);
   const net = gross - totalExpenses;
-  const totalKm = earnings.reduce((s, e) => s + e.km, 0);
-  const totalHours = earnings.reduce((s, e) => s + e.hours, 0);
-  const totalRides = earnings.reduce((s, e) => s + (e.rides || 0), 0);
-  const perHour = totalHours > 0 ? gross / totalHours : 0;
-  const perKm = totalKm > 0 ? gross / totalKm : 0;
-  const perRide = totalRides > 0 ? gross / totalRides : 0;
+  const totalKm = operational.reduce((s, e) => s + e.km, 0);
+  const totalHours = operational.reduce((s, e) => s + e.hours, 0);
+  const totalRides = operational.reduce((s, e) => s + (e.rides || 0), 0);
+  const perHour = totalHours > 0 ? operationalGross / totalHours : 0;
+  const perKm = totalKm > 0 ? operationalGross / totalKm : 0;
+  const perRide = totalRides > 0 ? operationalGross / totalRides : 0;
   return { gross, totalExpenses, net, totalKm, totalHours, totalRides, perHour, perKm, perRide, count: earnings.length };
 }
 
