@@ -56,9 +56,11 @@ export type Database = {
           created_at: string
           emoji: string
           id: string
+          image_url: string | null
           is_custom: boolean
           key: string
           label: string
+          platform_type: string
           type: string
           user_id: string
         }
@@ -67,9 +69,11 @@ export type Database = {
           created_at?: string
           emoji?: string
           id?: string
+          image_url?: string | null
           is_custom?: boolean
           key: string
           label: string
+          platform_type?: string
           type: string
           user_id: string
         }
@@ -78,9 +82,11 @@ export type Database = {
           created_at?: string
           emoji?: string
           id?: string
+          image_url?: string | null
           is_custom?: boolean
           key?: string
           label?: string
+          platform_type?: string
           type?: string
           user_id?: string
         }
