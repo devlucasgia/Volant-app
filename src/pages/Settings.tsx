@@ -439,7 +439,7 @@ export default function SettingsPage() {
                     <div className="min-w-0 flex-1 truncate text-sm font-medium">{p.label}</div>
                     <div className="flex shrink-0 items-center gap-0.5">
                       <Button size="icon" variant="ghost" className="h-8 w-8"
-                        onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex } })}>
+                        onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex, platformType: p.type, imageUrl: p.imageUrl } })}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       {p.isCustom && (
