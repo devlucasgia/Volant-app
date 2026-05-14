@@ -422,6 +422,61 @@ export default function SettingsPage() {
                 {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
+              {/* Greeting message — autosaved */}
+              <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Mensagem abaixo do apelido</Label>
+                <Input
+                  value={greetingMessage}
+                  onChange={(e) => updateGreetingMessage(e.target.value)}
+                  onBlur={(e) => updateGreetingMessage(e.target.value, true)}
+                  placeholder="Ex.: Bora pra cima! 🚀"
+                  maxLength={60}
+                  className="bg-background"
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">
+                    Aparece abaixo da saudação na tela inicial. Opcional.
+                  </p>
+                  <span className="text-[10px] tabular-nums text-muted-foreground/70">
+                    {greetingMessage.length}/60
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    "Bora pra cima! 🚀",
+                    "Foco, disciplina e constância! 💪",
+                    "Deus no comando sempre! 🙌",
+                    "Boas corridas hoje! 🛣️",
+                  ].map((preset) => {
+                    const selected = greetingMessage.trim() === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => updateGreetingMessage(preset, true)}
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                          selected
+                            ? "border-primary/50 bg-primary/15 text-foreground"
+                            : "border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/40",
+                        )}
+                      >
+                        {preset}
+                      </button>
+                    );
+                  })}
+                  {greetingMessage && (
+                    <button
+                      type="button"
+                      onClick={() => updateGreetingMessage("", true)}
+                      className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/40"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Authentication / password */}
               <div className="pt-1">
                 {isOAuthGoogle ? (
