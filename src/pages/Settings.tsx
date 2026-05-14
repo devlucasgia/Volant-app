@@ -989,14 +989,16 @@ export default function SettingsPage() {
 
         {/* App footer */}
         <footer className="flex flex-col items-center gap-1 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <img
-            src={volantSymbol}
-            alt={APP_NAME}
-            width={20}
-            height={20}
-            className="h-5 w-5 shrink-0 rounded-full opacity-80 shadow-[0_2px_6px_-3px_hsl(var(--success)/0.35)]"
-          />
-          <div className="font-semibold text-muted-foreground">{APP_NAME}</div>
+          <div className="flex items-center gap-1.5">
+            <img
+              src={volantSymbol}
+              alt={APP_NAME}
+              width={18}
+              height={18}
+              className="h-[18px] w-[18px] shrink-0 rounded-full opacity-80 shadow-[0_2px_6px_-3px_hsl(var(--success)/0.35)]"
+            />
+            <span className="font-semibold text-muted-foreground">{APP_NAME}</span>
+          </div>
           <div>Versão {APP_VERSION_LABEL}</div>
           <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
         </footer>
