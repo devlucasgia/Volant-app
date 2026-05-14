@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
+import { useGreetingStyle, greetingStyleClass } from "@/lib/greetingStyle";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
