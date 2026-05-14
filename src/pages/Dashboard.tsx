@@ -54,15 +54,22 @@ export default function Dashboard() {
     return "Motorista";
   }, [nickname, user]);
 
-  const periodRangeLabel = useMemo(() => {
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const contextualDate = useMemo(() => {
     const now = new Date();
-    if (period === "day") return format(startOfDay(now), "d 'de' MMMM", { locale: ptBR });
+    if (period === "day") {
+      return cap(format(now, "EEEE, d 'de' MMMM", { locale: ptBR }));
+    }
     if (period === "week") {
       const s = startOfWeek(now, { weekStartsOn: 1 });
       const e = endOfWeek(now, { weekStartsOn: 1 });
-      return `${format(s, "d MMM", { locale: ptBR })} – ${format(e, "d MMM", { locale: ptBR })}`;
+      const sameMonth = s.getMonth() === e.getMonth();
+      if (sameMonth) {
+        return `${format(s, "d", { locale: ptBR })} a ${format(e, "d 'de' MMMM", { locale: ptBR })}`;
+      }
+      return `${format(s, "d 'de' MMM", { locale: ptBR })} a ${format(e, "d 'de' MMM", { locale: ptBR })}`;
     }
-    return format(now, "MMMM 'de' yyyy", { locale: ptBR });
+    return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
   }, [period]);
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
