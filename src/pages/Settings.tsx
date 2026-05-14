@@ -679,6 +679,10 @@ export default function SettingsPage() {
                 </p>
               </div>
 
+              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty} className="w-full">
+                {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+              </Button>
+
               <div className="pt-1">
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Metas avançadas
