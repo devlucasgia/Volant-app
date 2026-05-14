@@ -18,7 +18,11 @@ export function friendlyDbError(err: unknown, fallback = "Não foi possível sal
 const ALLOWED_IMAGE_MIME = ["image/png", "image/jpeg", "image/webp"];
 const ALLOWED_IMAGE_EXT = ["png", "jpg", "jpeg", "webp"];
 
-export function validateImageFile(file: File, maxBytes = 2 * 1024 * 1024): { ok: true; ext: string } | { ok: false; message: string } {
+export type ImageValidationResult =
+  | { ok: true; ext: string; message?: undefined }
+  | { ok: false; ext?: undefined; message: string };
+
+export function validateImageFile(file: File, maxBytes = 2 * 1024 * 1024): ImageValidationResult {
   if (file.size > maxBytes) {
     return { ok: false, message: `Imagem deve ter até ${Math.round(maxBytes / (1024 * 1024))}MB` };
   }
