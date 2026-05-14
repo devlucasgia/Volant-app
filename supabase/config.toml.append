@@ -1,3 +1,0 @@
-[functions.send-feedback-email]
-verify_jwt = false
-
