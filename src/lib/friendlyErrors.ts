@@ -15,8 +15,8 @@ export function friendlyDbError(err: unknown, fallback = "Não foi possível sal
   return fallback;
 }
 
-const ALLOWED_IMAGE_MIME = ["image/png", "image/jpeg"];
-const ALLOWED_IMAGE_EXT = ["png", "jpg", "jpeg"];
+const ALLOWED_IMAGE_MIME = ["image/png", "image/jpeg", "image/webp"];
+const ALLOWED_IMAGE_EXT = ["png", "jpg", "jpeg", "webp"];
 
 export type ImageValidationResult =
   | { ok: true; ext: string; message?: undefined }
