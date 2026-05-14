@@ -28,6 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { friendlyDbError } from "@/lib/friendlyErrors";
 
 type Filter = "all" | "earning" | "expense";
 
@@ -367,9 +369,17 @@ export default function History() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (confirmDelete) removeEntry(confirmDelete.id);
+              onClick={async () => {
+                const target = confirmDelete;
                 setConfirmDelete(null);
+                if (!target) return;
+                try {
+                  await removeEntry(target.id);
+                } catch (err) {
+                  toast.error("Não foi possível excluir", {
+                    description: friendlyDbError(err, "Tente novamente em instantes."),
+                  });
+                }
               }}
             >
               Excluir
