@@ -211,15 +211,16 @@ export default function SettingsPage() {
     (async () => {
       const { data } = await (supabase
         .from("profiles") as any)
-        .select("nickname, avatar_url")
+        .select("nickname, avatar_url, greeting_message")
         .eq("id", user.id)
         .maybeSingle();
       if (!active) return;
-      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null };
+      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null; greeting_message?: string | null };
       const n = row.nickname ?? "";
       setNickname(n);
       setNicknameBaseline(n);
       setProfileAvatar(row.avatar_url ?? "");
+      setGreetingMessage(row.greeting_message ?? "");
     })();
     return () => { active = false; };
   }, [user]);
