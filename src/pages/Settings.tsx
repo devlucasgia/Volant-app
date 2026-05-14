@@ -254,7 +254,7 @@ export default function SettingsPage() {
     return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, []);
 
-  const profileSaveProfile = async () => {};
+  const profileDirty = displayName !== profileBaseline.name;
 
   const saveProfile = async () => {
     if (!user) return;
