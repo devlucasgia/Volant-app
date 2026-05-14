@@ -992,9 +992,9 @@ export default function SettingsPage() {
           <img
             src={volantSymbol}
             alt={APP_NAME}
-            width={16}
-            height={16}
-            className="h-4 w-4 shrink-0 opacity-70"
+            width={20}
+            height={20}
+            className="h-5 w-5 shrink-0 opacity-70"
           />
           <div>Versão {APP_VERSION_LABEL}</div>
           <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
