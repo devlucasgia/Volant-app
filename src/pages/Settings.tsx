@@ -20,7 +20,9 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
 } from "lucide-react";
-import { FeedbackDialog } from "@/components/account/FeedbackDialog";
+import { BugReportDialog } from "@/components/account/BugReportDialog";
+import { SuggestionDialog } from "@/components/account/SuggestionDialog";
+import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Car as CarType, DashboardWidgets } from "@/types";
@@ -128,7 +130,8 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
-  const [feedback, setFeedback] = useState<{ open: boolean; type: "bug" | "suggestion" }>({ open: false, type: "bug" });
+  const [bugOpen, setBugOpen] = useState(false);
+  const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
 
