@@ -545,28 +545,36 @@ export default function SettingsPage() {
                             </span>
                           </button>
                           <div className="flex shrink-0 items-center gap-0.5 pl-1">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              disabled={isFirst}
-                              onClick={() => moveHomeCard(k, -1)}
-                              aria-label={`Mover ${meta.label} para cima`}
-                            >
-                              <ArrowUp className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              disabled={isLast}
-                              onClick={() => moveHomeCard(k, 1)}
-                              aria-label={`Mover ${meta.label} para baixo`}
-                            >
-                              <ArrowDown className="h-3.5 w-3.5" />
-                            </Button>
+                            {k === "greeting" ? (
+                              <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                                Topo
+                              </span>
+                            ) : (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={isFirst || homeOrder[i - 1] === "greeting"}
+                                  onClick={() => moveHomeCard(k, -1)}
+                                  aria-label={`Mover ${meta.label} para cima`}
+                                >
+                                  <ArrowUp className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={isLast}
+                                  onClick={() => moveHomeCard(k, 1)}
+                                  aria-label={`Mover ${meta.label} para baixo`}
+                                >
+                                  <ArrowDown className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );
