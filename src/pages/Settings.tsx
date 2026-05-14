@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +10,10 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -19,8 +23,8 @@ import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
-  Home as HomeIcon, BarChart3, Receipt, Gauge, CalendarRange, CalendarDays,
-  Route, Clock, Activity, GripVertical,
+  Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
+  Route, Clock, Flag, LineChart, GripVertical,
 } from "lucide-react";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
@@ -117,7 +121,7 @@ function SoonRow({ label, hint }: { label: string; hint?: string }) {
   );
 }
 
-/** Mini card toggle for dashboard/report customization. Touch-friendly, single-tap. */
+/** Compact, premium mini card toggle. Subtle dark-green tint when active. */
 function MiniCardToggle({
   active, icon, label, onClick,
 }: {
@@ -131,25 +135,25 @@ function MiniCardToggle({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center",
-        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.96]",
+        "group relative flex flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2.5 text-center min-h-[64px]",
+        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97]",
         active
-          ? "border-primary/60 bg-primary text-primary-foreground shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.55)]"
-          : "border-border/70 bg-muted/40 text-muted-foreground hover:bg-muted/60",
+          ? "border-primary/45 bg-primary/[0.08] text-foreground shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_4px_14px_-10px_hsl(var(--primary)/0.5)]"
+          : "border-border/60 bg-muted/25 text-muted-foreground hover:bg-muted/40",
       )}
     >
       <span
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-xl transition-colors duration-300",
-          active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-background/70 text-foreground/70",
+          "flex h-6 w-6 items-center justify-center rounded-md transition-colors duration-300",
+          active ? "text-primary" : "text-muted-foreground/70",
         )}
       >
         {icon}
       </span>
       <span
         className={cn(
-          "text-[11px] font-semibold leading-tight transition-colors duration-300",
-          active ? "text-primary-foreground" : "text-foreground/80",
+          "text-[10.5px] font-semibold leading-tight transition-colors duration-300 line-clamp-2",
+          active ? "text-foreground" : "text-muted-foreground/80",
         )}
       >
         {label}
@@ -190,29 +194,66 @@ export default function SettingsPage() {
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
-  // ---- Draft for batched-save settings
+  // ---- Draft for batched-save settings (debounced autosave + leave-guard)
   const baseline = useMemo<DraftSettings>(() => buildDraft(settings), [settings]);
   const [draft, setDraft] = useState<DraftSettings>(baseline);
-  const [saving, setSaving] = useState(false);
+  const dirty = !isEqualDraft(draft, baseline);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync draft when remote settings change (e.g. after save).
   useEffect(() => {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setDisplayName(data.display_name || "");
-          setAvatarUrl(data.avatar_url || "");
-          setProfileBaseline({ name: data.display_name || "", avatar: data.avatar_url || "" });
-        }
+  const flushSave = async () => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    if (!dirtyRef.current) return;
+    const d = draftRef.current;
+    try {
+      await updateSettings({
+        dailyGoal: d.dailyGoal,
+        maintenanceIntervalKm: d.maintenanceIntervalKm,
+        lastMaintenanceKm: d.lastMaintenanceKm,
+        dashboardWidgets: d.dashboardWidgets,
       });
-  }, [user]);
+    } catch {
+      toast.error("Não foi possível salvar");
+    }
+  };
 
-  const dirty = !isEqualDraft(draft, baseline);
+  // Debounced autosave: 700ms after the last change.
+  useEffect(() => {
+    if (!dirty) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => { void flushSave(); }, 700);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, dirty]);
+
+  // Flush on unmount (e.g. route change away from Settings).
+  useEffect(() => {
+    return () => { void flushSave(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Warn if the page/tab is being closed while a save is pending.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
   const profileDirty = displayName !== profileBaseline.name;
 
   const saveProfile = async () => {
@@ -227,25 +268,15 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado");
   };
 
-  const saveDraft = async () => {
-    if (!dirty || saving) return;
-    setSaving(true);
-    try {
-      await updateSettings({
-        dailyGoal: draft.dailyGoal,
-        maintenanceIntervalKm: draft.maintenanceIntervalKm,
-        lastMaintenanceKm: draft.lastMaintenanceKm,
-        dashboardWidgets: draft.dashboardWidgets,
-      });
-      toast.success("Ajustes salvos");
-    } catch {
-      toast.error("Não foi possível salvar");
-    } finally {
-      setSaving(false);
+  // Confirm before closing an open Personalização section that has pending changes.
+  const [pendingCustomizeValue, setPendingCustomizeValue] = useState<string | null>(null);
+  const onCustomizeChange = (next: string) => {
+    if (next === "" && customizeOpen !== "" && dirty) {
+      setPendingCustomizeValue("");
+      return;
     }
+    setCustomizeOpen(next);
   };
-
-  const cancelDraft = () => setDraft(buildDraft(settings));
 
   const setWidget = (k: keyof DashboardWidgets, v: boolean) =>
     setDraft((d) => ({ ...d, dashboardWidgets: { ...d.dashboardWidgets, [k]: v } }));
@@ -293,7 +324,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Ajustes" subtitle="Gerencie suas preferências" />
-      <div className={cn("px-4 pt-5 pb-6 space-y-6", dirty && "pb-32")}>
+      <div className={"px-4 pt-5 pb-6 space-y-6"}>
 
         {/* ============== CONTA ============== */}
         <SectionGroup title="Conta">
@@ -347,46 +378,6 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
-              {/* Theme */}
-              <div className="flex items-center justify-between rounded-xl border border-border p-3 transition-colors hover:bg-muted/30">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/80">
-                    {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">Modo escuro</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {settings.theme === "dark" ? "Ativado" : "Desativado"}
-                    </div>
-                  </div>
-                </div>
-                <Switch
-                  checked={settings.theme === "dark"}
-                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
-                />
-              </div>
-
-              {/* Font size */}
-              <button
-                type="button"
-                onClick={() => setFontOpen(true)}
-                className="flex w-full items-center justify-between rounded-xl border border-border p-3 text-left transition-colors hover:bg-muted/30"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/80">
-                    <Type className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">Tamanho dos textos</div>
-                    <div className="text-[11px] text-muted-foreground">{fontScaleLabel}</div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-
-            </SettingsCard>
-
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
@@ -417,14 +408,53 @@ export default function SettingsPage() {
             type="single"
             collapsible
             value={customizeOpen}
-            onValueChange={setCustomizeOpen}
+            onValueChange={onCustomizeChange}
             className="space-y-2.5"
           >
+            <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
+              {/* Theme */}
+              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/70 text-foreground/80">
+                    {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">Modo escuro</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {settings.theme === "dark" ? "Ativado" : "Desativado"}
+                    </div>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.theme === "dark"}
+                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
+                />
+              </div>
+
+              {/* Font size */}
+              <button
+                type="button"
+                onClick={() => setFontOpen(true)}
+                className="flex w-full items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 text-left transition-colors hover:bg-muted/30"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/70 text-foreground/80">
+                    <Type className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">Tamanho dos textos</div>
+                    <div className="text-[11px] text-muted-foreground">{fontScaleLabel}</div>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </SettingsCard>
+
             <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
               <p className="text-[11px] text-muted-foreground">
                 Toque para ativar ou desativar os blocos da tela inicial.
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {([
                   { k: "goal", label: "Meta", icon: <Target className="h-4 w-4" /> },
                   { k: "stats", label: "Performance", icon: <Gauge className="h-4 w-4" /> },
@@ -453,14 +483,19 @@ export default function SettingsPage() {
               <p className="text-[11px] text-muted-foreground">
                 Toque para ativar ou desativar os blocos da tela de relatórios.
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {([
-                  { k: "weekly", label: "Semanal", icon: <CalendarRange className="h-4 w-4" /> },
-                  { k: "monthly", label: "Mensal", icon: <CalendarDays className="h-4 w-4" /> },
-                  { k: "expenses", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
-                  { k: "mileage", label: "KM", icon: <Route className="h-4 w-4" /> },
-                  { k: "hours", label: "Horas", icon: <Clock className="h-4 w-4" /> },
-                  { k: "appPerformance", label: "Por app", icon: <Activity className="h-4 w-4" /> },
+                  { k: "net",        label: "Líquido",      icon: <Wallet className="h-4 w-4" /> },
+                  { k: "perHour",    label: "R$ / hora",    icon: <Gauge className="h-4 w-4" /> },
+                  { k: "gross",      label: "Bruto",        icon: <Wallet className="h-4 w-4" /> },
+                  { k: "expenses",   label: "Gastos",       icon: <Receipt className="h-4 w-4" /> },
+                  { k: "activeDays", label: "Dias ativos",  icon: <CalendarDays className="h-4 w-4" /> },
+                  { k: "perDay",     label: "Média / dia",  icon: <Clock className="h-4 w-4" /> },
+                  { k: "totalKm",    label: "KM total",     icon: <Route className="h-4 w-4" /> },
+                  { k: "perKm",      label: "R$ / km",      icon: <Route className="h-4 w-4" /> },
+                  { k: "trips",      label: "Corridas",     icon: <Flag className="h-4 w-4" /> },
+                  { k: "perTrip",    label: "R$ / corrida", icon: <Flag className="h-4 w-4" /> },
+                  { k: "chart",      label: "Gráfico",      icon: <LineChart className="h-4 w-4" /> },
                 ] as { k: keyof ReportWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
                   <MiniCardToggle
                     key={w.k}
@@ -697,37 +732,46 @@ export default function SettingsPage() {
         </footer>
       </div>
 
-      {/* Floating save bar — refined, contextual, low-key */}
-      <div
-        className={cn(
-          "fixed left-0 right-0 z-40 px-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-          dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
-        )}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+      {/* Confirm before collapsing a Personalização section with pending changes */}
+      <AlertDialog
+        open={pendingCustomizeValue !== null}
+        onOpenChange={(o) => { if (!o) setPendingCustomizeValue(null); }}
       >
-        <div className="mx-auto flex max-w-md items-center gap-1.5 rounded-full border border-border/70 bg-background/80 py-1.5 pl-4 pr-1.5 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-          <span className="flex-1 truncate text-[12px] text-muted-foreground">
-            Alterações não salvas
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-full px-3 text-xs text-muted-foreground hover:text-foreground"
-            onClick={cancelDraft}
-            disabled={saving}
-          >
-            Cancelar
-          </Button>
-          <Button
-            size="sm"
-            className="h-8 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            onClick={saveDraft}
-            disabled={saving}
-          >
-            {saving ? (<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Salvando</>) : "Salvar"}
-          </Button>
-        </div>
-      </div>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Salvar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você fez ajustes nesta seção. Deseja salvar antes de fechar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel onClick={() => setPendingCustomizeValue(null)}>
+              Continuar editando
+            </AlertDialogCancel>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraft(buildDraft(settings));
+                const next = pendingCustomizeValue ?? "";
+                setPendingCustomizeValue(null);
+                setCustomizeOpen(next);
+              }}
+            >
+              Descartar
+            </Button>
+            <AlertDialogAction
+              onClick={async () => {
+                const next = pendingCustomizeValue ?? "";
+                setPendingCustomizeValue(null);
+                await flushSave();
+                setCustomizeOpen(next);
+              }}
+            >
+              Salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PasswordChangeDialog
         open={pwdOpen}

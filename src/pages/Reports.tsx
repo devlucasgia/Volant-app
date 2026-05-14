@@ -20,6 +20,7 @@ import {
   Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useReportWidgets } from "@/lib/reportWidgets";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
   startOfDay, endOfDay, subMonths, addMonths,
@@ -42,6 +43,7 @@ const CHARTS: { key: ChartKey; label: string; color: string }[] = [
 
 export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const [widgets] = useReportWidgets();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [yearRef, setYearRef] = useState<Date>(startOfYear(new Date()));
@@ -326,117 +328,133 @@ export default function Reports() {
           </div>
         )}
 
-        {/* Top hierarchy: Lucro líquido + Média por hora share equal weight */}
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {/* Lucro líquido */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
-            <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
-            <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
-            <div className="relative flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-success" />
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
+        {/* Top hierarchy: Lucro líquido + Média por hora */}
+        {(widgets.net || widgets.perHour) && (
+          <div className={cn("grid grid-cols-1 gap-3", widgets.net && widgets.perHour && "lg:grid-cols-2")}>
+            {widgets.net && (
+              <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
+                <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
+                <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
+                <div className="relative flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-success" />
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
+                </div>
+                <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+                  {brl(s.net)}
+                </div>
+                <div className="relative mt-3 h-14">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+                      <defs>
+                        <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
+                          <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlow)" dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {widgets.perHour && (
+              <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
+                <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
+                <div className="relative flex items-center gap-2">
+                  <Gauge className="h-4 w-4 text-success" />
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
+                </div>
+                <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
+                  {brl(s.perHour)}
+                </div>
+                <div className="relative mt-auto pt-3 text-[11.5px] leading-snug text-muted-foreground/90">
+                  com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Secondary KPIs: Bruto + Gastos */}
+        {(widgets.gross || widgets.expenses) && (
+          <div className={cn("grid gap-3", widgets.gross && widgets.expenses ? "grid-cols-2" : "grid-cols-1")}>
+            {widgets.gross && <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />}
+            {widgets.expenses && <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />}
+          </div>
+        )}
+
+        {/* Performance pairs */}
+        {(widgets.activeDays || widgets.perDay || widgets.totalKm || widgets.perKm || widgets.trips || widgets.perTrip) && (
+          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
+            {(widgets.activeDays || widgets.perDay) && (
+              <PairCard
+                showTotal={widgets.activeDays}
+                showAvg={widgets.perDay}
+                totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
+                totalLabel="Dias ativos"
+                totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
+                avgIcon={<Clock className="h-3.5 w-3.5" />}
+                avgLabel="Média / dia"
+                avgValue={brl(avgPerDay)}
+                accent="success"
+              />
+            )}
+            {(widgets.totalKm || widgets.perKm) && (
+              <PairCard
+                showTotal={widgets.totalKm}
+                showAvg={widgets.perKm}
+                totalIcon={<Route className="h-3.5 w-3.5" />}
+                totalLabel="KM total"
+                totalValue={`${num(s.totalKm, 0)} km`}
+                avgIcon={<Route className="h-3.5 w-3.5" />}
+                avgLabel="Média / km"
+                avgValue={brl(s.perKm)}
+                accent="info"
+              />
+            )}
+            {(widgets.trips || widgets.perTrip) && (
+              <PairCard
+                showTotal={widgets.trips}
+                showAvg={widgets.perTrip}
+                totalIcon={<Flag className="h-3.5 w-3.5" />}
+                totalLabel="Corridas"
+                totalValue={String(s.totalRides)}
+                avgIcon={<Flag className="h-3.5 w-3.5" />}
+                avgLabel="R$ / corrida"
+                avgValue={brl(s.perRide)}
+                accent="purple"
+              />
+            )}
+          </div>
+        )}
+
+        {/* Chart selector + chart */}
+        {widgets.chart && (
+          <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-0.5">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+                <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+              </div>
+              <div className="min-w-[150px]">
+                <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
+                  <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CHARTS.map((c) => (
+                      <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
-              {brl(s.net)}
-            </div>
-            <div className="relative mt-3 h-14">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
-                  <defs>
-                    <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlow)" dot={false} />
-                </AreaChart>
+                {renderChart()}
               </ResponsiveContainer>
             </div>
           </div>
-
-          {/* Média por hora */}
-          <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
-            <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
-            <div className="relative flex items-center gap-2">
-              <Gauge className="h-4 w-4 text-success" />
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
-            </div>
-            <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
-              {brl(s.perHour)}
-            </div>
-            <div className="relative mt-auto pt-3 text-[11.5px] leading-snug text-muted-foreground/90">
-              com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary KPIs: Bruto + Gastos */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-2">
-          <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
-          <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
-        </div>
-
-        {/* Performance: paired totals/averages with subtle connector.
-            Breakpoints chosen to guarantee a safe minimum width per pair card:
-            - <md (mobile/small tablet): 1 column, full-width pair per row
-            - md–xl (tablet/small desktop): 2 columns, ~min 340px each
-            - ≥xl (wide desktop/PWA): 3 columns */}
-        <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
-          <PairCard
-            totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-            totalLabel="Dias ativos"
-            totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
-            avgIcon={<Clock className="h-3.5 w-3.5" />}
-            avgLabel="Média / dia"
-            avgValue={brl(avgPerDay)}
-            accent="success"
-          />
-          <PairCard
-            totalIcon={<Route className="h-3.5 w-3.5" />}
-            totalLabel="KM total"
-            totalValue={`${num(s.totalKm, 0)} km`}
-            avgIcon={<Route className="h-3.5 w-3.5" />}
-            avgLabel="Média / km"
-            avgValue={brl(s.perKm)}
-            accent="info"
-          />
-          <PairCard
-            totalIcon={<Flag className="h-3.5 w-3.5" />}
-            totalLabel="Corridas"
-            totalValue={String(s.totalRides)}
-            avgIcon={<Flag className="h-3.5 w-3.5" />}
-            avgLabel="R$ / corrida"
-            avgValue={brl(s.perRide)}
-            accent="purple"
-          />
-        </div>
-
-        {/* Chart selector + chart */}
-        <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div className="flex flex-col gap-0.5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-              <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
-            </div>
-            <div className="min-w-[150px]">
-              <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
-                <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CHARTS.map((c) => (
-                    <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              {renderChart()}
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-
+        )}
       </div>
     </>
   );
@@ -481,10 +499,14 @@ function PairCard({
   totalIcon, totalLabel, totalValue,
   avgIcon, avgLabel, avgValue,
   accent = "muted",
+  showTotal = true,
+  showAvg = true,
 }: {
   totalIcon: React.ReactNode; totalLabel: string; totalValue: string;
   avgIcon: React.ReactNode; avgLabel: string; avgValue: string;
   accent?: "success" | "info" | "purple" | "muted";
+  showTotal?: boolean;
+  showAvg?: boolean;
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
@@ -499,26 +521,35 @@ function PairCard({
     a.text
   );
   const valueCls = "text-center text-[clamp(15px,2vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
+  const both = showTotal && showAvg;
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
-      <div className="grid grid-cols-2 items-stretch">
-        <div className={half}>
-          <div className={labelCls}>
-            <span className="shrink-0">{totalIcon}</span>
-            <span className="min-w-0">{totalLabel}</span>
+      <div className={cn("grid items-stretch", both ? "grid-cols-2" : "grid-cols-1")}>
+        {showTotal && (
+          <div className={half}>
+            <div className={labelCls}>
+              <span className="shrink-0">{totalIcon}</span>
+              <span className="min-w-0">{totalLabel}</span>
+            </div>
+            <div className={valueCls}>{totalValue}</div>
           </div>
-          <div className={valueCls}>{totalValue}</div>
-        </div>
-        <div className={cn(half, "bg-muted/15")}>
-          <div className={labelCls}>
-            <span className="shrink-0">{avgIcon}</span>
-            <span className="min-w-0">{avgLabel}</span>
+        )}
+        {showAvg && (
+          <div className={cn(half, both && "bg-muted/15")}>
+            <div className={labelCls}>
+              <span className="shrink-0">{avgIcon}</span>
+              <span className="min-w-0">{avgLabel}</span>
+            </div>
+            <div className={valueCls}>{avgValue}</div>
           </div>
-          <div className={valueCls}>{avgValue}</div>
-        </div>
+        )}
       </div>
-      <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
-      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
+      {both && (
+        <>
+          <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
+          <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
+        </>
+      )}
     </div>
   );
 }
