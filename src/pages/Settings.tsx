@@ -561,26 +561,44 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      {/* Sticky save bar */}
+      {/* Floating save bar — refined, contextual, low-key */}
       <div
         className={cn(
-          "fixed left-0 right-0 z-40 px-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-          dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-4 opacity-0",
+          "fixed left-0 right-0 z-40 px-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+          dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
         )}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 76px)" }}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
       >
-        <div className="mx-auto flex max-w-md items-center gap-2 rounded-2xl border border-border bg-card/95 p-2.5 shadow-[0_18px_40px_-18px_rgba(0,0,0,0.55)] backdrop-blur-lg">
-          <div className="flex-1 px-2 text-xs text-muted-foreground">
-            Você tem alterações não salvas
-          </div>
-          <Button variant="ghost" size="sm" onClick={cancelDraft} disabled={saving}>
-            <X className="mr-1 h-4 w-4" /> Cancelar
+        <div className="mx-auto flex max-w-md items-center gap-1.5 rounded-full border border-border/70 bg-background/80 py-1.5 pl-4 pr-1.5 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+          <span className="flex-1 truncate text-[12px] text-muted-foreground">
+            Alterações não salvas
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 rounded-full px-3 text-xs text-muted-foreground hover:text-foreground"
+            onClick={cancelDraft}
+            disabled={saving}
+          >
+            Cancelar
           </Button>
-          <Button size="sm" onClick={saveDraft} disabled={saving}>
-            {saving ? (<><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar alterações"}
+          <Button
+            size="sm"
+            className="h-8 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+            onClick={saveDraft}
+            disabled={saving}
+          >
+            {saving ? (<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Salvando</>) : "Salvar"}
           </Button>
         </div>
       </div>
+
+      <PasswordChangeDialog
+        open={pwdOpen}
+        onOpenChange={setPwdOpen}
+        email={user?.email ?? ""}
+      />
+      <FontSizeSheet open={fontOpen} onOpenChange={setFontOpen} />
 
       <CarFormDialog
         open={carDialog.open}
