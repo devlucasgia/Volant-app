@@ -451,6 +451,130 @@ export default function SettingsPage() {
               )}
             </SettingsCard>
 
+            <SettingsCard value="greeting" icon={<Sparkles className="h-4 w-4" />} title="Saudação">
+              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
+                <div className="min-w-0 pr-3">
+                  <div className="text-sm font-medium">Mostrar saudação na tela inicial</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Exibe seu nome e mensagem no topo da Home.
+                  </div>
+                </div>
+                <Switch
+                  checked={!!widgets.greeting}
+                  onCheckedChange={(v) => setWidget("greeting", v)}
+                />
+              </div>
+
+              <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Mensagem personalizada</Label>
+                <Input
+                  value={greetingMessage}
+                  onChange={(e) => updateGreetingMessage(e.target.value)}
+                  onBlur={(e) => updateGreetingMessage(e.target.value, true)}
+                  placeholder="Ex.: Bora pra cima! 🚀"
+                  maxLength={60}
+                  className="bg-background"
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">
+                    Aparece abaixo da saudação. Opcional.
+                  </p>
+                  <span className="text-[10px] tabular-nums text-muted-foreground/70">
+                    {greetingMessage.length}/60
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    "Bora pra cima! 🚀",
+                    "Foco, disciplina e constância! 💪",
+                    "Deus no comando sempre! 🙌",
+                    "Boas corridas hoje! 🛣️",
+                  ].map((preset) => {
+                    const selected = greetingMessage.trim() === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => updateGreetingMessage(preset, true)}
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                          selected
+                            ? "border-primary/50 bg-primary/15 text-foreground"
+                            : "border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/40",
+                        )}
+                      >
+                        {preset}
+                      </button>
+                    );
+                  })}
+                  {greetingMessage && (
+                    <button
+                      type="button"
+                      onClick={() => updateGreetingMessage("", true)}
+                      className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/40"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Estilo da mensagem</Label>
+                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                  {([
+                    { k: "normal" as GreetingStyle, label: "Normal", icon: <TypeIcon className="h-3.5 w-3.5" /> },
+                    { k: "bold" as GreetingStyle,   label: "Negrito", icon: <Bold className="h-3.5 w-3.5" /> },
+                    { k: "italic" as GreetingStyle, label: "Itálico", icon: <Italic className="h-3.5 w-3.5" /> },
+                  ]).map((opt) => {
+                    const active = greetingStyle === opt.k;
+                    return (
+                      <button
+                        key={opt.k}
+                        type="button"
+                        onClick={() => { setGreetingStyle(opt.k); notifySaved(); }}
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-[12px] font-medium transition-all",
+                          active
+                            ? "border-primary/45 bg-primary/[0.08] text-foreground"
+                            : "border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/40",
+                        )}
+                      >
+                        {opt.icon}{opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Aplica-se apenas à mensagem personalizada.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/70 bg-background/40 p-3">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Pré-visualização
+                </div>
+                <div className="text-[20px] font-bold tracking-tight leading-tight text-foreground">
+                  Olá, {(nickname.trim() || accountName.split(/\s+/)[0])} <span aria-hidden>👋</span>
+                </div>
+                {greetingMessage && (
+                  <div className={cn(
+                    "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+                    greetingStyleClass(greetingStyle),
+                  )}>
+                    {greetingMessage}
+                  </div>
+                )}
+                <div className="mt-0.5 text-[12px] text-muted-foreground/70">
+                  {(() => {
+                    const d = new Date();
+                    const day = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+                    return day.charAt(0).toUpperCase() + day.slice(1);
+                  })()}
+                </div>
+              </div>
+            </SettingsCard>
+
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
