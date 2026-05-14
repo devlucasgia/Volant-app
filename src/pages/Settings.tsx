@@ -20,9 +20,10 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
-  Route, Clock, Flag, LineChart, GripVertical,
+  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon,
 } from "lucide-react";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
+import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
 import { SuggestionDialog } from "@/components/account/SuggestionDialog";
 import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
