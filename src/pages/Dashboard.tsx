@@ -231,22 +231,8 @@ export default function Dashboard() {
         }
       />
       <div className={cn("space-y-5 px-4", topPadding)}>
-        {/* Greeting renders first if it appears earliest in the order list */}
-        {(() => {
-          // Render ordered blocks but split greeting up to the top header position.
-          const ordered = homeOrder.map((k) => blocks[k]).filter(Boolean);
-          return (
-            <>
-              {ordered.map((node, i) => (
-                <div key={i} className="contents">{node}</div>
-              )).slice(0, 0) /* placeholder — replaced below */}
-            </>
-          );
-        })()}
-
-        {homeOrder
-          .filter((k) => k === "greeting" && blocks.greeting)
-          .map(() => blocks.greeting)}
+        {/* Greeting (fixed at top of body, toggleable via personalization) */}
+        {blocks.greeting}
 
         {/* Period switcher */}
         <Segmented<Period> options={PERIODS} value={period} onChange={setPeriod} />
