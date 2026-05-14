@@ -558,6 +558,39 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
+        {/* ============== FEEDBACK ============== */}
+        <SectionGroup title="Feedback">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
+            <div className="mb-3 flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <MessageSquare className="h-4 w-4" />
+              </span>
+              <div>
+                <div className="text-[15px] font-semibold">Feedback</div>
+                <p className="text-[11px] text-muted-foreground">
+                  Encontrou um problema ou tem uma ideia para melhorar o Volant?
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="h-10 justify-start gap-2"
+                onClick={() => setFeedback({ open: true, type: "bug" })}
+              >
+                <Bug className="h-4 w-4" /> Reportar bug
+              </Button>
+              <Button
+                variant="outline"
+                className="h-10 justify-start gap-2"
+                onClick={() => setFeedback({ open: true, type: "suggestion" })}
+              >
+                <Lightbulb className="h-4 w-4" /> Sugerir melhoria
+              </Button>
+            </div>
+          </div>
+        </SectionGroup>
+
         <p className="pt-2 text-center text-xs text-muted-foreground">
           Volant · Dados sincronizados na nuvem
         </p>
