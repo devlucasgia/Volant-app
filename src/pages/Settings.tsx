@@ -23,7 +23,7 @@ import {
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon,
 } from "lucide-react";
-import { VolantLogo } from "@/components/VolantLogo";
+import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
