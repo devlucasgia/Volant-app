@@ -383,28 +383,6 @@ export default function SettingsPage() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
 
-              {/* Tela inicial */}
-              <div className="pt-2">
-                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <LayoutDashboard className="h-3.5 w-3.5" /> Tela inicial
-                </div>
-                <p className="mb-2 text-[11px] text-muted-foreground">
-                  Escolha quais blocos deseja visualizar na tela inicial.
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { k: "goal" as const, label: "Meta diária" },
-                    { k: "stats" as const, label: "Performance" },
-                    { k: "byApp" as const, label: "Ganhos por aplicativo" },
-                    { k: "byExpense" as const, label: "Gastos" },
-                  ].map((w) => (
-                    <div key={w.k} className="flex items-center justify-between rounded-xl border border-border p-3 transition-colors hover:bg-muted/30">
-                      <span className="text-sm">{w.label}</span>
-                      <Switch checked={widgets[w.k]} onCheckedChange={(v) => setWidget(w.k, v)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
             </SettingsCard>
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
