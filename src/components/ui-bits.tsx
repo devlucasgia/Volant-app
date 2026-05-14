@@ -13,26 +13,26 @@ interface PageHeaderProps {
 export function PageHeader({ title, subtitle, right, brand = false }: PageHeaderProps) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
-      <div className="flex items-center justify-between gap-3 px-5 py-3.5">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center justify-between gap-3 px-5 py-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           {brand && (
             <img
               src={volantSymbol}
               alt="Volant"
-              width={40}
-              height={40}
+              width={32}
+              height={32}
               decoding="sync"
               loading="eager"
               fetchPriority="high"
-              className="h-10 w-10 shrink-0 rounded-full shadow-[0_2px_10px_-2px_hsl(var(--success)/0.45)]"
+              className="h-8 w-8 shrink-0 rounded-full shadow-[0_2px_8px_-3px_hsl(var(--success)/0.35)]"
             />
           )}
           <div className="min-w-0">
-            <h1 className="truncate text-lg font-bold tracking-tight leading-tight text-foreground">
+            <h1 className="truncate text-[17px] font-bold tracking-tight leading-tight text-foreground">
               {title}
             </h1>
             {subtitle && (
-              <p className="text-[11px] text-muted-foreground leading-tight">{subtitle}</p>
+              <p className="text-[11px] text-muted-foreground/80 leading-tight">{subtitle}</p>
             )}
           </div>
         </div>
