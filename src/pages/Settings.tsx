@@ -193,6 +193,7 @@ export default function SettingsPage() {
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
+  const [greetingStyle, setGreetingStyle] = useGreetingStyle();
 
   // DnD sensors — TouchSensor with small delay prevents scroll conflicts on mobile.
   const dndSensors = useSensors(
