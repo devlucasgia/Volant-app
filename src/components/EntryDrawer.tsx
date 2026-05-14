@@ -176,8 +176,9 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       reset();
       onOpenChange(false);
       if (wasMaint && cb) cb();
-    } catch (err: any) {
-      toast.error("Erro ao salvar: " + (err?.message || "tente novamente"));
+    } catch (err) {
+      console.error("[entry save]", err);
+      toast.error("Não foi possível salvar. Revise as informações e tente novamente.");
     } finally {
       setSubmitting(false);
     }

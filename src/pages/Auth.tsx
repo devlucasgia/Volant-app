@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Car } from "lucide-react";
+import { friendlyAuthError } from "@/lib/friendlyErrors";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -42,8 +43,8 @@ export default function Auth() {
         if (error) throw error;
         toast.success("Bem-vindo de volta!");
       }
-    } catch (err: any) {
-      toast.error(err.message || "Erro de autenticação");
+    } catch (err) {
+      toast.error(friendlyAuthError(err));
     } finally {
       setBusy(false);
     }
@@ -55,7 +56,7 @@ export default function Auth() {
       redirect_uri: window.location.origin,
     });
     if (result.error) {
-      toast.error("Falha ao entrar com Google");
+      toast.error(friendlyAuthError(result.error, "Não foi possível entrar com Google. Tente novamente."));
       setBusy(false);
     }
   };
