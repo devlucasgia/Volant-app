@@ -20,8 +20,11 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
-  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon, GripVertical,
+  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
+  Sparkles, Bold, Italic, Type as TypeIcon,
 } from "lucide-react";
+import { VolantLogo } from "@/components/VolantLogo";
+import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent,
@@ -190,6 +193,7 @@ export default function SettingsPage() {
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
+  const [greetingStyle, setGreetingStyle] = useGreetingStyle();
 
   // DnD sensors — TouchSensor with small delay prevents scroll conflicts on mobile.
   const dndSensors = useSensors(
@@ -429,9 +433,40 @@ export default function SettingsPage() {
                 </p>
               </div>
 
-              {/* Greeting message — autosaved */}
+              <Button onClick={saveProfile} disabled={savingProfile || !nicknameDirty} className="w-full">
+                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+              </Button>
+
+              {/* Password (for non-Google accounts) */}
+              {!isOAuthGoogle && (
+                <div className="pt-1">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setPwdOpen(true)}
+                  >
+                    <KeyRound className="mr-2 h-4 w-4" /> Alterar senha
+                  </Button>
+                </div>
+              )}
+            </SettingsCard>
+
+            <SettingsCard value="greeting" icon={<Sparkles className="h-4 w-4" />} title="Saudação">
+              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
+                <div className="min-w-0 pr-3">
+                  <div className="text-sm font-medium">Mostrar saudação na tela inicial</div>
+                  <div className="text-[11px] text-muted-foreground">
+                    Exibe seu nome e mensagem no topo da Home.
+                  </div>
+                </div>
+                <Switch
+                  checked={!!widgets.greeting}
+                  onCheckedChange={(v) => setWidget("greeting", v)}
+                />
+              </div>
+
               <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-3">
-                <Label className="text-xs text-muted-foreground">Mensagem abaixo do apelido</Label>
+                <Label className="text-xs text-muted-foreground">Mensagem personalizada</Label>
                 <Input
                   value={greetingMessage}
                   onChange={(e) => updateGreetingMessage(e.target.value)}
@@ -442,7 +477,7 @@ export default function SettingsPage() {
                 />
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-muted-foreground">
-                    Aparece abaixo da saudação na tela inicial. Opcional.
+                    Aparece abaixo da saudação. Opcional.
                   </p>
                   <span className="text-[10px] tabular-nums text-muted-foreground/70">
                     {greetingMessage.length}/60
@@ -484,22 +519,60 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <Button onClick={saveProfile} disabled={savingProfile || !nicknameDirty} className="w-full">
-                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
-              </Button>
-
-              {/* Password (for non-Google accounts) */}
-              {!isOAuthGoogle && (
-                <div className="pt-1">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => setPwdOpen(true)}
-                  >
-                    <KeyRound className="mr-2 h-4 w-4" /> Alterar senha
-                  </Button>
+              <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Estilo da mensagem</Label>
+                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                  {([
+                    { k: "normal" as GreetingStyle, label: "Normal", icon: <TypeIcon className="h-3.5 w-3.5" /> },
+                    { k: "bold" as GreetingStyle,   label: "Negrito", icon: <Bold className="h-3.5 w-3.5" /> },
+                    { k: "italic" as GreetingStyle, label: "Itálico", icon: <Italic className="h-3.5 w-3.5" /> },
+                  ]).map((opt) => {
+                    const active = greetingStyle === opt.k;
+                    return (
+                      <button
+                        key={opt.k}
+                        type="button"
+                        onClick={() => { setGreetingStyle(opt.k); notifySaved(); }}
+                        className={cn(
+                          "flex items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-[12px] font-medium transition-all",
+                          active
+                            ? "border-primary/45 bg-primary/[0.08] text-foreground"
+                            : "border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/40",
+                        )}
+                      >
+                        {opt.icon}{opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
+                <p className="mt-2 text-[11px] text-muted-foreground">
+                  Aplica-se apenas à mensagem personalizada.
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-border/70 bg-background/40 p-3">
+                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Pré-visualização
+                </div>
+                <div className="text-[20px] font-bold tracking-tight leading-tight text-foreground">
+                  Olá, {(nickname.trim() || accountName.split(/\s+/)[0])} <span aria-hidden>👋</span>
+                </div>
+                {greetingMessage && (
+                  <div className={cn(
+                    "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+                    greetingStyleClass(greetingStyle),
+                  )}>
+                    {greetingMessage}
+                  </div>
+                )}
+                <div className="mt-0.5 text-[12px] text-muted-foreground/70">
+                  {(() => {
+                    const d = new Date();
+                    const day = d.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+                    return day.charAt(0).toUpperCase() + day.slice(1);
+                  })()}
+                </div>
+              </div>
             </SettingsCard>
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
@@ -579,15 +652,14 @@ export default function SettingsPage() {
                 Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
               </p>
               {(() => {
-                const labels: Record<HomeCardKey, { label: string; icon: React.ReactNode }> = {
-                  greeting:  { label: "Saudação",   icon: <MessageCircle className="h-4 w-4" /> },
-                  goal:      { label: "Meta",       icon: <Target className="h-4 w-4" /> },
-                  stats:     { label: "Performance",icon: <Gauge className="h-4 w-4" /> },
-                  byApp:     { label: "Por app",    icon: <BarChart3 className="h-4 w-4" /> },
-                  byExpense: { label: "Gastos",     icon: <Receipt className="h-4 w-4" /> },
-                  journey:   { label: "Jornada",    icon: <TimerIcon className="h-4 w-4" /> },
+                const labels: Partial<Record<HomeCardKey, { label: string; icon: React.ReactNode }>> = {
+                  goal:      { label: "Meta",        icon: <Target className="h-4 w-4" /> },
+                  stats:     { label: "Performance", icon: <Gauge className="h-4 w-4" /> },
+                  byApp:     { label: "Por app",     icon: <BarChart3 className="h-4 w-4" /> },
+                  byExpense: { label: "Gastos",      icon: <Receipt className="h-4 w-4" /> },
+                  journey:   { label: "Jornada",     icon: <TimerIcon className="h-4 w-4" /> },
                 };
-                // Only non-greeting items are draggable; greeting is pinned to the top.
+                // Greeting is managed in the dedicated "Saudação" section above.
                 const draggable = homeOrder.filter((k) => k !== "greeting");
 
                 const onDragEnd = (e: DragEndEvent) => {
@@ -598,9 +670,8 @@ export default function SettingsPage() {
                 };
 
                 const renderRowInner = (k: HomeCardKey, i: number, isLast: boolean) => {
-                  const meta = labels[k];
+                  const meta = labels[k]!;
                   const active = (widgets as any)[k] as boolean;
-                  const isFirstSortable = i === 1; // index 0 is greeting
                   return (
                     <>
                       <button
@@ -625,26 +696,18 @@ export default function SettingsPage() {
                         )}>{active ? "Ativo" : "Oculto"}</span>
                       </button>
                       <div className="flex shrink-0 items-center gap-0.5 pl-1">
-                        {k === "greeting" ? (
-                          <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                            Topo
-                          </span>
-                        ) : (
-                          <>
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
-                              disabled={isFirstSortable}
-                              onClick={() => moveHomeCard(k, -1)}
-                              aria-label={`Mover ${meta.label} para cima`}>
-                              <ArrowUp className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
-                              disabled={isLast}
-                              onClick={() => moveHomeCard(k, 1)}
-                              aria-label={`Mover ${meta.label} para baixo`}>
-                              <ArrowDown className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                          disabled={i === 0}
+                          onClick={() => moveHomeCard(k, -1)}
+                          aria-label={`Mover ${meta.label} para cima`}>
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                          disabled={isLast}
+                          onClick={() => moveHomeCard(k, 1)}
+                          aria-label={`Mover ${meta.label} para baixo`}>
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </>
                   );
@@ -652,32 +715,14 @@ export default function SettingsPage() {
 
                 return (
                   <div className="space-y-2">
-                    {/* Greeting row — pinned, not draggable */}
-                    {homeOrder[0] === "greeting" && (
-                      <div className={cn(
-                        "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
-                        (widgets as any).greeting
-                          ? "border-primary/40 bg-primary/[0.06]"
-                          : "border-border/60 bg-muted/20",
-                      )}>
-                        <span className="flex h-8 w-6 shrink-0 items-center justify-center text-muted-foreground/30">
-                          <GripVertical className="h-4 w-4" />
-                        </span>
-                        <div className="flex-1 min-w-0 flex items-center gap-1">
-                          {renderRowInner("greeting", 0, false)}
-                        </div>
-                      </div>
-                    )}
-                    {/* Sortable rows */}
                     <DndContext
                       sensors={dndSensors}
                       collisionDetection={closestCenter}
                       onDragEnd={onDragEnd}
                     >
                       <SortableContext items={draggable} strategy={verticalListSortingStrategy}>
-                        {draggable.map((k, di) => {
-                          const i = di + 1;
-                          const isLast = i === homeOrder.length - 1;
+                        {draggable.map((k, i) => {
+                          const isLast = i === draggable.length - 1;
                           return (
                             <SortableHomeRow
                               key={k}
@@ -943,10 +988,11 @@ export default function SettingsPage() {
         </SectionGroup>
 
         {/* App footer */}
-        <footer className="pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <div className="font-semibold text-muted-foreground">{APP_NAME}</div>
+        <footer className="flex flex-col items-center gap-1.5 pt-6 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <VolantLogo size={22} className="opacity-80" />
+          <div className="mt-0.5 font-semibold text-muted-foreground">{APP_NAME}</div>
           <div>Versão {APP_VERSION_LABEL}</div>
-          <div>Dados sincronizados na nuvem</div>
+          <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
         </footer>
       </div>
 

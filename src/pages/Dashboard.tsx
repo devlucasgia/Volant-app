@@ -15,6 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
+import { useGreetingStyle, greetingStyleClass } from "@/lib/greetingStyle";
 
 const PERIODS: { key: Period; label: string }[] = [
   { key: "day", label: "Hoje" },
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<Period>("day");
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
+  const [greetingStyle] = useGreetingStyle();
 
   // Personalized greeting — nickname + optional subtitle message from profiles.
   const [nickname, setNickname] = useState<string>("");
@@ -103,9 +105,14 @@ export default function Dashboard() {
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
-        <div className="mt-1 text-[13px] text-muted-foreground/90 leading-snug">
-          {greetingMessage || "Bem-vindo de volta ao Volant."}
-        </div>
+        {greetingMessage && (
+          <div className={cn(
+            "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+            greetingStyleClass(greetingStyle),
+          )}>
+            {greetingMessage}
+          </div>
+        )}
         <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
           {contextualDate}
         </div>
