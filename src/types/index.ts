@@ -98,6 +98,8 @@ export interface DashboardWidgets {
   stats: boolean;
   byApp: boolean;
   byExpense: boolean;
+  greeting: boolean;
+  journey: boolean;
 }
 
 export interface Settings {
