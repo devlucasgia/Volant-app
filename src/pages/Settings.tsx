@@ -425,7 +425,7 @@ export default function SettingsPage() {
                   className="transition-shadow duration-200 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.18)]"
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Apelido usado nas saudações dentro do app. Se vazio, usamos seu nome da conta.
+                  Apelido usado nas saudações do app.
                 </p>
               </div>
 
