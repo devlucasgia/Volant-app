@@ -18,8 +18,9 @@ import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
   CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2,
-  KeyRound, Type, ChevronRight,
+  KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
 } from "lucide-react";
+import { FeedbackDialog } from "@/components/account/FeedbackDialog";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Car as CarType, DashboardWidgets } from "@/types";
