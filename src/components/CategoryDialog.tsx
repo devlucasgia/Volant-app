@@ -232,7 +232,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                   <input
                     ref={fileRef}
                     type="file"
-                    accept="image/png,image/jpeg"
+                    accept="image/png,image/jpeg,image/webp"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
