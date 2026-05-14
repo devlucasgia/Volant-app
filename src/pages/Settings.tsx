@@ -181,7 +181,7 @@ export default function SettingsPage() {
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
-  const [homeOrder, moveHome] = useHomeOrder();
+  const [homeOrder, moveHome, reorderHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
 
   // Subtle, premium autosave confirmation. Reuses a single toast id to avoid stacking.
