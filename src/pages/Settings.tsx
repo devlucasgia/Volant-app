@@ -732,37 +732,46 @@ export default function SettingsPage() {
         </footer>
       </div>
 
-      {/* Floating save bar — refined, contextual, low-key */}
-      <div
-        className={cn(
-          "fixed left-0 right-0 z-40 px-3 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-          dirty ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0",
-        )}
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
+      {/* Confirm before collapsing a Personalização section with pending changes */}
+      <AlertDialog
+        open={pendingCustomizeValue !== null}
+        onOpenChange={(o) => { if (!o) setPendingCustomizeValue(null); }}
       >
-        <div className="mx-auto flex max-w-md items-center gap-1.5 rounded-full border border-border/70 bg-background/80 py-1.5 pl-4 pr-1.5 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.5)] backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
-          <span className="flex-1 truncate text-[12px] text-muted-foreground">
-            Alterações não salvas
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 rounded-full px-3 text-xs text-muted-foreground hover:text-foreground"
-            onClick={cancelDraft}
-            disabled={saving}
-          >
-            Cancelar
-          </Button>
-          <Button
-            size="sm"
-            className="h-8 rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            onClick={saveDraft}
-            disabled={saving}
-          >
-            {saving ? (<><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Salvando</>) : "Salvar"}
-          </Button>
-        </div>
-      </div>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Salvar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você fez ajustes nesta seção. Deseja salvar antes de fechar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel onClick={() => setPendingCustomizeValue(null)}>
+              Continuar editando
+            </AlertDialogCancel>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setDraft(buildDraft(settings));
+                const next = pendingCustomizeValue ?? "";
+                setPendingCustomizeValue(null);
+                setCustomizeOpen(next);
+              }}
+            >
+              Descartar
+            </Button>
+            <AlertDialogAction
+              onClick={async () => {
+                const next = pendingCustomizeValue ?? "";
+                setPendingCustomizeValue(null);
+                await flushSave();
+                setCustomizeOpen(next);
+              }}
+            >
+              Salvar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <PasswordChangeDialog
         open={pwdOpen}
