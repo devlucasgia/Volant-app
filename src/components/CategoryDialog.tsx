@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { Car, Wallet, Upload, X, Loader2 } from "lucide-react";
+import { friendlyDbError, validateImageFile } from "@/lib/friendlyErrors";
 import type { PlatformType } from "@/types";
 
 const EMOJI_OPTIONS = ["⛽","🍔","🔧","📦","💰","🚗","🚕","🛞","🪛","💡","☕","🍕","🛒","🏥","🎁","📱","🧾","🚿","🅿️","🛣️","💸"];
@@ -62,21 +63,23 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
 
   const handleUpload = async (file: File) => {
     if (!user) return;
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Imagem deve ter até 2MB");
+    const v = validateImageFile(file);
+    if (!v.ok) {
+      toast.error(v.message);
       return;
     }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "png";
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("category-logos").upload(path, file, { upsert: true });
+      const path = `${user.id}/${Date.now()}.${v.ext}`;
+      const { error } = await supabase.storage
+        .from("category-logos")
+        .upload(path, file, { upsert: true, contentType: file.type });
       if (error) throw error;
       const { data } = supabase.storage.from("category-logos").getPublicUrl(path);
       setImageUrl(data.publicUrl);
       toast.success("Imagem enviada");
-    } catch (e: any) {
-      toast.error("Falha no upload: " + (e?.message || ""));
+    } catch (e) {
+      toast.error(friendlyDbError(e, "Não foi possível enviar a imagem. Tente novamente."));
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -106,8 +109,8 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
         toast.success(isEarning ? "Plataforma criada" : "Categoria criada");
       }
       onOpenChange(false);
-    } catch (e: any) {
-      toast.error("Erro: " + (e?.message || ""));
+    } catch (e) {
+      toast.error(friendlyDbError(e));
     } finally {
       setSaving(false);
     }
