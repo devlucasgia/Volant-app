@@ -23,7 +23,7 @@ import {
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon,
 } from "lucide-react";
-import { VolantLogo } from "@/components/VolantLogo";
+import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
@@ -988,9 +988,15 @@ export default function SettingsPage() {
         </SectionGroup>
 
         {/* App footer */}
-        <footer className="flex flex-col items-center gap-1.5 pt-6 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <VolantLogo size={22} className="opacity-80" />
-          <div className="mt-0.5 font-semibold text-muted-foreground">{APP_NAME}</div>
+        <footer className="flex flex-col items-center gap-1 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <img
+            src={volantSymbol}
+            alt={APP_NAME}
+            width={20}
+            height={20}
+            className="h-5 w-5 shrink-0 rounded-full opacity-80 shadow-[0_2px_6px_-3px_hsl(var(--success)/0.35)]"
+          />
+          <div className="font-semibold text-muted-foreground">{APP_NAME}</div>
           <div>Versão {APP_VERSION_LABEL}</div>
           <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
         </footer>

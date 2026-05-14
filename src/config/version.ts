@@ -7,7 +7,7 @@
 // - major (0.x.x -> 1.0.0): official public launch / major modules
 
 export const APP_NAME = "Volant";
-export const APP_VERSION = "0.5.0";
+export const APP_VERSION = "0.5.2";
 export const APP_CHANNEL: "beta" | "rc" | "stable" = "beta";
 
 export const APP_VERSION_LABEL: string =
