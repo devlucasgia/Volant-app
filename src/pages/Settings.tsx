@@ -172,6 +172,7 @@ export default function SettingsPage() {
 
   const [nickname, setNickname] = useState("");
   const [nicknameBaseline, setNicknameBaseline] = useState("");
+  const [greetingMessage, setGreetingMessage] = useState("");
   const [profileAvatar, setProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
