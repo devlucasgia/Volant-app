@@ -290,9 +290,21 @@ export default function SettingsPage() {
 
   // Auto-save home dashboard widgets immediately on toggle.
   const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
-    void updateSettings({
+    void autoSave({
       dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
     });
+  };
+
+  // Toggle for report widgets — uses local storage but still confirms via subtle toast.
+  const toggleReport = (k: keyof ReportWidgets) => {
+    toggleReportWidget(k);
+    notifySaved();
+  };
+
+  // Reorder a Home card and confirm.
+  const moveHomeCard = (k: HomeCardKey, dir: -1 | 1) => {
+    moveHome(k, dir);
+    notifySaved();
   };
 
   const deleteCar = async (car: CarType) => {
