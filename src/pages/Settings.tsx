@@ -190,16 +190,17 @@ export default function SettingsPage() {
     if (!user) return;
     let active = true;
     (async () => {
-      const { data } = await supabase
-        .from("profiles")
+      const { data } = await (supabase
+        .from("profiles") as any)
         .select("nickname, avatar_url")
         .eq("id", user.id)
         .maybeSingle();
       if (!active) return;
-      const n = ((data as { nickname?: string | null } | null)?.nickname ?? "") as string;
+      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null };
+      const n = row.nickname ?? "";
       setNickname(n);
       setNicknameBaseline(n);
-      setProfileAvatar((data?.avatar_url as string | null) ?? "");
+      setProfileAvatar(row.avatar_url ?? "");
     })();
     return () => { active = false; };
   }, [user]);
