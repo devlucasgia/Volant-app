@@ -212,7 +212,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
               <div className="flex items-center gap-3">
                 {imageUrl ? (
                   <div className="relative">
-                    <img src={imageUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border" />
+                    <img src={previewSignedUrl ?? imageUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border" />
                     <button
                       type="button"
                       onClick={() => setImageUrl(null)}
