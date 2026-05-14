@@ -125,6 +125,13 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [profileBaseline, setProfileBaseline] = useState({ name: "", avatar: "" });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [pwdOpen, setPwdOpen] = useState(false);
+  const [fontOpen, setFontOpen] = useState(false);
+  const [fontScale] = useFontScale();
+  const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
+
+  const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
+  const isOAuthGoogle = provider === "google";
 
   // ---- Dialogs
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
