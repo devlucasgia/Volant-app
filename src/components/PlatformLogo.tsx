@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSignedLogoUrl } from "@/lib/logoUrl";
@@ -19,10 +20,8 @@ interface Props {
   imageUrl?: string | null;
 }
 
-/**
- * Renders an "official" looking logo for built-in platforms,
- * a custom uploaded image when present, or a colored letter avatar fallback.
- */
+const BUILTIN = new Set(["uber", "99", "indriver", "particular"]);
+
 export function PlatformLogo({ platformKey, label, hex, size = "md", className, imageUrl }: Props) {
   const s = sizeMap[size];
   const base = cn(
@@ -32,15 +31,20 @@ export function PlatformLogo({ platformKey, label, hex, size = "md", className, 
     className
   );
 
-  const signedUrl = useSignedLogoUrl(
-    imageUrl && !["uber", "99", "indriver", "particular"].includes(platformKey) ? imageUrl : null
-  );
+  const isBuiltin = BUILTIN.has(platformKey);
+  const signedUrl = useSignedLogoUrl(!isBuiltin && imageUrl ? imageUrl : null);
+  const [errored, setErrored] = useState(false);
 
   // Custom uploaded logo takes priority for non-builtin platforms
-  if (signedUrl && !["uber", "99", "indriver", "particular"].includes(platformKey)) {
+  if (!isBuiltin && signedUrl && !errored) {
     return (
       <div className={cn(base, "bg-muted")}>
-        <img src={signedUrl} alt={label} className="h-full w-full object-cover" />
+        <img
+          src={signedUrl}
+          alt={label}
+          className="h-full w-full object-cover"
+          onError={() => setErrored(true)}
+        />
       </div>
     );
   }
@@ -74,7 +78,7 @@ export function PlatformLogo({ platformKey, label, hex, size = "md", className, 
     );
   }
 
-  // Custom platform without image: colored letter
+  // Custom platform without (or failed) image: colored letter
   const letter = (label || "?").trim().charAt(0).toUpperCase();
   return (
     <div className={cn(base, "text-white")} style={{ backgroundColor: hex }}>
