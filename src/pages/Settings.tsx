@@ -17,9 +17,12 @@ import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
-  CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2,
+  CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
+  Home as HomeIcon, BarChart3, Receipt, Gauge, CalendarRange, CalendarDays,
+  Route, Clock, Activity, GripVertical,
 } from "lucide-react";
+import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
 import { SuggestionDialog } from "@/components/account/SuggestionDialog";
 import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
@@ -114,6 +117,48 @@ function SoonRow({ label, hint }: { label: string; hint?: string }) {
   );
 }
 
+/** Mini card toggle for dashboard/report customization. Touch-friendly, single-tap. */
+function MiniCardToggle({
+  active, icon, label, onClick,
+}: {
+  active: boolean; icon: React.ReactNode; label: string; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={label}
+      onClick={onClick}
+      className={cn(
+        "group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center",
+        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.96]",
+        active
+          ? "border-primary/60 bg-primary text-primary-foreground shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.55)]"
+          : "border-border/70 bg-muted/40 text-muted-foreground hover:bg-muted/60",
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-8 w-8 items-center justify-center rounded-xl transition-colors duration-300",
+          active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-background/70 text-foreground/70",
+        )}
+      >
+        {icon}
+      </span>
+      <span
+        className={cn(
+          "text-[11px] font-semibold leading-tight transition-colors duration-300",
+          active ? "text-primary-foreground" : "text-foreground/80",
+        )}
+      >
+        {label}
+      </span>
+    </button>
+  );
+}
+
+
 export default function SettingsPage() {
   const {
     settings, updateSettings, entries, cars, activeCar, carInitialKm,
@@ -134,6 +179,8 @@ export default function SettingsPage() {
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
+  const [reportWidgets, toggleReportWidget] = useReportWidgets();
+  const [customizeOpen, setCustomizeOpen] = useState<string>("");
 
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
@@ -245,7 +292,7 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Ajustes" />
+      <PageHeader title="Ajustes" subtitle="Gerencie suas preferências" />
       <div className={cn("px-4 pt-5 pb-6 space-y-6", dirty && "pb-32")}>
 
         {/* ============== CONTA ============== */}
@@ -338,28 +385,6 @@ export default function SettingsPage() {
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
               </button>
 
-              {/* Tela inicial */}
-              <div className="pt-2">
-                <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <LayoutDashboard className="h-3.5 w-3.5" /> Tela inicial
-                </div>
-                <p className="mb-2 text-[11px] text-muted-foreground">
-                  Escolha quais blocos deseja visualizar na tela inicial.
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { k: "goal" as const, label: "Meta diária" },
-                    { k: "stats" as const, label: "Performance" },
-                    { k: "byApp" as const, label: "Ganhos por aplicativo" },
-                    { k: "byExpense" as const, label: "Gastos" },
-                  ].map((w) => (
-                    <div key={w.k} className="flex items-center justify-between rounded-xl border border-border p-3 transition-colors hover:bg-muted/30">
-                      <span className="text-sm">{w.label}</span>
-                      <Switch checked={widgets[w.k]} onCheckedChange={(v) => setWidget(w.k, v)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
             </SettingsCard>
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
@@ -386,7 +411,77 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
-        {/* ============== VEÍCULO ============== */}
+        {/* ============== PERSONALIZAÇÃO ============== */}
+        <SectionGroup title="Personalização">
+          <Accordion
+            type="single"
+            collapsible
+            value={customizeOpen}
+            onValueChange={setCustomizeOpen}
+            className="space-y-2.5"
+          >
+            <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
+              <p className="text-[11px] text-muted-foreground">
+                Toque para ativar ou desativar os blocos da tela inicial.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { k: "goal", label: "Meta", icon: <Target className="h-4 w-4" /> },
+                  { k: "stats", label: "Performance", icon: <Gauge className="h-4 w-4" /> },
+                  { k: "byApp", label: "Por app", icon: <BarChart3 className="h-4 w-4" /> },
+                  { k: "byExpense", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
+                ] as { k: keyof DashboardWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
+                  <MiniCardToggle
+                    key={w.k}
+                    active={widgets[w.k]}
+                    icon={w.icon}
+                    label={w.label}
+                    onClick={() => setWidget(w.k, !widgets[w.k])}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
+              >
+                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
+              </button>
+            </SettingsCard>
+
+            <SettingsCard value="reports" icon={<BarChart3 className="h-4 w-4" />} title="Relatórios">
+              <p className="text-[11px] text-muted-foreground">
+                Toque para ativar ou desativar os blocos da tela de relatórios.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { k: "weekly", label: "Semanal", icon: <CalendarRange className="h-4 w-4" /> },
+                  { k: "monthly", label: "Mensal", icon: <CalendarDays className="h-4 w-4" /> },
+                  { k: "expenses", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
+                  { k: "mileage", label: "KM", icon: <Route className="h-4 w-4" /> },
+                  { k: "hours", label: "Horas", icon: <Clock className="h-4 w-4" /> },
+                  { k: "appPerformance", label: "Por app", icon: <Activity className="h-4 w-4" /> },
+                ] as { k: keyof ReportWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
+                  <MiniCardToggle
+                    key={w.k}
+                    active={reportWidgets[w.k]}
+                    icon={w.icon}
+                    label={w.label}
+                    onClick={() => toggleReportWidget(w.k)}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
+              >
+                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
+              </button>
+            </SettingsCard>
+          </Accordion>
+        </SectionGroup>
+
         <SectionGroup title="Veículo">
           <Accordion type="multiple" className="space-y-2.5">
             <SettingsCard
