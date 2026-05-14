@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { Car, Wallet, Upload, X, Loader2 } from "lucide-react";
-import { friendlyDbError, validateImageFile } from "@/lib/friendlyErrors";
+import { friendlyDbError, verifyImageSignature } from "@/lib/friendlyErrors";
 import { useSignedLogoUrl } from "@/lib/logoUrl";
 import type { PlatformType } from "@/types";
 
@@ -65,7 +65,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
 
   const handleUpload = async (file: File) => {
     if (!user) return;
-    const v = validateImageFile(file);
+    const v = await verifyImageSignature(file);
     if (!v.ok) {
       toast.error(v.message);
       return;
