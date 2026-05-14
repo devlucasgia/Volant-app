@@ -499,10 +499,14 @@ function PairCard({
   totalIcon, totalLabel, totalValue,
   avgIcon, avgLabel, avgValue,
   accent = "muted",
+  showTotal = true,
+  showAvg = true,
 }: {
   totalIcon: React.ReactNode; totalLabel: string; totalValue: string;
   avgIcon: React.ReactNode; avgLabel: string; avgValue: string;
   accent?: "success" | "info" | "purple" | "muted";
+  showTotal?: boolean;
+  showAvg?: boolean;
 }) {
   const accentMap: Record<string, { text: string; border: string; line: string; dot: string }> = {
     muted:   { text: "text-muted-foreground",   border: "border-border",                  line: "via-border",                       dot: "bg-muted-foreground/40" },
@@ -517,26 +521,35 @@ function PairCard({
     a.text
   );
   const valueCls = "text-center text-[clamp(15px,2vw,18px)] font-bold tabular-nums leading-tight tracking-tight text-foreground whitespace-nowrap";
+  const both = showTotal && showAvg;
   return (
     <div className={cn("relative overflow-hidden rounded-2xl border bg-card", a.border)}>
-      <div className="grid grid-cols-2 items-stretch">
-        <div className={half}>
-          <div className={labelCls}>
-            <span className="shrink-0">{totalIcon}</span>
-            <span className="min-w-0">{totalLabel}</span>
+      <div className={cn("grid items-stretch", both ? "grid-cols-2" : "grid-cols-1")}>
+        {showTotal && (
+          <div className={half}>
+            <div className={labelCls}>
+              <span className="shrink-0">{totalIcon}</span>
+              <span className="min-w-0">{totalLabel}</span>
+            </div>
+            <div className={valueCls}>{totalValue}</div>
           </div>
-          <div className={valueCls}>{totalValue}</div>
-        </div>
-        <div className={cn(half, "bg-muted/15")}>
-          <div className={labelCls}>
-            <span className="shrink-0">{avgIcon}</span>
-            <span className="min-w-0">{avgLabel}</span>
+        )}
+        {showAvg && (
+          <div className={cn(half, both && "bg-muted/15")}>
+            <div className={labelCls}>
+              <span className="shrink-0">{avgIcon}</span>
+              <span className="min-w-0">{avgLabel}</span>
+            </div>
+            <div className={valueCls}>{avgValue}</div>
           </div>
-          <div className={valueCls}>{avgValue}</div>
-        </div>
+        )}
       </div>
-      <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
-      <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
+      {both && (
+        <>
+          <div className={cn("pointer-events-none absolute inset-y-2 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-transparent to-transparent", a.line)} />
+          <div className={cn("pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-1 w-1 rounded-full ring-[3px] ring-card", a.dot)} />
+        </>
+      )}
     </div>
   );
 }
