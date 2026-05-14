@@ -20,8 +20,11 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
-  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon, GripVertical,
+  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
+  Sparkles, Bold, Italic, Type as TypeIcon,
 } from "lucide-react";
+import { VolantLogo } from "@/components/VolantLogo";
+import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
   type DragEndEvent,
