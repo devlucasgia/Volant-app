@@ -378,46 +378,6 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
-              {/* Theme */}
-              <div className="flex items-center justify-between rounded-xl border border-border p-3 transition-colors hover:bg-muted/30">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/80">
-                    {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">Modo escuro</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {settings.theme === "dark" ? "Ativado" : "Desativado"}
-                    </div>
-                  </div>
-                </div>
-                <Switch
-                  checked={settings.theme === "dark"}
-                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
-                />
-              </div>
-
-              {/* Font size */}
-              <button
-                type="button"
-                onClick={() => setFontOpen(true)}
-                className="flex w-full items-center justify-between rounded-xl border border-border p-3 text-left transition-colors hover:bg-muted/30"
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted text-foreground/80">
-                    <Type className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">Tamanho dos textos</div>
-                    <div className="text-[11px] text-muted-foreground">{fontScaleLabel}</div>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-
-            </SettingsCard>
-
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
@@ -448,14 +408,53 @@ export default function SettingsPage() {
             type="single"
             collapsible
             value={customizeOpen}
-            onValueChange={setCustomizeOpen}
+            onValueChange={onCustomizeChange}
             className="space-y-2.5"
           >
+            <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
+              {/* Theme */}
+              <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/70 text-foreground/80">
+                    {settings.theme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">Modo escuro</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {settings.theme === "dark" ? "Ativado" : "Desativado"}
+                    </div>
+                  </div>
+                </div>
+                <Switch
+                  checked={settings.theme === "dark"}
+                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
+                />
+              </div>
+
+              {/* Font size */}
+              <button
+                type="button"
+                onClick={() => setFontOpen(true)}
+                className="flex w-full items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 text-left transition-colors hover:bg-muted/30"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-background/70 text-foreground/80">
+                    <Type className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium">Tamanho dos textos</div>
+                    <div className="text-[11px] text-muted-foreground">{fontScaleLabel}</div>
+                  </div>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            </SettingsCard>
+
             <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
               <p className="text-[11px] text-muted-foreground">
                 Toque para ativar ou desativar os blocos da tela inicial.
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {([
                   { k: "goal", label: "Meta", icon: <Target className="h-4 w-4" /> },
                   { k: "stats", label: "Performance", icon: <Gauge className="h-4 w-4" /> },
@@ -484,14 +483,19 @@ export default function SettingsPage() {
               <p className="text-[11px] text-muted-foreground">
                 Toque para ativar ou desativar os blocos da tela de relatórios.
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5">
                 {([
-                  { k: "weekly", label: "Semanal", icon: <CalendarRange className="h-4 w-4" /> },
-                  { k: "monthly", label: "Mensal", icon: <CalendarDays className="h-4 w-4" /> },
-                  { k: "expenses", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
-                  { k: "mileage", label: "KM", icon: <Route className="h-4 w-4" /> },
-                  { k: "hours", label: "Horas", icon: <Clock className="h-4 w-4" /> },
-                  { k: "appPerformance", label: "Por app", icon: <Activity className="h-4 w-4" /> },
+                  { k: "net",        label: "Líquido",      icon: <Wallet className="h-4 w-4" /> },
+                  { k: "perHour",    label: "R$ / hora",    icon: <Gauge className="h-4 w-4" /> },
+                  { k: "gross",      label: "Bruto",        icon: <Wallet className="h-4 w-4" /> },
+                  { k: "expenses",   label: "Gastos",       icon: <Receipt className="h-4 w-4" /> },
+                  { k: "activeDays", label: "Dias ativos",  icon: <CalendarDays className="h-4 w-4" /> },
+                  { k: "perDay",     label: "Média / dia",  icon: <Clock className="h-4 w-4" /> },
+                  { k: "totalKm",    label: "KM total",     icon: <Route className="h-4 w-4" /> },
+                  { k: "perKm",      label: "R$ / km",      icon: <Route className="h-4 w-4" /> },
+                  { k: "trips",      label: "Corridas",     icon: <Flag className="h-4 w-4" /> },
+                  { k: "perTrip",    label: "R$ / corrida", icon: <Flag className="h-4 w-4" /> },
+                  { k: "chart",      label: "Gráfico",      icon: <LineChart className="h-4 w-4" /> },
                 ] as { k: keyof ReportWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
                   <MiniCardToggle
                     key={w.k}
