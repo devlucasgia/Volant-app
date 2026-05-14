@@ -153,10 +153,25 @@ export default function SettingsPage() {
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
 
-  // ---- Profile (kept with its own save action)
-  const [displayName, setDisplayName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [profileBaseline, setProfileBaseline] = useState({ name: "", avatar: "" });
+  // ---- Profile state
+  const accountName = useMemo(() => {
+    const md = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    return (
+      (md.full_name as string) ||
+      (md.name as string) ||
+      (md.display_name as string) ||
+      user?.email?.split("@")[0] ||
+      "Motorista"
+    );
+  }, [user]);
+  const accountAvatar = useMemo(() => {
+    const md = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    return (md.avatar_url as string) || (md.picture as string) || "";
+  }, [user]);
+
+  const [nickname, setNickname] = useState("");
+  const [nicknameBaseline, setNicknameBaseline] = useState("");
+  const [profileAvatar, setProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
@@ -170,97 +185,96 @@ export default function SettingsPage() {
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
 
+  // Load profile (nickname + saved avatar) from Supabase
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("nickname, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      const n = ((data as { nickname?: string | null } | null)?.nickname ?? "") as string;
+      setNickname(n);
+      setNicknameBaseline(n);
+      setProfileAvatar((data?.avatar_url as string | null) ?? "");
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const displayedAvatar = profileAvatar || accountAvatar;
+
   // ---- Dialogs
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
-  // ---- Draft for batched-save settings (debounced autosave + leave-guard)
-  const baseline = useMemo<DraftSettings>(() => buildDraft(settings), [settings]);
-  const [draft, setDraft] = useState<DraftSettings>(baseline);
-  const dirty = !isEqualDraft(draft, baseline);
-  const dirtyRef = useRef(false);
-  dirtyRef.current = dirty;
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ---- Draft for explicit-save settings (goals + maintenance)
+  const [draft, setDraft] = useState<DraftSettings>(() => buildDraft(settings));
 
-  // Sync draft when remote settings change (e.g. after save).
+  // Sync draft when remote settings change.
   useEffect(() => {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  const flushSave = async () => {
-    if (saveTimer.current) {
-      clearTimeout(saveTimer.current);
-      saveTimer.current = null;
-    }
-    if (!dirtyRef.current) return;
-    const d = draftRef.current;
+  const goalsDirty = draft.dailyGoal !== settings.dailyGoal;
+  const maintDirty =
+    draft.maintenanceIntervalKm !== settings.maintenanceIntervalKm ||
+    draft.lastMaintenanceKm !== settings.lastMaintenanceKm;
+
+  const [savingGoals, setSavingGoals] = useState(false);
+  const [savingMaint, setSavingMaint] = useState(false);
+
+  const saveGoals = async () => {
+    setSavingGoals(true);
     try {
-      await updateSettings({
-        dailyGoal: d.dailyGoal,
-        maintenanceIntervalKm: d.maintenanceIntervalKm,
-        lastMaintenanceKm: d.lastMaintenanceKm,
-        dashboardWidgets: d.dashboardWidgets,
-      });
+      await updateSettings({ dailyGoal: draft.dailyGoal });
+      toast.success("Meta atualizada");
     } catch {
       toast.error("Não foi possível salvar");
+    } finally {
+      setSavingGoals(false);
     }
   };
 
-  // Debounced autosave: 700ms after the last change.
-  useEffect(() => {
-    if (!dirty) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { void flushSave(); }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, dirty]);
+  const saveMaint = async () => {
+    setSavingMaint(true);
+    try {
+      await updateSettings({
+        maintenanceIntervalKm: draft.maintenanceIntervalKm,
+        lastMaintenanceKm: draft.lastMaintenanceKm,
+      });
+      toast.success("Manutenção atualizada");
+    } catch {
+      toast.error("Não foi possível salvar");
+    } finally {
+      setSavingMaint(false);
+    }
+  };
 
-  // Flush on unmount (e.g. route change away from Settings).
-  useEffect(() => {
-    return () => { void flushSave(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Warn if the page/tab is being closed while a save is pending.
-  useEffect(() => {
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ""; }
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, []);
-
-  const profileDirty = displayName !== profileBaseline.name;
+  const nicknameDirty = nickname.trim() !== nicknameBaseline.trim();
 
   const saveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id, display_name: displayName || null, avatar_url: avatarUrl || null,
-    });
+    const trimmed = nickname.trim();
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, nickname: trimmed || null } as any);
     setSavingProfile(false);
     if (error) return toast.error(friendlyDbError(error, "Não foi possível salvar o perfil."));
-    setProfileBaseline({ name: displayName, avatar: avatarUrl });
+    setNicknameBaseline(trimmed);
     toast.success("Perfil atualizado");
   };
 
-  // Confirm before closing an open Personalização section that has pending changes.
-  const [pendingCustomizeValue, setPendingCustomizeValue] = useState<string | null>(null);
-  const onCustomizeChange = (next: string) => {
-    if (next === "" && customizeOpen !== "" && dirty) {
-      setPendingCustomizeValue("");
-      return;
-    }
-    setCustomizeOpen(next);
+  // Auto-save home dashboard widgets immediately on toggle.
+  const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
+    void updateSettings({
+      dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
+    });
   };
-
-  const setWidget = (k: keyof DashboardWidgets, v: boolean) =>
-    setDraft((d) => ({ ...d, dashboardWidgets: { ...d.dashboardWidgets, [k]: v } }));
 
   const deleteCar = async (car: CarType) => {
     if (!confirm(`Excluir o carro ${car.brand || ""} ${car.model || ""}?`)) return;
@@ -300,7 +314,7 @@ export default function SettingsPage() {
     return parts || "Carro sem nome";
   };
 
-  const widgets = draft.dashboardWidgets;
+  const widgets = settings.dashboardWidgets;
 
   return (
     <>
