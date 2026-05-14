@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { Car, Wallet, Upload, X, Loader2 } from "lucide-react";
 import { friendlyDbError, validateImageFile } from "@/lib/friendlyErrors";
+import { useSignedLogoUrl } from "@/lib/logoUrl";
 import type { PlatformType } from "@/types";
 
 const EMOJI_OPTIONS = ["⛽","🍔","🔧","📦","💰","🚗","🚕","🛞","🪛","💡","☕","🍕","🛒","🏥","🎁","📱","🧾","🚿","🅿️","🛣️","💸"];
