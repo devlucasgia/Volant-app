@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
@@ -10,10 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -42,29 +38,14 @@ interface DraftSettings {
   dailyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
-  dashboardWidgets: DashboardWidgets;
 }
 
-function buildDraft(s: {
-  dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number; dashboardWidgets: DashboardWidgets;
-}): DraftSettings {
+function buildDraft(s: { dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
   return {
     dailyGoal: s.dailyGoal,
     maintenanceIntervalKm: s.maintenanceIntervalKm,
     lastMaintenanceKm: s.lastMaintenanceKm,
-    dashboardWidgets: { ...s.dashboardWidgets },
   };
-}
-
-function isEqualDraft(a: DraftSettings, b: DraftSettings) {
-  return (
-    a.dailyGoal === b.dailyGoal &&
-    a.maintenanceIntervalKm === b.maintenanceIntervalKm &&
-    a.lastMaintenanceKm === b.lastMaintenanceKm &&
-    (Object.keys(a.dashboardWidgets) as (keyof DashboardWidgets)[]).every(
-      (k) => a.dashboardWidgets[k] === b.dashboardWidgets[k],
-    )
-  );
 }
 
 /** Section group header used to visually group multiple accordion cards. */
@@ -172,10 +153,25 @@ export default function SettingsPage() {
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
 
-  // ---- Profile (kept with its own save action)
-  const [displayName, setDisplayName] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [profileBaseline, setProfileBaseline] = useState({ name: "", avatar: "" });
+  // ---- Profile state
+  const accountName = useMemo(() => {
+    const md = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    return (
+      (md.full_name as string) ||
+      (md.name as string) ||
+      (md.display_name as string) ||
+      user?.email?.split("@")[0] ||
+      "Motorista"
+    );
+  }, [user]);
+  const accountAvatar = useMemo(() => {
+    const md = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    return (md.avatar_url as string) || (md.picture as string) || "";
+  }, [user]);
+
+  const [nickname, setNickname] = useState("");
+  const [nicknameBaseline, setNicknameBaseline] = useState("");
+  const [profileAvatar, setProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
@@ -189,97 +185,97 @@ export default function SettingsPage() {
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
 
+  // Load profile (nickname + saved avatar) from Supabase
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      const { data } = await (supabase
+        .from("profiles") as any)
+        .select("nickname, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!active) return;
+      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null };
+      const n = row.nickname ?? "";
+      setNickname(n);
+      setNicknameBaseline(n);
+      setProfileAvatar(row.avatar_url ?? "");
+    })();
+    return () => { active = false; };
+  }, [user]);
+
+  const displayedAvatar = profileAvatar || accountAvatar;
+
   // ---- Dialogs
   const [carDialog, setCarDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
-  // ---- Draft for batched-save settings (debounced autosave + leave-guard)
-  const baseline = useMemo<DraftSettings>(() => buildDraft(settings), [settings]);
-  const [draft, setDraft] = useState<DraftSettings>(baseline);
-  const dirty = !isEqualDraft(draft, baseline);
-  const dirtyRef = useRef(false);
-  dirtyRef.current = dirty;
-  const draftRef = useRef(draft);
-  draftRef.current = draft;
-  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ---- Draft for explicit-save settings (goals + maintenance)
+  const [draft, setDraft] = useState<DraftSettings>(() => buildDraft(settings));
 
-  // Sync draft when remote settings change (e.g. after save).
+  // Sync draft when remote settings change.
   useEffect(() => {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  const flushSave = async () => {
-    if (saveTimer.current) {
-      clearTimeout(saveTimer.current);
-      saveTimer.current = null;
-    }
-    if (!dirtyRef.current) return;
-    const d = draftRef.current;
+  const goalsDirty = draft.dailyGoal !== settings.dailyGoal;
+  const maintDirty =
+    draft.maintenanceIntervalKm !== settings.maintenanceIntervalKm ||
+    draft.lastMaintenanceKm !== settings.lastMaintenanceKm;
+
+  const [savingGoals, setSavingGoals] = useState(false);
+  const [savingMaint, setSavingMaint] = useState(false);
+
+  const saveGoals = async () => {
+    setSavingGoals(true);
     try {
-      await updateSettings({
-        dailyGoal: d.dailyGoal,
-        maintenanceIntervalKm: d.maintenanceIntervalKm,
-        lastMaintenanceKm: d.lastMaintenanceKm,
-        dashboardWidgets: d.dashboardWidgets,
-      });
+      await updateSettings({ dailyGoal: draft.dailyGoal });
+      toast.success("Meta atualizada");
     } catch {
       toast.error("Não foi possível salvar");
+    } finally {
+      setSavingGoals(false);
     }
   };
 
-  // Debounced autosave: 700ms after the last change.
-  useEffect(() => {
-    if (!dirty) return;
-    if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { void flushSave(); }, 700);
-    return () => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft, dirty]);
+  const saveMaint = async () => {
+    setSavingMaint(true);
+    try {
+      await updateSettings({
+        maintenanceIntervalKm: draft.maintenanceIntervalKm,
+        lastMaintenanceKm: draft.lastMaintenanceKm,
+      });
+      toast.success("Manutenção atualizada");
+    } catch {
+      toast.error("Não foi possível salvar");
+    } finally {
+      setSavingMaint(false);
+    }
+  };
 
-  // Flush on unmount (e.g. route change away from Settings).
-  useEffect(() => {
-    return () => { void flushSave(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Warn if the page/tab is being closed while a save is pending.
-  useEffect(() => {
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ""; }
-    };
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, []);
-
-  const profileDirty = displayName !== profileBaseline.name;
+  const nicknameDirty = nickname.trim() !== nicknameBaseline.trim();
 
   const saveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id, display_name: displayName || null, avatar_url: avatarUrl || null,
-    });
+    const trimmed = nickname.trim();
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, nickname: trimmed || null } as any);
     setSavingProfile(false);
     if (error) return toast.error(friendlyDbError(error, "Não foi possível salvar o perfil."));
-    setProfileBaseline({ name: displayName, avatar: avatarUrl });
+    setNicknameBaseline(trimmed);
     toast.success("Perfil atualizado");
   };
 
-  // Confirm before closing an open Personalização section that has pending changes.
-  const [pendingCustomizeValue, setPendingCustomizeValue] = useState<string | null>(null);
-  const onCustomizeChange = (next: string) => {
-    if (next === "" && customizeOpen !== "" && dirty) {
-      setPendingCustomizeValue("");
-      return;
-    }
-    setCustomizeOpen(next);
+  // Auto-save home dashboard widgets immediately on toggle.
+  const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
+    void updateSettings({
+      dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
+    });
   };
-
-  const setWidget = (k: keyof DashboardWidgets, v: boolean) =>
-    setDraft((d) => ({ ...d, dashboardWidgets: { ...d.dashboardWidgets, [k]: v } }));
 
   const deleteCar = async (car: CarType) => {
     if (!confirm(`Excluir o carro ${car.brand || ""} ${car.model || ""}?`)) return;
@@ -319,7 +315,7 @@ export default function SettingsPage() {
     return parts || "Carro sem nome";
   };
 
-  const widgets = draft.dashboardWidgets;
+  const widgets = settings.dashboardWidgets;
 
   return (
     <>
@@ -332,26 +328,31 @@ export default function SettingsPage() {
             <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
                 <Avatar className="h-14 w-14 ring-2 ring-border">
-                  <AvatarImage src={avatarUrl} alt={displayName} />
+                  <AvatarImage src={displayedAvatar} alt={accountName} referrerPolicy="no-referrer" />
                   <AvatarFallback className="bg-primary/15 text-primary"><UserIcon className="h-6 w-6" /></AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold truncate">{displayName || "Sem nome"}</div>
+                  <div className="font-semibold truncate">{accountName}</div>
                   <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Nome</Label>
+                <Label className="text-xs text-muted-foreground">Como deseja ser chamado?</Label>
                 <Input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder={accountName}
+                  maxLength={40}
                   className="transition-shadow duration-200 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.18)]"
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  Apelido usado nas saudações dentro do app. Se vazio, usamos seu nome da conta.
+                </p>
               </div>
 
-              <Button onClick={saveProfile} disabled={savingProfile || !profileDirty} className="w-full">
-                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar perfil"}
+              <Button onClick={saveProfile} disabled={savingProfile || !nicknameDirty} className="w-full">
+                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
               {/* Authentication / password */}
@@ -408,7 +409,7 @@ export default function SettingsPage() {
             type="single"
             collapsible
             value={customizeOpen}
-            onValueChange={onCustomizeChange}
+            onValueChange={setCustomizeOpen}
             className="space-y-2.5"
           >
             <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
@@ -603,6 +604,9 @@ export default function SettingsPage() {
                   <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
                 </div>
               </div>
+              <Button onClick={saveMaint} disabled={savingMaint || !maintDirty} className="w-full">
+                {savingMaint ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+              </Button>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
@@ -676,6 +680,10 @@ export default function SettingsPage() {
                 </p>
               </div>
 
+              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty} className="w-full">
+                {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+              </Button>
+
               <div className="pt-1">
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                   Metas avançadas
@@ -731,47 +739,6 @@ export default function SettingsPage() {
           <div>Dados sincronizados na nuvem</div>
         </footer>
       </div>
-
-      {/* Confirm before collapsing a Personalização section with pending changes */}
-      <AlertDialog
-        open={pendingCustomizeValue !== null}
-        onOpenChange={(o) => { if (!o) setPendingCustomizeValue(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Salvar alterações?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você fez ajustes nesta seção. Deseja salvar antes de fechar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-2">
-            <AlertDialogCancel onClick={() => setPendingCustomizeValue(null)}>
-              Continuar editando
-            </AlertDialogCancel>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setDraft(buildDraft(settings));
-                const next = pendingCustomizeValue ?? "";
-                setPendingCustomizeValue(null);
-                setCustomizeOpen(next);
-              }}
-            >
-              Descartar
-            </Button>
-            <AlertDialogAction
-              onClick={async () => {
-                const next = pendingCustomizeValue ?? "";
-                setPendingCustomizeValue(null);
-                await flushSave();
-                setCustomizeOpen(next);
-              }}
-            >
-              Salvar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <PasswordChangeDialog
         open={pwdOpen}
