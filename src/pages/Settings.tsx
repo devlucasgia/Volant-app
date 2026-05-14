@@ -327,26 +327,31 @@ export default function SettingsPage() {
             <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
                 <Avatar className="h-14 w-14 ring-2 ring-border">
-                  <AvatarImage src={avatarUrl} alt={displayName} />
+                  <AvatarImage src={displayedAvatar} alt={accountName} referrerPolicy="no-referrer" />
                   <AvatarFallback className="bg-primary/15 text-primary"><UserIcon className="h-6 w-6" /></AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <div className="font-semibold truncate">{displayName || "Sem nome"}</div>
+                  <div className="font-semibold truncate">{accountName}</div>
                   <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Nome</Label>
+                <Label className="text-xs text-muted-foreground">Como deseja ser chamado?</Label>
                 <Input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder={accountName}
+                  maxLength={40}
                   className="transition-shadow duration-200 focus-visible:shadow-[0_0_0_3px_hsl(var(--primary)/0.18)]"
                 />
+                <p className="text-[11px] text-muted-foreground">
+                  Apelido usado nas saudações dentro do app. Se vazio, usamos seu nome da conta.
+                </p>
               </div>
 
-              <Button onClick={saveProfile} disabled={savingProfile || !profileDirty} className="w-full">
-                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar perfil"}
+              <Button onClick={saveProfile} disabled={savingProfile || !nicknameDirty} className="w-full">
+                {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
               {/* Authentication / password */}
