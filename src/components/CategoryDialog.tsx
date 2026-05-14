@@ -76,8 +76,8 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
         .from("category-logos")
         .upload(path, file, { upsert: true, contentType: file.type });
       if (error) throw error;
-      const { data } = supabase.storage.from("category-logos").getPublicUrl(path);
-      setImageUrl(data.publicUrl);
+      // Store the storage path (private bucket — signed URLs are generated on demand)
+      setImageUrl(path);
       toast.success("Imagem enviada");
     } catch (e) {
       toast.error(friendlyDbError(e, "Não foi possível enviar a imagem. Tente novamente."));
