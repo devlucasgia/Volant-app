@@ -132,8 +132,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
     setLoading(true);
     (async () => {
+      // Explicit user_id filter (defense-in-depth alongside RLS) and raised
+      // range to avoid silent truncation at the default 1000-row PostgREST limit.
       const [{ data: rows }, { data: sRow }] = await Promise.all([
-        supabase.from("entries").select("*").order("entry_date", { ascending: false }),
+        supabase
+          .from("entries")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("entry_date", { ascending: false })
+          .range(0, 9999),
         supabase.from("user_settings").select("*").eq("user_id", user.id).maybeSingle(),
       ]);
       await Promise.all([loadCars(user.id), loadCategories(user.id)]);
@@ -162,9 +169,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const removeEntry = useCallback(async (id: string) => {
+    const snapshot = entries;
     setEntries((prev) => prev.filter((x) => x.id !== id));
-    await supabase.from("entries").delete().eq("id", id);
-  }, []);
+    const { error } = await supabase.from("entries").delete().eq("id", id);
+    if (error) {
+      // Roll back optimistic removal so the UI stays consistent with the DB.
+      setEntries(snapshot);
+      throw error;
+    }
+  }, [entries]);
 
   const updateEntry = useCallback(async (e: Entry) => {
     if (!user) return;
@@ -178,14 +191,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback(async (patch: Partial<Settings>) => {
     if (!user) return;
+    const prev = settings;
     const next = { ...settings, ...patch };
     setSettings(next);
-    await supabase.from("user_settings").upsert({
+    const { error } = await supabase.from("user_settings").upsert({
       user_id: user.id, daily_goal: next.dailyGoal,
       maintenance_interval_km: next.maintenanceIntervalKm,
       last_maintenance_km: next.lastMaintenanceKm, theme: next.theme,
       dashboard_widgets: next.dashboardWidgets as any,
     } as any);
+    if (error) {
+      // Revert optimistic state on failure so the UI does not lie.
+      setSettings(prev);
+      throw error;
+    }
   }, [user, settings]);
 
   // ---- Categories
