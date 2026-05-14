@@ -38,29 +38,14 @@ interface DraftSettings {
   dailyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
-  dashboardWidgets: DashboardWidgets;
 }
 
-function buildDraft(s: {
-  dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number; dashboardWidgets: DashboardWidgets;
-}): DraftSettings {
+function buildDraft(s: { dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
   return {
     dailyGoal: s.dailyGoal,
     maintenanceIntervalKm: s.maintenanceIntervalKm,
     lastMaintenanceKm: s.lastMaintenanceKm,
-    dashboardWidgets: { ...s.dashboardWidgets },
   };
-}
-
-function isEqualDraft(a: DraftSettings, b: DraftSettings) {
-  return (
-    a.dailyGoal === b.dailyGoal &&
-    a.maintenanceIntervalKm === b.maintenanceIntervalKm &&
-    a.lastMaintenanceKm === b.lastMaintenanceKm &&
-    (Object.keys(a.dashboardWidgets) as (keyof DashboardWidgets)[]).every(
-      (k) => a.dashboardWidgets[k] === b.dashboardWidgets[k],
-    )
-  );
 }
 
 /** Section group header used to visually group multiple accordion cards. */
