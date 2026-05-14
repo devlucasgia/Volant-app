@@ -191,6 +191,12 @@ export default function SettingsPage() {
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
 
+  // DnD sensors — TouchSensor with small delay prevents scroll conflicts on mobile.
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+  );
+
   // Subtle, premium autosave confirmation. Reuses a single toast id to avoid stacking.
   const notifySaved = () =>
     toast.success("Alterações salvas", { id: "autosave", duration: 1600 });
