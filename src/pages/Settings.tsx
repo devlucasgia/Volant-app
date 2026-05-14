@@ -988,10 +988,11 @@ export default function SettingsPage() {
         </SectionGroup>
 
         {/* App footer */}
-        <footer className="pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <div className="font-semibold text-muted-foreground">{APP_NAME}</div>
+        <footer className="flex flex-col items-center gap-1.5 pt-6 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <VolantLogo size={22} className="opacity-80" />
+          <div className="mt-0.5 font-semibold text-muted-foreground">{APP_NAME}</div>
           <div>Versão {APP_VERSION_LABEL}</div>
-          <div>Dados sincronizados na nuvem</div>
+          <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
         </footer>
       </div>
 
