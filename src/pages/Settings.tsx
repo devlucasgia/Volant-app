@@ -635,6 +635,12 @@ export default function SettingsPage() {
       />
       <FontSizeSheet open={fontOpen} onOpenChange={setFontOpen} />
 
+      <FeedbackDialog
+        open={feedback.open}
+        onOpenChange={(o) => setFeedback((s) => ({ ...s, open: o }))}
+        initialType={feedback.type}
+      />
+
       <CarFormDialog
         open={carDialog.open}
         onOpenChange={(o) => setCarDialog((s) => ({ ...s, open: o }))}
