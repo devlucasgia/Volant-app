@@ -381,7 +381,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
           <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
-            <Button className="flex-1 gradient-success text-primary-foreground" onClick={submit} disabled={submitting}>
+            <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={submit} disabled={submitting}>
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</>
               ) : (
