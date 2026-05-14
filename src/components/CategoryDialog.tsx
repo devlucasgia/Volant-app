@@ -48,6 +48,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewSignedUrl = useSignedLogoUrl(imageUrl);
 
   const isEarning = type === "earning";
   const isBuiltinPlatform = isEarning && !!editing && BUILTIN_PLATFORM_KEYS.has(editing.key);
