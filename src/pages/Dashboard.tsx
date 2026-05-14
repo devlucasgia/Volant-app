@@ -30,16 +30,18 @@ export default function Dashboard() {
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
 
-  // Personalized greeting — nickname from profiles, fallback to Google first name, then "Motorista".
+  // Personalized greeting — nickname + optional subtitle message from profiles.
   const [nickname, setNickname] = useState<string>("");
+  const [greetingMessage, setGreetingMessage] = useState<string>("");
   useEffect(() => {
-    if (!user) { setNickname(""); return; }
+    if (!user) { setNickname(""); setGreetingMessage(""); return; }
     let active = true;
     (async () => {
       const { data } = await (supabase.from("profiles") as any)
-        .select("nickname").eq("id", user.id).maybeSingle();
+        .select("nickname, greeting_message").eq("id", user.id).maybeSingle();
       if (!active) return;
       setNickname(((data as any)?.nickname ?? "").trim());
+      setGreetingMessage(((data as any)?.greeting_message ?? "").trim());
     })();
     return () => { active = false; };
   }, [user]);
