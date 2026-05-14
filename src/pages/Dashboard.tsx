@@ -103,8 +103,11 @@ export default function Dashboard() {
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
-        <div className="mt-1 text-[13px] italic text-muted-foreground/90 leading-snug">
+        <div className="mt-1 text-[13px] text-muted-foreground/90 leading-snug">
           {greetingMessage || "Bem-vindo de volta ao Volant."}
+        </div>
+        <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
+          {contextualDate}
         </div>
       </div>
     ) : null,
