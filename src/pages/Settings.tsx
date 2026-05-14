@@ -18,8 +18,11 @@ import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
   CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2,
-  KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
+  KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb, Sliders,
+  Home as HomeIcon, BarChart3, Receipt, Gauge, CalendarRange, CalendarDays,
+  Route, Clock, Activity, GripVertical,
 } from "lucide-react";
+import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
 import { SuggestionDialog } from "@/components/account/SuggestionDialog";
 import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
