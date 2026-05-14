@@ -1,0 +1,1 @@
+UPDATE storage.buckets SET public = false, allowed_mime_types = ARRAY['image/png','image/jpeg','image/webp']::text[] WHERE id = 'category-logos';

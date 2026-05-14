@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { Car, Wallet, Upload, X, Loader2 } from "lucide-react";
 import { friendlyDbError, validateImageFile } from "@/lib/friendlyErrors";
+import { useSignedLogoUrl } from "@/lib/logoUrl";
 import type { PlatformType } from "@/types";
 
 const EMOJI_OPTIONS = ["⛽","🍔","🔧","📦","💰","🚗","🚕","🛞","🪛","💡","☕","🍕","🛒","🏥","🎁","📱","🧾","🚿","🅿️","🛣️","💸"];
@@ -47,6 +48,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const previewSignedUrl = useSignedLogoUrl(imageUrl);
 
   const isEarning = type === "earning";
   const isBuiltinPlatform = isEarning && !!editing && BUILTIN_PLATFORM_KEYS.has(editing.key);
@@ -75,8 +77,8 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
         .from("category-logos")
         .upload(path, file, { upsert: true, contentType: file.type });
       if (error) throw error;
-      const { data } = supabase.storage.from("category-logos").getPublicUrl(path);
-      setImageUrl(data.publicUrl);
+      // Store the storage path (private bucket — signed URLs are generated on demand)
+      setImageUrl(path);
       toast.success("Imagem enviada");
     } catch (e) {
       toast.error(friendlyDbError(e, "Não foi possível enviar a imagem. Tente novamente."));
@@ -211,7 +213,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
               <div className="flex items-center gap-3">
                 {imageUrl ? (
                   <div className="relative">
-                    <img src={imageUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border" />
+                    <img src={previewSignedUrl ?? imageUrl} alt="" className="h-14 w-14 rounded-full object-cover border border-border" />
                     <button
                       type="button"
                       onClick={() => setImageUrl(null)}
@@ -230,7 +232,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                   <input
                     ref={fileRef}
                     type="file"
-                    accept="image/png,image/jpeg"
+                    accept="image/png,image/jpeg,image/webp"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
@@ -249,7 +251,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
                     ) : imageUrl ? "Trocar imagem" : "Enviar imagem"}
                   </Button>
-                  <p className="mt-1 text-[10px] text-muted-foreground">PNG ou JPG até 2MB.</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG ou WEBP até 2MB.</p>
                 </div>
               </div>
             </div>

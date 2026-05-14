@@ -1,5 +1,6 @@
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSignedLogoUrl } from "@/lib/logoUrl";
 
 type Size = "sm" | "md" | "lg";
 
@@ -31,11 +32,15 @@ export function PlatformLogo({ platformKey, label, hex, size = "md", className, 
     className
   );
 
+  const signedUrl = useSignedLogoUrl(
+    imageUrl && !["uber", "99", "indriver", "particular"].includes(platformKey) ? imageUrl : null
+  );
+
   // Custom uploaded logo takes priority for non-builtin platforms
-  if (imageUrl && !["uber", "99", "indriver", "particular"].includes(platformKey)) {
+  if (signedUrl && !["uber", "99", "indriver", "particular"].includes(platformKey)) {
     return (
       <div className={cn(base, "bg-muted")}>
-        <img src={imageUrl} alt={label} className="h-full w-full object-cover" />
+        <img src={signedUrl} alt={label} className="h-full w-full object-cover" />
       </div>
     );
   }
