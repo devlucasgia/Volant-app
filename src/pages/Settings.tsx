@@ -599,17 +599,10 @@ export default function SettingsPage() {
                     active={reportWidgets[w.k]}
                     icon={w.icon}
                     label={w.label}
-                    onClick={() => toggleReportWidget(w.k)}
+                    onClick={() => toggleReport(w.k)}
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                disabled
-                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
-              >
-                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
-              </button>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
