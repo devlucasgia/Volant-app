@@ -92,10 +92,15 @@ export default function Dashboard() {
   // Build the renderer map for each reorderable / hideable card.
   const blocks: Record<HomeCardKey, React.ReactNode> = {
     greeting: widgets.greeting ? (
-      <div key="greeting" className="px-1 pt-0.5 pb-1 animate-fade-in">
+      <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
+        {greetingMessage && (
+          <div className="mt-1 text-[13px] italic text-muted-foreground/90 leading-snug">
+            {greetingMessage}
+          </div>
+        )}
         <div className="mt-0.5 text-xs text-muted-foreground">
           Bem-vindo de volta ao Volant.
         </div>
