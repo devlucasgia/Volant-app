@@ -28,7 +28,7 @@ export function validateImageFile(file: File, maxBytes = 2 * 1024 * 1024): Image
   }
   const ext = (file.name.split(".").pop() || "").toLowerCase();
   if (!ALLOWED_IMAGE_MIME.includes(file.type) || !ALLOWED_IMAGE_EXT.includes(ext)) {
-    return { ok: false, message: "Formato inválido. Envie uma imagem PNG ou JPG." };
+    return { ok: false, message: "Formato inválido. Envie uma imagem PNG, JPG ou WEBP." };
   }
   return { ok: true, ext: ext === "jpeg" ? "jpg" : ext };
 }
