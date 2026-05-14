@@ -579,14 +579,14 @@ export default function SettingsPage() {
               <Button
                 variant="outline"
                 className="h-10 justify-start gap-2"
-                onClick={() => setFeedback({ open: true, type: "bug" })}
+                onClick={() => setBugOpen(true)}
               >
                 <Bug className="h-4 w-4" /> Reportar bug
               </Button>
               <Button
                 variant="outline"
                 className="h-10 justify-start gap-2"
-                onClick={() => setFeedback({ open: true, type: "suggestion" })}
+                onClick={() => setSuggestionOpen(true)}
               >
                 <Lightbulb className="h-4 w-4" /> Sugerir melhoria
               </Button>
@@ -594,9 +594,12 @@ export default function SettingsPage() {
           </div>
         </SectionGroup>
 
-        <p className="pt-2 text-center text-xs text-muted-foreground">
-          Volant · Dados sincronizados na nuvem
-        </p>
+        {/* App footer */}
+        <footer className="pt-4 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <div className="font-semibold text-muted-foreground">{APP_NAME}</div>
+          <div>Versão {APP_VERSION_LABEL}</div>
+          <div>Dados sincronizados na nuvem</div>
+        </footer>
       </div>
 
       {/* Floating save bar — refined, contextual, low-key */}
@@ -638,11 +641,8 @@ export default function SettingsPage() {
       />
       <FontSizeSheet open={fontOpen} onOpenChange={setFontOpen} />
 
-      <FeedbackDialog
-        open={feedback.open}
-        onOpenChange={(o) => setFeedback((s) => ({ ...s, open: o }))}
-        initialType={feedback.type}
-      />
+      <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
+      <SuggestionDialog open={suggestionOpen} onOpenChange={setSuggestionOpen} />
 
       <CarFormDialog
         open={carDialog.open}
