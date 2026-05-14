@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<Period>("day");
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
+  const [greetingStyle] = useGreetingStyle();
 
   // Personalized greeting — nickname + optional subtitle message from profiles.
   const [nickname, setNickname] = useState<string>("");
