@@ -181,7 +181,24 @@ export default function SettingsPage() {
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
+  const [homeOrder, moveHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
+
+  // Subtle, premium autosave confirmation. Reuses a single toast id to avoid stacking.
+  const notifySaved = () =>
+    toast.success("Alterações salvas", { id: "autosave", duration: 1600 });
+  const notifySaveError = () =>
+    toast.error("Não foi possível salvar agora. Tente novamente.", { id: "autosave" });
+
+  // Wrap updateSettings so any auto-saved change shows the discreet feedback.
+  const autoSave = async (patch: Parameters<typeof updateSettings>[0]) => {
+    try {
+      await updateSettings(patch);
+      notifySaved();
+    } catch {
+      notifySaveError();
+    }
+  };
 
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
