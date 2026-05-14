@@ -161,7 +161,7 @@ export default function SettingsPage() {
   }, [user]);
 
   const dirty = !isEqualDraft(draft, baseline);
-  const profileDirty = displayName !== profileBaseline.name || avatarUrl !== profileBaseline.avatar;
+  const profileDirty = displayName !== profileBaseline.name;
 
   const saveProfile = async () => {
     if (!user) return;
@@ -170,7 +170,7 @@ export default function SettingsPage() {
       id: user.id, display_name: displayName || null, avatar_url: avatarUrl || null,
     });
     setSavingProfile(false);
-    if (error) return toast.error("Erro ao salvar perfil");
+    if (error) return toast.error(friendlyDbError(error, "Não foi possível salvar o perfil."));
     setProfileBaseline({ name: displayName, avatar: avatarUrl });
     toast.success("Perfil atualizado");
   };
