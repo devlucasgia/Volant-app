@@ -508,7 +508,7 @@ export default function SettingsPage() {
 
             <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
               <p className="text-[11px] text-muted-foreground">
-                Toque no card para ativar/desativar. Use as setas para reordenar.
+                Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
               </p>
               {(() => {
                 const labels: Record<HomeCardKey, { label: string; icon: React.ReactNode }> = {
@@ -517,93 +517,113 @@ export default function SettingsPage() {
                   stats:     { label: "Performance",icon: <Gauge className="h-4 w-4" /> },
                   byApp:     { label: "Por app",    icon: <BarChart3 className="h-4 w-4" /> },
                   byExpense: { label: "Gastos",     icon: <Receipt className="h-4 w-4" /> },
-                  journey:   { label: "Jornada", icon: <TimerIcon className="h-4 w-4" /> },
+                  journey:   { label: "Jornada",    icon: <TimerIcon className="h-4 w-4" /> },
                 };
+                // Only non-greeting items are draggable; greeting is pinned to the top.
+                const draggable = homeOrder.filter((k) => k !== "greeting");
+
+                const onDragEnd = (e: DragEndEvent) => {
+                  const { active, over } = e;
+                  if (!over || active.id === over.id) return;
+                  reorderHome(active.id as HomeCardKey, over.id as HomeCardKey);
+                  notifySaved();
+                };
+
+                const renderRowInner = (k: HomeCardKey, i: number, isLast: boolean) => {
+                  const meta = labels[k];
+                  const active = (widgets as any)[k] as boolean;
+                  const isFirstSortable = i === 1; // index 0 is greeting
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={active}
+                        aria-label={meta.label}
+                        onClick={() => setWidget(k as keyof DashboardWidgets, !active)}
+                        className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 text-left transition-transform active:scale-[0.98]"
+                      >
+                        <span className={cn(
+                          "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+                          active ? "bg-primary/15 text-primary" : "bg-background/60 text-muted-foreground/70",
+                        )}>{meta.icon}</span>
+                        <span className={cn(
+                          "text-[13px] font-semibold",
+                          active ? "text-foreground" : "text-muted-foreground/80",
+                        )}>{meta.label}</span>
+                        <span className={cn(
+                          "ml-auto text-[10px] font-bold uppercase tracking-wider",
+                          active ? "text-primary/80" : "text-muted-foreground/60",
+                        )}>{active ? "Ativo" : "Oculto"}</span>
+                      </button>
+                      <div className="flex shrink-0 items-center gap-0.5 pl-1">
+                        {k === "greeting" ? (
+                          <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                            Topo
+                          </span>
+                        ) : (
+                          <>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                              disabled={isFirstSortable}
+                              onClick={() => moveHomeCard(k, -1)}
+                              aria-label={`Mover ${meta.label} para cima`}>
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                              disabled={isLast}
+                              onClick={() => moveHomeCard(k, 1)}
+                              aria-label={`Mover ${meta.label} para baixo`}>
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  );
+                };
+
                 return (
                   <div className="space-y-2">
-                    {homeOrder.map((k, i) => {
-                      const meta = labels[k];
-                      const active = (widgets as any)[k] as boolean;
-                      const isFirst = i === 0;
-                      const isLast = i === homeOrder.length - 1;
-                      return (
-                        <div
-                          key={k}
-                          className={cn(
-                            "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
-                            active
-                              ? "border-primary/40 bg-primary/[0.06]"
-                              : "border-border/60 bg-muted/20",
-                          )}
-                        >
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={active}
-                            aria-label={meta.label}
-                            onClick={() => setWidget(k as keyof DashboardWidgets, !active)}
-                            className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 text-left transition-transform active:scale-[0.98]"
-                          >
-                            <span
-                              className={cn(
-                                "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-                                active ? "bg-primary/15 text-primary" : "bg-background/60 text-muted-foreground/70",
-                              )}
-                            >
-                              {meta.icon}
-                            </span>
-                            <span
-                              className={cn(
-                                "text-[13px] font-semibold",
-                                active ? "text-foreground" : "text-muted-foreground/80",
-                              )}
-                            >
-                              {meta.label}
-                            </span>
-                            <span
-                              className={cn(
-                                "ml-auto text-[10px] font-bold uppercase tracking-wider",
-                                active ? "text-primary/80" : "text-muted-foreground/60",
-                              )}
-                            >
-                              {active ? "Ativo" : "Oculto"}
-                            </span>
-                          </button>
-                          <div className="flex shrink-0 items-center gap-0.5 pl-1">
-                            {k === "greeting" ? (
-                              <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                                Topo
-                              </span>
-                            ) : (
-                              <>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  disabled={isFirst || homeOrder[i - 1] === "greeting"}
-                                  onClick={() => moveHomeCard(k, -1)}
-                                  aria-label={`Mover ${meta.label} para cima`}
-                                >
-                                  <ArrowUp className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  disabled={isLast}
-                                  onClick={() => moveHomeCard(k, 1)}
-                                  aria-label={`Mover ${meta.label} para baixo`}
-                                >
-                                  <ArrowDown className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                    {/* Greeting row — pinned, not draggable */}
+                    {homeOrder[0] === "greeting" && (
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
+                        (widgets as any).greeting
+                          ? "border-primary/40 bg-primary/[0.06]"
+                          : "border-border/60 bg-muted/20",
+                      )}>
+                        <span className="flex h-8 w-6 shrink-0 items-center justify-center text-muted-foreground/30">
+                          <GripVertical className="h-4 w-4" />
+                        </span>
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
+                          {renderRowInner("greeting", 0, false)}
                         </div>
-                      );
-                    })}
+                      </div>
+                    )}
+                    {/* Sortable rows */}
+                    <DndContext
+                      sensors={dndSensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={onDragEnd}
+                    >
+                      <SortableContext items={draggable} strategy={verticalListSortingStrategy}>
+                        {draggable.map((k, di) => {
+                          const i = di + 1;
+                          const isLast = i === homeOrder.length - 1;
+                          return (
+                            <SortableHomeRow
+                              key={k}
+                              id={k}
+                              active={(widgets as any)[k] as boolean}
+                            >
+                              <div className="flex items-center gap-1">
+                                {renderRowInner(k, i, isLast)}
+                              </div>
+                            </SortableHomeRow>
+                          );
+                        })}
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 );
               })()}
