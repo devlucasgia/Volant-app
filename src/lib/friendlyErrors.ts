@@ -93,8 +93,8 @@ export function validateImageFile(file: File, maxBytes = 2 * 1024 * 1024): Image
  * Inspects the first bytes of the file to confirm it really is a PNG/JPG/WEBP
  * (defends against renamed scripts / SVG / HTML disguised as images).
  */
-export async function verifyImageSignature(file: File): Promise<ImageValidationResult> {
-  const basic = validateImageFile(file);
+export async function verifyImageSignature(file: File, maxBytes?: number): Promise<ImageValidationResult> {
+  const basic = validateImageFile(file, maxBytes);
   if (!basic.ok) return basic;
 
   try {
