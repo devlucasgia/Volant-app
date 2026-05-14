@@ -17,7 +17,7 @@ import { totalKmAllTime } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
-  CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2, X,
+  CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2,
   KeyRound, Type, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
