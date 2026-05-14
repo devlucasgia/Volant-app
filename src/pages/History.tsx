@@ -376,10 +376,8 @@ export default function History() {
                 try {
                   await removeEntry(target.id);
                 } catch (err) {
-                  toast({
-                    title: "Não foi possível excluir",
+                  toast.error("Não foi possível excluir", {
                     description: friendlyDbError(err, "Tente novamente em instantes."),
-                    variant: "destructive",
                   });
                 }
               }}
