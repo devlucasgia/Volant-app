@@ -1,5 +1,6 @@
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSignedLogoUrl } from "@/lib/logoUrl";
 
 type Size = "sm" | "md" | "lg";
 
