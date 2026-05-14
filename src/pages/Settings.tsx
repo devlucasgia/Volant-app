@@ -18,10 +18,15 @@ import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
   CheckCircle2, Wrench, Target, Palette, Database, Tags, LayoutDashboard, Loader2, X,
+  KeyRound, Type, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Car as CarType, DashboardWidgets } from "@/types";
+import { PasswordChangeDialog } from "@/components/account/PasswordChangeDialog";
+import { FontSizeSheet } from "@/components/account/FontSizeSheet";
+import { useFontScale, FONT_SCALE_OPTIONS } from "@/lib/fontScale";
+import { friendlyDbError } from "@/lib/friendlyErrors";
 
 interface DraftSettings {
   dailyGoal: number;
