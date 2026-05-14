@@ -105,9 +105,14 @@ export default function Dashboard() {
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
-        <div className="mt-1 text-[13px] text-muted-foreground/90 leading-snug">
-          {greetingMessage || "Bem-vindo de volta ao Volant."}
-        </div>
+        {greetingMessage && (
+          <div className={cn(
+            "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+            greetingStyleClass(greetingStyle),
+          )}>
+            {greetingMessage}
+          </div>
+        )}
         <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
           {contextualDate}
         </div>
