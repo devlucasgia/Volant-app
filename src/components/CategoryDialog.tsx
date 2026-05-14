@@ -127,7 +127,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
           </DialogTitle>
           <DialogDescription>
             {isEarning
-              ? "Personalize o nome, tipo e logo da plataforma."
+              ? "Personalize sua fonte de ganhos"
               : "Personalize com nome, ícone e cor."}
           </DialogDescription>
         </DialogHeader>
@@ -143,9 +143,9 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
               size="md"
             />
             <div className="min-w-0">
-              <div className="text-sm font-semibold truncate">{label || "Sem nome"}</div>
+              <div className="text-sm font-semibold truncate">{label || "Ainda não configurada"}</div>
               <div className="text-[11px] text-muted-foreground">
-                {platformType === "ride" ? "Plataforma operacional" : "Receita simples"}
+                {platformType === "ride" ? "Operacional" : "Receita simples"}
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                   <Car className="h-4 w-4 text-primary" />
                   <span className="text-xs font-bold">Operacional</span>
                   <span className="text-[10px] leading-tight text-muted-foreground">
-                    Corridas com km, horas e R$/h
+                    Corridas, km e horas
                   </span>
                 </button>
                 <button
@@ -182,7 +182,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                   <Wallet className="h-4 w-4 text-primary" />
                   <span className="text-xs font-bold">Receita simples</span>
                   <span className="text-[10px] leading-tight text-muted-foreground">
-                    Apenas valor (vendas, gorjetas...)
+                    Vendas, gorjetas e ganhos rápidos
                   </span>
                 </button>
               </div>
@@ -194,7 +194,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
             <Input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder={isEarning ? "Ex: Lucas Store" : "Ex: Pedágio"}
+              placeholder={isEarning ? "Digite o nome da plataforma" : "Ex: Pedágio"}
               disabled={isBuiltinPlatform}
             />
             {isBuiltinPlatform && (
@@ -230,7 +230,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                   <input
                     ref={fileRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/png,image/jpeg"
                     className="hidden"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
