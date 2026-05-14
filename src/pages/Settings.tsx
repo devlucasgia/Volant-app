@@ -458,7 +458,7 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   checked={settings.theme === "dark"}
-                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
+                  onCheckedChange={(v) => autoSave({ theme: v ? "dark" : "light" })}
                 />
               </div>
 
