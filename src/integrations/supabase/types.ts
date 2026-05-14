@@ -148,36 +148,42 @@ export type Database = {
       }
       feedback_reports: {
         Row: {
+          account_email: string | null
           app_version: string | null
           contact_email: string | null
           created_at: string
           description: string
           device_info: string | null
           id: string
+          screenshot_url: string | null
           status: string
           title: string
           type: string
           user_id: string | null
         }
         Insert: {
+          account_email?: string | null
           app_version?: string | null
           contact_email?: string | null
           created_at?: string
           description: string
           device_info?: string | null
           id?: string
+          screenshot_url?: string | null
           status?: string
           title: string
           type: string
           user_id?: string | null
         }
         Update: {
+          account_email?: string | null
           app_version?: string | null
           contact_email?: string | null
           created_at?: string
           description?: string
           device_info?: string | null
           id?: string
+          screenshot_url?: string | null
           status?: string
           title?: string
           type?: string
