@@ -9,8 +9,8 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, CalendarDays, Gauge, Timer as TimerIcon } from "lucide-react";
-import { format, startOfDay, startOfMonth, startOfWeek, endOfMonth, endOfWeek } from "date-fns";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon } from "lucide-react";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
@@ -54,15 +54,22 @@ export default function Dashboard() {
     return "Motorista";
   }, [nickname, user]);
 
-  const periodRangeLabel = useMemo(() => {
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  const contextualDate = useMemo(() => {
     const now = new Date();
-    if (period === "day") return format(startOfDay(now), "d 'de' MMMM", { locale: ptBR });
+    if (period === "day") {
+      return cap(format(now, "EEEE, d 'de' MMMM", { locale: ptBR }));
+    }
     if (period === "week") {
       const s = startOfWeek(now, { weekStartsOn: 1 });
       const e = endOfWeek(now, { weekStartsOn: 1 });
-      return `${format(s, "d MMM", { locale: ptBR })} – ${format(e, "d MMM", { locale: ptBR })}`;
+      const sameMonth = s.getMonth() === e.getMonth();
+      if (sameMonth) {
+        return `${format(s, "d", { locale: ptBR })} a ${format(e, "d 'de' MMMM", { locale: ptBR })}`;
+      }
+      return `${format(s, "d 'de' MMM", { locale: ptBR })} a ${format(e, "d 'de' MMM", { locale: ptBR })}`;
     }
-    return format(now, "MMMM 'de' yyyy", { locale: ptBR });
+    return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
   }, [period]);
 
   const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
@@ -96,8 +103,11 @@ export default function Dashboard() {
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
-        <div className="mt-1 text-[13px] italic text-muted-foreground/90 leading-snug">
+        <div className="mt-1 text-[13px] text-muted-foreground/90 leading-snug">
           {greetingMessage || "Bem-vindo de volta ao Volant."}
+        </div>
+        <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
+          {contextualDate}
         </div>
       </div>
     ) : null,
@@ -225,12 +235,6 @@ export default function Dashboard() {
         brand
         title="Volant"
         subtitle="Seu controle financeiro"
-        right={
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <CalendarDays className="h-3.5 w-3.5" />
-            <span className="capitalize">{periodRangeLabel}</span>
-          </div>
-        }
       />
       <div className={cn("space-y-5 px-4", topPadding)}>
         {/* Greeting (fixed at top of body, toggleable via personalization) */}
