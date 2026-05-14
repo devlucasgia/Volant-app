@@ -194,30 +194,67 @@ export default function SettingsPage() {
   const [catDialog, setCatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
   const [platDialog, setPlatDialog] = useState<{ open: boolean; editing: any }>({ open: false, editing: null });
 
-  // ---- Draft for batched-save settings
+  // ---- Draft for batched-save settings (debounced autosave + leave-guard)
   const baseline = useMemo<DraftSettings>(() => buildDraft(settings), [settings]);
   const [draft, setDraft] = useState<DraftSettings>(baseline);
-  const [saving, setSaving] = useState(false);
+  const dirty = !isEqualDraft(draft, baseline);
+  const dirtyRef = useRef(false);
+  dirtyRef.current = dirty;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync draft when remote settings change (e.g. after save).
   useEffect(() => {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("profiles").select("display_name, avatar_url").eq("id", user.id).maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setDisplayName(data.display_name || "");
-          setAvatarUrl(data.avatar_url || "");
-          setProfileBaseline({ name: data.display_name || "", avatar: data.avatar_url || "" });
-        }
+  const flushSave = async () => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    if (!dirtyRef.current) return;
+    const d = draftRef.current;
+    try {
+      await updateSettings({
+        dailyGoal: d.dailyGoal,
+        maintenanceIntervalKm: d.maintenanceIntervalKm,
+        lastMaintenanceKm: d.lastMaintenanceKm,
+        dashboardWidgets: d.dashboardWidgets,
       });
-  }, [user]);
+    } catch {
+      toast.error("Não foi possível salvar");
+    }
+  };
 
-  const dirty = !isEqualDraft(draft, baseline);
-  const profileDirty = displayName !== profileBaseline.name;
+  // Debounced autosave: 700ms after the last change.
+  useEffect(() => {
+    if (!dirty) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => { void flushSave(); }, 700);
+    return () => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft, dirty]);
+
+  // Flush on unmount (e.g. route change away from Settings).
+  useEffect(() => {
+    return () => { void flushSave(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Warn if the page/tab is being closed while a save is pending.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ""; }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
+  const profileSaveProfile = async () => {};
 
   const saveProfile = async () => {
     if (!user) return;
@@ -231,25 +268,15 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado");
   };
 
-  const saveDraft = async () => {
-    if (!dirty || saving) return;
-    setSaving(true);
-    try {
-      await updateSettings({
-        dailyGoal: draft.dailyGoal,
-        maintenanceIntervalKm: draft.maintenanceIntervalKm,
-        lastMaintenanceKm: draft.lastMaintenanceKm,
-        dashboardWidgets: draft.dashboardWidgets,
-      });
-      toast.success("Ajustes salvos");
-    } catch {
-      toast.error("Não foi possível salvar");
-    } finally {
-      setSaving(false);
+  // Confirm before closing an open Personalização section that has pending changes.
+  const [pendingCustomizeValue, setPendingCustomizeValue] = useState<string | null>(null);
+  const onCustomizeChange = (next: string) => {
+    if (next === "" && customizeOpen !== "" && dirty) {
+      setPendingCustomizeValue("");
+      return;
     }
+    setCustomizeOpen(next);
   };
-
-  const cancelDraft = () => setDraft(buildDraft(settings));
 
   const setWidget = (k: keyof DashboardWidgets, v: boolean) =>
     setDraft((d) => ({ ...d, dashboardWidgets: { ...d.dashboardWidgets, [k]: v } }));
