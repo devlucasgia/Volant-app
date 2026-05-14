@@ -492,7 +492,7 @@ export default function SettingsPage() {
                   stats:     { label: "Performance",icon: <Gauge className="h-4 w-4" /> },
                   byApp:     { label: "Por app",    icon: <BarChart3 className="h-4 w-4" /> },
                   byExpense: { label: "Gastos",     icon: <Receipt className="h-4 w-4" /> },
-                  journey:   { label: "Tempo online", icon: <TimerIcon className="h-4 w-4" /> },
+                  journey:   { label: "Jornada", icon: <TimerIcon className="h-4 w-4" /> },
                 };
                 return (
                   <div className="space-y-2">
