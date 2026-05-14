@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
@@ -20,8 +20,14 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
-  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon,
+  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon, GripVertical,
 } from "lucide-react";
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableHomeRow } from "@/components/account/SortableHomeRow";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
@@ -172,6 +178,7 @@ export default function SettingsPage() {
 
   const [nickname, setNickname] = useState("");
   const [nicknameBaseline, setNicknameBaseline] = useState("");
+  const [greetingMessage, setGreetingMessage] = useState("");
   const [profileAvatar, setProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
@@ -181,8 +188,14 @@ export default function SettingsPage() {
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
-  const [homeOrder, moveHome] = useHomeOrder();
+  const [homeOrder, moveHome, reorderHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
+
+  // DnD sensors — TouchSensor with small delay prevents scroll conflicts on mobile.
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+  );
 
   // Subtle, premium autosave confirmation. Reuses a single toast id to avoid stacking.
   const notifySaved = () =>
@@ -210,15 +223,16 @@ export default function SettingsPage() {
     (async () => {
       const { data } = await (supabase
         .from("profiles") as any)
-        .select("nickname, avatar_url")
+        .select("nickname, avatar_url, greeting_message")
         .eq("id", user.id)
         .maybeSingle();
       if (!active) return;
-      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null };
+      const row = (data ?? {}) as { nickname?: string | null; avatar_url?: string | null; greeting_message?: string | null };
       const n = row.nickname ?? "";
       setNickname(n);
       setNicknameBaseline(n);
       setProfileAvatar(row.avatar_url ?? "");
+      setGreetingMessage(row.greeting_message ?? "");
     })();
     return () => { active = false; };
   }, [user]);
@@ -288,7 +302,30 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado");
   };
 
-  // Auto-save home dashboard widgets immediately on toggle.
+  // Greeting message — autosaved with debounce. Persists to profiles.greeting_message.
+  const greetingMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistGreetingMessage = async (value: string) => {
+    if (!user) return;
+    const trimmed = value.trim().slice(0, 60);
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, greeting_message: trimmed || null } as any);
+    if (error) {
+      notifySaveError();
+      return;
+    }
+    notifySaved();
+  };
+  const updateGreetingMessage = (value: string, immediate = false) => {
+    const v = value.slice(0, 60);
+    setGreetingMessage(v);
+    if (greetingMsgTimer.current) clearTimeout(greetingMsgTimer.current);
+    if (immediate) {
+      void persistGreetingMessage(v);
+    } else {
+      greetingMsgTimer.current = setTimeout(() => void persistGreetingMessage(v), 600);
+    }
+  };
   const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
     void autoSave({
       dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
@@ -384,6 +421,61 @@ export default function SettingsPage() {
               <Button onClick={saveProfile} disabled={savingProfile || !nicknameDirty} className="w-full">
                 {savingProfile ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
+
+              {/* Greeting message — autosaved */}
+              <div className="space-y-1.5 rounded-xl border border-border/60 bg-muted/20 p-3">
+                <Label className="text-xs text-muted-foreground">Mensagem abaixo do apelido</Label>
+                <Input
+                  value={greetingMessage}
+                  onChange={(e) => updateGreetingMessage(e.target.value)}
+                  onBlur={(e) => updateGreetingMessage(e.target.value, true)}
+                  placeholder="Ex.: Bora pra cima! 🚀"
+                  maxLength={60}
+                  className="bg-background"
+                />
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-muted-foreground">
+                    Aparece abaixo da saudação na tela inicial. Opcional.
+                  </p>
+                  <span className="text-[10px] tabular-nums text-muted-foreground/70">
+                    {greetingMessage.length}/60
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {[
+                    "Bora pra cima! 🚀",
+                    "Foco, disciplina e constância! 💪",
+                    "Deus no comando sempre! 🙌",
+                    "Boas corridas hoje! 🛣️",
+                  ].map((preset) => {
+                    const selected = greetingMessage.trim() === preset;
+                    return (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => updateGreetingMessage(preset, true)}
+                        className={cn(
+                          "rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                          selected
+                            ? "border-primary/50 bg-primary/15 text-foreground"
+                            : "border-border/60 bg-background/60 text-muted-foreground hover:bg-muted/40",
+                        )}
+                      >
+                        {preset}
+                      </button>
+                    );
+                  })}
+                  {greetingMessage && (
+                    <button
+                      type="button"
+                      onClick={() => updateGreetingMessage("", true)}
+                      className="rounded-full border border-border/60 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/40"
+                    >
+                      Limpar
+                    </button>
+                  )}
+                </div>
+              </div>
 
               {/* Authentication / password */}
               <div className="pt-1">
@@ -483,7 +575,7 @@ export default function SettingsPage() {
 
             <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
               <p className="text-[11px] text-muted-foreground">
-                Toque no card para ativar/desativar. Use as setas para reordenar.
+                Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
               </p>
               {(() => {
                 const labels: Record<HomeCardKey, { label: string; icon: React.ReactNode }> = {
@@ -492,93 +584,113 @@ export default function SettingsPage() {
                   stats:     { label: "Performance",icon: <Gauge className="h-4 w-4" /> },
                   byApp:     { label: "Por app",    icon: <BarChart3 className="h-4 w-4" /> },
                   byExpense: { label: "Gastos",     icon: <Receipt className="h-4 w-4" /> },
-                  journey:   { label: "Tempo online", icon: <TimerIcon className="h-4 w-4" /> },
+                  journey:   { label: "Jornada",    icon: <TimerIcon className="h-4 w-4" /> },
                 };
+                // Only non-greeting items are draggable; greeting is pinned to the top.
+                const draggable = homeOrder.filter((k) => k !== "greeting");
+
+                const onDragEnd = (e: DragEndEvent) => {
+                  const { active, over } = e;
+                  if (!over || active.id === over.id) return;
+                  reorderHome(active.id as HomeCardKey, over.id as HomeCardKey);
+                  notifySaved();
+                };
+
+                const renderRowInner = (k: HomeCardKey, i: number, isLast: boolean) => {
+                  const meta = labels[k];
+                  const active = (widgets as any)[k] as boolean;
+                  const isFirstSortable = i === 1; // index 0 is greeting
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={active}
+                        aria-label={meta.label}
+                        onClick={() => setWidget(k as keyof DashboardWidgets, !active)}
+                        className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 text-left transition-transform active:scale-[0.98]"
+                      >
+                        <span className={cn(
+                          "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+                          active ? "bg-primary/15 text-primary" : "bg-background/60 text-muted-foreground/70",
+                        )}>{meta.icon}</span>
+                        <span className={cn(
+                          "text-[13px] font-semibold",
+                          active ? "text-foreground" : "text-muted-foreground/80",
+                        )}>{meta.label}</span>
+                        <span className={cn(
+                          "ml-auto text-[10px] font-bold uppercase tracking-wider",
+                          active ? "text-primary/80" : "text-muted-foreground/60",
+                        )}>{active ? "Ativo" : "Oculto"}</span>
+                      </button>
+                      <div className="flex shrink-0 items-center gap-0.5 pl-1">
+                        {k === "greeting" ? (
+                          <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                            Topo
+                          </span>
+                        ) : (
+                          <>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                              disabled={isFirstSortable}
+                              onClick={() => moveHomeCard(k, -1)}
+                              aria-label={`Mover ${meta.label} para cima`}>
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
+                              disabled={isLast}
+                              onClick={() => moveHomeCard(k, 1)}
+                              aria-label={`Mover ${meta.label} para baixo`}>
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  );
+                };
+
                 return (
                   <div className="space-y-2">
-                    {homeOrder.map((k, i) => {
-                      const meta = labels[k];
-                      const active = (widgets as any)[k] as boolean;
-                      const isFirst = i === 0;
-                      const isLast = i === homeOrder.length - 1;
-                      return (
-                        <div
-                          key={k}
-                          className={cn(
-                            "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
-                            active
-                              ? "border-primary/40 bg-primary/[0.06]"
-                              : "border-border/60 bg-muted/20",
-                          )}
-                        >
-                          <button
-                            type="button"
-                            role="switch"
-                            aria-checked={active}
-                            aria-label={meta.label}
-                            onClick={() => setWidget(k as keyof DashboardWidgets, !active)}
-                            className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 text-left transition-transform active:scale-[0.98]"
-                          >
-                            <span
-                              className={cn(
-                                "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
-                                active ? "bg-primary/15 text-primary" : "bg-background/60 text-muted-foreground/70",
-                              )}
-                            >
-                              {meta.icon}
-                            </span>
-                            <span
-                              className={cn(
-                                "text-[13px] font-semibold",
-                                active ? "text-foreground" : "text-muted-foreground/80",
-                              )}
-                            >
-                              {meta.label}
-                            </span>
-                            <span
-                              className={cn(
-                                "ml-auto text-[10px] font-bold uppercase tracking-wider",
-                                active ? "text-primary/80" : "text-muted-foreground/60",
-                              )}
-                            >
-                              {active ? "Ativo" : "Oculto"}
-                            </span>
-                          </button>
-                          <div className="flex shrink-0 items-center gap-0.5 pl-1">
-                            {k === "greeting" ? (
-                              <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
-                                Topo
-                              </span>
-                            ) : (
-                              <>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  disabled={isFirst || homeOrder[i - 1] === "greeting"}
-                                  onClick={() => moveHomeCard(k, -1)}
-                                  aria-label={`Mover ${meta.label} para cima`}
-                                >
-                                  <ArrowUp className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  disabled={isLast}
-                                  onClick={() => moveHomeCard(k, 1)}
-                                  aria-label={`Mover ${meta.label} para baixo`}
-                                >
-                                  <ArrowDown className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
-                            )}
-                          </div>
+                    {/* Greeting row — pinned, not draggable */}
+                    {homeOrder[0] === "greeting" && (
+                      <div className={cn(
+                        "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
+                        (widgets as any).greeting
+                          ? "border-primary/40 bg-primary/[0.06]"
+                          : "border-border/60 bg-muted/20",
+                      )}>
+                        <span className="flex h-8 w-6 shrink-0 items-center justify-center text-muted-foreground/30">
+                          <GripVertical className="h-4 w-4" />
+                        </span>
+                        <div className="flex-1 min-w-0 flex items-center gap-1">
+                          {renderRowInner("greeting", 0, false)}
                         </div>
-                      );
-                    })}
+                      </div>
+                    )}
+                    {/* Sortable rows */}
+                    <DndContext
+                      sensors={dndSensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={onDragEnd}
+                    >
+                      <SortableContext items={draggable} strategy={verticalListSortingStrategy}>
+                        {draggable.map((k, di) => {
+                          const i = di + 1;
+                          const isLast = i === homeOrder.length - 1;
+                          return (
+                            <SortableHomeRow
+                              key={k}
+                              id={k}
+                              active={(widgets as any)[k] as boolean}
+                            >
+                              <div className="flex items-center gap-1">
+                                {renderRowInner(k, i, isLast)}
+                              </div>
+                            </SortableHomeRow>
+                          );
+                        })}
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 );
               })()}

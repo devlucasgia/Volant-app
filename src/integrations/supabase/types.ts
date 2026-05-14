@@ -201,6 +201,7 @@ export type Database = {
           car_plate: string | null
           created_at: string
           display_name: string | null
+          greeting_message: string | null
           id: string
           nickname: string | null
           updated_at: string
@@ -214,6 +215,7 @@ export type Database = {
           car_plate?: string | null
           created_at?: string
           display_name?: string | null
+          greeting_message?: string | null
           id: string
           nickname?: string | null
           updated_at?: string
@@ -227,6 +229,7 @@ export type Database = {
           car_plate?: string | null
           created_at?: string
           display_name?: string | null
+          greeting_message?: string | null
           id?: string
           nickname?: string | null
           updated_at?: string

@@ -30,16 +30,18 @@ export default function Dashboard() {
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
 
-  // Personalized greeting — nickname from profiles, fallback to Google first name, then "Motorista".
+  // Personalized greeting — nickname + optional subtitle message from profiles.
   const [nickname, setNickname] = useState<string>("");
+  const [greetingMessage, setGreetingMessage] = useState<string>("");
   useEffect(() => {
-    if (!user) { setNickname(""); return; }
+    if (!user) { setNickname(""); setGreetingMessage(""); return; }
     let active = true;
     (async () => {
       const { data } = await (supabase.from("profiles") as any)
-        .select("nickname").eq("id", user.id).maybeSingle();
+        .select("nickname, greeting_message").eq("id", user.id).maybeSingle();
       if (!active) return;
       setNickname(((data as any)?.nickname ?? "").trim());
+      setGreetingMessage(((data as any)?.greeting_message ?? "").trim());
     })();
     return () => { active = false; };
   }, [user]);
@@ -90,10 +92,15 @@ export default function Dashboard() {
   // Build the renderer map for each reorderable / hideable card.
   const blocks: Record<HomeCardKey, React.ReactNode> = {
     greeting: widgets.greeting ? (
-      <div key="greeting" className="px-1 pt-0.5 pb-1 animate-fade-in">
+      <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName} <span aria-hidden>👋</span>
         </div>
+        {greetingMessage && (
+          <div className="mt-1 text-[13px] italic text-muted-foreground/90 leading-snug">
+            {greetingMessage}
+          </div>
+        )}
         <div className="mt-0.5 text-xs text-muted-foreground">
           Bem-vindo de volta ao Volant.
         </div>
@@ -207,7 +214,7 @@ export default function Dashboard() {
     journey: widgets.journey ? (
       <section key="journey">
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          <TimerIcon className="h-3.5 w-3.5" /> Tempo online
+          <TimerIcon className="h-3.5 w-3.5" /> Jornada
         </div>
         <JourneyModule />
       </section>

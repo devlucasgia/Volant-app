@@ -53,5 +53,17 @@ export function useHomeOrder() {
     });
   }, []);
 
-  return [order, move] as const;
+  const reorder = useCallback((fromKey: HomeCardKey, toKey: HomeCardKey) => {
+    setOrder((prev) => {
+      const from = prev.indexOf(fromKey);
+      const to = prev.indexOf(toKey);
+      if (from < 0 || to < 0 || from === to) return prev;
+      const next = prev.slice();
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }, []);
+
+  return [order, move, reorder] as const;
 }
