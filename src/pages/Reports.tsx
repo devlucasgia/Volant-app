@@ -20,6 +20,7 @@ import {
   Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useReportWidgets } from "@/lib/reportWidgets";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
   startOfDay, endOfDay, subMonths, addMonths,
