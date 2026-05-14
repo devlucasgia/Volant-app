@@ -408,7 +408,7 @@ export default function SettingsPage() {
             type="single"
             collapsible
             value={customizeOpen}
-            onValueChange={onCustomizeChange}
+            onValueChange={setCustomizeOpen}
             className="space-y-2.5"
           >
             <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
