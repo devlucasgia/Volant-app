@@ -179,6 +179,8 @@ export default function SettingsPage() {
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
+  const [reportWidgets, toggleReportWidget] = useReportWidgets();
+  const [customizeOpen, setCustomizeOpen] = useState<string>("");
 
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
