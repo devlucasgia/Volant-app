@@ -235,12 +235,6 @@ export default function Dashboard() {
         brand
         title="Volant"
         subtitle="Seu controle financeiro"
-        right={
-          <div className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-            <CalendarDays className="h-3.5 w-3.5" />
-            <span className="capitalize">{periodRangeLabel}</span>
-          </div>
-        }
       />
       <div className={cn("space-y-5 px-4", topPadding)}>
         {/* Greeting (fixed at top of body, toggleable via personalization) */}
