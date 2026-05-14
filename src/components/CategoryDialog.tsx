@@ -251,7 +251,7 @@ export function CategoryDialog({ open, onOpenChange, type, editing, onCreated }:
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando...</>
                     ) : imageUrl ? "Trocar imagem" : "Enviar imagem"}
                   </Button>
-                  <p className="mt-1 text-[10px] text-muted-foreground">PNG ou JPG até 2MB.</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">PNG, JPG ou WEBP até 2MB.</p>
                 </div>
               </div>
             </div>
