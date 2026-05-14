@@ -988,14 +988,14 @@ export default function SettingsPage() {
         </SectionGroup>
 
         {/* App footer */}
-        <footer className="flex flex-col items-center gap-1 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <div className="flex items-center gap-1.5">
+        <footer className="flex flex-col items-center gap-1.5 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <div className="flex items-center gap-1">
             <img
               src={volantSymbol}
               alt={APP_NAME}
               width={18}
               height={18}
-              className="h-[18px] w-[18px] shrink-0 rounded-full opacity-80 shadow-[0_2px_6px_-3px_hsl(var(--success)/0.35)]"
+              className="h-[18px] w-[18px] shrink-0 opacity-80"
             />
             <span className="font-semibold text-muted-foreground">{APP_NAME}</span>
           </div>
