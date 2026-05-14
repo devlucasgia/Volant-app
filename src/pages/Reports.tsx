@@ -43,6 +43,7 @@ const CHARTS: { key: ChartKey; label: string; color: string }[] = [
 
 export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const [widgets] = useReportWidgets();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [yearRef, setYearRef] = useState<Date>(startOfYear(new Date()));
