@@ -324,7 +324,7 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader title="Ajustes" subtitle="Gerencie suas preferências" />
-      <div className={cn("px-4 pt-5 pb-6 space-y-6", dirty && "pb-32")}>
+      <div className={"px-4 pt-5 pb-6 space-y-6"}>
 
         {/* ============== CONTA ============== */}
         <SectionGroup title="Conta">
