@@ -43,7 +43,7 @@ interface DataCtx {
 
 const Ctx = createContext<DataCtx | null>(null);
 
-const DEFAULT_WIDGETS: DashboardWidgets = { goal: true, stats: true, byApp: true, byExpense: true };
+const DEFAULT_WIDGETS: DashboardWidgets = { goal: true, stats: true, byApp: true, byExpense: true, greeting: true, journey: true };
 const DEFAULT_SETTINGS: Settings = {
   dailyGoal: 250,
   maintenanceIntervalKm: 10000,

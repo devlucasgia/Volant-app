@@ -20,9 +20,10 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
-  Route, Clock, Flag, LineChart, GripVertical,
+  Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, MessageCircle, Timer as TimerIcon,
 } from "lucide-react";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
+import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { BugReportDialog } from "@/components/account/BugReportDialog";
 import { SuggestionDialog } from "@/components/account/SuggestionDialog";
 import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
@@ -180,7 +181,24 @@ export default function SettingsPage() {
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
+  const [homeOrder, moveHome] = useHomeOrder();
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
+
+  // Subtle, premium autosave confirmation. Reuses a single toast id to avoid stacking.
+  const notifySaved = () =>
+    toast.success("Alterações salvas", { id: "autosave", duration: 1600 });
+  const notifySaveError = () =>
+    toast.error("Não foi possível salvar agora. Tente novamente.", { id: "autosave" });
+
+  // Wrap updateSettings so any auto-saved change shows the discreet feedback.
+  const autoSave = async (patch: Parameters<typeof updateSettings>[0]) => {
+    try {
+      await updateSettings(patch);
+      notifySaved();
+    } catch {
+      notifySaveError();
+    }
+  };
 
   const provider = (user?.app_metadata as { provider?: string } | undefined)?.provider ?? "email";
   const isOAuthGoogle = provider === "google";
@@ -272,9 +290,21 @@ export default function SettingsPage() {
 
   // Auto-save home dashboard widgets immediately on toggle.
   const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
-    void updateSettings({
+    void autoSave({
       dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
     });
+  };
+
+  // Toggle for report widgets — uses local storage but still confirms via subtle toast.
+  const toggleReport = (k: keyof ReportWidgets) => {
+    toggleReportWidget(k);
+    notifySaved();
+  };
+
+  // Reorder a Home card and confirm.
+  const moveHomeCard = (k: HomeCardKey, dir: -1 | 1) => {
+    moveHome(k, dir);
+    notifySaved();
   };
 
   const deleteCar = async (car: CarType) => {
@@ -428,7 +458,7 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   checked={settings.theme === "dark"}
-                  onCheckedChange={(v) => updateSettings({ theme: v ? "dark" : "light" })}
+                  onCheckedChange={(v) => autoSave({ theme: v ? "dark" : "light" })}
                 />
               </div>
 
@@ -453,31 +483,105 @@ export default function SettingsPage() {
 
             <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
               <p className="text-[11px] text-muted-foreground">
-                Toque para ativar ou desativar os blocos da tela inicial.
+                Toque no card para ativar/desativar. Use as setas para reordenar.
               </p>
-              <div className="grid grid-cols-3 gap-1.5">
-                {([
-                  { k: "goal", label: "Meta", icon: <Target className="h-4 w-4" /> },
-                  { k: "stats", label: "Performance", icon: <Gauge className="h-4 w-4" /> },
-                  { k: "byApp", label: "Por app", icon: <BarChart3 className="h-4 w-4" /> },
-                  { k: "byExpense", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
-                ] as { k: keyof DashboardWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
-                  <MiniCardToggle
-                    key={w.k}
-                    active={widgets[w.k]}
-                    icon={w.icon}
-                    label={w.label}
-                    onClick={() => setWidget(w.k, !widgets[w.k])}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                disabled
-                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
-              >
-                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
-              </button>
+              {(() => {
+                const labels: Record<HomeCardKey, { label: string; icon: React.ReactNode }> = {
+                  greeting:  { label: "Saudação",   icon: <MessageCircle className="h-4 w-4" /> },
+                  goal:      { label: "Meta",       icon: <Target className="h-4 w-4" /> },
+                  stats:     { label: "Performance",icon: <Gauge className="h-4 w-4" /> },
+                  byApp:     { label: "Por app",    icon: <BarChart3 className="h-4 w-4" /> },
+                  byExpense: { label: "Gastos",     icon: <Receipt className="h-4 w-4" /> },
+                  journey:   { label: "Tempo online", icon: <TimerIcon className="h-4 w-4" /> },
+                };
+                return (
+                  <div className="space-y-2">
+                    {homeOrder.map((k, i) => {
+                      const meta = labels[k];
+                      const active = (widgets as any)[k] as boolean;
+                      const isFirst = i === 0;
+                      const isLast = i === homeOrder.length - 1;
+                      return (
+                        <div
+                          key={k}
+                          className={cn(
+                            "flex items-center gap-2 rounded-xl border p-2 transition-colors duration-200",
+                            active
+                              ? "border-primary/40 bg-primary/[0.06]"
+                              : "border-border/60 bg-muted/20",
+                          )}
+                        >
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={active}
+                            aria-label={meta.label}
+                            onClick={() => setWidget(k as keyof DashboardWidgets, !active)}
+                            className="flex flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 text-left transition-transform active:scale-[0.98]"
+                          >
+                            <span
+                              className={cn(
+                                "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+                                active ? "bg-primary/15 text-primary" : "bg-background/60 text-muted-foreground/70",
+                              )}
+                            >
+                              {meta.icon}
+                            </span>
+                            <span
+                              className={cn(
+                                "text-[13px] font-semibold",
+                                active ? "text-foreground" : "text-muted-foreground/80",
+                              )}
+                            >
+                              {meta.label}
+                            </span>
+                            <span
+                              className={cn(
+                                "ml-auto text-[10px] font-bold uppercase tracking-wider",
+                                active ? "text-primary/80" : "text-muted-foreground/60",
+                              )}
+                            >
+                              {active ? "Ativo" : "Oculto"}
+                            </span>
+                          </button>
+                          <div className="flex shrink-0 items-center gap-0.5 pl-1">
+                            {k === "greeting" ? (
+                              <span className="px-1 text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                                Topo
+                              </span>
+                            ) : (
+                              <>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={isFirst || homeOrder[i - 1] === "greeting"}
+                                  onClick={() => moveHomeCard(k, -1)}
+                                  aria-label={`Mover ${meta.label} para cima`}
+                                >
+                                  <ArrowUp className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  disabled={isLast}
+                                  onClick={() => moveHomeCard(k, 1)}
+                                  aria-label={`Mover ${meta.label} para baixo`}
+                                >
+                                  <ArrowDown className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </SettingsCard>
 
             <SettingsCard value="reports" icon={<BarChart3 className="h-4 w-4" />} title="Relatórios">
@@ -503,17 +607,10 @@ export default function SettingsPage() {
                     active={reportWidgets[w.k]}
                     icon={w.icon}
                     label={w.label}
-                    onClick={() => toggleReportWidget(w.k)}
+                    onClick={() => toggleReport(w.k)}
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                disabled
-                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
-              >
-                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
-              </button>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
