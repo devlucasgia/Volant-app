@@ -411,7 +411,77 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
-        {/* ============== VEÍCULO ============== */}
+        {/* ============== PERSONALIZAÇÃO ============== */}
+        <SectionGroup title="Personalização">
+          <Accordion
+            type="single"
+            collapsible
+            value={customizeOpen}
+            onValueChange={setCustomizeOpen}
+            className="space-y-2.5"
+          >
+            <SettingsCard value="home" icon={<HomeIcon className="h-4 w-4" />} title="Tela inicial">
+              <p className="text-[11px] text-muted-foreground">
+                Toque para ativar ou desativar os blocos da tela inicial.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { k: "goal", label: "Meta", icon: <Target className="h-4 w-4" /> },
+                  { k: "stats", label: "Performance", icon: <Gauge className="h-4 w-4" /> },
+                  { k: "byApp", label: "Por app", icon: <BarChart3 className="h-4 w-4" /> },
+                  { k: "byExpense", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
+                ] as { k: keyof DashboardWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
+                  <MiniCardToggle
+                    key={w.k}
+                    active={widgets[w.k]}
+                    icon={w.icon}
+                    label={w.label}
+                    onClick={() => setWidget(w.k, !widgets[w.k])}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
+              >
+                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
+              </button>
+            </SettingsCard>
+
+            <SettingsCard value="reports" icon={<BarChart3 className="h-4 w-4" />} title="Relatórios">
+              <p className="text-[11px] text-muted-foreground">
+                Toque para ativar ou desativar os blocos da tela de relatórios.
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { k: "weekly", label: "Semanal", icon: <CalendarRange className="h-4 w-4" /> },
+                  { k: "monthly", label: "Mensal", icon: <CalendarDays className="h-4 w-4" /> },
+                  { k: "expenses", label: "Gastos", icon: <Receipt className="h-4 w-4" /> },
+                  { k: "mileage", label: "KM", icon: <Route className="h-4 w-4" /> },
+                  { k: "hours", label: "Horas", icon: <Clock className="h-4 w-4" /> },
+                  { k: "appPerformance", label: "Por app", icon: <Activity className="h-4 w-4" /> },
+                ] as { k: keyof ReportWidgets; label: string; icon: React.ReactNode }[]).map((w) => (
+                  <MiniCardToggle
+                    key={w.k}
+                    active={reportWidgets[w.k]}
+                    icon={w.icon}
+                    label={w.label}
+                    onClick={() => toggleReportWidget(w.k)}
+                  />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border/60 py-2 text-[11px] font-medium text-muted-foreground/70"
+              >
+                <GripVertical className="h-3.5 w-3.5" /> Gerenciar ordem (em breve)
+              </button>
+            </SettingsCard>
+          </Accordion>
+        </SectionGroup>
+
         <SectionGroup title="Veículo">
           <Accordion type="multiple" className="space-y-2.5">
             <SettingsCard
