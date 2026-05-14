@@ -603,6 +603,9 @@ export default function SettingsPage() {
                   <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
                 </div>
               </div>
+              <Button onClick={saveMaint} disabled={savingMaint || !maintDirty} className="w-full">
+                {savingMaint ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+              </Button>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
