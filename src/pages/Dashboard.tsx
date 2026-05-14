@@ -214,7 +214,7 @@ export default function Dashboard() {
     journey: widgets.journey ? (
       <section key="journey">
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          <TimerIcon className="h-3.5 w-3.5" /> Tempo online
+          <TimerIcon className="h-3.5 w-3.5" /> Jornada
         </div>
         <JourneyModule />
       </section>
