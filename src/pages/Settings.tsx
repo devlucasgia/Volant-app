@@ -117,7 +117,7 @@ function SoonRow({ label, hint }: { label: string; hint?: string }) {
   );
 }
 
-/** Mini card toggle for dashboard/report customization. Touch-friendly, single-tap. */
+/** Compact, premium mini card toggle. Subtle dark-green tint when active. */
 function MiniCardToggle({
   active, icon, label, onClick,
 }: {
@@ -131,25 +131,25 @@ function MiniCardToggle({
       aria-label={label}
       onClick={onClick}
       className={cn(
-        "group relative flex aspect-square flex-col items-center justify-center gap-1.5 rounded-2xl border p-2 text-center",
-        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.96]",
+        "group relative flex flex-col items-center justify-center gap-1 rounded-xl border px-1.5 py-2.5 text-center min-h-[64px]",
+        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97]",
         active
-          ? "border-primary/60 bg-primary text-primary-foreground shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.55)]"
-          : "border-border/70 bg-muted/40 text-muted-foreground hover:bg-muted/60",
+          ? "border-primary/45 bg-primary/[0.08] text-foreground shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_4px_14px_-10px_hsl(var(--primary)/0.5)]"
+          : "border-border/60 bg-muted/25 text-muted-foreground hover:bg-muted/40",
       )}
     >
       <span
         className={cn(
-          "flex h-8 w-8 items-center justify-center rounded-xl transition-colors duration-300",
-          active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-background/70 text-foreground/70",
+          "flex h-6 w-6 items-center justify-center rounded-md transition-colors duration-300",
+          active ? "text-primary" : "text-muted-foreground/70",
         )}
       >
         {icon}
       </span>
       <span
         className={cn(
-          "text-[11px] font-semibold leading-tight transition-colors duration-300",
-          active ? "text-primary-foreground" : "text-foreground/80",
+          "text-[10.5px] font-semibold leading-tight transition-colors duration-300 line-clamp-2",
+          active ? "text-foreground" : "text-muted-foreground/80",
         )}
       >
         {label}
