@@ -290,7 +290,30 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado");
   };
 
-  // Auto-save home dashboard widgets immediately on toggle.
+  // Greeting message — autosaved with debounce. Persists to profiles.greeting_message.
+  const greetingMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistGreetingMessage = async (value: string) => {
+    if (!user) return;
+    const trimmed = value.trim().slice(0, 60);
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, greeting_message: trimmed || null } as any);
+    if (error) {
+      notifySaveError();
+      return;
+    }
+    notifySaved();
+  };
+  const updateGreetingMessage = (value: string, immediate = false) => {
+    const v = value.slice(0, 60);
+    setGreetingMessage(v);
+    if (greetingMsgTimer.current) clearTimeout(greetingMsgTimer.current);
+    if (immediate) {
+      void persistGreetingMessage(v);
+    } else {
+      greetingMsgTimer.current = setTimeout(() => void persistGreetingMessage(v), 600);
+    }
+  };
   const setWidget = (k: keyof DashboardWidgets, v: boolean) => {
     void autoSave({
       dashboardWidgets: { ...settings.dashboardWidgets, [k]: v },
