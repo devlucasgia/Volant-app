@@ -128,6 +128,7 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
+  const [feedback, setFeedback] = useState<{ open: boolean; type: "bug" | "suggestion" }>({ open: false, type: "bug" });
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
 
