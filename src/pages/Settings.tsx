@@ -732,47 +732,6 @@ export default function SettingsPage() {
         </footer>
       </div>
 
-      {/* Confirm before collapsing a Personalização section with pending changes */}
-      <AlertDialog
-        open={pendingCustomizeValue !== null}
-        onOpenChange={(o) => { if (!o) setPendingCustomizeValue(null); }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Salvar alterações?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Você fez ajustes nesta seção. Deseja salvar antes de fechar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-2">
-            <AlertDialogCancel onClick={() => setPendingCustomizeValue(null)}>
-              Continuar editando
-            </AlertDialogCancel>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                setDraft(buildDraft(settings));
-                const next = pendingCustomizeValue ?? "";
-                setPendingCustomizeValue(null);
-                setCustomizeOpen(next);
-              }}
-            >
-              Descartar
-            </Button>
-            <AlertDialogAction
-              onClick={async () => {
-                const next = pendingCustomizeValue ?? "";
-                setPendingCustomizeValue(null);
-                await flushSave();
-                setCustomizeOpen(next);
-              }}
-            >
-              Salvar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <PasswordChangeDialog
         open={pwdOpen}
         onOpenChange={setPwdOpen}
