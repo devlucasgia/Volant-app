@@ -146,6 +146,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_reports: {
+        Row: {
+          app_version: string | null
+          contact_email: string | null
+          created_at: string
+          description: string
+          device_info: string | null
+          id: string
+          status: string
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          contact_email?: string | null
+          created_at?: string
+          description: string
+          device_info?: string | null
+          id?: string
+          status?: string
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          contact_email?: string | null
+          created_at?: string
+          description?: string
+          device_info?: string | null
+          id?: string
+          status?: string
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
