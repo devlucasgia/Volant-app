@@ -17,7 +17,6 @@ export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "final";
 
 const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "final"];
-const TOUR_STEPS: StepKey[] = ["registro", "jornada", "relatorios", "customizacao"];
 
 export function OnboardingFlow() {
   const { user } = useAuth();
