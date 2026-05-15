@@ -1,55 +1,68 @@
-## O que descobri reproduzindo
+# Onboarding Volant — Plano completo
 
-Cliquei em **"Continuar com Google"** no Preview (`https://id-preview--185df6ff-9e46-459a-a25d-323f7411f3f9.lovable.app/auth`) e o navegador foi redirecionado para:
+## Visão geral
+Onboarding multi-etapas, animado, mobile-first, reutilizando o design system atual (cores, gradientes, cards arredondados, tipografia). Inspirado em Nubank/Duolingo/iFood. Aparece **uma única vez** após o primeiro login (ou quando o usuário pedir refazer em Ajustes).
 
+## Estrutura (5 etapas)
+
+### 1. Boas-vindas (full-screen)
+- Logo Volant animada (fade + scale)
+- Headline: **"Mais controle, mais lucro."**
+- Subtítulo: "Vamos te mostrar como o Volant trabalha por você."
+- Botão "Começar" (gradient primary) + "Pular" discreto
+- Background com gradiente sutil + partículas/orbs animados
+
+### 2. Carrossel de funções (4 slides com swipe + dots)
+Cada slide com **mockup visual fictício animado** dentro de um "frame" estilo celular:
+
+- **Slide A — Registro rápido**: FAB pulsante abrindo radial → drawer de Ganho preenchendo R$ 80,00 / Uber. Mostra a velocidade.
+- **Slide B — Jornada inteligente** (cenário fictício animado):
+  1. Botão "Iniciar jornada" → modal de **meta** aparecendo (R$ 250)
+  2. Cronômetro rodando (00:00 → 03:42)
+  3. "Encerrar jornada" → drawer de **ganho abre automaticamente com horas preenchidas**
+  - Legenda: "Iniciou com meta, encerrou com ganho já no formulário."
+- **Slide C — Histórico & Relatórios**: cards animados aparecendo (Bruto/Gastos/Líquido) + mini gráfico desenhando linha. "Veja onde seu dinheiro vai."
+- **Slide D — Customização** (cenário real-like): mostra screenshot estilizado de Ajustes com toggles de **widgets da Tela de Início** e **widgets de Relatórios** ligando/desligando, e **reordenação de cards**. Legenda: "Monte sua tela do seu jeito — escolha o que aparece e em que ordem, tanto na Tela de Início quanto nos Relatórios."
+
+### 3. Tela final celebratória
+- Confetti sutil (canvas-confetti) com cores do app
+- "Tudo pronto, [nome]!"
+- Subtítulo: "Mais controle, mais lucro — agora é com você."
+- CTA: "Entrar no Volant"
+
+## Comportamento
+- Aparece após login se `profiles.onboarded = false` (ou nova coluna)
+- Pulável a qualquer momento (marca como concluído)
+- Em Ajustes → seção "Sobre" → botão **"Refazer tour"** que reabre
+- Progresso por dots no topo, gestos de swipe (embla), animações com Framer Motion
+- Respeita safe areas, dark/light mode, `prefers-reduced-motion`
+
+## Detalhes técnicos
+- **Novo componente**: `src/components/onboarding/OnboardingFlow.tsx` (orquestrador)
+- **Sub-componentes**: `WelcomeStep`, `FeatureCarousel`, `slides/` (RegistroSlide, JornadaSlide, RelatoriosSlide, CustomizacaoSlide), `FinalStep`
+- **Animações**: Framer Motion (já não instalado — adicionar) + `canvas-confetti`
+- **Persistência**: nova coluna `profiles.onboarded boolean default false` (migration)
+- **Hook**: `useOnboarding()` para ler/marcar concluído
+- **Montagem**: dentro de `AppLayout`, sobreposto, render condicional
+- **Reset**: botão em `Settings.tsx` chama `updateProfile({ onboarded: false })` e dispara abertura
+- **Reuso**: `VolantLogo`, paleta de tokens, `gradient-success`, `Drawer`, `Button` existentes
+- **Mockups dos slides** são puramente visuais (divs estilizadas como o app real) — não usam dados reais nem disparam ações
+- Sem alterar nenhuma lógica existente (Timer, Drawer, Settings funcionalidades)
+
+## Migration (Supabase)
+```sql
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarded boolean NOT NULL DEFAULT false;
 ```
-https://lovable.dev/auth-bridge?project_id=...&return_url=https://id-preview--.../auth
-```
 
-…que por sua vez exigiu login na conta Lovable e jogou para `https://lovable.dev/login`. É exatamente nesse ponto que o fluxo trava e a UI mostra **"Falha ao entrar com Google"**.
+## Ordem de execução
+1. Migration (`onboarded` em profiles)
+2. Instalar `framer-motion` e `canvas-confetti`
+3. Criar componentes do onboarding
+4. Integrar em `AppLayout` + gancho em `Settings`
+5. QA visual no viewport mobile
 
-Em paralelo, conferi os logs de Auth do backend: o seu último login Google **bem-sucedido** veio do referer `https://usevolant.lovable.app` (URL publicada). Não há nenhum login Google partindo do `id-preview--...` — eles falham antes de chegar no Supabase.
-
-## Causa real
-
-O Google OAuth gerenciado pelo Lovable Cloud usa um "auth-bridge" hospedado em `lovable.dev`. Esse bridge:
-
-1. Requer **sessão ativa do dono do projeto em `lovable.dev`** no mesmo navegador.
-2. Depende de **cookies de terceiros para `lovable.dev`** estarem permitidos.
-3. Funciona normalmente no domínio publicado (`usevolant.lovable.app`, `usevolant.app`) porque ali o redirecionamento ocorre na própria origem do app.
-
-No domínio do Preview (`id-preview--...lovable.app`), o bridge é cross-origin em relação ao `lovable.dev`, então qualquer um destes quebra:
-
-- Sessão Lovable expirada/encerrada no navegador.
-- Bloqueio de cookies de terceiros (Brave, Safari ITP, modo anônimo, extensões de privacidade).
-- Abrir o Preview em janela anônima/outro perfil sem estar logado em `lovable.dev`.
-
-Isso bate com o cenário que você descreveu: "tinha entrado, mas agora voltou a falhar" — clássico de sessão Lovable expirando ou cookies sendo limpos.
-
-## Por que NÃO vou mexer no código
-
-- O código em `src/pages/Auth.tsx` segue o padrão correto (`lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin })`).
-- O mesmo código funciona em produção (logs confirmam).
-- A URL de Preview é gerenciada pelo sistema e **não pode** ser adicionada manualmente no allowlist do Google (você já viu o erro "System-managed URLs cannot be added manually").
-- Mexer em `redirect_uri`, provider ou config do Supabase iria **quebrar produção** sem resolver o Preview.
-
-## O que fazer agora (sem alterar código)
-
-Para validar a Sprint no Preview com Google, na ordem de menor esforço:
-
-1. **Faça login em `https://lovable.dev`** no mesmo navegador/perfil onde está abrindo o Preview, depois recarregue a Preview e tente o Google de novo.
-2. **Permita cookies de terceiros para `lovable.dev`** nas configurações do navegador (ou desative bloqueios de rastreamento/extensões só para esse domínio).
-3. **Não use janela anônima** para testar Google no Preview.
-4. **Alternativa imediata para validar a Sprint:** entre no Preview por **email + senha** (esse fluxo não passa pelo auth-bridge e funciona normalmente) e teste tudo. Use o Google só no domínio publicado, onde já está confirmado que funciona.
-
-## Caso queira mesmo um diagnóstico mais profundo
-
-Posso, **só se você autorizar**, fazer uma alteração mínima e temporária em `src/pages/Auth.tsx` para logar `result.error` no console e exibir a mensagem real no toast — assim conseguimos ver se é "popup_closed", "third_party_cookies_blocked", "session_expired" etc. Reverto depois. Mas, pelo padrão do erro e pelos logs, tenho alta confiança de que é o item 1 ou 2 acima.
-
-## Resumo técnico
-
-- **Sintoma:** toast "Falha ao entrar com Google" no Preview.
-- **Origem:** `lovable.auth.signInWithOAuth("google")` → redireciona para `lovable.dev/auth-bridge` → este redireciona para `lovable.dev/login` (sessão Lovable ausente/expirada ou cookie 3rd-party bloqueado) → callback nunca volta para o app → `result.error` setado → toast disparado.
-- **Produção:** OK (login Google de `usevolant.lovable.app` registrado nos auth_logs com status 200).
-- **Backend (Lovable Cloud):** saudável, sem incidente.
-- **Ação no código:** nenhuma necessária.
+## O que NÃO muda
+- Lógica de Timer, Drawer, Settings, Reports, History
+- Banco existente (apenas nova coluna)
+- Design system (tokens, cores, componentes)
+- Rotas

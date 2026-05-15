@@ -204,6 +204,7 @@ export type Database = {
           greeting_message: string | null
           id: string
           nickname: string | null
+          onboarded: boolean
           updated_at: string
         }
         Insert: {
@@ -218,6 +219,7 @@ export type Database = {
           greeting_message?: string | null
           id: string
           nickname?: string | null
+          onboarded?: boolean
           updated_at?: string
         }
         Update: {
@@ -232,6 +234,7 @@ export type Database = {
           greeting_message?: string | null
           id?: string
           nickname?: string | null
+          onboarded?: boolean
           updated_at?: string
         }
         Relationships: []

@@ -988,13 +988,19 @@ export default function SettingsPage() {
         </SectionGroup>
 
         {/* App footer */}
-        <footer className="flex flex-col items-center gap-1 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+        <footer className="flex flex-col items-center gap-2 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/80 transition hover:bg-muted"
+          >
+            <Sparkles className="h-3 w-3 text-primary" /> Refazer tour de boas-vindas
+          </button>
           <img
             src={volantSymbol}
             alt={APP_NAME}
             width={20}
             height={20}
-            className="h-5 w-5 shrink-0 opacity-70"
+            className="mt-1 h-5 w-5 shrink-0 opacity-70"
           />
           <div>Versão {APP_VERSION_LABEL}</div>
           <div className="text-muted-foreground/60">Dados sincronizados na nuvem</div>
