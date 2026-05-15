@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { EntryDrawer } from "./EntryDrawer";
 import { CarOnboardingDialog } from "./CarOnboardingDialog";
+import { OnboardingFlow } from "./onboarding/OnboardingFlow";
 import { TimerFab } from "./TimerFab";
 import { useUI } from "@/context/UIContext";
 
@@ -19,6 +20,7 @@ export function AppLayout() {
       <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
       <BottomNav />
       <CarOnboardingDialog />
+      <OnboardingFlow />
     </div>
   );
 }
