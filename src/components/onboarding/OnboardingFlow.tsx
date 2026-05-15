@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import confetti from "canvas-confetti";
 import {
-  ArrowRight, ArrowLeft, X, Plus, Play, Coffee, StopCircle, Target,
+  ArrowRight, ArrowLeft, X, Plus, Play, StopCircle, Target,
   Clock, BarChart3, Sliders, GripVertical, CheckCircle2, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { VolantLogo } from "@/components/VolantLogo";
 import { useAuth } from "@/context/AuthContext";
-import { useData } from "@/context/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
