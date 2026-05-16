@@ -4,10 +4,10 @@ import confetti from "canvas-confetti";
 import {
   ArrowRight, ArrowLeft, X, Plus, Play, StopCircle, Target,
   Clock, BarChart3, Sliders, GripVertical, CheckCircle2, Sparkles,
+  TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { VolantLogo } from "@/components/VolantLogo";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -53,6 +53,8 @@ export function OnboardingFlow() {
     if (user) {
       await supabase.from("profiles").upsert({ id: user.id, onboarded: true } as any);
     }
+    // Notify other dialogs (e.g. car onboarding) that the tour is done
+    window.dispatchEvent(new CustomEvent("volant:onboarding-finished"));
   };
 
   const step = STEPS[stepIdx];
@@ -206,10 +208,12 @@ function WelcomeStep() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative mb-6"
       >
-        <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-card shadow-elevated">
-          <VolantLogo size={56} />
-        </div>
+        <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
+        <img
+          src="/volant-logo-splash.png"
+          alt="Volant"
+          className="h-28 w-auto drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
+        />
       </motion.div>
 
       <motion.div
@@ -221,8 +225,10 @@ function WelcomeStep() {
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
           Bem-vindo ao Volant
         </div>
-        <h1 className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-3xl font-bold leading-tight text-transparent">
-          Mais controle,<br />mais lucro.
+        <h1 className="text-3xl font-bold leading-tight text-foreground">
+          <span className="text-primary">Mais controle,</span>
+          <br />
+          <span className="text-primary">mais lucro.</span>
         </h1>
         <p className="mx-auto mt-3 max-w-xs text-[14px] leading-relaxed text-muted-foreground">
           Vamos te mostrar como o Volant trabalha por você no dia a dia das corridas.
@@ -236,56 +242,173 @@ function WelcomeStep() {
  *  STEP 2 — Registro rápido
  * ============================================================ */
 function RegistroStep() {
+  // Looped scenario: idle → radial open → drawer with prefilled fields
+  const PHASES = ["idle", "radial", "drawer"] as const;
+  type Phase = typeof PHASES[number];
+  const [phase, setPhase] = useState<Phase>("idle");
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase("radial"), 900);
+    const t2 = setTimeout(() => setPhase("drawer"), 2200);
+    const t3 = setTimeout(() => setPhase("idle"), 6500);
+    return () => { [t1, t2, t3].forEach(clearTimeout); };
+  }, []);
+
   return (
     <StepShell
       eyebrow="Registro rápido"
       title="Lance um ganho em segundos"
-      description="Toque no botão verde e registre cada corrida sem fricção."
+      description="Toque no + verde, escolha ganho ou gasto e preencha — leva poucos segundos."
     >
       <PhoneFrame>
-        <div className="absolute inset-0 flex flex-col">
-          <div className="border-b border-border/60 bg-card/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Tela de Início
-          </div>
-          <div className="flex-1 space-y-2 p-3">
-            <MockCard label="Bruto" value="R$ 184,50" tone="default" />
-            <MockCard label="Líquido" value="R$ 142,30" tone="success" />
-            <div className="rounded-lg border border-border/60 bg-muted/30 p-2 text-[10px] text-muted-foreground">
-              Toque no <span className="font-semibold text-primary">+</span> para lançar
+        <div className="absolute inset-0 flex flex-col bg-background">
+          {/* Mock home content */}
+          <div className="flex-1 space-y-1.5 p-2.5 opacity-90">
+            <div className="text-[10px] font-semibold">Olá, Lucas 👋</div>
+            <div className="rounded-lg gradient-success/30 border border-success/30 bg-success/10 p-2">
+              <div className="text-[8px] font-semibold uppercase tracking-wider text-success/80">Lucro líquido</div>
+              <div className="text-base font-bold tabular-nums text-success">R$ 142,30</div>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="rounded-lg border border-border bg-card p-1.5">
+                <div className="text-[8px] uppercase text-success/80">Bruto</div>
+                <div className="text-[11px] font-bold tabular-nums">R$ 184,50</div>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-1.5">
+                <div className="text-[8px] uppercase text-destructive/80">Gastos</div>
+                <div className="text-[11px] font-bold tabular-nums">R$ 42,20</div>
+              </div>
             </div>
           </div>
 
-          {/* Pulsing FAB */}
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: [0.95, 1.08, 1], opacity: 1 }}
-            transition={{ delay: 0.3, duration: 1.2, repeat: Infinity, repeatType: "reverse" }}
-            className="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full gradient-success text-primary-foreground shadow-fab"
-          >
-            <Plus className="h-5 w-5" />
-          </motion.div>
+          {/* Bottom nav mock */}
+          <div className="relative border-t border-border bg-card/80 px-3 pt-2 pb-2">
+            <div className="grid grid-cols-5 items-center text-[8px] text-muted-foreground">
+              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Início</div>
+              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Histórico</div>
+              <div />
+              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Relatórios</div>
+              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Ajustes</div>
+            </div>
+          </div>
 
-          {/* Drawer mock sliding up */}
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: "30%" }}
-            transition={{ delay: 1.2, duration: 0.6, ease: "easeOut" }}
-            className="absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
-          >
-            <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-muted-foreground/30" />
-            <div className="mb-1 text-[11px] font-semibold">Novo ganho</div>
-            <div className="flex items-center justify-between rounded-lg bg-muted/50 px-2 py-1.5 text-[11px]">
-              <span className="text-muted-foreground">Uber</span>
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.8 }}
-                className="font-bold text-success"
+          {/* Backdrop when radial/drawer open */}
+          <AnimatePresence>
+            {(phase === "radial" || phase === "drawer") && (
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-background/60 backdrop-blur-[2px]"
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Radial actions */}
+          <AnimatePresence>
+            {phase === "radial" && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                className="absolute inset-x-0 bottom-12 flex justify-center gap-2 px-3"
               >
-                R$ 80,00
-              </motion.span>
-            </div>
+                <div className="flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-[9px] font-semibold shadow-elevated">
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-success/15 text-success">
+                    <TrendingUp className="h-2.5 w-2.5" />
+                  </span>
+                  Novo ganho
+                </div>
+                <div className="flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-[9px] font-semibold shadow-elevated">
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-destructive/15 text-destructive">
+                    <TrendingDown className="h-2.5 w-2.5" />
+                  </span>
+                  Novo gasto
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Center FAB — pulsing in idle, X when radial open */}
+          <motion.div
+            animate={
+              phase === "idle"
+                ? { scale: [1, 1.08, 1] }
+                : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
+            }
+            transition={
+              phase === "idle"
+                ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                : { duration: 0.25 }
+            }
+            className="absolute left-1/2 bottom-6 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab"
+          >
+            {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
           </motion.div>
+
+          {/* Drawer mock — mirrors real "Novo registro" form */}
+          <AnimatePresence>
+            {phase === "drawer" && (
+              <motion.div
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 24, stiffness: 240 }}
+                className="absolute inset-x-0 bottom-0 max-h-[88%] overflow-hidden rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
+              >
+                <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-muted-foreground/30" />
+                <div className="mb-2 text-center text-[11px] font-semibold">Novo registro</div>
+
+                <div className="space-y-2">
+                  <div>
+                    <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Data do registro</div>
+                    <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px]">
+                      <Calendar className="h-3 w-3 text-muted-foreground" />
+                      15 de maio de 2026
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-0.5 rounded-md border border-border bg-muted/30 p-0.5">
+                    <div className="flex items-center justify-center gap-1 rounded bg-card py-1 text-[10px] font-semibold">
+                      <TrendingUp className="h-2.5 w-2.5 text-success" /> Lucro
+                    </div>
+                    <div className="flex items-center justify-center gap-1 py-1 text-[10px] text-muted-foreground">
+                      <TrendingDown className="h-2.5 w-2.5" /> Gasto
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold">
+                      <span className="text-muted-foreground">Plataforma</span>
+                      <span className="text-primary">+ Nova plataforma</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px]">
+                      <div className="flex items-center gap-1.5">
+                        <div className="grid h-4 w-4 place-items-center rounded-full bg-foreground text-[6px] font-bold text-background">U</div>
+                        Uber
+                      </div>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Horas trabalhadas</div>
+                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px] text-muted-foreground/70">Ex: 6.5</div>
+                    </div>
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Valor recebido</div>
+                      <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
+                        className="rounded-md border border-success/40 bg-success/10 px-2 py-1.5 text-[10px] font-bold tabular-nums text-success"
+                      >
+                        R$ 80,00
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <div className="flex-1 rounded-md border border-border py-1.5 text-center text-[10px]">Cancelar</div>
+                    <div className="flex-1 rounded-md gradient-success py-1.5 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </PhoneFrame>
     </StepShell>
@@ -462,48 +585,90 @@ function RelatoriosStep() {
     <StepShell
       eyebrow="Histórico & Relatórios"
       title="Veja para onde seu dinheiro vai"
-      description="Acompanhe bruto, gastos, lucro líquido e performance por hora, km, dia e corrida."
+      description="Bruto, gastos, líquido e performance por hora, km, dia e corrida."
     >
       <PhoneFrame>
-        <div className="absolute inset-0 flex flex-col">
-          <div className="border-b border-border/60 bg-card/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Relatórios
+        <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
+          {/* Header */}
+          <div className="mb-1.5">
+            <div className="text-[12px] font-bold leading-tight">Relatórios</div>
+            <div className="text-[8px] text-muted-foreground">maio de 2026</div>
           </div>
-          <div className="flex-1 space-y-2 p-3">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <MockCard label="Bruto" value="R$ 4.820" tone="default" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <MockCard label="Gastos" value="R$ 1.150" tone="destructive" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <MockCard label="Líquido" value="R$ 3.670" tone="success" />
-            </motion.div>
 
-            {/* Mini chart */}
+          {/* Period tabs */}
+          <div className="mb-2 grid grid-cols-3 gap-0.5 rounded-full border border-border bg-muted/30 p-0.5 text-[8px]">
+            <div className="rounded-full gradient-success py-1 text-center font-semibold text-primary-foreground">Por mês</div>
+            <div className="py-1 text-center text-muted-foreground">Por ano</div>
+            <div className="py-1 text-center text-muted-foreground">Person.</div>
+          </div>
+
+          {/* Lucro líquido big card with chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="mb-1.5 rounded-xl border border-success/40 bg-success/5 p-2"
+          >
+            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
+              <Wallet className="h-2.5 w-2.5" /> Lucro líquido
+            </div>
+            <div className="mt-0.5 text-base font-bold tabular-nums">R$ 1.112,67</div>
+            <svg viewBox="0 0 120 28" className="mt-1 h-6 w-full">
+              <motion.path
+                d="M2 24 Q14 22 22 22 T40 16 Q46 6 52 7 Q58 8 64 22 T120 22"
+                fill="none" stroke="hsl(var(--success))" strokeWidth="1.8" strokeLinecap="round"
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+              />
+            </svg>
+          </motion.div>
+
+          {/* Média por hora */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="mb-1.5 rounded-xl border border-success/30 bg-success/5 p-2"
+          >
+            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
+              <Gauge className="h-2.5 w-2.5" /> Média por hora
+            </div>
+            <div className="mt-0.5 text-sm font-bold tabular-nums">R$ 59,46</div>
+            <div className="text-[8px] text-muted-foreground">com 24,0h trabalhadas</div>
+          </motion.div>
+
+          {/* Bruto / Gastos side by side */}
+          <div className="grid grid-cols-2 gap-1.5">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="rounded-lg border border-border bg-card p-2"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="rounded-xl border border-info/30 bg-info/5 p-2"
             >
-              <div className="mb-1 flex items-center gap-1 text-[9px] text-muted-foreground">
-                <BarChart3 className="h-3 w-3" /> Líquido por dia
+              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-info">
+                <Wallet className="h-2.5 w-2.5" /> Bruto
               </div>
-              <svg viewBox="0 0 120 36" className="h-9 w-full">
-                <motion.path
-                  d="M2 28 L20 22 L38 25 L56 14 L74 18 L92 8 L118 12"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ delay: 0.7, duration: 1.2, ease: "easeOut" }}
-                />
-              </svg>
+              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 1.427,01</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+              className="rounded-xl border border-destructive/30 bg-destructive/5 p-2"
+            >
+              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-destructive">
+                <Receipt className="h-2.5 w-2.5" /> Gastos
+              </div>
+              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 314,34</div>
             </motion.div>
           </div>
+
+          {/* Dias / Média dia */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Dias ativos</div>
+              <div className="mt-0.5 text-[10px] font-bold">3 dias</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Média / dia</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 370,89</div>
+            </div>
+          </motion.div>
         </div>
       </PhoneFrame>
     </StepShell>
@@ -594,12 +759,9 @@ function FinalStep({ onMount }: { onMount: () => void }) {
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="mt-2 max-w-xs text-[14px] leading-relaxed text-muted-foreground"
+        className="mt-2 max-w-xs text-[15px] leading-relaxed text-foreground"
       >
-        <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text font-semibold text-transparent">
-          Mais controle, mais lucro
-        </span>
-        {" "}— agora é com você.
+        Agora é com você — <span className="font-semibold text-primary">bora rodar e lucrar</span>.
       </motion.p>
     </div>
   );
