@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -209,11 +209,13 @@ function WelcomeStep() {
         className="relative mb-6"
       >
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
-        <img
-          src="/volant-logo-splash.png"
-          alt="Volant"
-          className="h-28 w-auto drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
-        />
+        <div className="h-28 w-28 overflow-hidden rounded-full border border-primary/20 bg-[#0b1220] shadow-[0_0_24px_hsl(var(--primary)/0.45)]">
+          <img
+            src="/volant-logo-splash.png"
+            alt="Volant"
+            className="h-full w-full scale-110 object-cover"
+          />
+        </div>
       </motion.div>
 
       <motion.div
@@ -281,14 +283,14 @@ function RegistroStep() {
             </div>
           </div>
 
-          {/* Bottom nav mock */}
-          <div className="relative border-t border-border bg-card/80 px-3 pt-2 pb-2">
+          {/* Bottom nav mock — real layout with center FAB */}
+          <div className="relative border-t border-border bg-card/80 px-2 pt-2 pb-1.5">
             <div className="grid grid-cols-5 items-center text-[8px] text-muted-foreground">
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Início</div>
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Histórico</div>
-              <div />
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Relatórios</div>
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Ajustes</div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-primary/60" /><span className="text-primary">Início</span></div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Histórico</span></div>
+              <div aria-hidden />
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Relatórios</span></div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Ajustes</span></div>
             </div>
           </div>
 
@@ -302,12 +304,12 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Radial actions */}
+          {/* Radial actions — float above FAB */}
           <AnimatePresence>
             {phase === "radial" && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                className="absolute inset-x-0 bottom-12 flex justify-center gap-2 px-3"
+                className="absolute inset-x-0 bottom-16 z-10 flex justify-center gap-2 px-3"
               >
                 <div className="flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-[9px] font-semibold shadow-elevated">
                   <span className="grid h-4 w-4 place-items-center rounded-full bg-success/15 text-success">
@@ -325,7 +327,7 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Center FAB — pulsing in idle, X when radial open */}
+          {/* Center FAB — sits over the nav center column, sticking up slightly */}
           <motion.div
             animate={
               phase === "idle"
@@ -337,7 +339,7 @@ function RegistroStep() {
                 ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
                 : { duration: 0.25 }
             }
-            className="absolute left-1/2 bottom-6 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab"
+            className="absolute left-1/2 bottom-3 z-20 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
           >
             {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
           </motion.div>
@@ -419,36 +421,51 @@ function RegistroStep() {
  *  STEP 3 — Jornada (fictional scenario)
  * ============================================================ */
 function JornadaStep() {
-  // Looped scenario: idle → goal modal → running timer → end → drawer with hours
-  const PHASES = ["idle", "goal", "running", "ended"] as const;
+  // Looped: idle → goal → running → resting → running → ended (drawer)
+  const PHASES = ["idle", "goal", "running", "resting", "running2", "ended"] as const;
   type Phase = typeof PHASES[number];
   const [phase, setPhase] = useState<Phase>("idle");
-  const [seconds, setSeconds] = useState(0);
+  const [workSec, setWorkSec] = useState(0);
+  const [restSec, setRestSec] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("goal"), 700);
-    const t2 = setTimeout(() => setPhase("running"), 2000);
-    const t3 = setTimeout(() => setPhase("ended"), 5500);
-    const t4 = setTimeout(() => { setPhase("idle"); setSeconds(0); }, 9500);
-    return () => { [t1, t2, t3, t4].forEach(clearTimeout); };
+    const ts: any[] = [];
+    ts.push(setTimeout(() => setPhase("goal"), 600));
+    ts.push(setTimeout(() => setPhase("running"), 1900));
+    ts.push(setTimeout(() => setPhase("resting"), 4200));
+    ts.push(setTimeout(() => setPhase("running2"), 6000));
+    ts.push(setTimeout(() => setPhase("ended"), 7800));
+    ts.push(setTimeout(() => { setPhase("idle"); setWorkSec(0); setRestSec(0); }, 12500));
+    return () => ts.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
-    if (phase !== "running") return;
-    const i = setInterval(() => setSeconds((s) => s + 47), 90);
-    return () => clearInterval(i);
+    if (phase === "running" || phase === "running2") {
+      const i = setInterval(() => setWorkSec((s) => s + 53), 90);
+      return () => clearInterval(i);
+    }
+    if (phase === "resting") {
+      const i = setInterval(() => setRestSec((s) => s + 23), 90);
+      return () => clearInterval(i);
+    }
   }, [phase]);
 
-  const hh = String(Math.floor(seconds / 3600)).padStart(2, "0");
-  const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  const hoursDecimal = (seconds / 3600).toFixed(2).replace(".", ",");
+  const fmt = (sec: number) => {
+    const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+    const s = String(sec % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+  const hoursDecimal = (workSec / 3600).toFixed(2).replace(".", ",");
+
+  const isRunning = phase === "running" || phase === "running2";
+  const isResting = phase === "resting";
 
   return (
     <StepShell
       eyebrow="Jornada inteligente"
-      title="Comece com meta, encerre com ganho"
-      description="Defina sua meta ao iniciar. Ao encerrar, o registro de ganho abre com as horas já preenchidas."
+      title="Meta, descanso e ganho automático"
+      description="Defina a meta ao iniciar, pause para descansar e, ao encerrar, o registro de ganho abre com as horas já preenchidas."
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col bg-background">
@@ -461,29 +478,56 @@ function JornadaStep() {
               <div className="mb-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <span className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  phase === "running" ? "bg-primary animate-pulse" :
+                  isRunning ? "bg-primary animate-pulse" :
+                  isResting ? "bg-warning" :
                   phase === "ended" ? "bg-success" : "bg-muted-foreground/40"
                 )} />
-                {phase === "running" ? "Trabalhando" : phase === "ended" ? "Encerrada" : "Parado"}
+                {isRunning ? "Trabalhando" : isResting ? "Em descanso" : phase === "ended" ? "Encerrada" : "Parado"}
               </div>
 
               <div className="flex flex-col items-center rounded-lg bg-muted/40 py-3">
                 <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Tempo</span>
                 <span className="mt-1 text-2xl font-bold tabular-nums leading-none">
-                  {hh}:{mm}:{ss}
+                  {fmt(workSec)}
                 </span>
               </div>
 
-              <div className="mt-2.5">
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <div className="rounded-md bg-muted/50 px-2 py-1">
+                  <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Trabalhado</div>
+                  <div className="text-[10px] font-bold tabular-nums">{fmt(workSec)}</div>
+                </div>
+                <div className="rounded-md bg-muted/50 px-2 py-1">
+                  <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Descanso</div>
+                  <div className="text-[10px] font-bold tabular-nums">{fmt(restSec)}</div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 space-y-1.5">
                 {phase === "idle" && (
                   <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
                     <Play className="h-3 w-3" /> Iniciar jornada
                   </div>
                 )}
-                {phase === "running" && (
-                  <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
-                    <StopCircle className="h-3 w-3" /> Encerrar jornada
-                  </div>
+                {isRunning && (
+                  <>
+                    <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-card text-[11px] font-semibold">
+                      ☕ Pausar para descanso
+                    </div>
+                    <div className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
+                      <StopCircle className="h-3 w-3" /> Encerrar jornada
+                    </div>
+                  </>
+                )}
+                {isResting && (
+                  <>
+                    <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
+                      <Play className="h-3 w-3" /> Retornar do descanso
+                    </div>
+                    <div className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
+                      <StopCircle className="h-3 w-3" /> Encerrar jornada
+                    </div>
+                  </>
                 )}
                 {phase === "ended" && (
                   <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md bg-success/15 text-[11px] font-semibold text-success">
@@ -498,15 +542,11 @@ function JornadaStep() {
           <AnimatePresence>
             {phase === "goal" && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 flex items-end bg-background/70 backdrop-blur-sm"
               >
                 <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 22, stiffness: 220 }}
                   className="w-full rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
                 >
@@ -525,39 +565,89 @@ function JornadaStep() {
             )}
           </AnimatePresence>
 
-          {/* Earning drawer with prefilled hours */}
+          {/* Earning drawer mirroring the real "Novo registro" form */}
           <AnimatePresence>
             {phase === "ended" && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 flex items-end bg-background/70 backdrop-blur-sm"
               >
                 <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 22, stiffness: 220, delay: 0.2 }}
-                  className="w-full rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
+                  className="max-h-[92%] w-full overflow-hidden rounded-t-2xl border-t border-border bg-card p-2.5 shadow-elevated"
                 >
-                  <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-muted-foreground/30" />
-                  <div className="mb-1.5 text-[11px] font-semibold">Registrar ganho</div>
+                  <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-muted-foreground/30" />
+                  <div className="mb-2 text-center text-[11px] font-semibold">Novo registro</div>
+
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-2 py-1.5 text-[11px]">
-                      <span className="text-muted-foreground">Horas</span>
-                      <motion.span
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="rounded bg-primary/15 px-1.5 py-0.5 font-bold tabular-nums text-primary"
-                      >
-                        {hoursDecimal} h ✓
-                      </motion.span>
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Data do registro</div>
+                      <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
+                        <Calendar className="h-2.5 w-2.5 text-muted-foreground" />
+                        16 de maio de 2026
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md bg-muted/30 px-2 py-1.5 text-[11px]">
-                      <span className="text-muted-foreground">Bruto</span>
-                      <span className="text-muted-foreground/60">R$ ___</span>
+
+                    <div className="grid grid-cols-2 gap-0.5 rounded-md border border-border bg-muted/30 p-0.5">
+                      <div className="flex items-center justify-center gap-1 rounded bg-card py-0.5 text-[9px] font-semibold">
+                        <TrendingUp className="h-2.5 w-2.5 text-success" /> Lucro
+                      </div>
+                      <div className="flex items-center justify-center gap-1 py-0.5 text-[9px] text-muted-foreground">
+                        <TrendingDown className="h-2.5 w-2.5" /> Gasto
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold">
+                        <span className="text-muted-foreground">Plataforma</span>
+                        <span className="text-primary">+ Nova plataforma</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
+                        <div className="flex items-center gap-1.5">
+                          <div className="grid h-3.5 w-3.5 place-items-center rounded-full bg-foreground text-[5px] font-bold text-background">U</div>
+                          Uber
+                        </div>
+                        <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold text-muted-foreground">
+                        <span>Quilometragem</span>
+                        <span className="flex gap-0.5 rounded-full bg-muted/40 p-0.5">
+                          <span className="rounded-full bg-card px-1.5 py-0 text-[7px] text-foreground">Total</span>
+                          <span className="px-1.5 py-0 text-[7px]">Ini/Fim</span>
+                        </span>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Km rodados</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Horas trabalhadas</div>
+                        <motion.div
+                          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="rounded-md border-2 border-success bg-success/10 px-2 py-1 text-[10px] font-bold tabular-nums text-success"
+                        >
+                          {hoursDecimal}
+                        </motion.div>
+                      </div>
+                      <div>
+                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Valor recebido</div>
+                        <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">R$ 0,00</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Quantidade de corridas</div>
+                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Opcional</div>
+                    </div>
+
+                    <div className="flex gap-1.5 pt-1">
+                      <div className="flex-1 rounded-md border border-border py-1 text-center text-[10px]">Cancelar</div>
+                      <div className="flex-1 rounded-md gradient-success py-1 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
                     </div>
                   </div>
                 </motion.div>
@@ -570,7 +660,7 @@ function JornadaStep() {
       <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-foreground/80">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
         <span>
-          Inicia com a sua meta na cabeça e termina já com as horas trabalhadas no formulário.
+          Inicia com a meta, pausa para descansar e termina com as horas já no formulário.
         </span>
       </div>
     </StepShell>
@@ -679,40 +769,39 @@ function RelatoriosStep() {
  *  STEP 5 — Customização (real)
  * ============================================================ */
 function CustomizacaoStep() {
-  const [home, setHome] = useState({ journey: true, byApp: true, byExpense: false });
-  const [rep, setRep] = useState({ chart: true, perf: true });
+  // Real settings: tap the whole card to toggle on/off. No switches.
+  const [home, setHome] = useState<Record<string, boolean>>({
+    meta: true, performance: true, byApp: true, gastos: false, jornada: true,
+  });
 
-  // Animate toggles on mount to suggest interactivity
+  // Animate toggle to suggest tap-to-activate
   useEffect(() => {
-    const t1 = setTimeout(() => setHome((h) => ({ ...h, byExpense: true })), 900);
-    const t2 = setTimeout(() => setRep((r) => ({ ...r, perf: false })), 1500);
-    const t3 = setTimeout(() => setRep((r) => ({ ...r, perf: true })), 2400);
+    const t1 = setTimeout(() => setHome((h) => ({ ...h, gastos: true })), 900);
+    const t2 = setTimeout(() => setHome((h) => ({ ...h, byApp: false })), 1900);
+    const t3 = setTimeout(() => setHome((h) => ({ ...h, byApp: true })), 2700);
     return () => { [t1, t2, t3].forEach(clearTimeout); };
   }, []);
 
   return (
     <StepShell
       eyebrow="Personalização"
-      title="Monte do seu jeito"
-      description="Em Ajustes você escolhe quais cards aparecem na Tela de Início e nos Relatórios — e em qual ordem."
+      title="Monte a tela do seu jeito"
+      description="Em Ajustes, toque no card para ativar ou desativar. Reordene pela alça ou pelas setas."
     >
-      <div className="space-y-2.5">
-        <MiniSettingsCard icon={<Sliders className="h-3.5 w-3.5" />} title="Tela de Início">
-          <ToggleRow label="Jornada" icon={<Clock className="h-3 w-3" />} checked={home.journey} />
-          <ToggleRow label="Ganhos por aplicativo" icon={<BarChart3 className="h-3 w-3" />} checked={home.byApp} />
-          <ToggleRow label="Gastos por categoria" icon={<BarChart3 className="h-3 w-3" />} checked={home.byExpense} />
-          <DragHint />
-        </MiniSettingsCard>
-
-        <MiniSettingsCard icon={<BarChart3 className="h-3.5 w-3.5" />} title="Relatórios">
-          <ToggleRow label="Gráfico líquido por dia" icon={<BarChart3 className="h-3 w-3" />} checked={rep.chart} />
-          <ToggleRow label="Performance (R$/h, R$/km)" icon={<Sparkles className="h-3 w-3" />} checked={rep.perf} />
-        </MiniSettingsCard>
-      </div>
+      <MiniSettingsCard icon={<Sliders className="h-3.5 w-3.5" />} title="Tela inicial">
+        <p className="-mt-1 mb-1.5 text-[10px] leading-snug text-muted-foreground">
+          Toque no card para ativar/desativar. Arraste pela alça ou use as setas para reordenar.
+        </p>
+        <CardToggleRow label="Meta" icon={<Target className="h-3 w-3" />} active={home.meta} />
+        <CardToggleRow label="Performance" icon={<Gauge className="h-3 w-3" />} active={home.performance} />
+        <CardToggleRow label="Por app" icon={<BarChart3 className="h-3 w-3" />} active={home.byApp} />
+        <CardToggleRow label="Gastos" icon={<Receipt className="h-3 w-3" />} active={home.gastos} />
+        <CardToggleRow label="Jornada" icon={<Clock className="h-3 w-3" />} active={home.jornada} isLast />
+      </MiniSettingsCard>
 
       <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-foreground/80">
         <Sliders className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-        <span>Ative só o que importa para você. Arraste para reordenar.</span>
+        <span>O mesmo funciona em Relatórios: você escolhe quais cards aparecem e em qual ordem.</span>
       </div>
     </StepShell>
   );
@@ -824,30 +913,46 @@ function MiniSettingsCard({
   );
 }
 
-function ToggleRow({
-  label, icon, checked,
-}: { label: string; icon: React.ReactNode; checked: boolean }) {
+function CardToggleRow({
+  label, icon, active, isLast,
+}: { label: string; icon: React.ReactNode; active: boolean; isLast?: boolean }) {
   return (
     <motion.div
       layout
-      className="flex items-center justify-between rounded-lg bg-muted/40 px-2.5 py-2"
+      animate={{
+        backgroundColor: active ? "hsl(var(--success) / 0.05)" : "hsl(var(--card))",
+      }}
+      transition={{ duration: 0.25 }}
+      className={cn(
+        "flex items-center justify-between rounded-xl border px-2.5 py-2",
+        active ? "border-success/50" : "border-border"
+      )}
     >
       <div className="flex items-center gap-2 text-[12px]">
         <GripVertical className="h-3 w-3 text-muted-foreground/60" />
-        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-background text-muted-foreground">
+        <span
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-full",
+            active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+          )}
+        >
           {icon}
         </span>
-        <span>{label}</span>
+        <span className="font-medium">{label}</span>
       </div>
-      <Switch checked={checked} className="pointer-events-none scale-90" />
+      <div className="flex items-center gap-1.5">
+        <motion.span
+          animate={{ opacity: active ? 1 : 0.45 }}
+          className={cn(
+            "text-[9px] font-bold uppercase tracking-wider",
+            active ? "text-success" : "text-muted-foreground"
+          )}
+        >
+          {active ? "Ativo" : "Inativo"}
+        </motion.span>
+        <span className="text-muted-foreground/60">↑</span>
+        <span className={cn(isLast ? "text-muted-foreground/30" : "text-muted-foreground/80")}>↓</span>
+      </div>
     </motion.div>
-  );
-}
-
-function DragHint() {
-  return (
-    <div className="mt-1 flex items-center gap-1.5 px-1 text-[10px] text-muted-foreground/70">
-      <GripVertical className="h-3 w-3" /> Arraste para reordenar
-    </div>
   );
 }
