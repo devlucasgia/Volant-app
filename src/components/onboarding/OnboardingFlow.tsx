@@ -7,7 +7,7 @@ import {
   TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
