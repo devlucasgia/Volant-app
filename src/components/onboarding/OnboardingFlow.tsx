@@ -130,8 +130,8 @@ export function OnboardingFlow() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-4">
-            <div className="flex-1 overflow-hidden">
+          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-5">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -139,7 +139,7 @@ export function OnboardingFlow() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="flex h-full flex-col"
+                  className="flex min-h-full flex-col"
                 >
                   {step === "welcome" && <WelcomeStep />}
                   {step === "registro" && <RegistroStep />}
@@ -151,19 +151,23 @@ export function OnboardingFlow() {
               </AnimatePresence>
             </div>
 
-            {/* Footer CTA */}
-            <div className="pt-3">
+            {/* Footer CTA — always visible, respects iOS safe area */}
+            <div
+              className="shrink-0 pt-4"
+              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+            >
               {isLast ? (
                 <Button
                   onClick={finish}
-                  className="h-12 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
                 >
-                  Entrar no Volant
+                  Bora rodar e lucrar
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
                 <Button
                   onClick={next}
-                  className="h-12 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
                 >
                   {isFirst ? "Começar" : "Continuar"}
                   <ArrowRight className="ml-2 h-4 w-4" />
