@@ -72,10 +72,9 @@ export function OnboardingFlow() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[100] overflow-hidden bg-background"
+          className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-background"
           style={{
             paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
           {/* Ambient gradient backdrop */}
@@ -85,7 +84,7 @@ export function OnboardingFlow() {
           </div>
 
           {/* Top bar */}
-          <div className="relative z-10 flex items-center justify-between px-5 pt-3">
+          <div className="relative z-10 flex shrink-0 items-center justify-between px-5 pt-3">
             <button
               onClick={prev}
               disabled={isFirst}
@@ -130,8 +129,8 @@ export function OnboardingFlow() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-5">
-            <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="relative z-10 mx-auto flex w-full min-h-0 max-w-md flex-1 flex-col px-5 pt-2">
+            <div className="min-h-0 flex-1 overflow-y-auto pb-2">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -153,8 +152,8 @@ export function OnboardingFlow() {
 
             {/* Footer CTA — always visible, respects iOS safe area */}
             <div
-              className="shrink-0 pt-4"
-              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+              className="shrink-0 pt-3"
+              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
             >
               {isLast ? (
                 <Button
@@ -205,7 +204,7 @@ function fireConfetti() {
 function WelcomeStep() {
   const reduce = useReducedMotion();
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center py-6 text-center">
       <motion.div
         initial={reduce ? {} : { scale: 0.85 }}
         animate={{ scale: 1 }}
@@ -866,7 +865,7 @@ function FinalStep({ onMount }: { onMount: () => void }) {
   }, [onMount]);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center py-6 text-center">
       <motion.div
         initial={{ scale: 0.4, opacity: 0, rotate: -10 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
