@@ -208,10 +208,12 @@ function WelcomeStep() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative mb-6"
       >
-        <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/20 blur-2xl" />
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-card shadow-elevated">
-          <VolantLogo size={56} />
-        </div>
+        <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
+        <img
+          src="/volant-logo-splash.png"
+          alt="Volant"
+          className="h-28 w-auto drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
+        />
       </motion.div>
 
       <motion.div
@@ -223,8 +225,10 @@ function WelcomeStep() {
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
           Bem-vindo ao Volant
         </div>
-        <h1 className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-3xl font-bold leading-tight text-transparent">
-          Mais controle,<br />mais lucro.
+        <h1 className="text-3xl font-bold leading-tight text-foreground">
+          <span className="text-primary">Mais controle,</span>
+          <br />
+          <span className="text-primary">mais lucro.</span>
         </h1>
         <p className="mx-auto mt-3 max-w-xs text-[14px] leading-relaxed text-muted-foreground">
           Vamos te mostrar como o Volant trabalha por você no dia a dia das corridas.
