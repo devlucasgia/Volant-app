@@ -209,11 +209,13 @@ function WelcomeStep() {
         className="relative mb-6"
       >
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
-        <img
-          src="/volant-logo-splash.png"
-          alt="Volant"
-          className="h-28 w-auto drop-shadow-[0_0_24px_hsl(var(--primary)/0.45)]"
-        />
+        <div className="h-28 w-28 overflow-hidden rounded-full border border-primary/20 bg-[#0b1220] shadow-[0_0_24px_hsl(var(--primary)/0.45)]">
+          <img
+            src="/volant-logo-splash.png"
+            alt="Volant"
+            className="h-full w-full scale-110 object-cover"
+          />
+        </div>
       </motion.div>
 
       <motion.div
