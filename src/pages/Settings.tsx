@@ -1000,12 +1000,6 @@ export default function SettingsPage() {
 
         {/* App footer */}
         <footer className="flex flex-col items-center gap-2 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/80 transition hover:bg-muted"
-          >
-            <Sparkles className="h-3 w-3 text-primary" /> Refazer tour de boas-vindas
-          </button>
           <img
             src={volantSymbol}
             alt={APP_NAME}
