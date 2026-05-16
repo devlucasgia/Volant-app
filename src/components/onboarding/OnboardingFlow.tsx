@@ -72,10 +72,9 @@ export function OnboardingFlow() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-0 z-[100] overflow-hidden bg-background"
+          className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-background"
           style={{
             paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
           {/* Ambient gradient backdrop */}
@@ -85,7 +84,7 @@ export function OnboardingFlow() {
           </div>
 
           {/* Top bar */}
-          <div className="relative z-10 flex items-center justify-between px-5 pt-3">
+          <div className="relative z-10 flex shrink-0 items-center justify-between px-5 pt-3">
             <button
               onClick={prev}
               disabled={isFirst}
