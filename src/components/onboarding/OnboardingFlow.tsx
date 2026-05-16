@@ -53,6 +53,8 @@ export function OnboardingFlow() {
     if (user) {
       await supabase.from("profiles").upsert({ id: user.id, onboarded: true } as any);
     }
+    // Notify other dialogs (e.g. car onboarding) that the tour is done
+    window.dispatchEvent(new CustomEvent("volant:onboarding-finished"));
   };
 
   const step = STEPS[stepIdx];
