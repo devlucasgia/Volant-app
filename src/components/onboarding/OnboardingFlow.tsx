@@ -904,20 +904,20 @@ function StepShell({
   eyebrow, title, description, children,
 }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="mb-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">{eyebrow}</div>
-        <h2 className="mt-1 text-xl font-bold leading-tight">{title}</h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{description}</p>
+    <div className="flex min-h-full flex-col">
+      <div className="mb-4 text-center">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">{eyebrow}</div>
+        <h2 className="mt-1.5 text-[22px] font-bold leading-tight text-foreground">{title}</h2>
+        <p className="mx-auto mt-2 max-w-[320px] text-[13.5px] leading-relaxed text-muted-foreground">{description}</p>
       </div>
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <div className="flex flex-1 items-center justify-center">{children}</div>
     </div>
   );
 }
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto h-full max-h-[420px] w-full max-w-[260px] overflow-hidden rounded-[28px] border border-border bg-card shadow-elevated">
+    <div className="relative mx-auto aspect-[9/16] h-auto max-h-[60vh] w-full max-w-[280px] overflow-hidden rounded-[32px] border-[3px] border-foreground/10 bg-card shadow-elevated">
       {children}
     </div>
   );
