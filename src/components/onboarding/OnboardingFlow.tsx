@@ -203,9 +203,9 @@ function WelcomeStep() {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
       <motion.div
-        initial={reduce ? {} : { scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        initial={reduce ? {} : { scale: 0.85 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative mb-6"
       >
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
@@ -213,15 +213,19 @@ function WelcomeStep() {
           <img
             src="/volant-logo-splash.png"
             alt="Volant"
+            loading="eager"
+            decoding="sync"
+            // @ts-expect-error fetchpriority is valid HTML
+            fetchpriority="high"
             className="h-full w-full scale-110 object-cover"
           />
         </div>
       </motion.div>
 
       <motion.div
-        initial={reduce ? {} : { y: 16, opacity: 0 }}
+        initial={reduce ? {} : { y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        transition={{ duration: 0.4 }}
         className="space-y-2"
       >
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
@@ -327,22 +331,24 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Center FAB — sits over the nav center column, sticking up slightly */}
-          <motion.div
-            animate={
-              phase === "idle"
-                ? { scale: [1, 1.08, 1] }
-                : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
-            }
-            transition={
-              phase === "idle"
-                ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
-                : { duration: 0.25 }
-            }
-            className="absolute left-1/2 bottom-3 z-20 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
-          >
-            {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
-          </motion.div>
+          {/* Center FAB — anchored to nav center via flex centering for pixel-perfect alignment */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
+            <motion.div
+              animate={
+                phase === "idle"
+                  ? { scale: [1, 1.08, 1] }
+                  : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
+              }
+              transition={
+                phase === "idle"
+                  ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                  : { duration: 0.25 }
+              }
+              className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
+            >
+              {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
+            </motion.div>
+          </div>
 
           {/* Drawer mock — mirrors real "Novo registro" form */}
           <AnimatePresence>
@@ -748,15 +754,45 @@ function RelatoriosStep() {
           {/* Dias / Média dia */}
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-2 text-center"
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-success/30 bg-card p-2 text-center"
           >
             <div>
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Dias ativos</div>
-              <div className="mt-0.5 text-[10px] font-bold">3 dias</div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">📅 Dias ativos</div>
+              <div className="mt-0.5 text-[10px] font-bold">4 dias</div>
             </div>
             <div className="border-l border-border">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Média / dia</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 370,89</div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">Média / dia</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 326,13</div>
+            </div>
+          </motion.div>
+
+          {/* KM total / Média km */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-info/30 bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">KM total</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">690 km</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">Média / km</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 2,52</div>
+            </div>
+          </motion.div>
+
+          {/* Corridas / R$ por corrida */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
+            className="mt-1.5 mb-1 grid grid-cols-2 gap-2 rounded-xl border border-[hsl(280_70%_60%/0.3)] bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">🏁 Corridas</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">39</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">R$ / corrida</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 44,59</div>
             </div>
           </motion.div>
         </div>
