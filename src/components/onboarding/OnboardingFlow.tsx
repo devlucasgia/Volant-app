@@ -871,26 +871,26 @@ function FinalStep({ onMount }: { onMount: () => void }) {
         initial={{ scale: 0.4, opacity: 0, rotate: -10 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
         transition={{ type: "spring", damping: 14, stiffness: 200 }}
-        className="mb-5 flex h-20 w-20 items-center justify-center rounded-full gradient-success shadow-fab"
+        className="mb-6 flex h-24 w-24 items-center justify-center rounded-full gradient-success shadow-fab"
       >
-        <CheckCircle2 className="h-10 w-10 text-primary-foreground" />
+        <CheckCircle2 className="h-12 w-12 text-primary-foreground" />
       </motion.div>
 
       <motion.h1
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="text-2xl font-bold capitalize"
+        className="text-[26px] font-bold capitalize leading-tight"
       >
-        Tudo pronto, {name}!
+        Tudo pronto, {name}! 🚀
       </motion.h1>
       <motion.p
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="mt-2 max-w-xs text-[15px] leading-relaxed text-foreground"
+        className="mt-3 max-w-xs text-[15px] leading-relaxed text-foreground/90"
       >
-        Agora é com você — <span className="font-semibold text-primary">bora rodar e lucrar</span>.
+        Agora é sua vez. Registre seu primeiro ganho e descubra <span className="font-semibold text-primary">quanto realmente sobra no fim do dia</span>.
       </motion.p>
     </div>
   );
