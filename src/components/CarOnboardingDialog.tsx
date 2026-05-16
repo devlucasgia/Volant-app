@@ -19,17 +19,28 @@ export function CarOnboardingDialog() {
   const [initialKm, setInitialKm] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const checkAndOpen = () => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("car_onboarded")
+      .select("car_onboarded, onboarded")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (data && !data.car_onboarded && cars.length === 0) setOpen(true);
+        if (!data) return;
+        // Only open after the welcome tour has been finished (or skipped)
+        if ((data as any).onboarded && !data.car_onboarded && cars.length === 0) setOpen(true);
       });
+  };
+
+  useEffect(() => {
+    checkAndOpen();
+    const onFinished = () => checkAndOpen();
+    window.addEventListener("volant:onboarding-finished", onFinished);
+    return () => window.removeEventListener("volant:onboarding-finished", onFinished);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, cars.length]);
+
 
   const finish = async (skip = false) => {
     if (!user) return;
