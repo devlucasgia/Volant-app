@@ -4,10 +4,10 @@ import confetti from "canvas-confetti";
 import {
   ArrowRight, ArrowLeft, X, Plus, Play, StopCircle, Target,
   Clock, BarChart3, Sliders, GripVertical, CheckCircle2, Sparkles,
+  TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { VolantLogo } from "@/components/VolantLogo";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
