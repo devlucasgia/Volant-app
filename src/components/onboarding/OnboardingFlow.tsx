@@ -130,8 +130,8 @@ export function OnboardingFlow() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-4">
-            <div className="flex-1 overflow-hidden">
+          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-5">
+            <div className="min-h-0 flex-1 overflow-y-auto">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -139,7 +139,7 @@ export function OnboardingFlow() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -24 }}
                   transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="flex h-full flex-col"
+                  className="flex min-h-full flex-col"
                 >
                   {step === "welcome" && <WelcomeStep />}
                   {step === "registro" && <RegistroStep />}
@@ -151,19 +151,23 @@ export function OnboardingFlow() {
               </AnimatePresence>
             </div>
 
-            {/* Footer CTA */}
-            <div className="pt-3">
+            {/* Footer CTA — always visible, respects iOS safe area */}
+            <div
+              className="shrink-0 pt-4"
+              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+            >
               {isLast ? (
                 <Button
                   onClick={finish}
-                  className="h-12 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
                 >
-                  Entrar no Volant
+                  Bora rodar e lucrar
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
                 <Button
                   onClick={next}
-                  className="h-12 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
                 >
                   {isFirst ? "Começar" : "Continuar"}
                   <ArrowRight className="ml-2 h-4 w-4" />
@@ -867,26 +871,26 @@ function FinalStep({ onMount }: { onMount: () => void }) {
         initial={{ scale: 0.4, opacity: 0, rotate: -10 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
         transition={{ type: "spring", damping: 14, stiffness: 200 }}
-        className="mb-5 flex h-20 w-20 items-center justify-center rounded-full gradient-success shadow-fab"
+        className="mb-6 flex h-24 w-24 items-center justify-center rounded-full gradient-success shadow-fab"
       >
-        <CheckCircle2 className="h-10 w-10 text-primary-foreground" />
+        <CheckCircle2 className="h-12 w-12 text-primary-foreground" />
       </motion.div>
 
       <motion.h1
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="text-2xl font-bold capitalize"
+        className="text-[26px] font-bold capitalize leading-tight"
       >
-        Tudo pronto, {name}!
+        Tudo pronto, {name}! 🚀
       </motion.h1>
       <motion.p
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="mt-2 max-w-xs text-[15px] leading-relaxed text-foreground"
+        className="mt-3 max-w-xs text-[15px] leading-relaxed text-foreground/90"
       >
-        Agora é com você — <span className="font-semibold text-primary">bora rodar e lucrar</span>.
+        Agora é sua vez. Registre seu primeiro ganho e descubra <span className="font-semibold text-primary">quanto realmente sobra no fim do dia</span>.
       </motion.p>
     </div>
   );
@@ -900,20 +904,20 @@ function StepShell({
   eyebrow, title, description, children,
 }: { eyebrow: string; title: string; description: string; children: React.ReactNode }) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="mb-3">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">{eyebrow}</div>
-        <h2 className="mt-1 text-xl font-bold leading-tight">{title}</h2>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">{description}</p>
+    <div className="flex min-h-full flex-col">
+      <div className="mb-4 text-center">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/80">{eyebrow}</div>
+        <h2 className="mt-1.5 text-[22px] font-bold leading-tight text-foreground">{title}</h2>
+        <p className="mx-auto mt-2 max-w-[320px] text-[13.5px] leading-relaxed text-muted-foreground">{description}</p>
       </div>
-      <div className="flex-1 overflow-hidden">{children}</div>
+      <div className="flex flex-1 flex-col items-stretch justify-center gap-3">{children}</div>
     </div>
   );
 }
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto h-full max-h-[420px] w-full max-w-[260px] overflow-hidden rounded-[28px] border border-border bg-card shadow-elevated">
+    <div className="relative mx-auto aspect-[9/16] h-auto max-h-[60vh] w-full max-w-[280px] overflow-hidden rounded-[32px] border-[3px] border-foreground/10 bg-card shadow-elevated">
       {children}
     </div>
   );

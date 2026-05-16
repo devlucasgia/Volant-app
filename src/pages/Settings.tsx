@@ -449,8 +449,52 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               )}
+
+              {/* Replay onboarding tour */}
+              <div className="pt-1">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
+                >
+                  <Sparkles className="mr-2 h-4 w-4 text-primary" /> Refazer tour de boas-vindas
+                </Button>
+              </div>
             </SettingsCard>
 
+            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
+              <Button variant="outline" className="w-full" onClick={signOut}>
+                <LogOut className="mr-2 h-4 w-4" /> Sair da conta
+              </Button>
+
+              <div className="rounded-xl border border-border bg-muted/30 p-3.5">
+                <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Zona de perigo
+                </div>
+                <p className="mb-3 text-[11px] text-muted-foreground">
+                  Esta ação remove todos os ganhos e gastos da sua conta e não pode ser desfeita.
+                </p>
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  onClick={clearAll}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> Apagar todos os meus dados
+                </Button>
+              </div>
+            </SettingsCard>
+          </Accordion>
+        </SectionGroup>
+
+        {/* ============== PERSONALIZAÇÃO ============== */}
+        <SectionGroup title="Personalização">
+          <Accordion
+            type="single"
+            collapsible
+            value={customizeOpen}
+            onValueChange={setCustomizeOpen}
+            className="space-y-2.5"
+          >
             <SettingsCard value="greeting" icon={<Sparkles className="h-4 w-4" />} title="Saudação">
               <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
                 <div className="min-w-0 pr-3">
@@ -575,39 +619,6 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
-              <Button variant="outline" className="w-full" onClick={signOut}>
-                <LogOut className="mr-2 h-4 w-4" /> Sair da conta
-              </Button>
-
-              <div className="rounded-xl border border-border bg-muted/30 p-3.5">
-                <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Zona de perigo
-                </div>
-                <p className="mb-3 text-[11px] text-muted-foreground">
-                  Esta ação remove todos os ganhos e gastos da sua conta e não pode ser desfeita.
-                </p>
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={clearAll}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Apagar todos os meus dados
-                </Button>
-              </div>
-            </SettingsCard>
-          </Accordion>
-        </SectionGroup>
-
-        {/* ============== PERSONALIZAÇÃO ============== */}
-        <SectionGroup title="Personalização">
-          <Accordion
-            type="single"
-            collapsible
-            value={customizeOpen}
-            onValueChange={setCustomizeOpen}
-            className="space-y-2.5"
-          >
             <SettingsCard value="appearance" icon={<Palette className="h-4 w-4" />} title="Aparência">
               {/* Theme */}
               <div className="flex items-center justify-between rounded-xl border border-border/70 bg-muted/20 p-3 transition-colors hover:bg-muted/30">
@@ -989,12 +1000,6 @@ export default function SettingsPage() {
 
         {/* App footer */}
         <footer className="flex flex-col items-center gap-2 pt-4 pb-2 text-center text-[11px] leading-relaxed text-muted-foreground/80">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
-            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-medium text-foreground/80 transition hover:bg-muted"
-          >
-            <Sparkles className="h-3 w-3 text-primary" /> Refazer tour de boas-vindas
-          </button>
           <img
             src={volantSymbol}
             alt={APP_NAME}
