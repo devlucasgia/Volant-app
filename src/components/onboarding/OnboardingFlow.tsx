@@ -203,9 +203,9 @@ function WelcomeStep() {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
       <motion.div
-        initial={reduce ? {} : { scale: 0.6, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        initial={reduce ? {} : { scale: 0.85 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="relative mb-6"
       >
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
@@ -213,15 +213,19 @@ function WelcomeStep() {
           <img
             src="/volant-logo-splash.png"
             alt="Volant"
+            loading="eager"
+            decoding="sync"
+            // @ts-expect-error fetchpriority is valid HTML
+            fetchpriority="high"
             className="h-full w-full scale-110 object-cover"
           />
         </div>
       </motion.div>
 
       <motion.div
-        initial={reduce ? {} : { y: 16, opacity: 0 }}
+        initial={reduce ? {} : { y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.5 }}
+        transition={{ duration: 0.4 }}
         className="space-y-2"
       >
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">
