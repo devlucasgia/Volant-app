@@ -449,6 +449,17 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               )}
+
+              {/* Replay onboarding tour */}
+              <div className="pt-1">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
+                >
+                  <Sparkles className="mr-2 h-4 w-4 text-primary" /> Refazer tour de boas-vindas
+                </Button>
+              </div>
             </SettingsCard>
 
             <SettingsCard value="greeting" icon={<Sparkles className="h-4 w-4" />} title="Saudação">
