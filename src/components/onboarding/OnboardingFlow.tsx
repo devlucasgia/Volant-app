@@ -129,8 +129,8 @@ export function OnboardingFlow() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 mx-auto flex h-full max-w-md flex-col px-5 pt-2 pb-5">
-            <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="relative z-10 mx-auto flex w-full min-h-0 max-w-md flex-1 flex-col px-5 pt-2">
+            <div className="min-h-0 flex-1 overflow-y-auto pb-2">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={step}
@@ -152,8 +152,8 @@ export function OnboardingFlow() {
 
             {/* Footer CTA — always visible, respects iOS safe area */}
             <div
-              className="shrink-0 pt-4"
-              style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom))" }}
+              className="shrink-0 pt-3"
+              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
             >
               {isLast ? (
                 <Button
