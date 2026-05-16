@@ -283,14 +283,14 @@ function RegistroStep() {
             </div>
           </div>
 
-          {/* Bottom nav mock */}
-          <div className="relative border-t border-border bg-card/80 px-3 pt-2 pb-2">
+          {/* Bottom nav mock — real layout with center FAB */}
+          <div className="relative border-t border-border bg-card/80 px-2 pt-2 pb-1.5">
             <div className="grid grid-cols-5 items-center text-[8px] text-muted-foreground">
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Início</div>
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Histórico</div>
-              <div />
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Relatórios</div>
-              <div className="flex flex-col items-center"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" />Ajustes</div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-primary/60" /><span className="text-primary">Início</span></div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Histórico</span></div>
+              <div aria-hidden />
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Relatórios</span></div>
+              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Ajustes</span></div>
             </div>
           </div>
 
@@ -304,12 +304,12 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Radial actions */}
+          {/* Radial actions — float above FAB */}
           <AnimatePresence>
             {phase === "radial" && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
-                className="absolute inset-x-0 bottom-12 flex justify-center gap-2 px-3"
+                className="absolute inset-x-0 bottom-16 z-10 flex justify-center gap-2 px-3"
               >
                 <div className="flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1 text-[9px] font-semibold shadow-elevated">
                   <span className="grid h-4 w-4 place-items-center rounded-full bg-success/15 text-success">
@@ -327,7 +327,7 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Center FAB — pulsing in idle, X when radial open */}
+          {/* Center FAB — sits over the nav center column, sticking up slightly */}
           <motion.div
             animate={
               phase === "idle"
@@ -339,7 +339,7 @@ function RegistroStep() {
                 ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
                 : { duration: 0.25 }
             }
-            className="absolute left-1/2 bottom-6 -translate-x-1/2 grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab"
+            className="absolute left-1/2 bottom-3 z-20 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
           >
             {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
           </motion.div>
