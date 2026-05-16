@@ -754,15 +754,45 @@ function RelatoriosStep() {
           {/* Dias / Média dia */}
           <motion.div
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-2 text-center"
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-success/30 bg-card p-2 text-center"
           >
             <div>
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Dias ativos</div>
-              <div className="mt-0.5 text-[10px] font-bold">3 dias</div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">📅 Dias ativos</div>
+              <div className="mt-0.5 text-[10px] font-bold">4 dias</div>
             </div>
             <div className="border-l border-border">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Média / dia</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 370,89</div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">Média / dia</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 326,13</div>
+            </div>
+          </motion.div>
+
+          {/* KM total / Média km */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-info/30 bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">KM total</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">690 km</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">Média / km</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 2,52</div>
+            </div>
+          </motion.div>
+
+          {/* Corridas / R$ por corrida */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
+            className="mt-1.5 mb-1 grid grid-cols-2 gap-2 rounded-xl border border-[hsl(280_70%_60%/0.3)] bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">🏁 Corridas</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">39</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">R$ / corrida</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 44,59</div>
             </div>
           </motion.div>
         </div>
