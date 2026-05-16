@@ -585,48 +585,90 @@ function RelatoriosStep() {
     <StepShell
       eyebrow="Histórico & Relatórios"
       title="Veja para onde seu dinheiro vai"
-      description="Acompanhe bruto, gastos, lucro líquido e performance por hora, km, dia e corrida."
+      description="Bruto, gastos, líquido e performance por hora, km, dia e corrida."
     >
       <PhoneFrame>
-        <div className="absolute inset-0 flex flex-col">
-          <div className="border-b border-border/60 bg-card/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Relatórios
+        <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
+          {/* Header */}
+          <div className="mb-1.5">
+            <div className="text-[12px] font-bold leading-tight">Relatórios</div>
+            <div className="text-[8px] text-muted-foreground">maio de 2026</div>
           </div>
-          <div className="flex-1 space-y-2 p-3">
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <MockCard label="Bruto" value="R$ 4.820" tone="default" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <MockCard label="Gastos" value="R$ 1.150" tone="destructive" />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <MockCard label="Líquido" value="R$ 3.670" tone="success" />
-            </motion.div>
 
-            {/* Mini chart */}
+          {/* Period tabs */}
+          <div className="mb-2 grid grid-cols-3 gap-0.5 rounded-full border border-border bg-muted/30 p-0.5 text-[8px]">
+            <div className="rounded-full gradient-success py-1 text-center font-semibold text-primary-foreground">Por mês</div>
+            <div className="py-1 text-center text-muted-foreground">Por ano</div>
+            <div className="py-1 text-center text-muted-foreground">Person.</div>
+          </div>
+
+          {/* Lucro líquido big card with chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="mb-1.5 rounded-xl border border-success/40 bg-success/5 p-2"
+          >
+            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
+              <Wallet className="h-2.5 w-2.5" /> Lucro líquido
+            </div>
+            <div className="mt-0.5 text-base font-bold tabular-nums">R$ 1.112,67</div>
+            <svg viewBox="0 0 120 28" className="mt-1 h-6 w-full">
+              <motion.path
+                d="M2 24 Q14 22 22 22 T40 16 Q46 6 52 7 Q58 8 64 22 T120 22"
+                fill="none" stroke="hsl(var(--success))" strokeWidth="1.8" strokeLinecap="round"
+                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
+                transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+              />
+            </svg>
+          </motion.div>
+
+          {/* Média por hora */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="mb-1.5 rounded-xl border border-success/30 bg-success/5 p-2"
+          >
+            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
+              <Gauge className="h-2.5 w-2.5" /> Média por hora
+            </div>
+            <div className="mt-0.5 text-sm font-bold tabular-nums">R$ 59,46</div>
+            <div className="text-[8px] text-muted-foreground">com 24,0h trabalhadas</div>
+          </motion.div>
+
+          {/* Bruto / Gastos side by side */}
+          <div className="grid grid-cols-2 gap-1.5">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="rounded-lg border border-border bg-card p-2"
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+              className="rounded-xl border border-info/30 bg-info/5 p-2"
             >
-              <div className="mb-1 flex items-center gap-1 text-[9px] text-muted-foreground">
-                <BarChart3 className="h-3 w-3" /> Líquido por dia
+              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-info">
+                <Wallet className="h-2.5 w-2.5" /> Bruto
               </div>
-              <svg viewBox="0 0 120 36" className="h-9 w-full">
-                <motion.path
-                  d="M2 28 L20 22 L38 25 L56 14 L74 18 L92 8 L118 12"
-                  fill="none"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ delay: 0.7, duration: 1.2, ease: "easeOut" }}
-                />
-              </svg>
+              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 1.427,01</div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+              className="rounded-xl border border-destructive/30 bg-destructive/5 p-2"
+            >
+              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-destructive">
+                <Receipt className="h-2.5 w-2.5" /> Gastos
+              </div>
+              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 314,34</div>
             </motion.div>
           </div>
+
+          {/* Dias / Média dia */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-border bg-card p-2 text-center"
+          >
+            <div>
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Dias ativos</div>
+              <div className="mt-0.5 text-[10px] font-bold">3 dias</div>
+            </div>
+            <div className="border-l border-border">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Média / dia</div>
+              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 370,89</div>
+            </div>
+          </motion.div>
         </div>
       </PhoneFrame>
     </StepShell>
