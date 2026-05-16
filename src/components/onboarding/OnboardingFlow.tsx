@@ -769,40 +769,39 @@ function RelatoriosStep() {
  *  STEP 5 — Customização (real)
  * ============================================================ */
 function CustomizacaoStep() {
-  const [home, setHome] = useState({ journey: true, byApp: true, byExpense: false });
-  const [rep, setRep] = useState({ chart: true, perf: true });
+  // Real settings: tap the whole card to toggle on/off. No switches.
+  const [home, setHome] = useState<Record<string, boolean>>({
+    meta: true, performance: true, byApp: true, gastos: false, jornada: true,
+  });
 
-  // Animate toggles on mount to suggest interactivity
+  // Animate toggle to suggest tap-to-activate
   useEffect(() => {
-    const t1 = setTimeout(() => setHome((h) => ({ ...h, byExpense: true })), 900);
-    const t2 = setTimeout(() => setRep((r) => ({ ...r, perf: false })), 1500);
-    const t3 = setTimeout(() => setRep((r) => ({ ...r, perf: true })), 2400);
+    const t1 = setTimeout(() => setHome((h) => ({ ...h, gastos: true })), 900);
+    const t2 = setTimeout(() => setHome((h) => ({ ...h, byApp: false })), 1900);
+    const t3 = setTimeout(() => setHome((h) => ({ ...h, byApp: true })), 2700);
     return () => { [t1, t2, t3].forEach(clearTimeout); };
   }, []);
 
   return (
     <StepShell
       eyebrow="Personalização"
-      title="Monte do seu jeito"
-      description="Em Ajustes você escolhe quais cards aparecem na Tela de Início e nos Relatórios — e em qual ordem."
+      title="Monte a tela do seu jeito"
+      description="Em Ajustes, toque no card para ativar ou desativar. Reordene pela alça ou pelas setas."
     >
-      <div className="space-y-2.5">
-        <MiniSettingsCard icon={<Sliders className="h-3.5 w-3.5" />} title="Tela de Início">
-          <ToggleRow label="Jornada" icon={<Clock className="h-3 w-3" />} checked={home.journey} />
-          <ToggleRow label="Ganhos por aplicativo" icon={<BarChart3 className="h-3 w-3" />} checked={home.byApp} />
-          <ToggleRow label="Gastos por categoria" icon={<BarChart3 className="h-3 w-3" />} checked={home.byExpense} />
-          <DragHint />
-        </MiniSettingsCard>
-
-        <MiniSettingsCard icon={<BarChart3 className="h-3.5 w-3.5" />} title="Relatórios">
-          <ToggleRow label="Gráfico líquido por dia" icon={<BarChart3 className="h-3 w-3" />} checked={rep.chart} />
-          <ToggleRow label="Performance (R$/h, R$/km)" icon={<Sparkles className="h-3 w-3" />} checked={rep.perf} />
-        </MiniSettingsCard>
-      </div>
+      <MiniSettingsCard icon={<Sliders className="h-3.5 w-3.5" />} title="Tela inicial">
+        <p className="-mt-1 mb-1.5 text-[10px] leading-snug text-muted-foreground">
+          Toque no card para ativar/desativar. Arraste pela alça ou use as setas para reordenar.
+        </p>
+        <CardToggleRow label="Meta" icon={<Target className="h-3 w-3" />} active={home.meta} />
+        <CardToggleRow label="Performance" icon={<Gauge className="h-3 w-3" />} active={home.performance} />
+        <CardToggleRow label="Por app" icon={<BarChart3 className="h-3 w-3" />} active={home.byApp} />
+        <CardToggleRow label="Gastos" icon={<Receipt className="h-3 w-3" />} active={home.gastos} />
+        <CardToggleRow label="Jornada" icon={<Clock className="h-3 w-3" />} active={home.jornada} isLast />
+      </MiniSettingsCard>
 
       <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-foreground/80">
         <Sliders className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
-        <span>Ative só o que importa para você. Arraste para reordenar.</span>
+        <span>O mesmo funciona em Relatórios: você escolhe quais cards aparecem e em qual ordem.</span>
       </div>
     </StepShell>
   );
