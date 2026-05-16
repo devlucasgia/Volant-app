@@ -64,7 +64,7 @@ export function CarOnboardingDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) finish(true); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md z-[120]">
         <DialogHeader>
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
             <Car className="h-6 w-6" />
