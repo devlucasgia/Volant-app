@@ -331,22 +331,24 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Center FAB — sits over the nav center column, sticking up slightly */}
-          <motion.div
-            animate={
-              phase === "idle"
-                ? { scale: [1, 1.08, 1] }
-                : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
-            }
-            transition={
-              phase === "idle"
-                ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
-                : { duration: 0.25 }
-            }
-            className="absolute left-1/2 bottom-3 z-20 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
-          >
-            {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
-          </motion.div>
+          {/* Center FAB — anchored to nav center via flex centering for pixel-perfect alignment */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
+            <motion.div
+              animate={
+                phase === "idle"
+                  ? { scale: [1, 1.08, 1] }
+                  : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
+              }
+              transition={
+                phase === "idle"
+                  ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                  : { duration: 0.25 }
+              }
+              className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
+            >
+              {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
+            </motion.div>
+          </div>
 
           {/* Drawer mock — mirrors real "Novo registro" form */}
           <AnimatePresence>
