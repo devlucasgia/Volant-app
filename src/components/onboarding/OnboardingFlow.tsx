@@ -910,7 +910,7 @@ function StepShell({
         <h2 className="mt-1.5 text-[22px] font-bold leading-tight text-foreground">{title}</h2>
         <p className="mx-auto mt-2 max-w-[320px] text-[13.5px] leading-relaxed text-muted-foreground">{description}</p>
       </div>
-      <div className="flex flex-1 items-center justify-center">{children}</div>
+      <div className="flex flex-1 flex-col items-stretch justify-center gap-3">{children}</div>
     </div>
   );
 }
