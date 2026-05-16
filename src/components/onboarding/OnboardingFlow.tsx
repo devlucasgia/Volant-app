@@ -913,30 +913,46 @@ function MiniSettingsCard({
   );
 }
 
-function ToggleRow({
-  label, icon, checked,
-}: { label: string; icon: React.ReactNode; checked: boolean }) {
+function CardToggleRow({
+  label, icon, active, isLast,
+}: { label: string; icon: React.ReactNode; active: boolean; isLast?: boolean }) {
   return (
     <motion.div
       layout
-      className="flex items-center justify-between rounded-lg bg-muted/40 px-2.5 py-2"
+      animate={{
+        backgroundColor: active ? "hsl(var(--success) / 0.05)" : "hsl(var(--card))",
+      }}
+      transition={{ duration: 0.25 }}
+      className={cn(
+        "flex items-center justify-between rounded-xl border px-2.5 py-2",
+        active ? "border-success/50" : "border-border"
+      )}
     >
       <div className="flex items-center gap-2 text-[12px]">
         <GripVertical className="h-3 w-3 text-muted-foreground/60" />
-        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-background text-muted-foreground">
+        <span
+          className={cn(
+            "flex h-6 w-6 items-center justify-center rounded-full",
+            active ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+          )}
+        >
           {icon}
         </span>
-        <span>{label}</span>
+        <span className="font-medium">{label}</span>
       </div>
-      <Switch checked={checked} className="pointer-events-none scale-90" />
+      <div className="flex items-center gap-1.5">
+        <motion.span
+          animate={{ opacity: active ? 1 : 0.45 }}
+          className={cn(
+            "text-[9px] font-bold uppercase tracking-wider",
+            active ? "text-success" : "text-muted-foreground"
+          )}
+        >
+          {active ? "Ativo" : "Inativo"}
+        </motion.span>
+        <span className="text-muted-foreground/60">↑</span>
+        <span className={cn(isLast ? "text-muted-foreground/30" : "text-muted-foreground/80")}>↓</span>
+      </div>
     </motion.div>
-  );
-}
-
-function DragHint() {
-  return (
-    <div className="mt-1 flex items-center gap-1.5 px-1 text-[10px] text-muted-foreground/70">
-      <GripVertical className="h-3 w-3" /> Arraste para reordenar
-    </div>
   );
 }
