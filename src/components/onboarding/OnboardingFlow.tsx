@@ -421,36 +421,51 @@ function RegistroStep() {
  *  STEP 3 — Jornada (fictional scenario)
  * ============================================================ */
 function JornadaStep() {
-  // Looped scenario: idle → goal modal → running timer → end → drawer with hours
-  const PHASES = ["idle", "goal", "running", "ended"] as const;
+  // Looped: idle → goal → running → resting → running → ended (drawer)
+  const PHASES = ["idle", "goal", "running", "resting", "running2", "ended"] as const;
   type Phase = typeof PHASES[number];
   const [phase, setPhase] = useState<Phase>("idle");
-  const [seconds, setSeconds] = useState(0);
+  const [workSec, setWorkSec] = useState(0);
+  const [restSec, setRestSec] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("goal"), 700);
-    const t2 = setTimeout(() => setPhase("running"), 2000);
-    const t3 = setTimeout(() => setPhase("ended"), 5500);
-    const t4 = setTimeout(() => { setPhase("idle"); setSeconds(0); }, 9500);
-    return () => { [t1, t2, t3, t4].forEach(clearTimeout); };
+    const ts: any[] = [];
+    ts.push(setTimeout(() => setPhase("goal"), 600));
+    ts.push(setTimeout(() => setPhase("running"), 1900));
+    ts.push(setTimeout(() => setPhase("resting"), 4200));
+    ts.push(setTimeout(() => setPhase("running2"), 6000));
+    ts.push(setTimeout(() => setPhase("ended"), 7800));
+    ts.push(setTimeout(() => { setPhase("idle"); setWorkSec(0); setRestSec(0); }, 12500));
+    return () => ts.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
-    if (phase !== "running") return;
-    const i = setInterval(() => setSeconds((s) => s + 47), 90);
-    return () => clearInterval(i);
+    if (phase === "running" || phase === "running2") {
+      const i = setInterval(() => setWorkSec((s) => s + 53), 90);
+      return () => clearInterval(i);
+    }
+    if (phase === "resting") {
+      const i = setInterval(() => setRestSec((s) => s + 23), 90);
+      return () => clearInterval(i);
+    }
   }, [phase]);
 
-  const hh = String(Math.floor(seconds / 3600)).padStart(2, "0");
-  const mm = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
-  const ss = String(seconds % 60).padStart(2, "0");
-  const hoursDecimal = (seconds / 3600).toFixed(2).replace(".", ",");
+  const fmt = (sec: number) => {
+    const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+    const s = String(sec % 60).padStart(2, "0");
+    return `${h}:${m}:${s}`;
+  };
+  const hoursDecimal = (workSec / 3600).toFixed(2).replace(".", ",");
+
+  const isRunning = phase === "running" || phase === "running2";
+  const isResting = phase === "resting";
 
   return (
     <StepShell
       eyebrow="Jornada inteligente"
-      title="Comece com meta, encerre com ganho"
-      description="Defina sua meta ao iniciar. Ao encerrar, o registro de ganho abre com as horas já preenchidas."
+      title="Meta, descanso e ganho automático"
+      description="Defina a meta ao iniciar, pause para descansar e, ao encerrar, o registro de ganho abre com as horas já preenchidas."
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col bg-background">
@@ -463,29 +478,56 @@ function JornadaStep() {
               <div className="mb-2 flex items-center gap-1.5 text-[10px] text-muted-foreground">
                 <span className={cn(
                   "h-1.5 w-1.5 rounded-full",
-                  phase === "running" ? "bg-primary animate-pulse" :
+                  isRunning ? "bg-primary animate-pulse" :
+                  isResting ? "bg-warning" :
                   phase === "ended" ? "bg-success" : "bg-muted-foreground/40"
                 )} />
-                {phase === "running" ? "Trabalhando" : phase === "ended" ? "Encerrada" : "Parado"}
+                {isRunning ? "Trabalhando" : isResting ? "Em descanso" : phase === "ended" ? "Encerrada" : "Parado"}
               </div>
 
               <div className="flex flex-col items-center rounded-lg bg-muted/40 py-3">
                 <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Tempo</span>
                 <span className="mt-1 text-2xl font-bold tabular-nums leading-none">
-                  {hh}:{mm}:{ss}
+                  {fmt(workSec)}
                 </span>
               </div>
 
-              <div className="mt-2.5">
+              <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <div className="rounded-md bg-muted/50 px-2 py-1">
+                  <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Trabalhado</div>
+                  <div className="text-[10px] font-bold tabular-nums">{fmt(workSec)}</div>
+                </div>
+                <div className="rounded-md bg-muted/50 px-2 py-1">
+                  <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Descanso</div>
+                  <div className="text-[10px] font-bold tabular-nums">{fmt(restSec)}</div>
+                </div>
+              </div>
+
+              <div className="mt-2.5 space-y-1.5">
                 {phase === "idle" && (
                   <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
                     <Play className="h-3 w-3" /> Iniciar jornada
                   </div>
                 )}
-                {phase === "running" && (
-                  <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
-                    <StopCircle className="h-3 w-3" /> Encerrar jornada
-                  </div>
+                {isRunning && (
+                  <>
+                    <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md border border-border bg-card text-[11px] font-semibold">
+                      ☕ Pausar para descanso
+                    </div>
+                    <div className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
+                      <StopCircle className="h-3 w-3" /> Encerrar jornada
+                    </div>
+                  </>
+                )}
+                {isResting && (
+                  <>
+                    <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
+                      <Play className="h-3 w-3" /> Retornar do descanso
+                    </div>
+                    <div className="flex h-7 w-full items-center justify-center gap-1.5 rounded-md border border-destructive/40 text-[11px] font-semibold text-destructive">
+                      <StopCircle className="h-3 w-3" /> Encerrar jornada
+                    </div>
+                  </>
                 )}
                 {phase === "ended" && (
                   <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md bg-success/15 text-[11px] font-semibold text-success">
@@ -500,15 +542,11 @@ function JornadaStep() {
           <AnimatePresence>
             {phase === "goal" && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 flex items-end bg-background/70 backdrop-blur-sm"
               >
                 <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 22, stiffness: 220 }}
                   className="w-full rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
                 >
@@ -527,39 +565,89 @@ function JornadaStep() {
             )}
           </AnimatePresence>
 
-          {/* Earning drawer with prefilled hours */}
+          {/* Earning drawer mirroring the real "Novo registro" form */}
           <AnimatePresence>
             {phase === "ended" && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="absolute inset-0 flex items-end bg-background/70 backdrop-blur-sm"
               >
                 <motion.div
-                  initial={{ y: "100%" }}
-                  animate={{ y: 0 }}
-                  exit={{ y: "100%" }}
+                  initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 22, stiffness: 220, delay: 0.2 }}
-                  className="w-full rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
+                  className="max-h-[92%] w-full overflow-hidden rounded-t-2xl border-t border-border bg-card p-2.5 shadow-elevated"
                 >
-                  <div className="mx-auto mb-2 h-1 w-8 rounded-full bg-muted-foreground/30" />
-                  <div className="mb-1.5 text-[11px] font-semibold">Registrar ganho</div>
+                  <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-muted-foreground/30" />
+                  <div className="mb-2 text-center text-[11px] font-semibold">Novo registro</div>
+
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between rounded-md bg-muted/50 px-2 py-1.5 text-[11px]">
-                      <span className="text-muted-foreground">Horas</span>
-                      <motion.span
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.5 }}
-                        className="rounded bg-primary/15 px-1.5 py-0.5 font-bold tabular-nums text-primary"
-                      >
-                        {hoursDecimal} h ✓
-                      </motion.span>
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Data do registro</div>
+                      <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
+                        <Calendar className="h-2.5 w-2.5 text-muted-foreground" />
+                        16 de maio de 2026
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md bg-muted/30 px-2 py-1.5 text-[11px]">
-                      <span className="text-muted-foreground">Bruto</span>
-                      <span className="text-muted-foreground/60">R$ ___</span>
+
+                    <div className="grid grid-cols-2 gap-0.5 rounded-md border border-border bg-muted/30 p-0.5">
+                      <div className="flex items-center justify-center gap-1 rounded bg-card py-0.5 text-[9px] font-semibold">
+                        <TrendingUp className="h-2.5 w-2.5 text-success" /> Lucro
+                      </div>
+                      <div className="flex items-center justify-center gap-1 py-0.5 text-[9px] text-muted-foreground">
+                        <TrendingDown className="h-2.5 w-2.5" /> Gasto
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold">
+                        <span className="text-muted-foreground">Plataforma</span>
+                        <span className="text-primary">+ Nova plataforma</span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
+                        <div className="flex items-center gap-1.5">
+                          <div className="grid h-3.5 w-3.5 place-items-center rounded-full bg-foreground text-[5px] font-bold text-background">U</div>
+                          Uber
+                        </div>
+                        <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold text-muted-foreground">
+                        <span>Quilometragem</span>
+                        <span className="flex gap-0.5 rounded-full bg-muted/40 p-0.5">
+                          <span className="rounded-full bg-card px-1.5 py-0 text-[7px] text-foreground">Total</span>
+                          <span className="px-1.5 py-0 text-[7px]">Ini/Fim</span>
+                        </span>
+                      </div>
+                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Km rodados</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <div>
+                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Horas trabalhadas</div>
+                        <motion.div
+                          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.5 }}
+                          className="rounded-md border-2 border-success bg-success/10 px-2 py-1 text-[10px] font-bold tabular-nums text-success"
+                        >
+                          {hoursDecimal}
+                        </motion.div>
+                      </div>
+                      <div>
+                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Valor recebido</div>
+                        <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">R$ 0,00</div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Quantidade de corridas</div>
+                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Opcional</div>
+                    </div>
+
+                    <div className="flex gap-1.5 pt-1">
+                      <div className="flex-1 rounded-md border border-border py-1 text-center text-[10px]">Cancelar</div>
+                      <div className="flex-1 rounded-md gradient-success py-1 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
                     </div>
                   </div>
                 </motion.div>
@@ -572,7 +660,7 @@ function JornadaStep() {
       <div className="mt-3 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-2.5 text-[11px] text-foreground/80">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
         <span>
-          Inicia com a sua meta na cabeça e termina já com as horas trabalhadas no formulário.
+          Inicia com a meta, pausa para descansar e termina com as horas já no formulário.
         </span>
       </div>
     </StepShell>
