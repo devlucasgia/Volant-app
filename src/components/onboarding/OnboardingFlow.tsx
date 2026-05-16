@@ -865,7 +865,7 @@ function FinalStep({ onMount }: { onMount: () => void }) {
   }, [onMount]);
 
   return (
-    <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="flex min-h-full flex-1 flex-col items-center justify-center py-6 text-center">
       <motion.div
         initial={{ scale: 0.4, opacity: 0, rotate: -10 }}
         animate={{ scale: 1, opacity: 1, rotate: 0 }}
