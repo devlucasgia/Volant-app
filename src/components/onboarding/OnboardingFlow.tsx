@@ -759,12 +759,9 @@ function FinalStep({ onMount }: { onMount: () => void }) {
         initial={{ y: 12, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="mt-2 max-w-xs text-[14px] leading-relaxed text-muted-foreground"
+        className="mt-2 max-w-xs text-[15px] leading-relaxed text-foreground"
       >
-        <span className="bg-gradient-to-r from-primary to-primary-glow bg-clip-text font-semibold text-transparent">
-          Mais controle, mais lucro
-        </span>
-        {" "}— agora é com você.
+        Agora é com você — <span className="font-semibold text-primary">bora rodar e lucrar</span>.
       </motion.p>
     </div>
   );
