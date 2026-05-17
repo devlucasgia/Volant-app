@@ -1068,9 +1068,14 @@ function StepShell({
   );
 }
 
-function PhoneFrame({ children }: { children: React.ReactNode }) {
+function PhoneFrame({ children, compact }: { children: React.ReactNode; compact?: boolean }) {
   return (
-    <div className="relative mx-auto aspect-[9/16] h-auto max-h-[60vh] w-full max-w-[280px] overflow-hidden rounded-[32px] border-[3px] border-foreground/10 bg-card shadow-elevated">
+    <div
+      className={cn(
+        "relative mx-auto h-auto w-full overflow-hidden rounded-[32px] border-[3px] border-foreground/10 bg-card shadow-elevated",
+        compact ? "aspect-[3/4] max-h-[48vh] max-w-[260px]" : "aspect-[9/16] max-h-[60vh] max-w-[280px]",
+      )}
+    >
       {children}
     </div>
   );
