@@ -21,7 +21,7 @@ import {
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
-  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell,
+  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera,
 } from "lucide-react";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
