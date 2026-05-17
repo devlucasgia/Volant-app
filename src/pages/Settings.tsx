@@ -1038,3 +1038,29 @@ export default function SettingsPage() {
     </>
   );
 }
+
+/** Read-only preview of weekly/daily goals derived from the monthly goal. */
+function DerivedGoalsPreview({ monthlyGoal }: { monthlyGoal: number }) {
+  const { entries } = useData();
+  const g = deriveGoals(monthlyGoal, entries);
+  return (
+    <div className="grid grid-cols-2 gap-2 pt-1">
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Meta semanal estimada
+        </div>
+        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+          {g.weekly > 0 ? `R$ ${g.weekly.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
+        </div>
+      </div>
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Meta diária sugerida
+        </div>
+        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+          {g.daily > 0 ? `R$ ${g.daily.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
+        </div>
+      </div>
+    </div>
+  );
+}
