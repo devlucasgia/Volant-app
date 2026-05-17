@@ -8,7 +8,8 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp } from "lucide-react";
+import { startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
