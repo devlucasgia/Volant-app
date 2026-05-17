@@ -145,6 +145,7 @@ export function OnboardingFlow() {
                   {step === "jornada" && <JornadaStep />}
                   {step === "relatorios" && <RelatoriosStep />}
                   {step === "customizacao" && <CustomizacaoStep />}
+                  {step === "metas" && <MetasStep />}
                   {step === "final" && <FinalStep onMount={fireConfetti} />}
                 </motion.div>
               </AnimatePresence>
