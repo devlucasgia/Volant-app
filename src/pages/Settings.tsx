@@ -184,6 +184,8 @@ export default function SettingsPage() {
   const [greetingMessage, setGreetingMessage] = useState("");
   const [profileAvatar, setProfileAvatar] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
