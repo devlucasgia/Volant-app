@@ -842,26 +842,15 @@ export default function SettingsPage() {
               {(() => {
                 const lastMaintKm = draft.lastMaintenanceKm > 0 ? draft.lastMaintenanceKm : carInitialKm;
                 const intervalKm = draft.maintenanceIntervalKm || 0;
+                // Next maintenance target = last maintenance km + interval (absolute km on odometer)
                 const nextMaintKm = lastMaintKm + intervalKm;
                 const kmRemaining = intervalKm > 0 ? Math.max(0, nextMaintKm - realCurrentKm) : 0;
                 const overdue = intervalKm > 0 && realCurrentKm >= nextMaintKm;
                 return (
                   <>
-                    {/* Premium header */}
-                    <div className="flex items-start gap-3 -mt-1">
-                      <div className="relative shrink-0">
-                        <div className="absolute inset-0 rounded-2xl bg-success/25 blur-xl" aria-hidden />
-                        <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-success/30 bg-success/10 text-success shadow-[0_0_20px_-4px_hsl(var(--success)/0.5)]">
-                          <Wrench className="h-5 w-5" />
-                        </div>
-                      </div>
-                      <div className="min-w-0 flex-1 pt-0.5">
-                        <div className="text-[15px] font-semibold leading-tight">Manutenção preventiva</div>
-                        <div className="mt-1 text-xs leading-snug text-muted-foreground">
-                          Acompanhe e seja avisado quando for hora de cuidar do seu carro.
-                        </div>
-                      </div>
-                    </div>
+                    <p className="-mt-1 text-xs leading-snug text-muted-foreground">
+                      Configure o intervalo da manutenção e a Volant acompanha automaticamente os km registrados, avisando quando for hora de cuidar do carro.
+                    </p>
 
                     {activeCar && (
                       <div className="text-xs text-muted-foreground">
@@ -898,51 +887,50 @@ export default function SettingsPage() {
                     {/* Intelligent summary card */}
                     <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/[0.08] via-card to-card p-4 shadow-[0_0_24px_-12px_hsl(var(--success)/0.5)]">
                       <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-success/15 blur-3xl" aria-hidden />
-                      <div className="relative flex items-center justify-between gap-4">
+                      <div className="relative grid grid-cols-2 gap-3">
                         <div className="min-w-0">
-                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Km atual do carro</div>
-                          <div className="mt-3 text-[11px] uppercase tracking-wide text-muted-foreground">
-                            {overdue ? "Manutenção atrasada em" : "Próxima manutenção em"}
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Km atual do carro</div>
+                          <div className="mt-1 text-lg font-bold tabular-nums">{num(realCurrentKm, 0)} km</div>
+                        </div>
+                        <div className="min-w-0 text-right">
+                          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Próxima manutenção aos</div>
+                          <div className={cn(
+                            "mt-1 text-lg font-bold tabular-nums",
+                            overdue ? "text-destructive" : "text-foreground"
+                          )}>
+                            {intervalKm > 0 ? `${num(nextMaintKm, 0)} km` : "--"}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold tabular-nums">{num(realCurrentKm, 0)} km</div>
+                        <div className="col-span-2 mt-1 border-t border-border/60 pt-2 text-center">
                           <div className={cn(
-                            "mt-3 text-lg font-bold tabular-nums",
+                            "text-xs font-medium",
                             overdue ? "text-destructive" : "text-success"
                           )}>
                             {intervalKm > 0
-                              ? `${overdue ? "" : ""}${num(overdue ? realCurrentKm - nextMaintKm : kmRemaining, 0)} km`
-                              : "--"}
+                              ? overdue
+                                ? `Atrasada em ${num(realCurrentKm - nextMaintKm, 0)} km`
+                                : `Faltam ${num(kmRemaining, 0)} km`
+                              : "Defina um intervalo para começar"}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Automatic tracking explanation */}
-                    <div className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3.5">
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                        <Info className="h-3.5 w-3.5" />
-                      </div>
-                      <p className="text-xs leading-snug text-muted-foreground">
-                        A Volant acompanha automaticamente os quilômetros registrados no app.
-                      </p>
-                    </div>
-
-                    {/* How it works */}
-                    <div className="space-y-2.5 pt-1">
-                      <div className="text-sm font-semibold text-foreground">Como funciona</div>
-                      <div className="grid grid-cols-3 gap-2">
+                    {/* How it works — compact */}
+                    <div className="space-y-2 pt-1">
+                      <div className="text-xs font-semibold text-foreground">Como funciona</div>
+                      <div className="grid grid-cols-3 gap-1.5">
                         {[
-                          { icon: Route, text: "Você define o intervalo de manutenção." },
-                          { icon: Gauge, text: "A Volant calcula automaticamente conforme os km." },
-                          { icon: Bell, text: "Avisamos na tela inicial quando for hora." },
+                          { icon: Route, title: "Defina o intervalo", text: "Escolha de quantos em quantos km a manutenção deve ser feita." },
+                          { icon: Gauge, title: "Acompanhe automaticamente", text: "Os km acompanham os registros de ganhos realizados no Volant." },
+                          { icon: Bell, title: "Receba o aviso", text: "Quando chegar a hora, o alerta aparece na tela inicial." },
                         ].map((s, i) => (
-                          <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-success/30 bg-success/10 text-success">
-                              <s.icon className="h-4 w-4" />
+                          <div key={i} className="flex flex-col items-center gap-1 rounded-lg border border-border bg-card px-1.5 py-2 text-center">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full border border-success/30 bg-success/10 text-success">
+                              <s.icon className="h-3 w-3" />
                             </div>
-                            <p className="text-[10.5px] leading-snug text-muted-foreground">{s.text}</p>
+                            <p className="text-[10px] font-semibold leading-tight text-foreground">{s.title}</p>
+                            <p className="text-[9.5px] leading-snug text-muted-foreground">{s.text}</p>
                           </div>
                         ))}
                       </div>
