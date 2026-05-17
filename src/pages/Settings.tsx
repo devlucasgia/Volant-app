@@ -42,7 +42,7 @@ import type { Car as CarType, DashboardWidgets } from "@/types";
 import { PasswordChangeDialog } from "@/components/account/PasswordChangeDialog";
 import { FontSizeSheet } from "@/components/account/FontSizeSheet";
 import { useFontScale, FONT_SCALE_OPTIONS } from "@/lib/fontScale";
-import { friendlyDbError } from "@/lib/friendlyErrors";
+import { friendlyDbError, verifyImageSignature } from "@/lib/friendlyErrors";
 
 interface DraftSettings {
   monthlyGoal: number;
