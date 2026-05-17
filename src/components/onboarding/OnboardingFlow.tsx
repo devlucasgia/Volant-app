@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
-type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "final";
+type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "metas" | "final";
 
-const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "final"];
+const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "metas", "final"];
 
 export function OnboardingFlow() {
   const { user } = useAuth();
@@ -145,6 +145,7 @@ export function OnboardingFlow() {
                   {step === "jornada" && <JornadaStep />}
                   {step === "relatorios" && <RelatoriosStep />}
                   {step === "customizacao" && <CustomizacaoStep />}
+                  {step === "metas" && <MetasStep />}
                   {step === "final" && <FinalStep onMount={fireConfetti} />}
                 </motion.div>
               </AnimatePresence>
@@ -847,7 +848,160 @@ function CustomizacaoStep() {
 }
 
 /* ============================================================
- *  STEP 6 — Final
+ *  STEP 6 — Metas inteligentes (smart goals)
+ * ============================================================ */
+function MetasStep() {
+  const reduce = useReducedMotion();
+  // Animated state: progress and "earned" value count up smoothly
+  const MONTHLY = 6000;
+  const TARGET_EARNED = 2240;
+  const [earned, setEarned] = useState(0);
+
+  useEffect(() => {
+    if (reduce) { setEarned(TARGET_EARNED); return; }
+    const start = performance.now();
+    const duration = 1400;
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - p, 3);
+      setEarned(Math.round(TARGET_EARNED * eased));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    const delay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 350);
+    return () => { clearTimeout(delay); cancelAnimationFrame(raf); };
+  }, [reduce]);
+
+  const pct = Math.min(100, (earned / MONTHLY) * 100);
+  const remaining = Math.max(0, MONTHLY - earned);
+  const dailySuggested = Math.round(remaining / 18); // ~remaining days fictional
+
+  return (
+    <StepShell
+      eyebrow="Metas inteligentes"
+      title="Metas que evoluem com você"
+      description="Defina uma meta mensal e o Volant calcula sua meta semanal e diária automaticamente."
+    >
+      <PhoneFrame>
+        <div className="absolute inset-0 flex flex-col bg-background p-2.5">
+          {/* Header */}
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <div className="text-[11px] font-bold leading-tight">Olá, Lucas 👋</div>
+              <div className="text-[8px] text-muted-foreground">Meta mensal • maio</div>
+            </div>
+            <div className="rounded-full border border-border bg-card px-1.5 py-0.5 text-[7px] font-semibold text-muted-foreground">
+              Hoje · Semana · Mês
+            </div>
+          </div>
+
+          {/* Goal card with animated progress */}
+          <motion.div
+            initial={reduce ? {} : { y: 12, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="relative overflow-hidden rounded-xl border border-success/40 bg-success/5 p-2.5 shadow-[0_0_24px_-12px_hsl(var(--success)/0.6)]"
+          >
+            {/* soft glow */}
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.0, 0.35, 0.0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute -inset-2 rounded-2xl bg-success/15 blur-2xl"
+            />
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
+                  <Target className="h-2.5 w-2.5" /> Meta mensal
+                </div>
+                <div className="text-[8px] tabular-nums text-muted-foreground">
+                  R$ {MONTHLY.toLocaleString("pt-BR")},00
+                </div>
+              </div>
+
+              <div className="mt-1 flex items-baseline gap-1.5">
+                <motion.span
+                  key={earned}
+                  initial={reduce ? {} : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="text-[18px] font-bold tabular-nums text-success"
+                >
+                  R$ {earned.toLocaleString("pt-BR")}
+                </motion.span>
+                <span className="text-[9px] text-muted-foreground">conquistados</span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 1.4, ease: "easeOut" }}
+                  className="h-full rounded-full gradient-success"
+                />
+              </div>
+              <div className="mt-1 flex items-center justify-between text-[8px] text-muted-foreground tabular-nums">
+                <span>{pct.toFixed(0)}%</span>
+                <span>Faltam R$ {remaining.toLocaleString("pt-BR")}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Derived goals */}
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <motion.div
+              initial={reduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-lg border border-border bg-card p-1.5"
+            >
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">Meta semanal</div>
+              <div className="text-[11px] font-bold tabular-nums">R$ {Math.round(remaining / 2.6).toLocaleString("pt-BR")}</div>
+              <div className="text-[7px] text-muted-foreground">calculada</div>
+            </motion.div>
+            <motion.div
+              initial={reduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="rounded-lg border border-primary/30 bg-primary/5 p-1.5"
+            >
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Sugerida hoje</div>
+              <div className="text-[11px] font-bold tabular-nums">R$ {dailySuggested.toLocaleString("pt-BR")}</div>
+              <div className="text-[7px] text-muted-foreground">ajusta sozinha</div>
+            </motion.div>
+          </div>
+        </div>
+      </PhoneFrame>
+
+      <div className="mt-3 space-y-1.5">
+        <HighlightRow delay={0.6} text="Seus ganhos reduzem a meta restante automaticamente." />
+        <HighlightRow delay={0.75} text="A meta da jornada substitui a meta do dia quando definida." />
+        <HighlightRow delay={0.9} text="Tudo se atualiza sozinho — sem cálculo manual." />
+      </div>
+    </StepShell>
+  );
+}
+
+function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? {} : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className="flex items-start gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 text-[11px] text-foreground/85"
+    >
+      <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+      <span>{text}</span>
+    </motion.div>
+  );
+}
+
+/* ============================================================
+ *  STEP 7 — Final
  * ============================================================ */
 function FinalStep({ onMount }: { onMount: () => void }) {
   const { user } = useAuth();

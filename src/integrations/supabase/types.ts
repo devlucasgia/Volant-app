@@ -201,6 +201,7 @@ export type Database = {
           car_plate: string | null
           created_at: string
           display_name: string | null
+          goal_onboarded: boolean
           greeting_message: string | null
           id: string
           nickname: string | null
@@ -216,6 +217,7 @@ export type Database = {
           car_plate?: string | null
           created_at?: string
           display_name?: string | null
+          goal_onboarded?: boolean
           greeting_message?: string | null
           id: string
           nickname?: string | null
@@ -231,6 +233,7 @@ export type Database = {
           car_plate?: string | null
           created_at?: string
           display_name?: string | null
+          goal_onboarded?: boolean
           greeting_message?: string | null
           id?: string
           nickname?: string | null

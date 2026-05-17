@@ -60,6 +60,8 @@ export function CarOnboardingDialog() {
     }
     setSaving(false);
     setOpen(false);
+    // Notify the next first-run step (monthly goal) regardless of save/skip
+    window.dispatchEvent(new CustomEvent("volant:car-onboarding-finished"));
   };
 
   return (
