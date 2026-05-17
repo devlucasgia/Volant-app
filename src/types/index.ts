@@ -104,6 +104,7 @@ export interface DashboardWidgets {
 
 export interface Settings {
   dailyGoal: number;
+  monthlyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
   theme: "light" | "dark";

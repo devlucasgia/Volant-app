@@ -1,33 +1,34 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
-import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
 import { supabase } from "@/integrations/supabase/client";
-import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
+import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime, goalForPeriod, type CustomRange } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useGreetingStyle, greetingStyleClass } from "@/lib/greetingStyle";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import type { DateRange } from "react-day-picker";
 
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "day", label: "Hoje" },
-  { key: "week", label: "Semana" },
-  { key: "month", label: "Mês" },
-];
 
 export default function Dashboard() {
   const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { user } = useAuth();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
+  const [customRange, setCustomRange] = useState<CustomRange | null>(null);
+  const [calOpen, setCalOpen] = useState(false);
+  const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
   const [greetingStyle] = useGreetingStyle();
@@ -71,16 +72,44 @@ export default function Dashboard() {
       }
       return `${format(s, "d 'de' MMM", { locale: ptBR })} a ${format(e, "d 'de' MMM", { locale: ptBR })}`;
     }
-    return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
-  }, [period]);
+    if (period === "month") {
+      return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
+    }
+    // custom
+    if (customRange) {
+      const { from, to } = customRange;
+      const single = +from === +to || format(from, "yyyy-MM-dd") === format(to, "yyyy-MM-dd");
+      if (single) return `${format(from, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
+      const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
+      if (sameMonth) return `${format(from, "d", { locale: ptBR })} a ${format(to, "d 'de' MMMM", { locale: ptBR })}`;
+      return `${format(from, "d 'de' MMM", { locale: ptBR })} a ${format(to, "d 'de' MMM", { locale: ptBR })}`;
+    }
+    return "";
+  }, [period, customRange]);
 
-  const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
+  const filtered = useMemo(
+    () => filterByPeriod(entries, period, customRange ?? undefined),
+    [entries, period, customRange]
+  );
   const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
   const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
-  const dayEarnings = useMemo(() => summarize(filterByPeriod(entries, "day")).gross, [entries]);
-  const goalPct = settings.dailyGoal > 0 ? Math.min(100, (dayEarnings / settings.dailyGoal) * 100) : 0;
+  // Daily-journey goal override (today only, set inside Jornada modal).
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const journeyDailyOverride = useMemo(() => {
+    try {
+      const raw = localStorage.getItem(`volant_day_goal_${todayKey}`);
+      const n = raw ? Number(raw) : 0;
+      return n > 0 ? n : null;
+    } catch { return null; }
+  }, [todayKey, settings.monthlyGoal, calOpen]);
+
+  const periodGoal = useMemo(
+    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride),
+    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride]
+  );
+  const goalPct = periodGoal.value > 0 ? Math.min(100, (s.gross / periodGoal.value) * 100) : 0;
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
@@ -123,14 +152,16 @@ export default function Dashboard() {
       <div key="goal" className="rounded-2xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold">
-            <Target className="h-4 w-4 text-primary" /> Meta diária
+            <Target className="h-4 w-4 text-primary" /> {periodGoal.title}
           </div>
           <div className="text-sm tabular-nums text-muted-foreground">
-            {brl(dayEarnings)} / {brl(settings.dailyGoal)}
+            {brl(s.gross)} / {brl(periodGoal.value)}
           </div>
         </div>
         <Progress value={goalPct} className="mt-3 h-2" />
-        <div className="mt-1 text-right text-xs text-muted-foreground">{num(goalPct, 0)}%</div>
+        <div className="mt-1 text-right text-xs text-muted-foreground">
+          {periodGoal.value > 0 ? `${num(goalPct, 0)}%` : "Defina sua meta mensal em Ajustes"}
+        </div>
       </div>
     ) : null,
 
@@ -247,8 +278,57 @@ export default function Dashboard() {
         {/* Greeting (fixed at top of body, toggleable via personalization) */}
         {blocks.greeting}
 
-        {/* Period switcher */}
-        <Segmented<Period> options={PERIODS} value={period} onChange={setPeriod} />
+        {/* Period switcher — Hoje | Semana | Mês | Calendário */}
+        <PeriodBar
+          period={period}
+          onSelect={(p) => { setPeriod(p); setCustomRange(null); }}
+          onCalendarClick={() => {
+            setCalDraft(customRange ? { from: customRange.from, to: customRange.to } : undefined);
+            setCalOpen(true);
+          }}
+        />
+
+        <Drawer open={calOpen} onOpenChange={setCalOpen}>
+          <DrawerContent>
+            <div className="mx-auto w-full max-w-md">
+              <DrawerHeader>
+                <DrawerTitle className="flex items-center gap-2">
+                  <CalendarRange className="h-4 w-4 text-success" /> Selecionar período
+                </DrawerTitle>
+                <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex justify-center px-2">
+                <Calendar
+                  mode="range"
+                  selected={calDraft}
+                  onSelect={setCalDraft}
+                  numberOfMonths={1}
+                  locale={ptBR}
+                  className="pointer-events-auto"
+                />
+              </div>
+              <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+                <Button variant="outline" className="flex-1" onClick={() => setCalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1 gradient-success text-primary-foreground"
+                  disabled={!calDraft?.from}
+                  onClick={() => {
+                    if (!calDraft?.from) return;
+                    const from = calDraft.from;
+                    const to = calDraft.to ?? calDraft.from;
+                    setCustomRange({ from, to });
+                    setPeriod("custom");
+                    setCalOpen(false);
+                  }}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
 
         {/* Net highlight — refined premium card (always visible, hero block) */}
         <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
@@ -311,3 +391,59 @@ export default function Dashboard() {
     </>
   );
 }
+
+/**
+ * Period selector with Hoje | Semana | Mês | Calendar icon — all four
+ * share the same green active state used elsewhere in the app.
+ */
+function PeriodBar({
+  period, onSelect, onCalendarClick,
+}: {
+  period: Period;
+  onSelect: (p: Period) => void;
+  onCalendarClick: () => void;
+}) {
+  const items: { key: Period; label: string }[] = [
+    { key: "day", label: "Hoje" },
+    { key: "week", label: "Semana" },
+    { key: "month", label: "Mês" },
+  ];
+  const activeClass =
+    "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
+  const inactiveClass = "text-muted-foreground hover:text-foreground";
+  return (
+    <div role="tablist" className="flex w-full items-stretch gap-1 rounded-xl border border-border/60 bg-muted/60 p-1">
+      {items.map((o) => {
+        const active = period === o.key;
+        return (
+          <button
+            key={o.key}
+            role="tab"
+            aria-selected={active}
+            onClick={() => onSelect(o.key)}
+            className={cn(
+              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200",
+              active ? activeClass : inactiveClass
+            )}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+      <button
+        type="button"
+        role="tab"
+        aria-label="Selecionar período no calendário"
+        aria-selected={period === "custom"}
+        onClick={onCalendarClick}
+        className={cn(
+          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+          period === "custom" ? activeClass : inactiveClass
+        )}
+      >
+        <CalendarRange className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+

@@ -13,7 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
-import { totalKmAllTime } from "@/lib/stats";
+import { totalKmAllTime, deriveGoals } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
@@ -45,14 +45,14 @@ import { useFontScale, FONT_SCALE_OPTIONS } from "@/lib/fontScale";
 import { friendlyDbError } from "@/lib/friendlyErrors";
 
 interface DraftSettings {
-  dailyGoal: number;
+  monthlyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
 }
 
-function buildDraft(s: { dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
+function buildDraft(s: { monthlyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
   return {
-    dailyGoal: s.dailyGoal,
+    monthlyGoal: s.monthlyGoal,
     maintenanceIntervalKm: s.maintenanceIntervalKm,
     lastMaintenanceKm: s.lastMaintenanceKm,
   };
@@ -256,7 +256,7 @@ export default function SettingsPage() {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  const goalsDirty = draft.dailyGoal !== settings.dailyGoal;
+  const goalsDirty = draft.monthlyGoal !== settings.monthlyGoal;
   const maintDirty =
     draft.maintenanceIntervalKm !== settings.maintenanceIntervalKm ||
     draft.lastMaintenanceKm !== settings.lastMaintenanceKm;
@@ -267,7 +267,7 @@ export default function SettingsPage() {
   const saveGoals = async () => {
     setSavingGoals(true);
     try {
-      await updateSettings({ dailyGoal: draft.dailyGoal });
+      await updateSettings({ monthlyGoal: draft.monthlyGoal });
       toast.success("Meta atualizada");
     } catch {
       toast.error("Não foi possível salvar");
@@ -935,14 +935,14 @@ export default function SettingsPage() {
 
             <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas e objetivos">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Meta diária</Label>
+                <Label className="text-xs text-muted-foreground">Meta mensal</Label>
                 <NumberField
                   currency
-                  value={draft.dailyGoal || null}
-                  onChange={(v) => setDraft((d) => ({ ...d, dailyGoal: v ?? 0 }))}
+                  value={draft.monthlyGoal || null}
+                  onChange={(v) => setDraft((d) => ({ ...d, monthlyGoal: v ?? 0 }))}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Define o objetivo de ganho líquido para cada dia trabalhado.
+                  Sua meta principal. A Volant calcula a meta semanal e diária a partir dela.
                 </p>
               </div>
 
@@ -950,17 +950,11 @@ export default function SettingsPage() {
                 {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
-              <div className="pt-1">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Metas avançadas
-                </div>
-                <div className="space-y-2">
-                  <SoonRow label="Meta semanal" hint="Influencia sugestões diárias automaticamente" />
-                  <SoonRow label="Meta mensal" hint="Define o objetivo principal do mês" />
-                  <SoonRow label="Bruto ou líquido" hint="Escolha como suas metas serão calculadas" />
-                  <SoonRow label="Sugestões inteligentes" hint="Volant calcula a meta diária a partir da mensal" />
-                </div>
-              </div>
+              <DerivedGoalsPreview monthlyGoal={settings.monthlyGoal} />
+
+              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+                A Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
+              </p>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
@@ -1042,5 +1036,31 @@ export default function SettingsPage() {
         editing={platDialog.editing}
       />
     </>
+  );
+}
+
+/** Read-only preview of weekly/daily goals derived from the monthly goal. */
+function DerivedGoalsPreview({ monthlyGoal }: { monthlyGoal: number }) {
+  const { entries } = useData();
+  const g = deriveGoals(monthlyGoal, entries);
+  return (
+    <div className="grid grid-cols-2 gap-2 pt-1">
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Meta semanal estimada
+        </div>
+        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+          {g.weekly > 0 ? `R$ ${g.weekly.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
+        </div>
+      </div>
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Meta diária sugerida
+        </div>
+        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+          {g.daily > 0 ? `R$ ${g.daily.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
+        </div>
+      </div>
+    </div>
   );
 }

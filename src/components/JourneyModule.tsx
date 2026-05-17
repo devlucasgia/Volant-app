@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { NumberField } from "@/components/NumberField";
 import { Label } from "@/components/ui/label";
@@ -7,20 +7,36 @@ import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { Play, RotateCcw, Coffee, StopCircle, CheckCircle2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { deriveGoals } from "@/lib/stats";
+import { format } from "date-fns";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 
+const todayKey = () => format(new Date(), "yyyy-MM-dd");
+const readDayGoal = (): number | null => {
+  try {
+    const raw = localStorage.getItem(`volant_day_goal_${todayKey()}`);
+    const n = raw ? Number(raw) : 0;
+    return n > 0 ? n : null;
+  } catch { return null; }
+};
+
 export function JourneyModule() {
   const { state, workMs, restMs, start, pauseRest, resumeWork, endJourney, reset } = useTimer();
-  const { settings, updateSettings } = useData();
+  const { settings, entries } = useData();
   const { openDrawer } = useUI();
+
+  const suggestedDaily = useMemo(
+    () => Math.round(deriveGoals(settings.monthlyGoal, entries).daily),
+    [settings.monthlyGoal, entries]
+  );
 
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
-  const [goalValue, setGoalValue] = useState<number | null>(settings.dailyGoal || null);
+  const [goalValue, setGoalValue] = useState<number | null>(readDayGoal() ?? suggestedDaily ?? null);
   const [pendingResetThenStart, setPendingResetThenStart] = useState(false);
 
   const totalMs = workMs + restMs;
@@ -38,19 +54,19 @@ export function JourneyModule() {
     state === "ended" ? "bg-success" : "bg-muted-foreground/40";
 
   const openGoal = (resetFirst: boolean) => {
-    setGoalValue(settings.dailyGoal || null);
+    setGoalValue(readDayGoal() ?? suggestedDaily ?? null);
     setPendingResetThenStart(resetFirst);
     setGoalOpen(true);
   };
 
   const confirmGoalAndStart = async () => {
     const v = goalValue ?? 0;
-    if (v !== settings.dailyGoal) {
-      try { await updateSettings({ dailyGoal: v }); } catch { /* noop */ }
-    }
+    try {
+      if (v > 0) localStorage.setItem(`volant_day_goal_${todayKey()}`, String(v));
+      else localStorage.removeItem(`volant_day_goal_${todayKey()}`);
+    } catch { /* noop */ }
     setGoalOpen(false);
     if (pendingResetThenStart) reset();
-    // small delay-free start; reset is sync state setter
     start();
   };
 

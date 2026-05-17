@@ -45,8 +45,9 @@ const Ctx = createContext<DataCtx | null>(null);
 
 const DEFAULT_WIDGETS: DashboardWidgets = { goal: true, stats: true, byApp: true, byExpense: true, greeting: true, journey: true };
 const DEFAULT_SETTINGS: Settings = {
-  dailyGoal: 250,
-  maintenanceIntervalKm: 10000,
+  dailyGoal: 0,
+  monthlyGoal: 0,
+  maintenanceIntervalKm: 0,
   lastMaintenanceKm: 0,
   theme: "dark",
   dashboardWidgets: DEFAULT_WIDGETS,
@@ -150,6 +151,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const dw = (sRow as any).dashboard_widgets || {};
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
+          monthlyGoal: Number((sRow as any).monthly_goal) || 0,
           maintenanceIntervalKm: Number(sRow.maintenance_interval_km) || 0,
           lastMaintenanceKm: Number(sRow.last_maintenance_km) || 0,
           theme: (sRow.theme as "light" | "dark") || "dark",
@@ -196,6 +198,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSettings(next);
     const { error } = await supabase.from("user_settings").upsert({
       user_id: user.id, daily_goal: next.dailyGoal,
+      monthly_goal: next.monthlyGoal,
       maintenance_interval_km: next.maintenanceIntervalKm,
       last_maintenance_km: next.lastMaintenanceKm, theme: next.theme,
       dashboard_widgets: next.dashboardWidgets as any,
