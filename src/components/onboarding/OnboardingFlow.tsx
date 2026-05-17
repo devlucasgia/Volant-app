@@ -883,10 +883,10 @@ function MetasStep() {
       title="Metas que evoluem com você"
       description="Defina uma meta mensal e o Volant calcula sua meta semanal e diária automaticamente."
     >
-      <PhoneFrame>
+      <PhoneFrame compact>
         <div className="absolute inset-0 flex flex-col bg-background p-2.5">
           {/* Header */}
-          <div className="mb-2 flex items-center justify-between">
+          <div className="mb-1.5 flex items-center justify-between">
             <div>
               <div className="text-[11px] font-bold leading-tight">Olá, Lucas 👋</div>
               <div className="text-[8px] text-muted-foreground">Meta mensal • maio</div>
