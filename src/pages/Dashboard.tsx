@@ -451,7 +451,7 @@ export default function Dashboard() {
                   ? `Você ultrapassou em ${num(Math.abs(kmToNext), 0)} km`
                   : `Faltam ${num(kmToNext, 0)} km para a próxima revisão`}
               </div>
-              <div className="mt-1 text-[11px] font-medium text-primary">Toque para registrar →</div>
+              <div className="mt-1 text-[11px] font-medium text-primary">Registrar manutenção →</div>
             </div>
           </button>
         )}
