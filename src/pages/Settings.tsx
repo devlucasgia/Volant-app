@@ -45,14 +45,14 @@ import { useFontScale, FONT_SCALE_OPTIONS } from "@/lib/fontScale";
 import { friendlyDbError } from "@/lib/friendlyErrors";
 
 interface DraftSettings {
-  dailyGoal: number;
+  monthlyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
 }
 
-function buildDraft(s: { dailyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
+function buildDraft(s: { monthlyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
   return {
-    dailyGoal: s.dailyGoal,
+    monthlyGoal: s.monthlyGoal,
     maintenanceIntervalKm: s.maintenanceIntervalKm,
     lastMaintenanceKm: s.lastMaintenanceKm,
   };
