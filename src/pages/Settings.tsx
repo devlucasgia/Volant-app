@@ -13,7 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { CarFormDialog } from "@/components/CarFormDialog";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
-import { totalKmAllTime } from "@/lib/stats";
+import { totalKmAllTime, deriveGoals } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
