@@ -839,40 +839,125 @@ export default function SettingsPage() {
             </SettingsCard>
 
             <SettingsCard value="maint" icon={<Wrench className="h-4 w-4" />} title="Manutenção preventiva">
-              {activeCar && (
-                <div className="text-xs text-muted-foreground">
-                  Carro ativo: <span className="font-semibold text-foreground">{carLabel(activeCar)}</span>
-                </div>
-              )}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Intervalo (km)</Label>
-                <NumberField
-                  value={draft.maintenanceIntervalKm || null}
-                  onChange={(v) => setDraft((d) => ({ ...d, maintenanceIntervalKm: v ?? 0 }))}
-                  decimal={false}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Última manutenção feita em (km)</Label>
-                <NumberField
-                  value={draft.lastMaintenanceKm || null}
-                  onChange={(v) => setDraft((d) => ({ ...d, lastMaintenanceKm: v ?? 0 }))}
-                  decimal={false}
-                />
-              </div>
-              <div className="rounded-xl bg-muted/60 p-3 text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Km atual do carro</span>
-                  <span className="font-semibold tabular-nums">{num(realCurrentKm, 1)} km</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Km rodados no app</span>
-                  <span className="font-semibold tabular-nums">{num(totalKmDriven, 1)} km</span>
-                </div>
-              </div>
-              <Button onClick={saveMaint} disabled={savingMaint || !maintDirty} className="w-full">
-                {savingMaint ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
-              </Button>
+              {(() => {
+                const lastMaintKm = draft.lastMaintenanceKm > 0 ? draft.lastMaintenanceKm : carInitialKm;
+                const intervalKm = draft.maintenanceIntervalKm || 0;
+                const nextMaintKm = lastMaintKm + intervalKm;
+                const kmRemaining = intervalKm > 0 ? Math.max(0, nextMaintKm - realCurrentKm) : 0;
+                const overdue = intervalKm > 0 && realCurrentKm >= nextMaintKm;
+                return (
+                  <>
+                    {/* Premium header */}
+                    <div className="flex items-start gap-3 -mt-1">
+                      <div className="relative shrink-0">
+                        <div className="absolute inset-0 rounded-2xl bg-success/25 blur-xl" aria-hidden />
+                        <div className="relative flex h-11 w-11 items-center justify-center rounded-2xl border border-success/30 bg-success/10 text-success shadow-[0_0_20px_-4px_hsl(var(--success)/0.5)]">
+                          <Wrench className="h-5 w-5" />
+                        </div>
+                      </div>
+                      <div className="min-w-0 flex-1 pt-0.5">
+                        <div className="text-[15px] font-semibold leading-tight">Manutenção preventiva</div>
+                        <div className="mt-1 text-xs leading-snug text-muted-foreground">
+                          Acompanhe e seja avisado quando for hora de cuidar do seu carro.
+                        </div>
+                      </div>
+                    </div>
+
+                    {activeCar && (
+                      <div className="text-xs text-muted-foreground">
+                        Carro ativo: <span className="font-semibold text-foreground">{carLabel(activeCar)}</span>
+                      </div>
+                    )}
+
+                    {/* Interval field */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-foreground">Intervalo (km)</Label>
+                      <p className="text-[11px] leading-snug text-muted-foreground">
+                        Defina de quantos em quantos quilômetros a manutenção deve ser feita.
+                      </p>
+                      <NumberField
+                        value={draft.maintenanceIntervalKm || null}
+                        onChange={(v) => setDraft((d) => ({ ...d, maintenanceIntervalKm: v ?? 0 }))}
+                        decimal={false}
+                      />
+                    </div>
+
+                    {/* Last maintenance field */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-medium text-foreground">Última manutenção feita em (km)</Label>
+                      <p className="text-[11px] leading-snug text-muted-foreground">
+                        Informe a quilometragem da última manutenção realizada.
+                      </p>
+                      <NumberField
+                        value={draft.lastMaintenanceKm || null}
+                        onChange={(v) => setDraft((d) => ({ ...d, lastMaintenanceKm: v ?? 0 }))}
+                        decimal={false}
+                      />
+                    </div>
+
+                    {/* Intelligent summary card */}
+                    <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/[0.08] via-card to-card p-4 shadow-[0_0_24px_-12px_hsl(var(--success)/0.5)]">
+                      <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-success/15 blur-3xl" aria-hidden />
+                      <div className="relative flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Km atual do carro</div>
+                          <div className="mt-3 text-[11px] uppercase tracking-wide text-muted-foreground">
+                            {overdue ? "Manutenção atrasada em" : "Próxima manutenção em"}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-bold tabular-nums">{num(realCurrentKm, 0)} km</div>
+                          <div className={cn(
+                            "mt-3 text-lg font-bold tabular-nums",
+                            overdue ? "text-destructive" : "text-success"
+                          )}>
+                            {intervalKm > 0
+                              ? `${overdue ? "" : ""}${num(overdue ? realCurrentKm - nextMaintKm : kmRemaining, 0)} km`
+                              : "--"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Automatic tracking explanation */}
+                    <div className="flex items-start gap-3 rounded-2xl border border-border bg-muted/30 p-3.5">
+                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+                        <Info className="h-3.5 w-3.5" />
+                      </div>
+                      <p className="text-xs leading-snug text-muted-foreground">
+                        A Volant acompanha automaticamente os quilômetros registrados no app.
+                      </p>
+                    </div>
+
+                    {/* How it works */}
+                    <div className="space-y-2.5 pt-1">
+                      <div className="text-sm font-semibold text-foreground">Como funciona</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { icon: Route, text: "Você define o intervalo de manutenção." },
+                          { icon: Gauge, text: "A Volant calcula automaticamente conforme os km." },
+                          { icon: Bell, text: "Avisamos na tela inicial quando for hora." },
+                        ].map((s, i) => (
+                          <div key={i} className="flex flex-col items-center gap-2 rounded-xl border border-border bg-card p-3 text-center">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-success/30 bg-success/10 text-success">
+                              <s.icon className="h-4 w-4" />
+                            </div>
+                            <p className="text-[10.5px] leading-snug text-muted-foreground">{s.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={saveMaint}
+                      disabled={savingMaint || !maintDirty}
+                      className="mt-2 w-full h-11 shadow-[0_8px_24px_-8px_hsl(var(--success)/0.45)]"
+                    >
+                      {savingMaint ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
+                    </Button>
+                  </>
+                );
+              })()}
             </SettingsCard>
           </Accordion>
         </SectionGroup>
