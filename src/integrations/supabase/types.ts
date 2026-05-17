@@ -245,6 +245,7 @@ export type Database = {
           dashboard_widgets: Json
           last_maintenance_km: number
           maintenance_interval_km: number
+          monthly_goal: number
           theme: string
           updated_at: string
           user_id: string
@@ -254,6 +255,7 @@ export type Database = {
           dashboard_widgets?: Json
           last_maintenance_km?: number
           maintenance_interval_km?: number
+          monthly_goal?: number
           theme?: string
           updated_at?: string
           user_id: string
@@ -263,6 +265,7 @@ export type Database = {
           dashboard_widgets?: Json
           last_maintenance_km?: number
           maintenance_interval_km?: number
+          monthly_goal?: number
           theme?: string
           updated_at?: string
           user_id?: string
