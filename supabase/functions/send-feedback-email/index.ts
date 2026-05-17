@@ -67,6 +67,68 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+    // ---- Rate limiting (per authenticated user) ----
+    // Limits: max 3 submissions per minute AND max 5 per 10 minutes.
+    // Also blocks exact duplicate (same type+title+description) within 60s.
+    const nowMs = Date.now();
+    const oneMinAgo = new Date(nowMs - 60 * 1000).toISOString();
+    const tenMinAgo = new Date(nowMs - 10 * 60 * 1000).toISOString();
+
+    const { data: recent, error: recentErr } = await admin
+      .from("feedback_reports")
+      .select("created_at,type,title,description")
+      .eq("user_id", user.id)
+      .gte("created_at", tenMinAgo)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (recentErr) {
+      console.error("[send-feedback-email] rate-limit lookup failed", recentErr);
+    } else if (recent) {
+      const inLastMinute = recent.filter((r) => r.created_at >= oneMinAgo).length;
+      const inLastTenMin = recent.length;
+
+      if (inLastMinute >= 3 || inLastTenMin >= 5) {
+        const retryAfter = inLastMinute >= 3 ? 60 : 600;
+        console.warn("[send-feedback-email] rate_limited", {
+          user_id: user.id,
+          inLastMinute,
+          inLastTenMin,
+          retryAfter,
+        });
+        return new Response(
+          JSON.stringify({
+            error: "rate_limited",
+            message:
+              "Você enviou muitos feedbacks em pouco tempo. Aguarde alguns minutos e tente novamente.",
+            retryAfter,
+          }),
+          {
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(retryAfter) },
+          },
+        );
+      }
+
+      const dup = recent.find(
+        (r) =>
+          r.created_at >= oneMinAgo &&
+          r.type === body.type &&
+          r.title === title &&
+          r.description === description,
+      );
+      if (dup) {
+        console.warn("[send-feedback-email] duplicate_submission_blocked", { user_id: user.id });
+        return new Response(
+          JSON.stringify({
+            error: "duplicate",
+            message: "Este feedback acabou de ser enviado. Aguarde um instante antes de reenviar.",
+          }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" } },
+        );
+      }
+    }
+
     // Build attachment + signed URL when present
     let attachment: { filename: string; content: string } | null = null;
     let signedUrl: string | null = null;
