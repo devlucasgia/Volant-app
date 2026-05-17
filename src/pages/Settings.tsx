@@ -935,14 +935,14 @@ export default function SettingsPage() {
 
             <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas e objetivos">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Meta diária</Label>
+                <Label className="text-xs text-muted-foreground">Meta mensal</Label>
                 <NumberField
                   currency
-                  value={draft.dailyGoal || null}
-                  onChange={(v) => setDraft((d) => ({ ...d, dailyGoal: v ?? 0 }))}
+                  value={draft.monthlyGoal || null}
+                  onChange={(v) => setDraft((d) => ({ ...d, monthlyGoal: v ?? 0 }))}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Define o objetivo de ganho líquido para cada dia trabalhado.
+                  Sua meta principal. A Volant calcula a meta semanal e diária a partir dela.
                 </p>
               </div>
 
@@ -950,17 +950,11 @@ export default function SettingsPage() {
                 {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
-              <div className="pt-1">
-                <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  Metas avançadas
-                </div>
-                <div className="space-y-2">
-                  <SoonRow label="Meta semanal" hint="Influencia sugestões diárias automaticamente" />
-                  <SoonRow label="Meta mensal" hint="Define o objetivo principal do mês" />
-                  <SoonRow label="Bruto ou líquido" hint="Escolha como suas metas serão calculadas" />
-                  <SoonRow label="Sugestões inteligentes" hint="Volant calcula a meta diária a partir da mensal" />
-                </div>
-              </div>
+              <DerivedGoalsPreview monthlyGoal={settings.monthlyGoal} />
+
+              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
+                A Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
+              </p>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
