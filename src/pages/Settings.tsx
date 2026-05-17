@@ -977,7 +977,7 @@ export default function SettingsPage() {
                 return (
                   <>
                     <p className="-mt-1 text-xs leading-snug text-muted-foreground">
-                      Configure o intervalo da manutenção e a Volant acompanha automaticamente os km registrados, avisando quando for hora de cuidar do carro.
+                      Configure o intervalo da manutenção e o Volant acompanha automaticamente os km registrados, avisando quando for hora de cuidar do carro.
                     </p>
 
                     {activeCar && (
@@ -1148,7 +1148,7 @@ export default function SettingsPage() {
                   onChange={(v) => setDraft((d) => ({ ...d, monthlyGoal: v ?? 0 }))}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Sua meta principal. A Volant calcula a meta semanal e diária a partir dela.
+                  Sua meta principal. O Volant calcula a meta semanal e diária a partir dela.
                 </p>
               </div>
 
@@ -1159,7 +1159,7 @@ export default function SettingsPage() {
               <DerivedGoalsPreview monthlyGoal={settings.monthlyGoal} />
 
               <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
-                A Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
+                O Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
               </p>
             </SettingsCard>
           </Accordion>
