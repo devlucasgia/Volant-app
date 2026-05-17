@@ -152,14 +152,16 @@ export default function Dashboard() {
       <div key="goal" className="rounded-2xl border border-border bg-card p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-semibold">
-            <Target className="h-4 w-4 text-primary" /> Meta diária
+            <Target className="h-4 w-4 text-primary" /> {periodGoal.title}
           </div>
           <div className="text-sm tabular-nums text-muted-foreground">
-            {brl(dayEarnings)} / {brl(settings.dailyGoal)}
+            {brl(s.gross)} / {brl(periodGoal.value)}
           </div>
         </div>
         <Progress value={goalPct} className="mt-3 h-2" />
-        <div className="mt-1 text-right text-xs text-muted-foreground">{num(goalPct, 0)}%</div>
+        <div className="mt-1 text-right text-xs text-muted-foreground">
+          {periodGoal.value > 0 ? `${num(goalPct, 0)}%` : "Defina sua meta mensal em Ajustes"}
+        </div>
       </div>
     ) : null,
 
