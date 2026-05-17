@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
-type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "final";
+type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "metas" | "final";
 
-const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "final"];
+const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "metas", "final"];
 
 export function OnboardingFlow() {
   const { user } = useAuth();
