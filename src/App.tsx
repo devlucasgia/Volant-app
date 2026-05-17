@@ -9,6 +9,7 @@ import { TimerProvider } from "@/context/TimerContext";
 import { UIProvider } from "@/context/UIContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
+import { RequirePremium } from "@/components/RequirePremium";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
@@ -32,10 +33,21 @@ const App = () => (
               <BrowserRouter>
                 <Routes>
                   <Route path="/auth" element={<Auth />} />
+                  {/* Checkout return must bypass the paywall so the webhook can confirm */}
+                  <Route
+                    path="/checkout/return"
+                    element={
+                      <RequireAuth>
+                        <CheckoutReturn />
+                      </RequireAuth>
+                    }
+                  />
                   <Route
                     element={
                       <RequireAuth>
-                        <AppLayout />
+                        <RequirePremium>
+                          <AppLayout />
+                        </RequirePremium>
                       </RequireAuth>
                     }
                   >
@@ -43,7 +55,6 @@ const App = () => (
                     <Route path="/historico" element={<History />} />
                     <Route path="/relatorios" element={<Reports />} />
                     <Route path="/ajustes" element={<SettingsPage />} />
-                    <Route path="/checkout/return" element={<CheckoutReturn />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>

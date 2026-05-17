@@ -24,6 +24,7 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
 } from "lucide-react";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
+import { useSubscription } from "@/hooks/useSubscription";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
@@ -151,6 +152,70 @@ function MiniCardToggle({
         {label}
       </span>
     </button>
+  );
+}
+
+function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
+  const { user } = useAuth();
+  // Lazy import to avoid hook in module scope
+  const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
+
+  const badge = isGrandfathered ? (
+    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+      Premium Vitalício
+    </span>
+  ) : isActive ? (
+    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+      Ativa
+    </span>
+  ) : null;
+
+  return (
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge}>
+      {isGrandfathered ? (
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
+          <p className="text-sm text-muted-foreground">
+            Você possui acesso completo ao Volant sem necessidade de assinatura.
+          </p>
+        </div>
+      ) : isActive ? (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
+            <div className="font-medium">
+              {subscription?.price_id === "volant_premium_yearly" ? "Plano Anual" : "Plano Mensal"}
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              Status: {subscription?.status === "trialing" ? "Teste de 7 dias ativo" : subscription?.status}
+              {subscription?.cancel_at_period_end ? " · cancelamento agendado" : ""}
+            </div>
+          </div>
+          <Button onClick={onOpen} className="w-full">Gerenciar assinatura</Button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <div className="text-[11px] text-muted-foreground">Mensal</div>
+              <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 19,90<span className="text-[11px] font-normal text-muted-foreground">/mês</span></div>
+            </div>
+            <div className="relative rounded-xl border border-primary/50 bg-primary/5 p-3">
+              <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                −62%
+              </span>
+              <div className="text-[11px] text-muted-foreground">Anual</div>
+              <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 89,90<span className="text-[11px] font-normal text-muted-foreground">/ano</span></div>
+            </div>
+          </div>
+          <Button onClick={onOpen} className="w-full gradient-success text-primary-foreground">
+            Começar teste de 7 dias
+          </Button>
+        </div>
+      )}
+    </SettingsCard>
   );
 }
 
@@ -551,44 +616,7 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard
-              value="subscription"
-              icon={<Crown className="h-4 w-4" />}
-              title="Assinatura"
-              badge={
-                <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Beta gratuito
-                </span>
-              }
-            >
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual.
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl border border-border bg-muted/30 p-3">
-                    <div className="text-[11px] text-muted-foreground">Mensal</div>
-                    <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 19,90<span className="text-[11px] font-normal text-muted-foreground">/mês</span></div>
-                  </div>
-                  <div className="relative rounded-xl border border-primary/50 bg-primary/5 p-3">
-                    <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                      −62%
-                    </span>
-                    <div className="text-[11px] text-muted-foreground">Anual</div>
-                    <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 89,90<span className="text-[11px] font-normal text-muted-foreground">/ano</span></div>
-                  </div>
-                </div>
-                <Button
-                  onClick={() => setSubscriptionOpen(true)}
-                  className="w-full gradient-success text-primary-foreground"
-                >
-                  Ver planos
-                </Button>
-                <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
-                  Pagamentos serão ativados em uma próxima atualização.
-                </p>
-              </div>
-            </SettingsCard>
+            <SubscriptionCard onOpen={() => setSubscriptionOpen(true)} />
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>

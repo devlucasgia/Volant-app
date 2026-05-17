@@ -61,6 +61,7 @@ export function MonthlyGoalOnboardingDialog() {
     await supabase.from("profiles").upsert({ id: user.id, goal_onboarded: true } as any);
     setSaving(false);
     setOpen(false);
+    window.dispatchEvent(new CustomEvent("volant:goal-onboarding-finished"));
   };
 
   return (
