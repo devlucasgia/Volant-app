@@ -24,6 +24,7 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
 } from "lucide-react";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
+import { useSubscription } from "@/hooks/useSubscription";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
@@ -157,7 +158,6 @@ function MiniCardToggle({
 function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
   const { user } = useAuth();
   // Lazy import to avoid hook in module scope
-  const { useSubscription } = require("@/hooks/useSubscription") as typeof import("@/hooks/useSubscription");
   const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
 
   const badge = isGrandfathered ? (
