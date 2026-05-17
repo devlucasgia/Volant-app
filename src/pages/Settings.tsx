@@ -935,7 +935,12 @@ export default function SettingsPage() {
 
             <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas e objetivos">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Meta mensal</Label>
+                <div className="flex items-baseline justify-between gap-2">
+                  <Label className="text-xs text-muted-foreground">Meta mensal</Label>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
+                    {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+                  </span>
+                </div>
                 <NumberField
                   currency
                   value={draft.monthlyGoal || null}
