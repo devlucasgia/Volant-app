@@ -1,27 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
-import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
 import { supabase } from "@/integrations/supabase/client";
-import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime } from "@/lib/stats";
+import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime, goalForPeriod, type CustomRange } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useGreetingStyle, greetingStyleClass } from "@/lib/greetingStyle";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import type { DateRange } from "react-day-picker";
 
-const PERIODS: { key: Period; label: string }[] = [
-  { key: "day", label: "Hoje" },
-  { key: "week", label: "Semana" },
-  { key: "month", label: "Mês" },
-];
 
 export default function Dashboard() {
   const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
