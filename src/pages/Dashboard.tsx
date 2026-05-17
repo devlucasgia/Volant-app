@@ -72,16 +72,44 @@ export default function Dashboard() {
       }
       return `${format(s, "d 'de' MMM", { locale: ptBR })} a ${format(e, "d 'de' MMM", { locale: ptBR })}`;
     }
-    return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
-  }, [period]);
+    if (period === "month") {
+      return cap(format(now, "MMMM 'de' yyyy", { locale: ptBR }));
+    }
+    // custom
+    if (customRange) {
+      const { from, to } = customRange;
+      const single = +from === +to || format(from, "yyyy-MM-dd") === format(to, "yyyy-MM-dd");
+      if (single) return `${format(from, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
+      const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
+      if (sameMonth) return `${format(from, "d", { locale: ptBR })} a ${format(to, "d 'de' MMMM", { locale: ptBR })}`;
+      return `${format(from, "d 'de' MMM", { locale: ptBR })} a ${format(to, "d 'de' MMM", { locale: ptBR })}`;
+    }
+    return "";
+  }, [period, customRange]);
 
-  const filtered = useMemo(() => filterByPeriod(entries, period), [entries, period]);
+  const filtered = useMemo(
+    () => filterByPeriod(entries, period, customRange ?? undefined),
+    [entries, period, customRange]
+  );
   const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
   const apps = useMemo(() => byApp(filtered), [filtered]);
   const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
-  const dayEarnings = useMemo(() => summarize(filterByPeriod(entries, "day")).gross, [entries]);
-  const goalPct = settings.dailyGoal > 0 ? Math.min(100, (dayEarnings / settings.dailyGoal) * 100) : 0;
+  // Daily-journey goal override (today only, set inside Jornada modal).
+  const todayKey = format(new Date(), "yyyy-MM-dd");
+  const journeyDailyOverride = useMemo(() => {
+    try {
+      const raw = localStorage.getItem(`volant_day_goal_${todayKey}`);
+      const n = raw ? Number(raw) : 0;
+      return n > 0 ? n : null;
+    } catch { return null; }
+  }, [todayKey, settings.monthlyGoal, calOpen]);
+
+  const periodGoal = useMemo(
+    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride),
+    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride]
+  );
+  const goalPct = periodGoal.value > 0 ? Math.min(100, (s.gross / periodGoal.value) * 100) : 0;
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
