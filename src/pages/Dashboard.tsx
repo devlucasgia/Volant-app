@@ -175,18 +175,66 @@ export default function Dashboard() {
     ) : null,
 
     goal: widgets.goal ? (
-      <div key="goal" className="rounded-2xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-semibold">
-            <Target className="h-4 w-4 text-primary" /> {periodGoal.title}
+      <div
+        key="goal"
+        className={cn(
+          "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
+          goalReached
+            ? "border-success/50 bg-gradient-to-br from-success/10 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--success)/0.55)]"
+            : "border-border",
+        )}
+      >
+        {goalReached && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-1 rounded-3xl bg-success/10 blur-2xl animate-fade-in"
+          />
+        )}
+        <div className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              {goalReached ? (
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success/20 text-success">
+                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                </span>
+              ) : (
+                <Target className="h-4 w-4 text-primary" />
+              )}
+              {periodGoal.title}
+            </div>
+            <div className="flex items-center gap-2">
+              {overAmount > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success animate-fade-in">
+                  <TrendingUp className="h-2.5 w-2.5" />
+                  {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+                </span>
+              )}
+              <div className="text-sm tabular-nums text-muted-foreground">
+                {brl(s.gross)} / {brl(periodGoal.value)}
+              </div>
+            </div>
           </div>
-          <div className="text-sm tabular-nums text-muted-foreground">
-            {brl(s.gross)} / {brl(periodGoal.value)}
+          <Progress
+            value={goalPct}
+            className={cn("mt-3 h-2 transition-all duration-700", goalReached && "[&>div]:bg-success")}
+          />
+          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+            <span className="tabular-nums">
+              {periodGoal.value > 0
+                ? goalReached
+                  ? overAmount > 0
+                    ? `${brl(overAmount)} acima da meta`
+                    : "Meta atingida"
+                  : `Faltam ${brl(goalRemaining)}`
+                : "Defina sua meta mensal em Ajustes"}
+            </span>
+            {periodGoal.value > 0 && <span className="tabular-nums">{num(goalPct, 0)}%</span>}
           </div>
-        </div>
-        <Progress value={goalPct} className="mt-3 h-2" />
-        <div className="mt-1 text-right text-xs text-muted-foreground">
-          {periodGoal.value > 0 ? `${num(goalPct, 0)}%` : "Defina sua meta mensal em Ajustes"}
+          {monthlyProjection !== null && (
+            <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+              Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
+            </div>
+          )}
         </div>
       </div>
     ) : null,
