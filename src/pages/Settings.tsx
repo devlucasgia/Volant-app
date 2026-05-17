@@ -191,6 +191,7 @@ export default function SettingsPage() {
   const [fontOpen, setFontOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
