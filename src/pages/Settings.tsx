@@ -435,10 +435,28 @@ export default function SettingsPage() {
           <Accordion type="multiple" className="space-y-2.5">
             <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
-                <Avatar className="h-14 w-14 ring-2 ring-border">
-                  <AvatarImage src={displayedAvatar} alt={accountName} referrerPolicy="no-referrer" />
-                  <AvatarFallback className="bg-primary/15 text-primary"><UserIcon className="h-6 w-6" /></AvatarFallback>
-                </Avatar>
+                <div className="relative shrink-0">
+                  <Avatar className="h-14 w-14 ring-2 ring-border">
+                    <AvatarImage src={displayedAvatar} alt={accountName} referrerPolicy="no-referrer" />
+                    <AvatarFallback className="bg-primary/15 text-primary"><UserIcon className="h-6 w-6" /></AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    aria-label="Alterar foto de perfil"
+                    className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md transition-transform active:scale-95 disabled:opacity-60"
+                  >
+                    {uploadingAvatar ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
+                  </button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFile}
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-semibold truncate">{accountName}</div>
                   <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
