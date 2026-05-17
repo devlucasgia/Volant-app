@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
+  Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription,
+} from "@/components/ui/drawer";
+import type { DateRange } from "react-day-picker";
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
@@ -16,7 +20,7 @@ import {
   Area, AreaChart,
 } from "recharts";
 import {
-  CalendarIcon,
+  CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -50,6 +54,8 @@ export default function Reports() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
+  const [calOpen, setCalOpen] = useState(false);
+  const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
@@ -300,33 +306,62 @@ export default function Reports() {
               onClick={() => setYearRef(addYears(yearRef, 1))}>›</Button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" /> {format(from, "dd/MM/yy")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={from} onSelect={(d) => d && setFrom(d)}
-                  disabled={(d) => d > new Date() || d > to} initialFocus locale={ptBR}
-                  className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" /> {format(to, "dd/MM/yy")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={to} onSelect={(d) => d && setTo(d)}
-                  disabled={(d) => d > new Date() || d < from} initialFocus locale={ptBR}
-                  className={cn("p-3 pointer-events-auto")} />
-              </PopoverContent>
-            </Popover>
-          </div>
+          <Button
+            variant="outline"
+            className="w-full justify-center font-normal"
+            onClick={() => {
+              setCalDraft({ from, to });
+              setCalOpen(true);
+            }}
+          >
+            <CalendarRange className="mr-2 h-4 w-4 text-success" />
+            {format(from, "dd/MM/yy")} – {format(to, "dd/MM/yy")}
+          </Button>
         )}
+
+        <Drawer open={calOpen} onOpenChange={setCalOpen}>
+          <DrawerContent>
+            <div className="mx-auto w-full max-w-md">
+              <DrawerHeader>
+                <DrawerTitle className="flex items-center gap-2">
+                  <CalendarRange className="h-4 w-4 text-success" /> Selecionar período
+                </DrawerTitle>
+                <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex justify-center px-2">
+                <Calendar
+                  mode="range"
+                  selected={calDraft}
+                  onSelect={setCalDraft}
+                  numberOfMonths={1}
+                  locale={ptBR}
+                  disabled={(d) => d > new Date()}
+                  className="pointer-events-auto"
+                />
+              </div>
+              <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+                <Button variant="outline" className="flex-1" onClick={() => setCalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1 gradient-success text-primary-foreground"
+                  disabled={!calDraft?.from}
+                  onClick={() => {
+                    if (!calDraft?.from) return;
+                    const f = calDraft.from;
+                    const t = calDraft.to ?? calDraft.from;
+                    setFrom(f);
+                    setTo(t);
+                    setCalOpen(false);
+                  }}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+
 
         {/* Top hierarchy: Lucro líquido + Média por hora */}
         {(widgets.net || widgets.perHour) && (
