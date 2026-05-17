@@ -68,44 +68,39 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     // ---- Rate limiting (per authenticated user) ----
-    // Limits: max 3 submissions per minute AND max 5 per 10 minutes.
+    // Limit: max 3 submissions per minute.
     // Also blocks exact duplicate (same type+title+description) within 60s.
     const nowMs = Date.now();
     const oneMinAgo = new Date(nowMs - 60 * 1000).toISOString();
-    const tenMinAgo = new Date(nowMs - 10 * 60 * 1000).toISOString();
 
     const { data: recent, error: recentErr } = await admin
       .from("feedback_reports")
       .select("created_at,type,title,description")
       .eq("user_id", user.id)
-      .gte("created_at", tenMinAgo)
+      .gte("created_at", oneMinAgo)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(10);
 
     if (recentErr) {
       console.error("[send-feedback-email] rate-limit lookup failed", recentErr);
     } else if (recent) {
-      const inLastMinute = recent.filter((r) => r.created_at >= oneMinAgo).length;
-      const inLastTenMin = recent.length;
+      const inLastMinute = recent.length;
 
-      if (inLastMinute >= 3 || inLastTenMin >= 5) {
-        const retryAfter = inLastMinute >= 3 ? 60 : 600;
+      if (inLastMinute >= 3) {
         console.warn("[send-feedback-email] rate_limited", {
           user_id: user.id,
           inLastMinute,
-          inLastTenMin,
-          retryAfter,
         });
         return new Response(
           JSON.stringify({
             error: "rate_limited",
             message:
-              "Você enviou muitos feedbacks em pouco tempo. Aguarde alguns minutos e tente novamente.",
-            retryAfter,
+              "Você enviou muitas mensagens em pouco tempo. Tente novamente em alguns minutos.",
+            retryAfter: 60,
           }),
           {
             status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(retryAfter) },
+            headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
           },
         );
       }

@@ -42,7 +42,7 @@ import type { Car as CarType, DashboardWidgets } from "@/types";
 import { PasswordChangeDialog } from "@/components/account/PasswordChangeDialog";
 import { FontSizeSheet } from "@/components/account/FontSizeSheet";
 import { useFontScale, FONT_SCALE_OPTIONS } from "@/lib/fontScale";
-import { friendlyDbError } from "@/lib/friendlyErrors";
+import { friendlyDbError, verifyImageSignature } from "@/lib/friendlyErrors";
 
 interface DraftSettings {
   monthlyGoal: number;
@@ -237,8 +237,31 @@ export default function SettingsPage() {
       const n = row.nickname ?? "";
       setNickname(n);
       setNicknameBaseline(n);
-      setProfileAvatar(row.avatar_url ?? "");
       setGreetingMessage(row.greeting_message ?? "");
+
+      // Resolve avatar:
+      // - http(s) URLs (legacy public, or Google) → use as-is
+      // - storage paths like "<uid>/file.jpg" → fetch signed URL
+      const stored = row.avatar_url ?? "";
+      if (!stored) {
+        setProfileAvatar("");
+      } else if (/^https?:\/\//i.test(stored)) {
+        // Legacy public URL from old bucket → extract path and sign
+        const m = stored.match(/\/storage\/v1\/object\/(?:public|sign)\/avatars\/([^?]+)/i);
+        if (m && m[1]) {
+          const { data: signed } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(decodeURIComponent(m[1]), 60 * 60 * 24 * 365);
+          if (active) setProfileAvatar(signed?.signedUrl ?? "");
+        } else {
+          setProfileAvatar(stored);
+        }
+      } else {
+        const { data: signed } = await supabase.storage
+          .from("avatars")
+          .createSignedUrl(stored, 60 * 60 * 24 * 365);
+        if (active) setProfileAvatar(signed?.signedUrl ?? "");
+      }
     })();
     return () => { active = false; };
   }, [user]);
@@ -312,29 +335,38 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file || !user) return;
-    if (!file.type.startsWith("image/")) {
-      toast.error("Selecione uma imagem válida.");
+
+    const check = await verifyImageSignature(file, 5 * 1024 * 1024);
+    if (!check.ok) {
+      // Map size error vs format error to required copy
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Imagem muito grande. Máximo 5 MB.");
+      } else {
+        toast.error("Formato inválido. Envie uma imagem JPG, PNG ou WEBP.");
+      }
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Imagem muito grande. Máximo 5 MB.");
-      return;
-    }
+    const ext = check.ext; // jpg | png | webp
+    const contentType =
+      ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+
     setUploadingAvatar(true);
     try {
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       const path = `${user.id}/avatar-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      const publicUrl = pub.publicUrl;
+      const { data: signed, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (signErr) throw signErr;
+      // Persist the storage path; we resolve a fresh signed URL on load.
       const { error: dbErr } = await supabase
         .from("profiles")
-        .upsert({ id: user.id, avatar_url: publicUrl } as any);
+        .upsert({ id: user.id, avatar_url: path } as any);
       if (dbErr) throw dbErr;
-      setProfileAvatar(publicUrl);
+      setProfileAvatar(signed.signedUrl);
       toast.success("Foto de perfil atualizada");
     } catch (err: any) {
       toast.error(friendlyDbError(err, "Não foi possível enviar a foto."));
@@ -452,7 +484,7 @@ export default function SettingsPage() {
                   <input
                     ref={avatarInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={handleAvatarFile}
                   />
