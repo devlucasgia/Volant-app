@@ -237,8 +237,31 @@ export default function SettingsPage() {
       const n = row.nickname ?? "";
       setNickname(n);
       setNicknameBaseline(n);
-      setProfileAvatar(row.avatar_url ?? "");
       setGreetingMessage(row.greeting_message ?? "");
+
+      // Resolve avatar:
+      // - http(s) URLs (legacy public, or Google) → use as-is
+      // - storage paths like "<uid>/file.jpg" → fetch signed URL
+      const stored = row.avatar_url ?? "";
+      if (!stored) {
+        setProfileAvatar("");
+      } else if (/^https?:\/\//i.test(stored)) {
+        // Legacy public URL from old bucket → extract path and sign
+        const m = stored.match(/\/storage\/v1\/object\/(?:public|sign)\/avatars\/([^?]+)/i);
+        if (m && m[1]) {
+          const { data: signed } = await supabase.storage
+            .from("avatars")
+            .createSignedUrl(decodeURIComponent(m[1]), 60 * 60 * 24 * 365);
+          if (active) setProfileAvatar(signed?.signedUrl ?? "");
+        } else {
+          setProfileAvatar(stored);
+        }
+      } else {
+        const { data: signed } = await supabase.storage
+          .from("avatars")
+          .createSignedUrl(stored, 60 * 60 * 24 * 365);
+        if (active) setProfileAvatar(signed?.signedUrl ?? "");
+      }
     })();
     return () => { active = false; };
   }, [user]);
