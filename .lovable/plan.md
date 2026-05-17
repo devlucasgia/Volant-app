@@ -1,68 +1,71 @@
-# Onboarding Volant — Plano completo
+## 1. Email notification on new user signup
 
-## Visão geral
-Onboarding multi-etapas, animado, mobile-first, reutilizando o design system atual (cores, gradientes, cards arredondados, tipografia). Inspirado em Nubank/Duolingo/iFood. Aparece **uma única vez** após o primeiro login (ou quando o usuário pedir refazer em Ajustes).
+Add an automatic email to `suporte.volant@gmail.com` every time a new account is created (Google OAuth or email/password).
 
-## Estrutura (5 etapas)
+### Approach
+- Create a new edge function `notify-new-user` that sends the email via Resend (reusing `RESEND_API_KEY` already configured).
+- Trigger it through a Postgres trigger on `auth.users` insert → calls a SECURITY DEFINER function that uses `pg_net` to POST to the edge function. This guarantees the email fires for ALL signup methods (Google, email/password, future providers) without touching client code.
+- The edge function will be public (no JWT) but protected by:
+  - A shared secret header (`NEW_USER_HOOK_SECRET`) validated server-side.
+  - In-memory + DB-based rate limit (max 30 calls/min globally) to prevent abuse if the URL leaks.
+- Email content: user name (from `raw_user_meta_data.display_name` / `full_name`), email, signup timestamp, signup method (derived from `raw_app_meta_data.provider` → "Google" or "Email/Senha").
+- Logging: each blocked/failed call is logged via `console.warn` for observability.
 
-### 1. Boas-vindas (full-screen)
-- Logo Volant animada (fade + scale)
-- Headline: **"Mais controle, mais lucro."**
-- Subtítulo: "Vamos te mostrar como o Volant trabalha por você."
-- Botão "Começar" (gradient primary) + "Pular" discreto
-- Background com gradiente sutil + partículas/orbs animados
+### Files
+- New: `supabase/functions/notify-new-user/index.ts`
+- New migration: extension `pg_net`, function `public.notify_new_user_signup()`, trigger `on_auth_user_created_notify` on `auth.users`, and a `new_user_notifications` table (optional, for dedup + log).
+- New secret: `NEW_USER_HOOK_SECRET` (random string).
 
-### 2. Carrossel de funções (4 slides com swipe + dots)
-Cada slide com **mockup visual fictício animado** dentro de um "frame" estilo celular:
+No client-side changes. No UX change.
 
-- **Slide A — Registro rápido**: FAB pulsante abrindo radial → drawer de Ganho preenchendo R$ 80,00 / Uber. Mostra a velocidade.
-- **Slide B — Jornada inteligente** (cenário fictício animado):
-  1. Botão "Iniciar jornada" → modal de **meta** aparecendo (R$ 250)
-  2. Cronômetro rodando (00:00 → 03:42)
-  3. "Encerrar jornada" → drawer de **ganho abre automaticamente com horas preenchidas**
-  - Legenda: "Iniciou com meta, encerrou com ganho já no formulário."
-- **Slide C — Histórico & Relatórios**: cards animados aparecendo (Bruto/Gastos/Líquido) + mini gráfico desenhando linha. "Veja onde seu dinheiro vai."
-- **Slide D — Customização** (cenário real-like): mostra screenshot estilizado de Ajustes com toggles de **widgets da Tela de Início** e **widgets de Relatórios** ligando/desligando, e **reordenação de cards**. Legenda: "Monte sua tela do seu jeito — escolha o que aparece e em que ordem, tanto na Tela de Início quanto nos Relatórios."
+---
 
-### 3. Tela final celebratória
-- Confetti sutil (canvas-confetti) com cores do app
-- "Tudo pronto, [nome]!"
-- Subtítulo: "Mais controle, mais lucro — agora é com você."
-- CTA: "Entrar no Volant"
+## 2. Subscription screen — visual structure only
 
-## Comportamento
-- Aparece após login se `profiles.onboarded = false` (ou nova coluna)
-- Pulável a qualquer momento (marca como concluído)
-- Em Ajustes → seção "Sobre" → botão **"Refazer tour"** que reabre
-- Progresso por dots no topo, gestos de swipe (embla), animações com Framer Motion
-- Respeita safe areas, dark/light mode, `prefers-reduced-motion`
+Add a **Subscription** section inside Settings → Account. No Stripe, no gating, no checkout.
 
-## Detalhes técnicos
-- **Novo componente**: `src/components/onboarding/OnboardingFlow.tsx` (orquestrador)
-- **Sub-componentes**: `WelcomeStep`, `FeatureCarousel`, `slides/` (RegistroSlide, JornadaSlide, RelatoriosSlide, CustomizacaoSlide), `FinalStep`
-- **Animações**: Framer Motion (já não instalado — adicionar) + `canvas-confetti`
-- **Persistência**: nova coluna `profiles.onboarded boolean default false` (migration)
-- **Hook**: `useOnboarding()` para ler/marcar concluído
-- **Montagem**: dentro de `AppLayout`, sobreposto, render condicional
-- **Reset**: botão em `Settings.tsx` chama `updateProfile({ onboarded: false })` e dispara abertura
-- **Reuso**: `VolantLogo`, paleta de tokens, `gradient-success`, `Drawer`, `Button` existentes
-- **Mockups dos slides** são puramente visuais (divs estilizadas como o app real) — não usam dados reais nem disparam ações
-- Sem alterar nenhuma lógica existente (Timer, Drawer, Settings funcionalidades)
+### Location
+- Add a new `SettingsCard` inside Settings.tsx under the "Conta" group, between Profile and Password, titled "Assinatura" with a `Crown` (or `Sparkles`) icon.
+- Expanding the card reveals a compact summary + a "Ver planos" button that opens a dedicated full-screen sheet/dialog `SubscriptionSheet` (new component) — keeps Settings clean and gives the plans the visual breathing room they need.
 
-## Migration (Supabase)
-```sql
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarded boolean NOT NULL DEFAULT false;
+### Subscription sheet contents
+```text
+┌──────────────────────────────────┐
+│  Plano atual: Beta gratuito      │  ← status badge (green)
+│                                  │
+│  Aproveite 7 dias grátis. Depois │
+│  escolha entre acesso mensal     │
+│  ou anual.                       │
+│                                  │
+│  ┌────────────┐  ┌────────────┐  │
+│  │  Mensal    │  │ Anual ★    │  │  ← yearly highlighted
+│  │  R$ 19,90  │  │ R$ 89,90   │  │     with green border +
+│  │  /mês      │  │ /ano       │  │     "Economize 62%" badge
+│  └────────────┘  └────────────┘  │
+│                                  │
+│  [ Começar teste grátis ]        │  ← primary green button (disabled-look + tooltip)
+│  [ Gerenciar assinatura ]        │  ← only when user has an active plan (hidden for now)
+│                                  │
+│  ⓘ Pagamentos serão ativados     │
+│    em uma próxima atualização.   │
+└──────────────────────────────────┘
 ```
 
-## Ordem de execução
-1. Migration (`onboarded` em profiles)
-2. Instalar `framer-motion` e `canvas-confetti`
-3. Criar componentes do onboarding
-4. Integrar em `AppLayout` + gancho em `Settings`
-5. QA visual no viewport mobile
+### Visual rules
+- Dark UI consistent with rest of app, rounded `rounded-2xl` cards, semantic tokens only (`bg-card`, `text-foreground`, `text-primary`, etc.).
+- Yearly card: subtle green border + "Economize 62%" badge in top-right corner.
+- "Começar teste grátis" button uses `gradient-success`; on click shows a toast: "Em breve! Pagamentos serão ativados em uma próxima atualização."
+- All copy in Brazilian Portuguese.
 
-## O que NÃO muda
-- Lógica de Timer, Drawer, Settings, Reports, History
-- Banco existente (apenas nova coluna)
-- Design system (tokens, cores, componentes)
-- Rotas
+### Files
+- New: `src/components/account/SubscriptionSheet.tsx` (Sheet component with the plans UI).
+- Edit: `src/pages/Settings.tsx` — add the new accordion entry inside the "Conta" group.
+
+No routing changes. No new dependencies. No backend.
+
+---
+
+## Out of scope (explicitly)
+- Stripe integration / checkout / webhooks.
+- Feature gating, trial countdown logic, or any billing state in the database.
+- Plan persistence per user.
