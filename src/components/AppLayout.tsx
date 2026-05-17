@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { EntryDrawer } from "./EntryDrawer";
 import { CarOnboardingDialog } from "./CarOnboardingDialog";
+import { MonthlyGoalOnboardingDialog } from "./MonthlyGoalOnboardingDialog";
 import { OnboardingFlow } from "./onboarding/OnboardingFlow";
 import { TimerFab } from "./TimerFab";
 import { useUI } from "@/context/UIContext";
