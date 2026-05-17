@@ -120,6 +120,22 @@ export default function Dashboard() {
     [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride]
   );
   const goalPct = periodGoal.value > 0 ? Math.min(100, (s.gross / periodGoal.value) * 100) : 0;
+  const goalReached = periodGoal.value > 0 && s.gross >= periodGoal.value;
+  const goalRemaining = Math.max(0, periodGoal.value - s.gross);
+  const overAmount = Math.max(0, s.gross - periodGoal.value);
+  const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
+
+  // Monthly projection — only when viewing the month. Uses net pace so far.
+  const monthlyProjection = useMemo(() => {
+    if (period !== "month") return null;
+    const now = new Date();
+    const mStart = startOfMonth(now);
+    const mEnd = endOfMonth(now);
+    const elapsed = Math.max(1, differenceInCalendarDays(now, mStart) + 1);
+    const total = differenceInCalendarDays(mEnd, mStart) + 1;
+    if (s.net <= 0) return null;
+    return Math.round((s.net / elapsed) * total);
+  }, [period, s.net]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
