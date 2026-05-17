@@ -198,6 +198,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setSettings(next);
     const { error } = await supabase.from("user_settings").upsert({
       user_id: user.id, daily_goal: next.dailyGoal,
+      monthly_goal: next.monthlyGoal,
       maintenance_interval_km: next.maintenanceIntervalKm,
       last_maintenance_km: next.lastMaintenanceKm, theme: next.theme,
       dashboard_widgets: next.dashboardWidgets as any,
