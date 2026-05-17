@@ -308,6 +308,41 @@ export default function SettingsPage() {
     toast.success("Perfil atualizado");
   };
 
+  const handleAvatarFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione uma imagem válida.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Imagem muito grande. Máximo 5 MB.");
+      return;
+    }
+    setUploadingAvatar(true);
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { cacheControl: "3600", upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: dbErr } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, avatar_url: publicUrl } as any);
+      if (dbErr) throw dbErr;
+      setProfileAvatar(publicUrl);
+      toast.success("Foto de perfil atualizada");
+    } catch (err: any) {
+      toast.error(friendlyDbError(err, "Não foi possível enviar a foto."));
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   // Greeting message — autosaved with debounce. Persists to profiles.greeting_message.
   const greetingMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const persistGreetingMessage = async (value: string) => {
