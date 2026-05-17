@@ -21,6 +21,7 @@ export function AppLayout() {
       <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
       <BottomNav />
       <CarOnboardingDialog />
+      <MonthlyGoalOnboardingDialog />
       <OnboardingFlow />
     </div>
   );
