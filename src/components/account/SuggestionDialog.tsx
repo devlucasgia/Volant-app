@@ -41,7 +41,7 @@ export function SuggestionDialog({ open, onOpenChange }: Props) {
     }
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke("send-feedback-email", {
+      const { data, error } = await supabase.functions.invoke("send-feedback-email", {
         body: {
           type: "suggestion",
           title: title.trim(),
@@ -50,6 +50,10 @@ export function SuggestionDialog({ open, onOpenChange }: Props) {
           deviceInfo: collectDeviceInfo(),
         },
       });
+      if ((data as any)?.error === "rate_limited" || (data as any)?.error === "duplicate") {
+        toast.error((data as any)?.message || "Aguarde alguns minutos antes de enviar novamente.");
+        return;
+      }
       if (error) throw error;
       toast.success("Feedback enviado com sucesso.");
       onOpenChange(false);
