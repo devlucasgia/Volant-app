@@ -72,7 +72,7 @@ export function MonthlyGoalOnboardingDialog() {
           </div>
           <DialogTitle className="text-center">Defina sua meta mensal</DialogTitle>
           <DialogDescription className="text-center">
-            Opcional. A Volant calcula sua meta semanal e diária automaticamente a partir dela.
+            Opcional. O Volant calcula sua meta semanal e diária automaticamente a partir dela.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
