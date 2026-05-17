@@ -1,71 +1,139 @@
-## 1. Email notification on new user signup
+## Visão geral
 
-Add an automatic email to `suporte.volant@gmail.com` every time a new account is created (Google OAuth or email/password).
+Integração de assinaturas via **Stripe nativo do Lovable** (sem necessidade de conta Stripe própria nesta fase). Tudo começa em **sandbox/test**. Beta atual NÃO é bloqueado até decidirmos regra de corte.
 
-### Approach
-- Create a new edge function `notify-new-user` that sends the email via Resend (reusing `RESEND_API_KEY` already configured).
-- Trigger it through a Postgres trigger on `auth.users` insert → calls a SECURITY DEFINER function that uses `pg_net` to POST to the edge function. This guarantees the email fires for ALL signup methods (Google, email/password, future providers) without touching client code.
-- The edge function will be public (no JWT) but protected by:
-  - A shared secret header (`NEW_USER_HOOK_SECRET`) validated server-side.
-  - In-memory + DB-based rate limit (max 30 calls/min globally) to prevent abuse if the URL leaks.
-- Email content: user name (from `raw_user_meta_data.display_name` / `full_name`), email, signup timestamp, signup method (derived from `raw_app_meta_data.provider` → "Google" or "Email/Senha").
-- Logging: each blocked/failed call is logged via `console.warn` for observability.
-
-### Files
-- New: `supabase/functions/notify-new-user/index.ts`
-- New migration: extension `pg_net`, function `public.notify_new_user_signup()`, trigger `on_auth_user_created_notify` on `auth.users`, and a `new_user_notifications` table (optional, for dedup + log).
-- New secret: `NEW_USER_HOOK_SECRET` (random string).
-
-No client-side changes. No UX change.
+Modelo: trial 7 dias → Mensal R$ 19,90 ou Anual R$ 89,90 (economia 62%) → cobrança automática.
 
 ---
 
-## 2. Subscription screen — visual structure only
+## 1. Mudanças no banco
 
-Add a **Subscription** section inside Settings → Account. No Stripe, no gating, no checkout.
+Nova tabela `subscribers` (uma linha por usuário):
 
-### Location
-- Add a new `SettingsCard` inside Settings.tsx under the "Conta" group, between Profile and Password, titled "Assinatura" with a `Crown` (or `Sparkles`) icon.
-- Expanding the card reveals a compact summary + a "Ver planos" button that opens a dedicated full-screen sheet/dialog `SubscriptionSheet` (new component) — keeps Settings clean and gives the plans the visual breathing room they need.
+| Campo | Tipo | Função |
+|---|---|---|
+| `user_id` | uuid (PK, FK auth.users) | dono |
+| `email` | text | redundância p/ webhook |
+| `stripe_customer_id` | text | id do cliente no Stripe |
+| `stripe_subscription_id` | text | id da assinatura |
+| `price_id` | text | preço atual (mensal/anual) |
+| `plan` | text | `monthly` \| `yearly` \| `none` |
+| `status` | text | `trialing` \| `active` \| `past_due` \| `canceled` \| `expired` \| `none` |
+| `trial_end` | timestamptz | fim do trial |
+| `current_period_end` | timestamptz | próxima cobrança |
+| `cancel_at_period_end` | bool | cancelamento agendado |
+| `beta_grandfathered` | bool default `true` | flag para não bloquear beta atual |
+| `created_at`/`updated_at` | timestamptz | |
 
-### Subscription sheet contents
-```text
-┌──────────────────────────────────┐
-│  Plano atual: Beta gratuito      │  ← status badge (green)
-│                                  │
-│  Aproveite 7 dias grátis. Depois │
-│  escolha entre acesso mensal     │
-│  ou anual.                       │
-│                                  │
-│  ┌────────────┐  ┌────────────┐  │
-│  │  Mensal    │  │ Anual ★    │  │  ← yearly highlighted
-│  │  R$ 19,90  │  │ R$ 89,90   │  │     with green border +
-│  │  /mês      │  │ /ano       │  │     "Economize 62%" badge
-│  └────────────┘  └────────────┘  │
-│                                  │
-│  [ Começar teste grátis ]        │  ← primary green button (disabled-look + tooltip)
-│  [ Gerenciar assinatura ]        │  ← only when user has an active plan (hidden for now)
-│                                  │
-│  ⓘ Pagamentos serão ativados     │
-│    em uma próxima atualização.   │
-└──────────────────────────────────┘
+**RLS:** SELECT só do próprio user; INSERT/UPDATE apenas via service_role (edge functions). Trigger no `auth.users` cria linha vazia com `beta_grandfathered=true` para todo novo signup já existente/futuro.
+
+Tabela auxiliar `stripe_webhook_events` (id text PK, type, payload jsonb, processed_at) para idempotência.
+
+---
+
+## 2. Produtos e preços no Stripe
+
+Criados via `batch_create_product` após habilitar:
+
+- **Produto:** "Volant Premium"
+  - Preço mensal: BRL 1990 centavos, recurring `month`, trial_period_days=7
+  - Preço anual: BRL 8990 centavos, recurring `year`, trial_period_days=7
+
+Metadata em cada preço: `plan: monthly|yearly` para facilitar mapeamento.
+
+---
+
+## 3. Edge functions
+
+Todas em `supabase/functions/`:
+
+| Função | Verify JWT | Função |
+|---|---|---|
+| `create-checkout` | sim | cria Checkout Session (mode=subscription, trial=7d) e retorna URL |
+| `customer-portal` | sim | cria sessão do Customer Portal e retorna URL |
+| `check-subscription` | sim | consulta Stripe + atualiza `subscribers`, retorna estado atual (fallback se webhook atrasar) |
+| `stripe-webhook` | NÃO (usa signature) | recebe eventos, valida assinatura, grava em `stripe_webhook_events`, atualiza `subscribers` |
+
+Secret necessário: `STRIPE_WEBHOOK_SECRET` (gerado ao registrar webhook no dashboard sandbox).
+
+---
+
+## 4. Eventos de webhook tratados
+
+- `checkout.session.completed` → cria/atualiza `subscribers` com customer e subscription
+- `customer.subscription.created`
+- `customer.subscription.updated` → sincroniza status, plan, period_end, cancel_at_period_end
+- `customer.subscription.deleted` → status `canceled` / `expired`
+- `customer.subscription.trial_will_end` (opcional, futuro: enviar email aviso)
+- `invoice.payment_succeeded` → mantém `active`, atualiza `current_period_end`
+- `invoice.payment_failed` → status `past_due`
+
+Idempotência: `event.id` deduplicado via `stripe_webhook_events`.
+
+---
+
+## 5. Mudanças na UI
+
+- **`SubscriptionSheet.tsx`** (já existe): trocar handler do botão "Começar teste grátis" para chamar `create-checkout` com plano selecionado e abrir URL em nova aba.
+- **Nova tela "Minha Assinatura"** (`/account/subscription` ou expansão do sheet): mostra plano atual, status (badge colorido), próxima cobrança, dias restantes do trial, botão "Gerenciar assinatura" → chama `customer-portal`. Visual idêntico ao padrão Volant (dark, cards `rounded-2xl`, accent verde).
+- **Hook `useSubscription()`**: lê `subscribers` em realtime, expõe `{status, plan, isActive, trialDaysLeft, isBetaGrandfathered}`.
+- **Banner sutil no topo da Home** quando `status='past_due'` ou `trialDaysLeft<=2`.
+- **Página de retorno** `/subscription/success` e `/subscription/canceled` (simples, chama `check-subscription` ao montar).
+
+---
+
+## 6. Estratégia de controle de acesso (paywall)
+
+Função utilitária `hasAppAccess(sub)`:
+```
+return sub.beta_grandfathered
+    || sub.status in ('trialing','active','past_due')
 ```
 
-### Visual rules
-- Dark UI consistent with rest of app, rounded `rounded-2xl` cards, semantic tokens only (`bg-card`, `text-foreground`, `text-primary`, etc.).
-- Yearly card: subtle green border + "Economize 62%" badge in top-right corner.
-- "Começar teste grátis" button uses `gradient-success`; on click shows a toast: "Em breve! Pagamentos serão ativados em uma próxima atualização."
-- All copy in Brazilian Portuguese.
-
-### Files
-- New: `src/components/account/SubscriptionSheet.tsx` (Sheet component with the plans UI).
-- Edit: `src/pages/Settings.tsx` — add the new accordion entry inside the "Conta" group.
-
-No routing changes. No new dependencies. No backend.
+- **`past_due`** mantém acesso por 7 dias (grace period) — depois vira `expired`.
+- **`expired`/`canceled`** → componente `<Paywall/>` renderiza no lugar do conteúdo das rotas protegidas, com CTA para reativar.
+- **`beta_grandfathered=true`** (todos os usuários atuais e novos até decidirmos o corte): NUNCA bloqueia. Flag será virada manualmente via SQL quando definirmos a data de início da cobrança obrigatória.
+- Implementado via `<RequireSubscription>` wrapper opcional nas rotas (Dashboard, Reports, History). Settings sempre acessível.
 
 ---
 
-## Out of scope (explicitly)
-- Stripe integration / checkout / webhooks.
-- Feature gating, trial countdown logic, or any billing state in the database.
-- Plan persistence per user.
+## 7. Checklist de testes (sandbox)
+
+1. Signup novo → linha em `subscribers` com `beta_grandfathered=true`, `status='none'`.
+2. Clicar "Começar teste grátis" mensal → Checkout abre → cartão teste `4242 4242 4242 4242` → retorna sucesso.
+3. Webhook `checkout.session.completed` chega → `status='trialing'`, `trial_end` correto.
+4. UI mostra "Trial — X dias restantes".
+5. Acelerar trial no dashboard Stripe → webhook `invoice.payment_succeeded` → `status='active'`.
+6. Cartão `4000 0000 0000 0341` (falha) → `invoice.payment_failed` → `status='past_due'`.
+7. Cancelar via Customer Portal → `cancel_at_period_end=true` → ao expirar, `status='canceled'`.
+8. Trocar plano mensal↔anual via Portal → `subscription.updated` reflete.
+9. Webhook duplicado → ignorado (idempotência).
+10. Usuário com `beta_grandfathered=true` e `status='expired'` → ainda acessa app.
+11. Mobile (406px): Checkout/Portal abrem corretamente, "Minha Assinatura" responsivo.
+
+---
+
+## 8. Ordem de implementação
+
+1. `enable_stripe_payments` (você preenche o form — sandbox ativa automático).
+2. Migration: tabela `subscribers` + `stripe_webhook_events` + RLS + trigger no signup + backfill `beta_grandfathered=true` para usuários existentes.
+3. Criar produtos/preços (mensal e anual com trial 7d).
+4. Edge functions: `create-checkout`, `customer-portal`, `check-subscription`, `stripe-webhook`.
+5. Registrar webhook no Stripe sandbox e salvar `STRIPE_WEBHOOK_SECRET`.
+6. Hook `useSubscription` + atualizar `SubscriptionSheet` para chamar checkout.
+7. Tela "Minha Assinatura" + páginas de retorno.
+8. Componente `<Paywall/>` + wrapper `<RequireSubscription>` — **desabilitado por padrão** (beta_grandfathered cobre todos).
+9. Banner para `past_due` / trial acabando.
+10. Rodar checklist completo no sandbox.
+11. (Futuro, fora deste sprint) decidir data de corte do beta → virar flag → ativar live.
+
+---
+
+## Fora de escopo deste sprint
+
+- Ativação de live billing (continua sandbox).
+- Bloqueio de usuários beta atuais.
+- Pix (Stripe Brasil via Lovable não suporta nativo — ficaria para outra integração).
+- Emissão de NF-e brasileira.
+- Cupons / códigos promocionais.
+- Upgrade/downgrade prorrateado custom (Customer Portal já cobre).
