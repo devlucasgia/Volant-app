@@ -64,6 +64,7 @@ export function JourneyModule() {
     try {
       if (v > 0) localStorage.setItem(`volant_day_goal_${todayKey()}`, String(v));
       else localStorage.removeItem(`volant_day_goal_${todayKey()}`);
+      window.dispatchEvent(new CustomEvent("volant:dayGoalChanged"));
     } catch { /* noop */ }
     setGoalOpen(false);
     if (pendingResetThenStart) reset();
