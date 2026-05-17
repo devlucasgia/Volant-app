@@ -54,6 +54,8 @@ export default function Reports() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
+  const [calOpen, setCalOpen] = useState(false);
+  const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
