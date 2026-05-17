@@ -484,7 +484,7 @@ export default function SettingsPage() {
                   <input
                     ref={avatarInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
                     className="hidden"
                     onChange={handleAvatarFile}
                   />
