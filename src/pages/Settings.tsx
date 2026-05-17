@@ -256,7 +256,7 @@ export default function SettingsPage() {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  const goalsDirty = draft.dailyGoal !== settings.dailyGoal;
+  const goalsDirty = draft.monthlyGoal !== settings.monthlyGoal;
   const maintDirty =
     draft.maintenanceIntervalKm !== settings.maintenanceIntervalKm ||
     draft.lastMaintenanceKm !== settings.lastMaintenanceKm;
@@ -267,7 +267,7 @@ export default function SettingsPage() {
   const saveGoals = async () => {
     setSavingGoals(true);
     try {
-      await updateSettings({ dailyGoal: draft.dailyGoal });
+      await updateSettings({ monthlyGoal: draft.monthlyGoal });
       toast.success("Meta atualizada");
     } catch {
       toast.error("Não foi possível salvar");
