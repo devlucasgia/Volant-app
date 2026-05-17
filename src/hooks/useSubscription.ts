@@ -51,7 +51,7 @@ export function useSubscription(userId: string | null | undefined): Subscription
     load();
     if (!userId) return;
     const ch = supabase
-      .channel(`sub-${userId}`)
+      .channel(`sub-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "subscriptions", filter: `user_id=eq.${userId}` },
