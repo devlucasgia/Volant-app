@@ -80,7 +80,7 @@ export function BugReportDialog({ open, onOpenChange }: Props) {
         screenshotPath = path;
       }
 
-      const { error } = await supabase.functions.invoke("send-feedback-email", {
+      const { data, error } = await supabase.functions.invoke("send-feedback-email", {
         body: {
           type: "bug",
           title: title.trim(),
@@ -90,6 +90,10 @@ export function BugReportDialog({ open, onOpenChange }: Props) {
           deviceInfo: collectDeviceInfo(),
         },
       });
+      if ((data as any)?.error === "rate_limited" || (data as any)?.error === "duplicate") {
+        toast.error((data as any)?.message || "Aguarde alguns minutos antes de enviar novamente.");
+        return;
+      }
       if (error) throw error;
       toast.success("Feedback enviado com sucesso.");
       onOpenChange(false);
