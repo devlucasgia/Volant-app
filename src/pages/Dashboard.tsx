@@ -97,13 +97,23 @@ export default function Dashboard() {
 
   // Daily-journey goal override (today only, set inside Jornada modal).
   const todayKey = format(new Date(), "yyyy-MM-dd");
+  const [overrideTick, setOverrideTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setOverrideTick((t) => t + 1);
+    window.addEventListener("volant:dayGoalChanged", handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("volant:dayGoalChanged", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
   const journeyDailyOverride = useMemo(() => {
     try {
       const raw = localStorage.getItem(`volant_day_goal_${todayKey}`);
       const n = raw ? Number(raw) : 0;
       return n > 0 ? n : null;
     } catch { return null; }
-  }, [todayKey, settings.monthlyGoal, calOpen]);
+  }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
   const periodGoal = useMemo(
     () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride),

@@ -1,5 +1,5 @@
 import { Entry, EarningEntry, ExpenseEntry } from "@/types";
-import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays, subDays } from "date-fns";
+import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays } from "date-fns";
 
 export type Period = "day" | "week" | "month" | "all" | "custom";
 
@@ -62,28 +62,38 @@ export function byExpenseCategory(entries: Entry[]): Record<string, number> {
 }
 
 /**
- * Compute suggested daily/weekly goals from a monthly goal and the user's
- * recent activity. Falls back to simple defaults when there is not enough
- * history (fewer than 3 active days in last 30 days).
+ * Smart goal derivation.
+ *
+ * Daily and weekly goals are calculated dynamically from:
+ *  - the remaining monthly goal amount (monthlyGoal − net earned this month),
+ *  - the remaining available days in the current month (including today).
+ *
+ * This way goals automatically adapt when the user adds/edits/deletes earnings,
+ * when the monthly goal changes, or as the month progresses.
  */
-export function deriveGoals(monthlyGoal: number, entries: Entry[]) {
+export function deriveGoals(monthlyGoal: number, entries: Entry[], now: Date = new Date()) {
   if (!monthlyGoal || monthlyGoal <= 0) {
-    return { monthly: 0, weekly: 0, daily: 0, activeDays: 0 };
+    return { monthly: 0, weekly: 0, daily: 0, remaining: 0, remainingDays: 0, earnedThisMonth: 0 };
   }
-  // count distinct days with earning entries in the last 30 days
-  const since = startOfDay(subDays(new Date(), 30));
-  const days = new Set<string>();
+  const mStart = startOfMonth(now);
+  const mEnd = endOfMonth(now);
+  let gross = 0;
+  let expenses = 0;
   entries.forEach((e) => {
-    if (e.type !== "earning") return;
     const d = new Date(e.date);
-    if (d >= since) days.add(d.toISOString().slice(0, 10));
+    if (d < mStart || d > mEnd) return;
+    if (e.type === "earning") gross += (e as EarningEntry).gross;
+    else if (e.type === "expense") expenses += (e as ExpenseEntry).expense.amount;
   });
-  const activeDays = days.size;
-  // Estimated working days per month: scale last-30 active days; fallback 22
-  const estDaysPerMonth = activeDays >= 3 ? activeDays : 22;
-  const daily = monthlyGoal / estDaysPerMonth;
-  const weekly = monthlyGoal / 4.345;
-  return { monthly: monthlyGoal, weekly, daily, activeDays };
+  const earnedThisMonth = Math.max(0, gross - expenses);
+  const remaining = Math.max(0, monthlyGoal - earnedThisMonth);
+  const today = startOfDay(now);
+  const lastDay = startOfDay(mEnd);
+  const remainingDays = Math.max(1, differenceInCalendarDays(lastDay, today) + 1);
+  const daily = remaining / remainingDays;
+  const weeksRemaining = Math.max(1, remainingDays / 7);
+  const weekly = remaining / weeksRemaining;
+  return { monthly: monthlyGoal, weekly, daily, remaining, remainingDays, earnedThisMonth };
 }
 
 /**
