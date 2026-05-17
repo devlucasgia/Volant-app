@@ -1,14 +1,32 @@
 import { useTheme } from "next-themes";
-import { Toaster as Sonner, toast as sonnerToast } from "sonner";
+import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
 /**
+ * Patch sonner so error/warning toasts default to a longer duration.
+ * Success/info stay snappy via the global `duration` on <Toaster /> below.
+ * Runs once at module load. Per-call `duration` still wins.
+ */
+const ERROR_DURATION = 3000;
+type ToastOpts = { duration?: number };
+const patchType = (key: "error" | "warning") => {
+  const original = (toast as any)[key]?.bind(toast);
+  if (!original) return;
+  (toast as any)[key] = (message: unknown, opts?: ToastOpts) => {
+    const merged: ToastOpts = { duration: ERROR_DURATION, ...(opts || {}) };
+    return original(message, merged);
+  };
+};
+patchType("error");
+patchType("warning");
+
+/**
  * Global toast configuration — optimized for fast, premium UX.
  * - Success/info: ~1.2s (fast confirmation, no interruption)
- * - Errors: ~3s (overridden per-call below)
+ * - Errors/warnings: ~3s (patched above)
  * - Single visible toast at a time → no stacking spam
- * - Compact padding + subtle fade/slide animation
+ * - Compact padding + subtle fade animation
  */
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme();
@@ -38,34 +56,5 @@ const Toaster = ({ ...props }: ToasterProps) => {
     />
   );
 };
-
-/**
- * Wrap sonner's `toast` so error/warning toasts default to a longer duration
- * (users need more time to read them) while success/info stay snappy.
- * Per-call `duration` still wins.
- */
-type ToastFn = typeof sonnerToast;
-const withDefaultDuration = <Args extends unknown[]>(
-  fn: (...args: Args) => string | number,
-  defaultDuration: number,
-) => {
-  return ((...args: Args) => {
-    const last = args[args.length - 1];
-    if (last && typeof last === "object" && !("length" in (last as object))) {
-      const opts = last as { duration?: number };
-      if (opts.duration == null) opts.duration = defaultDuration;
-    } else {
-      (args as unknown[]).push({ duration: defaultDuration });
-    }
-    return fn(...args);
-  }) as typeof fn;
-};
-
-const toast: ToastFn = Object.assign(
-  ((...args: Parameters<ToastFn>) => sonnerToast(...args)) as ToastFn,
-  sonnerToast,
-);
-toast.error = withDefaultDuration(sonnerToast.error.bind(sonnerToast), 3000);
-toast.warning = withDefaultDuration(sonnerToast.warning.bind(sonnerToast), 3000);
 
 export { Toaster, toast };
