@@ -26,6 +26,9 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
+  const [customRange, setCustomRange] = useState<CustomRange | null>(null);
+  const [calOpen, setCalOpen] = useState(false);
+  const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
   const [greetingStyle] = useGreetingStyle();
