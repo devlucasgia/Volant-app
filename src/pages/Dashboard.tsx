@@ -278,8 +278,57 @@ export default function Dashboard() {
         {/* Greeting (fixed at top of body, toggleable via personalization) */}
         {blocks.greeting}
 
-        {/* Period switcher */}
-        <Segmented<Period> options={PERIODS} value={period} onChange={setPeriod} />
+        {/* Period switcher — Hoje | Semana | Mês | Calendário */}
+        <PeriodBar
+          period={period}
+          onSelect={(p) => { setPeriod(p); setCustomRange(null); }}
+          onCalendarClick={() => {
+            setCalDraft(customRange ? { from: customRange.from, to: customRange.to } : undefined);
+            setCalOpen(true);
+          }}
+        />
+
+        <Drawer open={calOpen} onOpenChange={setCalOpen}>
+          <DrawerContent>
+            <div className="mx-auto w-full max-w-md">
+              <DrawerHeader>
+                <DrawerTitle className="flex items-center gap-2">
+                  <CalendarRange className="h-4 w-4 text-success" /> Selecionar período
+                </DrawerTitle>
+                <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
+              </DrawerHeader>
+              <div className="flex justify-center px-2">
+                <Calendar
+                  mode="range"
+                  selected={calDraft}
+                  onSelect={setCalDraft}
+                  numberOfMonths={1}
+                  locale={ptBR}
+                  className="pointer-events-auto"
+                />
+              </div>
+              <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
+                <Button variant="outline" className="flex-1" onClick={() => setCalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="flex-1 gradient-success text-primary-foreground"
+                  disabled={!calDraft?.from}
+                  onClick={() => {
+                    if (!calDraft?.from) return;
+                    const from = calDraft.from;
+                    const to = calDraft.to ?? calDraft.from;
+                    setCustomRange({ from, to });
+                    setPeriod("custom");
+                    setCalOpen(false);
+                  }}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
 
         {/* Net highlight — refined premium card (always visible, hero block) */}
         <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
