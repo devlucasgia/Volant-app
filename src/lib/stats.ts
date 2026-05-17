@@ -1,5 +1,5 @@
 import { Entry, EarningEntry, ExpenseEntry } from "@/types";
-import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays, subDays } from "date-fns";
+import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays } from "date-fns";
 
 export type Period = "day" | "week" | "month" | "all" | "custom";
 
