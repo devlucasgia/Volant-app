@@ -21,8 +21,9 @@ import {
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
-  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera,
+  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
 } from "lucide-react";
+import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
@@ -190,6 +191,7 @@ export default function SettingsPage() {
   const [fontOpen, setFontOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
@@ -546,6 +548,45 @@ export default function SettingsPage() {
                 >
                   <Sparkles className="mr-2 h-4 w-4 text-primary" /> Refazer tour de boas-vindas
                 </Button>
+              </div>
+            </SettingsCard>
+
+            <SettingsCard
+              value="subscription"
+              icon={<Crown className="h-4 w-4" />}
+              title="Assinatura"
+              badge={
+                <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                  Beta gratuito
+                </span>
+              }
+            >
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-border bg-muted/30 p-3">
+                    <div className="text-[11px] text-muted-foreground">Mensal</div>
+                    <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 19,90<span className="text-[11px] font-normal text-muted-foreground">/mês</span></div>
+                  </div>
+                  <div className="relative rounded-xl border border-primary/50 bg-primary/5 p-3">
+                    <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                      −62%
+                    </span>
+                    <div className="text-[11px] text-muted-foreground">Anual</div>
+                    <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 89,90<span className="text-[11px] font-normal text-muted-foreground">/ano</span></div>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => setSubscriptionOpen(true)}
+                  className="w-full gradient-success text-primary-foreground"
+                >
+                  Ver planos
+                </Button>
+                <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+                  Pagamentos serão ativados em uma próxima atualização.
+                </p>
               </div>
             </SettingsCard>
 
@@ -1180,6 +1221,7 @@ export default function SettingsPage() {
 
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
       <SuggestionDialog open={suggestionOpen} onOpenChange={setSuggestionOpen} />
+      <SubscriptionSheet open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
 
       <CarFormDialog
         open={carDialog.open}

@@ -242,6 +242,21 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_notifications: {
+        Row: {
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           daily_goal: number
