@@ -182,26 +182,34 @@ export function JourneyModule() {
       <Drawer open={goalOpen} onOpenChange={setGoalOpen}>
         <DrawerContent>
           <div className="mx-auto w-full max-w-md">
-            <DrawerHeader>
-              <DrawerTitle className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" /> Meta da jornada
-              </DrawerTitle>
-              <DrawerDescription>Defina sua meta para hoje.</DrawerDescription>
+            <DrawerHeader className="items-center text-center pb-2">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <DrawerTitle className="text-center text-lg">Meta da jornada</DrawerTitle>
+              <DrawerDescription className="text-center text-[13px] leading-snug">
+                Defina quanto você quer ganhar hoje. Esta meta vale apenas para o dia de hoje.
+              </DrawerDescription>
             </DrawerHeader>
-            <div className="space-y-2 px-4 pb-2">
-              <Label>Meta (R$)</Label>
+            <div className="space-y-2 px-5 pb-1">
+              <Label className="text-xs text-muted-foreground">Meta (R$)</Label>
               <NumberField
                 currency
                 value={goalValue}
                 onChange={setGoalValue}
                 autoFocus
               />
+              {suggestedDaily > 0 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Sugestão inteligente: R$ {suggestedDaily.toLocaleString("pt-BR")}
+                </p>
+              )}
             </div>
-            <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-              <Button variant="outline" className="flex-1" onClick={() => setGoalOpen(false)}>
+            <div className="flex gap-2 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+              <Button variant="outline" className="h-11 flex-1" onClick={() => setGoalOpen(false)}>
                 Cancelar
               </Button>
-              <Button className="flex-1 gradient-success text-primary-foreground" onClick={confirmGoalAndStart}>
+              <Button className="h-11 flex-1 gradient-success text-primary-foreground" onClick={confirmGoalAndStart}>
                 <Play className="mr-2 h-4 w-4" /> Iniciar jornada
               </Button>
             </div>
