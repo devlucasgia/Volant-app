@@ -1,0 +1,1 @@
+UPDATE storage.buckets SET allowed_mime_types = ARRAY['image/png','image/jpeg','image/webp'], file_size_limit = 5242880 WHERE id = 'avatars';
