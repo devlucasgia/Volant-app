@@ -15,6 +15,7 @@ import History from "./pages/History";
 import Reports from "./pages/Reports";
 
 import SettingsPage from "./pages/Settings";
+import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
                     <Route path="/historico" element={<History />} />
                     <Route path="/relatorios" element={<Reports />} />
                     <Route path="/ajustes" element={<SettingsPage />} />
+                    <Route path="/checkout/return" element={<CheckoutReturn />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
