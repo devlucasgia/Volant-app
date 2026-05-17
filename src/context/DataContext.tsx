@@ -151,6 +151,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const dw = (sRow as any).dashboard_widgets || {};
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
+          monthlyGoal: Number((sRow as any).monthly_goal) || 0,
           maintenanceIntervalKm: Number(sRow.maintenance_interval_km) || 0,
           lastMaintenanceKm: Number(sRow.last_maintenance_km) || 0,
           theme: (sRow.theme as "light" | "dark") || "dark",
