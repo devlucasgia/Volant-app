@@ -296,6 +296,7 @@ export default function SettingsPage() {
   const [bugOpen, setBugOpen] = useState(false);
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
+  const [subscriptionInitialView, setSubscriptionInitialView] = useState<"auto" | "plans">("auto");
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
