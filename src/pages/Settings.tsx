@@ -1292,7 +1292,11 @@ export default function SettingsPage() {
 
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
       <SuggestionDialog open={suggestionOpen} onOpenChange={setSuggestionOpen} />
-      <SubscriptionSheet open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
+      <SubscriptionSheet
+        open={subscriptionOpen}
+        onOpenChange={setSubscriptionOpen}
+        initialView={subscriptionInitialView}
+      />
 
       <CarFormDialog
         open={carDialog.open}
