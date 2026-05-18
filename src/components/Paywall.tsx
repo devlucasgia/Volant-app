@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Check, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Crown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { getStripeEnvironment } from "@/lib/stripe";
+import { supabase } from "@/integrations/supabase/client";
 
 type PlanKey = "monthly" | "yearly";
 
@@ -21,7 +22,6 @@ const FEATURES = [
 ];
 
 interface PaywallProps {
-  /** Optional: show a sign-out / "sair" affordance at top */
   onSignOut?: () => void;
 }
 
@@ -29,7 +29,33 @@ export function Paywall({ onSignOut }: PaywallProps) {
   const { user } = useAuth();
   const [selected, setSelected] = useState<PlanKey>("yearly");
   const [showCheckout, setShowCheckout] = useState(false);
+  const [hasUsedTrial, setHasUsedTrial] = useState(false);
   const isTestMode = getStripeEnvironment() === "sandbox";
+
+  // Detect if user already had any subscription row in this environment.
+  // If yes, suppress the "Começar teste de 7 dias" acquisition copy.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("environment", getStripeEnvironment())
+        .limit(1)
+        .maybeSingle();
+      if (!cancelled) setHasUsedTrial(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const ctaLabel = hasUsedTrial
+    ? `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`
+    : "Começar teste de 7 dias";
+  const ctaHint = hasUsedTrial
+    ? "Você pode cancelar quando quiser pelo portal de assinatura."
+    : "Sem cobrança nos 7 primeiros dias. Cancele quando quiser pelo portal de assinatura.";
 
   return (
     <div className="relative min-h-[100dvh] overflow-y-auto bg-background">
@@ -50,7 +76,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-full border border-primary/30 bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.35)]">
-              <Sparkles className="h-4 w-4" />
+              <Crown className="h-4 w-4" />
             </div>
             <span className="text-sm font-semibold tracking-wide text-foreground">Volant Premium</span>
           </div>
@@ -87,13 +113,19 @@ export function Paywall({ onSignOut }: PaywallProps) {
             <div className="mt-7 text-center">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                 <ShieldCheck className="h-3 w-3" />
-                7 dias grátis
+                {hasUsedTrial ? "Reative seu acesso" : "7 dias grátis"}
               </span>
               <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">
-                Acesso completo ao <span className="text-primary">Volant Premium</span>
+                {hasUsedTrial ? (
+                  <>Continue com o <span className="text-primary">Volant Premium</span></>
+                ) : (
+                  <>Acesso completo ao <span className="text-primary">Volant Premium</span></>
+                )}
               </h1>
               <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
-                Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste.
+                {hasUsedTrial
+                  ? "Escolha o plano ideal para retomar todos os recursos Premium."
+                  : "Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste."}
               </p>
             </div>
 
@@ -136,10 +168,10 @@ export function Paywall({ onSignOut }: PaywallProps) {
                 onClick={() => setShowCheckout(true)}
                 className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-[0_0_28px_hsl(var(--primary)/0.35)]"
               >
-                Começar teste de 7 dias
+                {ctaLabel}
               </Button>
               <p className="px-1 text-center text-[11px] leading-relaxed text-muted-foreground">
-                Sem cobrança nos 7 primeiros dias. Cancele quando quiser pelo portal de assinatura.
+                {ctaHint}
               </p>
             </div>
 
