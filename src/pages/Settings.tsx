@@ -656,7 +656,10 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SubscriptionCard onOpen={() => setSubscriptionOpen(true)} />
+            <SubscriptionCard
+              onOpen={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenPlans={() => { setSubscriptionInitialView("plans"); setSubscriptionOpen(true); }}
+            />
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
