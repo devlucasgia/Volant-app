@@ -155,10 +155,23 @@ function MiniCardToggle({
   );
 }
 
-function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
+function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenPlans: () => void }) {
   const { user } = useAuth();
-  // Lazy import to avoid hook in module scope
   const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
+
+  const isYearly = subscription?.price_id === "volant_premium_yearly";
+  const isMonthly = subscription?.price_id === "volant_premium_monthly";
+  const isTrialing = subscription?.status === "trialing";
+  const hasUsedTrial = !!subscription;
+
+  const formatDate = (iso?: string | null) => {
+    if (!iso) return null;
+    try {
+      return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+    } catch { return null; }
+  };
+  const trialEnd = isTrialing ? formatDate(subscription?.current_period_end) : null;
+  const nextBilling = subscription && !isTrialing ? formatDate(subscription.current_period_end) : null;
 
   const badge = isGrandfathered ? (
     <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
@@ -166,7 +179,7 @@ function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
     </span>
   ) : isActive ? (
     <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-      Ativa
+      {isTrialing ? "Teste ativo" : "Ativa"}
     </span>
   ) : null;
 
@@ -183,19 +196,45 @@ function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
         <div className="space-y-3">
           <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
             <div className="font-medium">
-              {subscription?.price_id === "volant_premium_yearly" ? "Plano Anual" : "Plano Mensal"}
+              {isYearly ? "Plano Anual" : "Plano Mensal"}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
-              Status: {subscription?.status === "trialing" ? "Teste de 7 dias ativo" : subscription?.status}
+              {isTrialing
+                ? "Teste de 7 dias ativo"
+                : subscription?.status === "active" ? "Assinatura ativa"
+                : subscription?.status === "past_due" ? "Pagamento pendente"
+                : subscription?.status}
               {subscription?.cancel_at_period_end ? " · cancelamento agendado" : ""}
             </div>
+            {trialEnd && (
+              <div className="mt-0.5 text-xs text-muted-foreground">Seu teste termina em {trialEnd}</div>
+            )}
+            {nextBilling && (
+              <div className="mt-0.5 text-xs text-muted-foreground">Próxima cobrança: {nextBilling}</div>
+            )}
+            {isYearly && (
+              <div className="mt-1 text-xs text-primary">Você está no melhor plano do Volant.</div>
+            )}
           </div>
+
+          {isMonthly && !subscription?.cancel_at_period_end && (
+            <Button
+              variant="outline"
+              onClick={onOpenPlans}
+              className="w-full border-primary/40 text-primary hover:bg-primary/10"
+            >
+              Economize com o plano anual
+            </Button>
+          )}
+
           <Button onClick={onOpen} className="w-full">Gerenciar assinatura</Button>
         </div>
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual.
+            {hasUsedTrial
+              ? "Reative seu acesso Premium para continuar usando o Volant."
+              : "Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual."}
           </p>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -211,7 +250,7 @@ function SubscriptionCard({ onOpen }: { onOpen: () => void }) {
             </div>
           </div>
           <Button onClick={onOpen} className="w-full gradient-success text-primary-foreground">
-            Começar teste de 7 dias
+            {hasUsedTrial ? "Ver planos" : "Começar teste de 7 dias"}
           </Button>
         </div>
       )}
