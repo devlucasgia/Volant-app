@@ -24,6 +24,7 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
 } from "lucide-react";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
+import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
 import { useSubscription } from "@/hooks/useSubscription";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
