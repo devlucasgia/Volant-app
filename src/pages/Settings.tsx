@@ -325,6 +325,27 @@ export default function SettingsPage() {
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [subscriptionInitialView, setSubscriptionInitialView] = useState<"auto" | "plans">("auto");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const openPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { getStripeEnvironment } = await import("@/lib/stripe");
+      const { data, error } = await supabase.functions.invoke("create-portal-session", {
+        body: {
+          environment: getStripeEnvironment(),
+          returnUrl: `${window.location.origin}/ajustes`,
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Falha ao abrir portal");
+      window.open(data.url, "_blank");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
