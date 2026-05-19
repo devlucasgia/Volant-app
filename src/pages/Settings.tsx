@@ -1349,6 +1349,7 @@ export default function SettingsPage() {
         onOpenChange={setSubscriptionOpen}
         initialView={subscriptionInitialView}
       />
+      <UpgradeToYearlyDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
 
       <CarFormDialog
         open={carDialog.open}
