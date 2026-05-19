@@ -685,8 +685,10 @@ export default function SettingsPage() {
             </SettingsCard>
 
             <SubscriptionCard
-              onOpen={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
-              onOpenPlans={() => { setSubscriptionInitialView("plans"); setSubscriptionOpen(true); }}
+              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenUpgrade={() => setUpgradeOpen(true)}
+              onManage={openPortal}
+              managing={portalLoading}
             />
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
