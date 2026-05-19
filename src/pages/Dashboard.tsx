@@ -37,6 +37,10 @@ export default function Dashboard() {
   const [homeOrder] = useHomeOrder();
   const [greetingStyle] = useGreetingStyle();
 
+  useEffect(() => {
+    try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
+  }, [hideValues]);
+
   // Personalized greeting — nickname + optional subtitle message from profiles.
   const [nickname, setNickname] = useState<string>("");
   const [greetingMessage, setGreetingMessage] = useState<string>("");
