@@ -24,6 +24,7 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
 } from "lucide-react";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
+import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
 import { useSubscription } from "@/hooks/useSubscription";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
@@ -155,7 +156,17 @@ function MiniCardToggle({
   );
 }
 
-function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenPlans: () => void }) {
+function SubscriptionCard({
+  onOpenAcquisition,
+  onOpenUpgrade,
+  onManage,
+  managing,
+}: {
+  onOpenAcquisition: () => void;
+  onOpenUpgrade: () => void;
+  onManage: () => void;
+  managing: boolean;
+}) {
   const { user } = useAuth();
   const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
 
@@ -183,13 +194,22 @@ function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenP
     </span>
   ) : null;
 
+  // Premium dark-green upgrade button (no neon).
+  const upgradeBtnClass = cn(
+    "group relative w-full overflow-hidden h-11",
+    "border border-primary/40 text-foreground",
+    "bg-[linear-gradient(135deg,hsl(var(--card))_0%,hsl(142_60%_14%)_55%,hsl(142_65%_20%)_100%)]",
+    "shadow-[inset_0_1px_0_hsl(var(--primary)/0.18),0_8px_24px_-14px_hsl(var(--primary)/0.55)]",
+    "hover:brightness-110 transition-all",
+  );
+
   return (
     <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge}>
       {isGrandfathered ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
           <p className="text-sm text-muted-foreground">
-            Você possui acesso completo ao Volant sem necessidade de assinatura.
+            Acesso completo ao Volant, permanente e sem cobranças.
           </p>
         </div>
       ) : isActive ? (
@@ -199,8 +219,7 @@ function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenP
               {isYearly ? "Plano Anual" : "Plano Mensal"}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
-              {isTrialing
-                ? "Teste de 7 dias ativo"
+              {isTrialing ? "Teste de 7 dias ativo"
                 : subscription?.status === "active" ? "Assinatura ativa"
                 : subscription?.status === "past_due" ? "Pagamento pendente"
                 : subscription?.status}
@@ -210,7 +229,9 @@ function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenP
               <div className="mt-0.5 text-xs text-muted-foreground">Seu teste termina em {trialEnd}</div>
             )}
             {nextBilling && (
-              <div className="mt-0.5 text-xs text-muted-foreground">Próxima cobrança: {nextBilling}</div>
+              <div className="mt-0.5 text-xs text-muted-foreground">
+                {isYearly ? "Próxima renovação" : "Próxima cobrança"}: {nextBilling}
+              </div>
             )}
             {isYearly && (
               <div className="mt-1 text-xs text-primary">Você está no melhor plano do Volant.</div>
@@ -218,16 +239,24 @@ function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenP
           </div>
 
           {isMonthly && !subscription?.cancel_at_period_end && (
-            <Button
-              variant="outline"
-              onClick={onOpenPlans}
-              className="w-full border-primary/40 text-primary hover:bg-primary/10"
-            >
-              Economize com o plano anual
+            <Button onClick={onOpenUpgrade} className={upgradeBtnClass}>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_30%,hsl(var(--primary)/0.22)_50%,transparent_70%)] group-hover:translate-x-full transition-transform duration-700"
+              />
+              <Crown className="h-4 w-4 text-primary" />
+              <span className="font-semibold">Upgrade de plano</span>
             </Button>
           )}
 
-          <Button onClick={onOpen} className="w-full">Gerenciar assinatura</Button>
+          <Button
+            variant="outline"
+            onClick={onManage}
+            disabled={managing}
+            className="w-full"
+          >
+            {managing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerenciar assinatura"}
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -249,7 +278,7 @@ function SubscriptionCard({ onOpen, onOpenPlans }: { onOpen: () => void; onOpenP
               <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 89,90<span className="text-[11px] font-normal text-muted-foreground">/ano</span></div>
             </div>
           </div>
-          <Button onClick={onOpen} className="w-full gradient-success text-primary-foreground">
+          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
             {hasUsedTrial ? "Ver planos" : "Começar teste de 7 dias"}
           </Button>
         </div>
@@ -297,6 +326,27 @@ export default function SettingsPage() {
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [subscriptionInitialView, setSubscriptionInitialView] = useState<"auto" | "plans">("auto");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const openPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { getStripeEnvironment } = await import("@/lib/stripe");
+      const { data, error } = await supabase.functions.invoke("create-portal-session", {
+        body: {
+          environment: getStripeEnvironment(),
+          returnUrl: `${window.location.origin}/ajustes`,
+        },
+      });
+      if (error || !data?.url) throw new Error(error?.message || "Falha ao abrir portal");
+      window.open(data.url, "_blank");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setPortalLoading(false);
+    }
+  };
   const [fontScale] = useFontScale();
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
@@ -657,8 +707,10 @@ export default function SettingsPage() {
             </SettingsCard>
 
             <SubscriptionCard
-              onOpen={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
-              onOpenPlans={() => { setSubscriptionInitialView("plans"); setSubscriptionOpen(true); }}
+              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenUpgrade={() => setUpgradeOpen(true)}
+              onManage={openPortal}
+              managing={portalLoading}
             />
 
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
@@ -1297,6 +1349,7 @@ export default function SettingsPage() {
         onOpenChange={setSubscriptionOpen}
         initialView={subscriptionInitialView}
       />
+      <UpgradeToYearlyDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
 
       <CarFormDialog
         open={carDialog.open}
