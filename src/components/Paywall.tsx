@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
+import premiumCrown from "@/assets/volant-premium-crown.png";
 
 type PlanKey = "monthly" | "yearly";
 
@@ -14,11 +15,11 @@ const PRICE_IDS: Record<PlanKey, string> = {
   yearly: "volant_premium_yearly",
 };
 
-const FEATURES = [
-  "Ganhos, gastos e lucro líquido em tempo real",
-  "Relatórios completos e indicadores de performance",
-  "Histórico ilimitado e metas personalizadas",
-  "Suporte prioritário e atualizações Premium",
+const BENEFITS: { title: string; desc: string }[] = [
+  { title: "Jornada completa de trabalho", desc: "Meta do dia, rotina e ganho registrado com facilidade." },
+  { title: "Metas que evoluem com você", desc: "Sugestões reais com base no seu desempenho." },
+  { title: "Seu app, do seu jeito", desc: "Personalize telas e organize os blocos como preferir." },
+  { title: "Controle financeiro real", desc: "Lucro, gastos, km e desempenho em um só lugar." },
 ];
 
 interface PaywallProps {
@@ -33,7 +34,6 @@ export function Paywall({ onSignOut }: PaywallProps) {
   const isTestMode = getStripeEnvironment() === "sandbox";
 
   // Detect if user already had any subscription row in this environment.
-  // If yes, suppress the "Começar teste de 7 dias" acquisition copy.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -54,15 +54,18 @@ export function Paywall({ onSignOut }: PaywallProps) {
     ? `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`
     : "Começar teste de 7 dias";
   const ctaHint = hasUsedTrial
-    ? "Você pode cancelar quando quiser pelo portal de assinatura."
-    : "Sem cobrança nos 7 primeiros dias. Cancele quando quiser pelo portal de assinatura.";
+    ? "Cancele quando quiser pelo portal de assinatura."
+    : "Cancele quando quiser pelo portal de assinatura.";
+
+  // Subtle staggered entrance for each section.
+  const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${i * 70}ms` });
 
   return (
     <div className="relative min-h-[100dvh] overflow-y-auto bg-background">
-      {/* Ambient premium glow */}
+      {/* Soft top green glow */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-primary-glow/15 blur-3xl" />
+        <div className="absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/22 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-primary-glow/10 blur-3xl" />
       </div>
 
       <div
@@ -72,13 +75,15 @@ export function Paywall({ onSignOut }: PaywallProps) {
           paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
         }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header: small crown + "Volant Premium" left, Sair right */}
+        <div className="flex items-center justify-between animate-fade-in" style={stagger(0)}>
           <div className="flex items-center gap-2">
             <div className="grid h-9 w-9 place-items-center rounded-full border border-primary/30 bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.35)]">
               <Crown className="h-4 w-4" />
             </div>
-            <span className="text-sm font-semibold tracking-wide text-foreground">Volant Premium</span>
+            <span className="text-[15px] font-semibold tracking-wide text-foreground">
+              Volant <span className="text-primary">Premium</span>
+            </span>
           </div>
           {onSignOut && (
             <button
@@ -91,7 +96,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
         </div>
 
         {showCheckout ? (
-          <div className="mt-6">
+          <div className="mt-6 animate-fade-in-up">
             <button
               onClick={() => setShowCheckout(false)}
               className="mb-3 text-xs text-muted-foreground underline-offset-2 hover:underline"
@@ -109,20 +114,21 @@ export function Paywall({ onSignOut }: PaywallProps) {
           </div>
         ) : (
           <>
-            {/* Headline */}
-            <div className="mt-7 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
+            {/* Badge */}
+            <div className="mt-7 flex justify-center animate-fade-in-up" style={stagger(1)}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                 <ShieldCheck className="h-3 w-3" />
                 {hasUsedTrial ? "Reative seu acesso" : "7 dias grátis"}
               </span>
-              <h1 className="mt-3 text-2xl font-bold leading-tight text-foreground">
-                {hasUsedTrial ? (
-                  <>Continue com o <span className="text-primary">Volant Premium</span></>
-                ) : (
-                  <>Acesso completo ao <span className="text-primary">Volant Premium</span></>
-                )}
+            </div>
+
+            {/* Headline */}
+            <div className="mt-3 text-center animate-fade-in-up" style={stagger(2)}>
+              <h1 className="text-[28px] font-bold leading-[1.15] text-foreground">
+                Acesso completo ao{" "}
+                <span className="text-primary">Volant Premium.</span>
               </h1>
-              <p className="mx-auto mt-2 max-w-xs text-sm text-muted-foreground">
+              <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
                 {hasUsedTrial
                   ? "Escolha o plano ideal para retomar todos os recursos Premium."
                   : "Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste."}
@@ -130,7 +136,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
             </div>
 
             {/* Plans */}
-            <div className="mt-6 grid grid-cols-2 gap-2.5">
+            <div className="mt-7 grid grid-cols-2 gap-2.5 animate-fade-in-up" style={stagger(3)}>
               <PlanCard
                 label="Mensal"
                 price="R$ 19,90"
@@ -150,24 +156,48 @@ export function Paywall({ onSignOut }: PaywallProps) {
               />
             </div>
 
-            {/* Features */}
-            <ul className="mt-6 space-y-2.5">
-              {FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-foreground/90">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
-                    <Check className="h-3 w-3" strokeWidth={3} />
-                  </span>
-                  {f}
-                </li>
-              ))}
-            </ul>
+            {/* Benefits */}
+            <div
+              className="mt-5 rounded-2xl border border-border bg-card/70 p-4 backdrop-blur-sm animate-fade-in-up"
+              style={stagger(4)}
+            >
+              <ul className="divide-y divide-border/60">
+                {BENEFITS.map((b, i) => (
+                  <li
+                    key={b.title}
+                    className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0 animate-fade-in-up"
+                    style={{ animationDelay: `${360 + i * 60}ms` }}
+                  >
+                    <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/12 text-primary animate-scale-in" style={{ animationDelay: `${380 + i * 60}ms` }}>
+                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="text-[13.5px] font-semibold leading-tight text-foreground">{b.title}</div>
+                      <div className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{b.desc}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
             {/* CTA */}
-            <div className="mt-7 space-y-2">
+            <div className="mt-6 space-y-2 animate-fade-in-up" style={stagger(6)}>
               <Button
                 onClick={() => setShowCheckout(true)}
-                className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-[0_0_28px_hsl(var(--primary)/0.35)]"
+                className={cn(
+                  "group relative h-14 w-full overflow-hidden text-base font-semibold",
+                  "border border-primary/45 text-foreground",
+                  "bg-[linear-gradient(135deg,hsl(var(--card))_0%,hsl(142_60%_14%)_50%,hsl(142_65%_22%)_100%)]",
+                  "shadow-[inset_0_1px_0_hsl(var(--primary)/0.22),0_10px_30px_-12px_hsl(var(--primary)/0.55)]",
+                  "transition-all duration-300 active:scale-[0.985] hover:brightness-110",
+                )}
               >
+                {/* Soft shine sweep */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-[linear-gradient(90deg,transparent,hsl(var(--primary)/0.18),transparent)] motion-safe:animate-premium-shine motion-reduce:hidden"
+                />
+                <Crown className="mr-2 h-4 w-4 text-primary" />
                 {ctaLabel}
               </Button>
               <p className="px-1 text-center text-[11px] leading-relaxed text-muted-foreground">
@@ -176,7 +206,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
             </div>
 
             {isTestMode && (
-              <div className="mt-4">
+              <div className="mt-4 animate-fade-in" style={stagger(7)}>
                 <TestModeNote />
               </div>
             )}
@@ -201,29 +231,46 @@ function PlanCard({
   label: string; price: string; period: string; selected: boolean;
   highlight?: boolean; badge?: string; footnote?: string; onSelect: () => void;
 }) {
+  const isAnnual = !!highlight;
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative rounded-2xl border bg-card p-4 text-left transition-all",
+        "relative rounded-2xl border bg-card p-4 text-left transition-all duration-300",
+        isAnnual ? "pt-10" : "",
         selected
-          ? "border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.25),0_0_24px_hsl(var(--primary)/0.25)]"
-          : "border-border",
-        highlight && !selected && "border-primary/40",
+          ? isAnnual
+            ? "border-primary/60 motion-safe:animate-premium-glow motion-reduce:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_0_24px_-4px_hsl(var(--primary)/0.5)]"
+            : "border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.22)]"
+          : isAnnual
+            ? "border-primary/35"
+            : "border-border",
       )}
     >
+      {isAnnual && (
+        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 animate-scale-in">
+          <img
+            src={premiumCrown}
+            alt=""
+            aria-hidden
+            className="h-16 w-16 drop-shadow-[0_0_18px_hsl(var(--primary)/0.55)]"
+          />
+        </div>
+      )}
       {badge && (
         <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
           {badge}
         </span>
       )}
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-bold text-foreground">
+      <div className={cn("text-xs font-medium text-muted-foreground", isAnnual && "text-center")}>{label}</div>
+      <div className={cn("mt-1 text-lg font-bold text-foreground", isAnnual && "text-center")}>
         {price}
         <span className="text-xs font-normal text-muted-foreground">{period}</span>
       </div>
-      {footnote && <div className="mt-1 text-[11px] text-muted-foreground">{footnote}</div>}
+      {footnote && (
+        <div className={cn("mt-1 text-[11px] text-muted-foreground", isAnnual && "text-center")}>{footnote}</div>
+      )}
     </button>
   );
 }
