@@ -21,7 +21,7 @@ import {
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
-  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown,
+  Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check,
 } from "lucide-react";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
