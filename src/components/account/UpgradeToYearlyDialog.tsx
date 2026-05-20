@@ -73,7 +73,7 @@ export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
               </div>
               <DialogTitle className="text-xl">Faça upgrade para o plano anual</DialogTitle>
               <DialogDescription className="text-sm">
-                Mesmos benefícios, com economia de 62% comparado ao mensal.
+                Mesmos benefícios, com economia de 62% em relação ao mensal.
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -89,7 +89,11 @@ export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
                 </div>
                 <div className="mt-1 text-[11px] text-muted-foreground">Plano atual</div>
               </div>
-              <div className="relative rounded-2xl border border-primary/45 bg-primary/[0.06] p-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)]">
+              <div className="relative rounded-2xl border border-primary/45 bg-primary/[0.06] p-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
+                <Crown
+                  aria-hidden
+                  className="pointer-events-none absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)] motion-safe:animate-scale-in"
+                />
                 <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
                   −62%
                 </span>
