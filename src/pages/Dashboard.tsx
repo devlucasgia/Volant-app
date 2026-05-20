@@ -36,6 +36,7 @@ export default function Dashboard() {
   });
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
+  const [heroMetric] = useHeroMetric();
   const [greetingStyle] = useGreetingStyle();
 
   useEffect(() => {
