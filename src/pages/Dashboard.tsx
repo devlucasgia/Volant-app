@@ -414,61 +414,71 @@ export default function Dashboard() {
           </DrawerContent>
         </Drawer>
 
-        {/* Net highlight — refined premium card (always visible, hero block) */}
-        <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
-          <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
-          <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
-          <div className="relative">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
-                <Gauge className="h-3.5 w-3.5" /> Lucro líquido
-              </div>
-              <button
-                type="button"
-                aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
-                onClick={() => setHideValues((v) => !v)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
-              >
-                {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            <div
-              className={cn(
-                "mt-1.5 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300",
-                hideValues && "blur-[4px] select-none"
-              )}
-            >
-              {hideValues ? "R$ •••••" : brl(s.net)}
-            </div>
-            <div className="mt-4 flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-success/70" />
-                <span className="text-muted-foreground">Bruto</span>
-                <span
+        {/* Hero highlight — user can switch between Lucro líquido (default) and Bruto */}
+        {(() => {
+          const showGross = heroMetric === "gross";
+          const heroTitle = showGross ? "Bruto" : "Lucro líquido";
+          const heroValue = showGross ? s.gross : s.net;
+          // Secondary metrics swap when "Bruto" is the hero.
+          const secondary: { label: string; value: number; dot: string }[] = showGross
+            ? [
+                { label: "Lucro líquido", value: s.net, dot: "bg-success/70" },
+                { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
+              ]
+            : [
+                { label: "Bruto", value: s.gross, dot: "bg-success/70" },
+                { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
+              ];
+          return (
+            <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
+              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
+              <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
+                    <Gauge className="h-3.5 w-3.5" /> {heroTitle}
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
+                    onClick={() => setHideValues((v) => !v)}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
+                  >
+                    {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div
+                  key={heroMetric}
                   className={cn(
-                    "font-semibold tabular-nums text-foreground/90 transition-all duration-300",
-                    hideValues && "blur-[3px] select-none"
+                    "mt-1.5 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300 animate-fade-in-up",
+                    hideValues && "blur-[4px] select-none"
                   )}
                 >
-                  {hideValues ? "R$ •••••" : brl(s.gross)}
-                </span>
-              </div>
-              <div className="h-3 w-px bg-border" />
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-destructive/70" />
-                <span className="text-muted-foreground">Gastos</span>
-                <span
-                  className={cn(
-                    "font-semibold tabular-nums text-foreground/90 transition-all duration-300",
-                    hideValues && "blur-[3px] select-none"
-                  )}
-                >
-                  {hideValues ? "R$ •••••" : brl(s.totalExpenses)}
-                </span>
+                  {hideValues ? "R$ •••••" : brl(heroValue)}
+                </div>
+                <div className="mt-4 flex items-center gap-4 text-xs">
+                  {secondary.map((m, i) => (
+                    <div key={m.label} className="flex items-center gap-3">
+                      {i > 0 && <div className="h-3 w-px bg-border" />}
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
+                        <span className="text-muted-foreground">{m.label}</span>
+                        <span
+                          className={cn(
+                            "font-semibold tabular-nums text-foreground/90 transition-all duration-300",
+                            hideValues && "blur-[3px] select-none"
+                          )}
+                        >
+                          {hideValues ? "R$ •••••" : brl(m.value)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Maintenance alert (conditional, fixed position, not in personalization) */}
         {showMaintAlert && (
