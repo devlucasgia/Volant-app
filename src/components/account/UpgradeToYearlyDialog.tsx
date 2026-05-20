@@ -13,10 +13,10 @@ interface Props {
 }
 
 const BENEFITS = [
-  "Todos os recursos Premium incluídos",
-  "Relatórios e indicadores completos",
-  "Histórico ilimitado e metas personalizadas",
-  "Suporte prioritário",
+  "Jornada completa de trabalho",
+  "Metas inteligentes",
+  "Personalização da rotina",
+  "Controle financeiro real",
 ];
 
 export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
