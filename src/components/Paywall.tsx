@@ -238,8 +238,8 @@ function PlanCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative rounded-2xl border bg-card p-4 text-left transition-all duration-300",
-        isAnnual ? "pt-10" : "",
+        "relative rounded-2xl border bg-card text-left transition-all duration-300",
+        isAnnual ? "px-4 pt-8 pb-4" : "px-4 py-4",
         selected
           ? isAnnual
             ? "border-primary/60 motion-safe:animate-premium-glow motion-reduce:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_0_24px_-4px_hsl(var(--primary)/0.5)]"
@@ -250,12 +250,12 @@ function PlanCard({
       )}
     >
       {isAnnual && (
-        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 animate-scale-in">
+        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[55%] animate-scale-in">
           <img
             src={premiumCrown}
             alt=""
             aria-hidden
-            className="h-16 w-16 drop-shadow-[0_0_18px_hsl(var(--primary)/0.55)]"
+            className="h-11 w-11 drop-shadow-[0_0_14px_hsl(var(--primary)/0.55)]"
           />
         </div>
       )}
@@ -264,13 +264,20 @@ function PlanCard({
           {badge}
         </span>
       )}
-      <div className={cn("text-xs font-medium text-muted-foreground", isAnnual && "text-center")}>{label}</div>
-      <div className={cn("mt-1 text-lg font-bold text-foreground", isAnnual && "text-center")}>
-        {price}
-        <span className="text-xs font-normal text-muted-foreground">{period}</span>
+      <div className={cn("text-[11px] font-semibold uppercase tracking-wider text-muted-foreground", isAnnual && "text-center")}>{label}</div>
+      <div className={cn("mt-1 flex items-baseline gap-0.5 font-bold text-foreground tabular-nums", isAnnual ? "justify-center" : "")}>
+        <span className="text-[18px] leading-none">{price}</span>
+        <span className="text-[11px] font-medium text-muted-foreground">{period}</span>
       </div>
       {footnote && (
-        <div className={cn("mt-1 text-[11px] text-muted-foreground", isAnnual && "text-center")}>{footnote}</div>
+        <div
+          className={cn(
+            "mt-1 text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]",
+            isAnnual && "text-center",
+          )}
+        >
+          {footnote}
+        </div>
       )}
     </button>
   );
