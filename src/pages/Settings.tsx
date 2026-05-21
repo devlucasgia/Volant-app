@@ -916,7 +916,7 @@ export default function SettingsPage() {
               <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-3">
                 <div className="flex items-center gap-2">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                    <Sparkles className="h-3.5 w-3.5" />
+                    <ArrowLeftRight className="h-3.5 w-3.5" />
                   </span>
                   <div className="min-w-0">
                     <div className="text-[13px] font-semibold leading-tight">Destaque do card principal</div>
@@ -937,7 +937,9 @@ export default function SettingsPage() {
                         type="button"
                         role="radio"
                         aria-checked={active}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           if (heroMetric === o.k) return;
                           setHeroMetric(o.k);
                           notifySaved();
@@ -962,9 +964,15 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <p className="text-[11px] text-muted-foreground">
-                Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
-              </p>
+              {/* Subsection header for reorderable blocks — visually connects to the list below */}
+              <div className="mt-1 pt-1">
+                <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+                  Blocos da tela inicial
+                </div>
+                <p className="mt-1 px-1 text-[11px] leading-snug text-muted-foreground">
+                  Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
+                </p>
+              </div>
               {(() => {
                 const labels: Partial<Record<HomeCardKey, { label: string; icon: React.ReactNode }>> = {
                   goal:      { label: "Meta",        icon: <Target className="h-4 w-4" /> },
