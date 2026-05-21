@@ -83,27 +83,31 @@ export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
             {/* Plan comparison */}
             <div className="grid grid-cols-2 gap-2.5">
               <div className="rounded-2xl border border-border bg-muted/30 p-3.5">
-                <div className="text-[11px] font-medium text-muted-foreground">Mensal</div>
-                <div className="mt-1 text-base font-semibold text-foreground">
-                  R$ 19,90
-                  <span className="text-[11px] font-normal text-muted-foreground">/mês</span>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Mensal</div>
+                <div className="mt-1 flex items-baseline gap-0.5 font-bold text-foreground tabular-nums">
+                  <span className="text-[17px] leading-none">R$ 19,90</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">/mês</span>
                 </div>
                 <div className="mt-1 text-[11px] text-muted-foreground">Plano atual</div>
               </div>
-              <div className="relative rounded-2xl border border-primary/45 bg-primary/[0.06] p-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
-                <Crown
+              <div className="relative rounded-2xl border border-primary/45 bg-primary/[0.06] px-3.5 pt-7 pb-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
+                <img
+                  src={premiumCrown}
+                  alt=""
                   aria-hidden
-                  className="pointer-events-none absolute -top-3 left-1/2 h-5 w-5 -translate-x-1/2 text-primary drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)] motion-safe:animate-scale-in"
+                  className="pointer-events-none absolute left-1/2 top-0 h-10 w-10 -translate-x-1/2 -translate-y-[55%] drop-shadow-[0_0_14px_hsl(var(--primary)/0.55)] motion-safe:animate-scale-in"
                 />
-                <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
                   −62%
                 </span>
-                <div className="text-[11px] font-medium text-muted-foreground">Anual</div>
-                <div className="mt-1 text-base font-semibold text-foreground">
-                  R$ 89,90
-                  <span className="text-[11px] font-normal text-muted-foreground">/ano</span>
+                <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Anual</div>
+                <div className="mt-1 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
+                  <span className="text-[17px] leading-none">R$ 89,90</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">/ano</span>
                 </div>
-                <div className="mt-1 text-[11px] text-primary">≈ R$ 7,49/mês</div>
+                <div className="mt-1 text-center text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]">
+                  ≈ R$ 7,49/mês
+                </div>
               </div>
             </div>
 
