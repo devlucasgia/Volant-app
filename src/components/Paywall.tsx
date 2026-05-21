@@ -62,17 +62,18 @@ export function Paywall({ onSignOut }: PaywallProps) {
 
   return (
     <div className="relative min-h-[100dvh] overflow-y-auto bg-background">
-      {/* Soft top green glow */}
+      {/* Soft top green glow — elegant, premium, not neon */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-primary/22 blur-3xl" />
-        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-primary-glow/10 blur-3xl" />
+        <div className="absolute -top-32 left-1/2 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-primary/25 blur-[90px]" />
+        <div className="absolute -top-16 left-1/2 h-48 w-72 -translate-x-1/2 rounded-full bg-primary-glow/15 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-60 w-60 rounded-full bg-primary-glow/8 blur-3xl" />
       </div>
 
       <div
         className="relative z-10 mx-auto flex w-full max-w-md flex-col px-5"
         style={{
-          paddingTop: "max(1.25rem, env(safe-area-inset-top))",
-          paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+          paddingTop: "max(1rem, env(safe-area-inset-top))",
+          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
         }}
       >
         {/* Header: small crown + "Volant Premium" left, Sair right */}
@@ -115,7 +116,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
         ) : (
           <>
             {/* Badge */}
-            <div className="mt-7 flex justify-center animate-fade-in-up" style={stagger(1)}>
+            <div className="mt-5 flex justify-center animate-fade-in-up" style={stagger(1)}>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                 <ShieldCheck className="h-3 w-3" />
                 {hasUsedTrial ? "Reative seu acesso" : "7 dias grátis"}
@@ -123,12 +124,12 @@ export function Paywall({ onSignOut }: PaywallProps) {
             </div>
 
             {/* Headline */}
-            <div className="mt-3 text-center animate-fade-in-up" style={stagger(2)}>
-              <h1 className="text-[28px] font-bold leading-[1.15] text-foreground">
+            <div className="mt-2.5 text-center animate-fade-in-up" style={stagger(2)}>
+              <h1 className="text-[24px] font-bold leading-[1.18] text-foreground">
                 Acesso completo ao{" "}
                 <span className="text-primary">Volant Premium.</span>
               </h1>
-              <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-muted-foreground">
+              <p className="mx-auto mt-2 max-w-xs text-[12.5px] leading-relaxed text-muted-foreground">
                 {hasUsedTrial
                   ? "Escolha o plano ideal para retomar todos os recursos Premium."
                   : "Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste."}
@@ -150,7 +151,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
                 period="/ano"
                 selected={selected === "yearly"}
                 highlight
-                badge="Economize 62%"
+                badge="−62%"
                 footnote="≈ R$ 7,49/mês"
                 onSelect={() => setSelected("yearly")}
               />
@@ -158,22 +159,22 @@ export function Paywall({ onSignOut }: PaywallProps) {
 
             {/* Benefits */}
             <div
-              className="mt-5 rounded-2xl border border-border bg-card/70 p-4 backdrop-blur-sm animate-fade-in-up"
+              className="mt-4 rounded-2xl border border-border bg-card/70 p-3.5 backdrop-blur-sm animate-fade-in-up"
               style={stagger(4)}
             >
               <ul className="divide-y divide-border/60">
                 {BENEFITS.map((b, i) => (
                   <li
                     key={b.title}
-                    className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0 animate-fade-in-up"
+                    className="flex items-start gap-3 py-2 first:pt-0 last:pb-0 animate-fade-in-up"
                     style={{ animationDelay: `${360 + i * 60}ms` }}
                   >
-                    <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/12 text-primary animate-scale-in" style={{ animationDelay: `${380 + i * 60}ms` }}>
-                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/12 text-primary animate-scale-in" style={{ animationDelay: `${380 + i * 60}ms` }}>
+                      <Check className="h-3 w-3" strokeWidth={3} />
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[13.5px] font-semibold leading-tight text-foreground">{b.title}</div>
-                      <div className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{b.desc}</div>
+                      <div className="text-[13px] font-semibold leading-tight text-foreground">{b.title}</div>
+                      <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{b.desc}</div>
                     </div>
                   </li>
                 ))}
@@ -181,11 +182,11 @@ export function Paywall({ onSignOut }: PaywallProps) {
             </div>
 
             {/* CTA */}
-            <div className="mt-6 space-y-2 animate-fade-in-up" style={stagger(6)}>
+            <div className="mt-4 space-y-1.5 animate-fade-in-up" style={stagger(6)}>
               <Button
                 onClick={() => setShowCheckout(true)}
                 className={cn(
-                  "group relative h-14 w-full overflow-hidden text-base font-semibold",
+                  "group relative h-13 py-3.5 w-full overflow-hidden text-base font-semibold",
                   "border border-primary/45 text-foreground",
                   "bg-[linear-gradient(135deg,hsl(var(--card))_0%,hsl(142_60%_14%)_50%,hsl(142_65%_22%)_100%)]",
                   "shadow-[inset_0_1px_0_hsl(var(--primary)/0.22),0_10px_30px_-12px_hsl(var(--primary)/0.55)]",
@@ -206,7 +207,7 @@ export function Paywall({ onSignOut }: PaywallProps) {
             </div>
 
             {isTestMode && (
-              <div className="mt-4 animate-fade-in" style={stagger(7)}>
+              <div className="mt-3 animate-fade-in" style={stagger(7)}>
                 <TestModeNote />
               </div>
             )}
