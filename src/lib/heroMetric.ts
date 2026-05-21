@@ -18,14 +18,6 @@ function read(): HeroMetric {
 export function useHeroMetric() {
   const [metric, setMetricState] = useState<HeroMetric>(read);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(STORAGE_KEY, metric);
-    } catch {
-      /* ignore */
-    }
-  }, [metric]);
-
   // Sync across tabs and across Settings ↔ Dashboard within the same tab.
   useEffect(() => {
     const handler = () => setMetricState(read());
@@ -38,6 +30,13 @@ export function useHeroMetric() {
   }, []);
 
   const setMetric = useCallback((next: HeroMetric) => {
+    // Persist synchronously BEFORE dispatching the event so other hook
+    // instances re-read the up-to-date value.
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next);
+    } catch {
+      /* ignore */
+    }
     setMetricState(next);
     try {
       window.dispatchEvent(new Event("volant:heroMetricChanged"));
