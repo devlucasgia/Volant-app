@@ -85,12 +85,9 @@ export function RequirePremium({ children }: { children: React.ReactNode }) {
     return isActive ? <>{children}</> : <Paywall onSignOut={signOut} />;
   }
 
-  // Onboarding still in progress: let the in-app onboarding flow handle it
-  // ONLY for users with premium access; otherwise gate immediately so a
-  // half-finished onboarding can't be used to access the app indefinitely.
-  if (onboarding === "incomplete") {
-    return isActive ? <>{children}</> : <Paywall onSignOut={signOut} />;
-  }
+  // Onboarding still in progress: allow the in-app onboarding flow to run
+  // (account setup is explicitly permitted before subscription).
+  if (onboarding === "incomplete") return <>{children}</>;
 
   // Onboarding done but no premium access → block with paywall.
   if (!isActive) return <Paywall onSignOut={signOut} />;
