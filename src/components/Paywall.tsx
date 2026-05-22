@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
-import premiumCrown from "@/assets/volant-premium-crown.png";
+
 
 type PlanKey = "monthly" | "yearly";
 
