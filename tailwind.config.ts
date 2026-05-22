@@ -117,8 +117,14 @@ export default {
           },
         },
         "premium-shine": {
-          "0%": { transform: "translateX(-120%)" },
-          "60%, 100%": { transform: "translateX(120%)" },
+          "0%": { transform: "translateX(-120%) skewX(-12deg)", opacity: "0" },
+          "15%": { opacity: "1" },
+          "85%": { opacity: "1" },
+          "100%": { transform: "translateX(220%) skewX(-12deg)", opacity: "0" },
+        },
+        "premium-breath": {
+          "0%, 100%": { opacity: "0.55" },
+          "50%": { opacity: "1" },
         },
       },
       animation: {
