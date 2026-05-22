@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { supabase } from "@/integrations/supabase/client";
-import premiumCrown from "@/assets/volant-premium-crown.png";
+
 
 type PlanKey = "monthly" | "yearly";
 
@@ -193,10 +193,15 @@ export function Paywall({ onSignOut }: PaywallProps) {
                   "transition-all duration-300 active:scale-[0.985] hover:brightness-110",
                 )}
               >
-                {/* Soft shine sweep */}
+                {/* Continuous shine sweep */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-[linear-gradient(90deg,transparent,hsl(var(--primary)/0.18),transparent)] motion-safe:animate-premium-shine motion-reduce:hidden"
+                  className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[linear-gradient(90deg,transparent_0%,hsl(var(--primary)/0.22)_50%,transparent_100%)] motion-safe:animate-premium-shine motion-reduce:hidden"
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 motion-safe:animate-premium-breath motion-reduce:opacity-0"
+                  style={{ boxShadow: "inset 0 0 24px hsl(var(--primary) / 0.18)" }}
                 />
                 <Crown className="mr-2 h-4 w-4 text-primary" />
                 {ctaLabel}
@@ -238,44 +243,40 @@ function PlanCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative rounded-2xl border bg-card text-left transition-all duration-300",
-        isAnnual ? "px-4 pt-8 pb-4" : "px-4 py-4",
+        "relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center transition-all duration-300",
+        isAnnual
+          ? "bg-[linear-gradient(160deg,hsl(var(--card))_0%,hsl(142_40%_10%/0.55)_100%)]"
+          : "bg-card",
         selected
           ? isAnnual
-            ? "border-primary/60 motion-safe:animate-premium-glow motion-reduce:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_0_24px_-4px_hsl(var(--primary)/0.5)]"
+            ? "border-primary/70 motion-safe:animate-premium-glow motion-reduce:shadow-[0_0_0_1px_hsl(var(--primary)/0.4),0_0_24px_-4px_hsl(var(--primary)/0.5)]"
             : "border-primary shadow-[0_0_0_2px_hsl(var(--primary)/0.22)]"
           : isAnnual
-            ? "border-primary/35"
+            ? "border-primary/40"
             : "border-border",
       )}
     >
       {isAnnual && (
-        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-[55%] animate-scale-in">
-          <img
-            src={premiumCrown}
-            alt=""
-            aria-hidden
-            className="h-11 w-11 drop-shadow-[0_0_14px_hsl(var(--primary)/0.55)]"
-          />
-        </div>
+        <span
+          aria-hidden
+          className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-full border border-primary/60 bg-[linear-gradient(135deg,hsl(142_55%_18%)_0%,hsl(142_70%_28%)_100%)] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary-foreground shadow-[0_0_14px_hsl(var(--primary)/0.55),inset_0_1px_0_hsl(var(--primary)/0.4)]"
+        >
+          <Crown className="h-3 w-3 text-primary-foreground" strokeWidth={2.5} />
+          Premium
+        </span>
       )}
       {badge && (
         <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
           {badge}
         </span>
       )}
-      <div className={cn("text-[11px] font-semibold uppercase tracking-wider text-muted-foreground", isAnnual && "text-center")}>{label}</div>
-      <div className={cn("mt-1 flex items-baseline gap-0.5 font-bold text-foreground tabular-nums", isAnnual ? "justify-center" : "")}>
-        <span className="text-[18px] leading-none">{price}</span>
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1.5 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
+        <span className="text-[19px] leading-none">{price}</span>
         <span className="text-[11px] font-medium text-muted-foreground">{period}</span>
       </div>
       {footnote && (
-        <div
-          className={cn(
-            "mt-1 text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]",
-            isAnnual && "text-center",
-          )}
-        >
+        <div className="mt-1.5 text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]">
           {footnote}
         </div>
       )}
