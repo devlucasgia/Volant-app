@@ -82,30 +82,31 @@ export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
           <div className="relative px-6 pb-6 pt-4 space-y-4">
             {/* Plan comparison */}
             <div className="grid grid-cols-2 gap-2.5">
-              <div className="rounded-2xl border border-border bg-muted/30 p-3.5">
+              <div className="flex min-h-[140px] flex-col items-center justify-center rounded-2xl border border-border bg-muted/30 px-3.5 py-5 text-center">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Mensal</div>
-                <div className="mt-1 flex items-baseline gap-0.5 font-bold text-foreground tabular-nums">
-                  <span className="text-[17px] leading-none">R$ 19,90</span>
+                <div className="mt-1.5 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
+                  <span className="text-[18px] leading-none">R$ 19,90</span>
                   <span className="text-[11px] font-medium text-muted-foreground">/mês</span>
                 </div>
-                <div className="mt-1 text-[11px] text-muted-foreground">Plano atual</div>
+                <div className="mt-1.5 text-[11px] text-muted-foreground">Plano atual</div>
               </div>
-              <div className="relative rounded-2xl border border-primary/45 bg-primary/[0.06] px-3.5 pt-7 pb-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
-                <img
-                  src={premiumCrown}
-                  alt=""
+              <div className="relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border border-primary/55 bg-[linear-gradient(160deg,hsl(var(--card))_0%,hsl(142_40%_10%/0.55)_100%)] px-3.5 py-5 text-center shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
+                <span
                   aria-hidden
-                  className="pointer-events-none absolute left-1/2 top-0 h-10 w-10 -translate-x-1/2 -translate-y-[55%] drop-shadow-[0_0_14px_hsl(var(--primary)/0.55)] motion-safe:animate-scale-in"
-                />
+                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-full border border-primary/60 bg-[linear-gradient(135deg,hsl(142_55%_18%)_0%,hsl(142_70%_28%)_100%)] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary-foreground shadow-[0_0_14px_hsl(var(--primary)/0.55),inset_0_1px_0_hsl(var(--primary)/0.4)]"
+                >
+                  <Crown className="h-3 w-3 text-primary-foreground" strokeWidth={2.5} />
+                  Premium
+                </span>
                 <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
                   −62%
                 </span>
-                <div className="text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Anual</div>
-                <div className="mt-1 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
-                  <span className="text-[17px] leading-none">R$ 89,90</span>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Anual</div>
+                <div className="mt-1.5 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
+                  <span className="text-[18px] leading-none">R$ 89,90</span>
                   <span className="text-[11px] font-medium text-muted-foreground">/ano</span>
                 </div>
-                <div className="mt-1 text-center text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]">
+                <div className="mt-1.5 text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]">
                   ≈ R$ 7,49/mês
                 </div>
               </div>
