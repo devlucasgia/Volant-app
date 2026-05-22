@@ -22,6 +22,7 @@ export function useSubscription(userId: string | null | undefined): Subscription
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubRow | null>(null);
   const [isGrandfathered, setIsGrandfathered] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const env = getStripeEnvironment();
 
@@ -31,25 +32,41 @@ export function useSubscription(userId: string | null | undefined): Subscription
       return;
     }
     setLoading(true);
-    const [{ data: prof }, { data: sub }] = await Promise.all([
-      supabase.from("profiles").select("beta_grandfathered").eq("id", userId).maybeSingle(),
-      supabase
-        .from("subscriptions")
-        .select("status, price_id, current_period_end, cancel_at_period_end, stripe_customer_id")
-        .eq("user_id", userId)
-        .eq("environment", env)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
-    setIsGrandfathered(Boolean(prof?.beta_grandfathered));
-    setSubscription((sub as SubRow | null) ?? null);
-    setLoading(false);
+    try {
+      const [profRes, subRes] = await Promise.all([
+        supabase.from("profiles").select("beta_grandfathered").eq("id", userId).maybeSingle(),
+        supabase
+          .from("subscriptions")
+          .select("status, price_id, current_period_end, cancel_at_period_end, stripe_customer_id")
+          .eq("user_id", userId)
+          .eq("environment", env)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      // Fail-closed: if either query errored, treat as no access until next successful refetch.
+      if (profRes.error || subRes.error) {
+        setLoadError(true);
+        setIsGrandfathered(false);
+        setSubscription(null);
+      } else {
+        setLoadError(false);
+        setIsGrandfathered(Boolean(profRes.data?.beta_grandfathered));
+        setSubscription((subRes.data as SubRow | null) ?? null);
+      }
+    } catch {
+      setLoadError(true);
+      setIsGrandfathered(false);
+      setSubscription(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     load();
     if (!userId) return;
+
     const ch = supabase
       .channel(`sub-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -58,8 +75,21 @@ export function useSubscription(userId: string | null | undefined): Subscription
         () => load(),
       )
       .subscribe();
+
+    // Re-validate aggressively whenever the app regains focus / connectivity / visibility.
+    const onFocus = () => load();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       supabase.removeChannel(ch);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -71,9 +101,12 @@ export function useSubscription(userId: string | null | undefined): Subscription
     (subscription.status === "canceled" && end !== null && end > now)
   );
 
+  // Fail-closed: any load error forces isActive=false until a successful refetch.
+  const isActive = !loadError && (isGrandfathered || subActive);
+
   return {
     loading,
-    isActive: isGrandfathered || subActive,
+    isActive,
     isGrandfathered,
     subscription,
     refetch: load,
