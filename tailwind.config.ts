@@ -135,7 +135,8 @@ export default {
         "scale-in": "scale-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) both",
         "shimmer": "shimmer 1.6s linear infinite",
         "premium-glow": "premium-glow 4s ease-in-out infinite",
-        "premium-shine": "premium-shine 3.5s ease-in-out infinite",
+        "premium-shine": "premium-shine 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
+        "premium-breath": "premium-breath 3.2s ease-in-out infinite",
       },
       transitionTimingFunction: {
         "premium": "cubic-bezier(0.22, 1, 0.36, 1)",
