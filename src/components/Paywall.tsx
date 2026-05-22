@@ -193,10 +193,15 @@ export function Paywall({ onSignOut }: PaywallProps) {
                   "transition-all duration-300 active:scale-[0.985] hover:brightness-110",
                 )}
               >
-                {/* Soft shine sweep */}
+                {/* Continuous shine sweep */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-[linear-gradient(90deg,transparent,hsl(var(--primary)/0.18),transparent)] motion-safe:animate-premium-shine motion-reduce:hidden"
+                  className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-[linear-gradient(90deg,transparent_0%,hsl(var(--primary)/0.22)_50%,transparent_100%)] motion-safe:animate-premium-shine motion-reduce:hidden"
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 motion-safe:animate-premium-breath motion-reduce:opacity-0"
+                  style={{ boxShadow: "inset 0 0 24px hsl(var(--primary) / 0.18)" }}
                 />
                 <Crown className="mr-2 h-4 w-4 text-primary" />
                 {ctaLabel}
