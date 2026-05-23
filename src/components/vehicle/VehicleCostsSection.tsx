@@ -51,12 +51,12 @@ export function VehicleCostsSection({ value, onChange }: Props) {
       <div className="space-y-2">
         <Label>Situação do veículo</Label>
         <Segmented
-          value={value.ownership_status ?? ""}
+          value={(value.ownership_status ?? "") as "" | "quitado" | "financiado" | "alugado"}
           onChange={(v) => set("ownership_status", (v || null) as OwnershipStatus)}
           options={[
-            { value: "quitado", label: "Quitado" },
-            { value: "financiado", label: "Financiado" },
-            { value: "alugado", label: "Alugado" },
+            { key: "quitado", label: "Quitado" },
+            { key: "financiado", label: "Financiado" },
+            { key: "alugado", label: "Alugado" },
           ]}
         />
       </div>
