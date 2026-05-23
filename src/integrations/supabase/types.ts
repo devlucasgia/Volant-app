@@ -18,33 +18,63 @@ export type Database = {
         Row: {
           brand: string | null
           created_at: string
+          financing_monthly: number | null
           id: string
           initial_km: number
+          insurance_monthly: number | null
+          ipva_yearly: number | null
           is_active: boolean
           model: string | null
+          oil_change_cost: number | null
+          oil_change_interval_km: number | null
+          other_monthly_costs: number | null
+          ownership_status: string | null
           plate: string | null
+          rental_weekly: number | null
+          tires_cost: number | null
+          tires_interval_km: number | null
           updated_at: string
           user_id: string
         }
         Insert: {
           brand?: string | null
           created_at?: string
+          financing_monthly?: number | null
           id?: string
           initial_km?: number
+          insurance_monthly?: number | null
+          ipva_yearly?: number | null
           is_active?: boolean
           model?: string | null
+          oil_change_cost?: number | null
+          oil_change_interval_km?: number | null
+          other_monthly_costs?: number | null
+          ownership_status?: string | null
           plate?: string | null
+          rental_weekly?: number | null
+          tires_cost?: number | null
+          tires_interval_km?: number | null
           updated_at?: string
           user_id: string
         }
         Update: {
           brand?: string | null
           created_at?: string
+          financing_monthly?: number | null
           id?: string
           initial_km?: number
+          insurance_monthly?: number | null
+          ipva_yearly?: number | null
           is_active?: boolean
           model?: string | null
+          oil_change_cost?: number | null
+          oil_change_interval_km?: number | null
+          other_monthly_costs?: number | null
+          ownership_status?: string | null
           plate?: string | null
+          rental_weekly?: number | null
+          tires_cost?: number | null
+          tires_interval_km?: number | null
           updated_at?: string
           user_id?: string
         }
