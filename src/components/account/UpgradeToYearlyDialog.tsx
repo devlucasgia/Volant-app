@@ -93,12 +93,12 @@ export function UpgradeToYearlyDialog({ open, onOpenChange }: Props) {
               <div className="relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border border-primary/55 bg-[linear-gradient(160deg,hsl(var(--card))_0%,hsl(142_40%_10%/0.55)_100%)] px-3.5 py-5 text-center shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_8px_28px_-18px_hsl(var(--primary)/0.6)] motion-safe:animate-premium-glow">
                 <span
                   aria-hidden
-                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-full border border-primary/60 bg-[linear-gradient(135deg,hsl(142_55%_18%)_0%,hsl(142_70%_28%)_100%)] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary-foreground shadow-[0_0_14px_hsl(var(--primary)/0.55),inset_0_1px_0_hsl(var(--primary)/0.4)]"
+                  className="absolute left-3 top-0 -translate-y-1/2 inline-flex items-center gap-1 rounded-full border border-primary/60 bg-[linear-gradient(135deg,hsl(142_55%_18%)_0%,hsl(142_70%_28%)_100%)] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary-foreground shadow-[0_0_14px_hsl(var(--primary)/0.55),inset_0_1px_0_hsl(var(--primary)/0.4)]"
                 >
                   <Crown className="h-3 w-3 text-primary-foreground" strokeWidth={2.5} />
                   Premium
                 </span>
-                <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
+                <span className="absolute -top-2 right-2 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
                   −62%
                 </span>
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Anual</div>
