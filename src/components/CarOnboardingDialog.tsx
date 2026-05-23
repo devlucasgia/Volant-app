@@ -8,6 +8,7 @@ import { useData } from "@/context/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Car } from "lucide-react";
+import { VehicleCostsSection, EMPTY_VEHICLE_COSTS, type VehicleCosts } from "@/components/vehicle/VehicleCostsSection";
 
 export function CarOnboardingDialog() {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ export function CarOnboardingDialog() {
   const [model, setModel] = useState("");
   const [plate, setPlate] = useState("");
   const [initialKm, setInitialKm] = useState("");
+  const [costs, setCosts] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
   const [saving, setSaving] = useState(false);
 
   const checkAndOpen = () => {
@@ -54,7 +56,8 @@ export function CarOnboardingDialog() {
         plate: plate || null,
         initial_km: parseFloat(initialKm) || 0,
         is_active: true,
-      });
+        ...costs,
+      } as any);
       await refreshCars();
       toast.success("Carro cadastrado!");
     }
@@ -66,7 +69,7 @@ export function CarOnboardingDialog() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) finish(true); }}>
-      <DialogContent className="max-w-md z-[120]">
+      <DialogContent className="max-w-md z-[120] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
             <Car className="h-6 w-6" />
@@ -96,6 +99,7 @@ export function CarOnboardingDialog() {
             <Input type="number" inputMode="decimal" value={initialKm}
               onChange={(e) => setInitialKm(e.target.value)} placeholder="Ex: 45000" />
           </div>
+          <VehicleCostsSection value={costs} onChange={setCosts} />
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" onClick={() => finish(true)} disabled={saving}>Pular</Button>
