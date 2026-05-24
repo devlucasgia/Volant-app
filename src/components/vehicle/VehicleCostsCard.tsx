@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useData } from "@/context/DataContext";
+import { useAccess } from "@/context/AccessContext";
 import { VehicleCostsSection, EMPTY_VEHICLE_COSTS, type VehicleCosts } from "@/components/vehicle/VehicleCostsSection";
 import type { Car as CarType } from "@/types";
 import { toast } from "sonner";
@@ -16,6 +17,7 @@ function carLabel(c: CarType) {
 
 export function VehicleCostsCard() {
   const { cars, activeCar, refreshCars } = useData();
+  const { requirePremium } = useAccess();
   const [selectedId, setSelectedId] = useState<string>("");
   const [costs, setCosts] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
   const [baseline, setBaseline] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
@@ -60,6 +62,8 @@ export function VehicleCostsCard() {
 
   const save = async () => {
     if (!selectedId) return;
+    // Custos do veículo é função operacional Premium.
+    if (!requirePremium()) return;
     setSaving(true);
     const { error } = await supabase.from("cars").update(costs as any).eq("id", selectedId);
     setSaving(false);
