@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Check, Crown, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,6 +32,9 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
   const [selected, setSelected] = useState<PlanKey>("yearly");
   const [showCheckout, setShowCheckout] = useState(false);
   const [hasUsedTrial, setHasUsedTrial] = useState(false);
+  const [modalScale, setModalScale] = useState(1);
+  const [scaledHeight, setScaledHeight] = useState<number | null>(null);
+  const modalBodyRef = useRef<HTMLDivElement | null>(null);
   const isTestMode = getStripeEnvironment() === "sandbox";
 
   // Detect if user already had any subscription row in this environment.
@@ -61,6 +64,36 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
   // Subtle staggered entrance for each section.
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${i * 70}ms` });
 
+  useLayoutEffect(() => {
+    if (!asModal || showCheckout) {
+      setModalScale(1);
+      setScaledHeight(null);
+      return;
+    }
+
+    const updateScale = () => {
+      const content = modalBodyRef.current;
+      if (!content) return;
+
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const availableHeight = Math.max(viewportHeight - 20, 320);
+      const naturalHeight = content.scrollHeight;
+      const nextScale = Math.min(1, availableHeight / naturalHeight);
+
+      setModalScale(nextScale);
+      setScaledHeight(naturalHeight * nextScale);
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    window.visualViewport?.addEventListener("resize", updateScale);
+
+    return () => {
+      window.removeEventListener("resize", updateScale);
+      window.visualViewport?.removeEventListener("resize", updateScale);
+    };
+  }, [asModal, hasUsedTrial, selected, showCheckout]);
+
   return (
     <div className={cn("relative bg-background", asModal ? "w-full" : "min-h-[100dvh] overflow-y-auto")}>
       {/* Soft top green glow — elegant, premium, not neon */}
@@ -71,23 +104,37 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
       </div>
 
       <div
-        className={cn("relative z-10 mx-auto flex w-full max-w-md flex-col px-5", asModal ? "py-5" : "")}
+        className={cn("relative z-10 mx-auto flex w-full max-w-md flex-col", asModal ? "px-4 py-4 sm:px-5 sm:py-5" : "px-5")}
         style={
           asModal
-            ? undefined
+            ? scaledHeight
+              ? { height: scaledHeight }
+              : undefined
             : {
                 paddingTop: "max(1rem, env(safe-area-inset-top))",
                 paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
               }
         }
       >
+        <div
+          ref={modalBodyRef}
+          className="flex flex-col"
+          style={
+            asModal && !showCheckout
+              ? {
+                  transform: `scale(${modalScale})`,
+                  transformOrigin: "top center",
+                }
+              : undefined
+          }
+        >
         {/* Header: small crown + "Volant Premium" left, Sair right */}
         <div className="flex items-center justify-between animate-fade-in" style={stagger(0)}>
           <div className="flex items-center gap-2">
-            <div className="grid h-9 w-9 place-items-center rounded-full border border-primary/30 bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.35)]">
+            <div className={cn("grid place-items-center rounded-full border border-primary/30 bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.35)]", asModal ? "h-8 w-8" : "h-9 w-9")}>
               <Crown className="h-4 w-4" />
             </div>
-            <span className="text-[15px] font-semibold tracking-wide text-foreground">
+            <span className={cn("font-semibold tracking-wide text-foreground", asModal ? "text-sm" : "text-[15px]")}>
               Volant <span className="text-primary">Premium</span>
             </span>
           </div>
@@ -121,7 +168,7 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
         ) : (
           <>
             {/* Badge */}
-            <div className="mt-5 flex justify-center animate-fade-in-up" style={stagger(1)}>
+            <div className={cn("flex justify-center animate-fade-in-up", asModal ? "mt-3.5" : "mt-5")} style={stagger(1)}>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                 <ShieldCheck className="h-3 w-3" />
                 {hasUsedTrial ? "Reative seu acesso" : "7 dias grátis"}
@@ -129,12 +176,12 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
             </div>
 
             {/* Headline */}
-            <div className="mt-2.5 text-center animate-fade-in-up" style={stagger(2)}>
-              <h1 className="text-[24px] font-bold leading-[1.18] text-foreground">
+            <div className={cn("text-center animate-fade-in-up", asModal ? "mt-2" : "mt-2.5")} style={stagger(2)}>
+              <h1 className={cn("font-bold leading-[1.18] text-foreground", asModal ? "text-[22px]" : "text-[24px]")}>
                 Acesso completo ao{" "}
                 <span className="text-primary">Volant Premium.</span>
               </h1>
-              <p className="mx-auto mt-2 max-w-xs text-[12.5px] leading-relaxed text-muted-foreground">
+              <p className={cn("mx-auto max-w-xs leading-relaxed text-muted-foreground", asModal ? "mt-1.5 text-[12px]" : "mt-2 text-[12.5px]")}>
                 {hasUsedTrial
                   ? "Escolha o plano ideal para retomar todos os recursos Premium."
                   : "Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste."}
@@ -142,11 +189,12 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
             </div>
 
             {/* Plans */}
-            <div className="mt-7 grid grid-cols-2 gap-2.5 animate-fade-in-up" style={stagger(3)}>
+            <div className={cn("grid grid-cols-2 animate-fade-in-up", asModal ? "mt-5 gap-2" : "mt-7 gap-2.5")} style={stagger(3)}>
               <PlanCard
                 label="Mensal"
                 price="R$ 19,90"
                 period="/mês"
+                compact={asModal}
                 selected={selected === "monthly"}
                 onSelect={() => setSelected("monthly")}
               />
@@ -158,28 +206,29 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
                 highlight
                 badge="−62%"
                 footnote="≈ R$ 7,49/mês"
+                compact={asModal}
                 onSelect={() => setSelected("yearly")}
               />
             </div>
 
             {/* Benefits */}
             <div
-              className="mt-4 rounded-2xl border border-border bg-card/70 p-3.5 backdrop-blur-sm animate-fade-in-up"
+              className={cn("rounded-2xl border border-border bg-card/70 backdrop-blur-sm animate-fade-in-up", asModal ? "mt-3 p-3" : "mt-4 p-3.5")}
               style={stagger(4)}
             >
               <ul className="divide-y divide-border/60">
                 {BENEFITS.map((b, i) => (
                   <li
                     key={b.title}
-                    className="flex items-start gap-3 py-2 first:pt-0 last:pb-0 animate-fade-in-up"
+                    className={cn("flex items-start gap-3 first:pt-0 last:pb-0 animate-fade-in-up", asModal ? "py-1.5" : "py-2")}
                     style={{ animationDelay: `${360 + i * 60}ms` }}
                   >
-                    <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/12 text-primary animate-scale-in" style={{ animationDelay: `${380 + i * 60}ms` }}>
+                    <span className={cn("mt-0.5 grid shrink-0 place-items-center rounded-full border border-primary/30 bg-primary/12 text-primary animate-scale-in", asModal ? "h-5 w-5" : "h-6 w-6")} style={{ animationDelay: `${380 + i * 60}ms` }}>
                       <Check className="h-3 w-3" strokeWidth={3} />
                     </span>
                     <div className="min-w-0">
-                      <div className="text-[13px] font-semibold leading-tight text-foreground">{b.title}</div>
-                      <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{b.desc}</div>
+                      <div className={cn("font-semibold leading-tight text-foreground", asModal ? "text-[12.5px]" : "text-[13px]")}>{b.title}</div>
+                      <div className={cn("mt-0.5 leading-snug text-muted-foreground", asModal ? "text-[11px]" : "text-[11.5px]")}>{b.desc}</div>
                     </div>
                   </li>
                 ))}
@@ -187,11 +236,12 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
             </div>
 
             {/* CTA */}
-            <div className="mt-4 space-y-1.5 animate-fade-in-up" style={stagger(6)}>
+            <div className={cn("space-y-1.5 animate-fade-in-up", asModal ? "mt-3" : "mt-4")} style={stagger(6)}>
               <Button
                 onClick={() => setShowCheckout(true)}
                 className={cn(
-                  "group relative h-13 py-3.5 w-full overflow-hidden text-base font-semibold",
+                  "group relative w-full overflow-hidden font-semibold",
+                  asModal ? "h-12 py-3 text-[15px]" : "h-13 py-3.5 text-base",
                   "border border-primary/45 text-foreground",
                   "bg-[linear-gradient(135deg,hsl(var(--card))_0%,hsl(142_60%_14%)_50%,hsl(142_65%_22%)_100%)]",
                   "shadow-[inset_0_1px_0_hsl(var(--primary)/0.22),0_10px_30px_-12px_hsl(var(--primary)/0.55)]",
@@ -223,6 +273,7 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );
