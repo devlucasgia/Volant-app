@@ -1341,7 +1341,7 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas e objetivos">
+            <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas Inteligentes">
               {/* 1. Tipo de meta */}
               <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
                 <div className="mb-3 flex items-start gap-2.5">
