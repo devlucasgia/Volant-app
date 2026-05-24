@@ -54,6 +54,7 @@ const DEFAULT_SETTINGS: Settings = {
   goalType: "bruto",
   workingDaysPerMonth: null,
   kmPlannedMonth: null,
+  kmRemainingOverride: null,
 };
 
 function rowToEntry(r: any): Entry {
@@ -165,6 +166,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const gt = ((sRow as any).goal_type as "liquido" | "bruto" | undefined) || "bruto";
         const wd = (sRow as any).working_days_per_month;
         const km = (sRow as any).km_planned_month;
+        const kmOv = (sRow as any).km_remaining_override;
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
           monthlyGoal: Number((sRow as any).monthly_goal) || 0,
@@ -175,6 +177,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           goalType: gt,
           workingDaysPerMonth: wd == null ? null : Number(wd),
           kmPlannedMonth: km == null ? null : Number(km),
+          kmRemainingOverride: kmOv == null ? null : Number(kmOv),
         });
       }
       setLoading(false);
@@ -224,6 +227,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       goal_type: next.goalType,
       working_days_per_month: next.workingDaysPerMonth,
       km_planned_month: next.kmPlannedMonth,
+      km_remaining_override: next.kmRemainingOverride,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.

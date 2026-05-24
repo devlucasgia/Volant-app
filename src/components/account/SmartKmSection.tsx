@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw } from "lucide-react";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
@@ -20,14 +20,20 @@ export function SmartKmSection() {
   const { isFull, requirePremium } = useAccess();
 
   const [draftKm, setDraftKm] = useState<number | null>(settings.kmPlannedMonth);
+  const [draftOverride, setDraftOverride] = useState<number | null>(settings.kmRemainingOverride);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setDraftKm(settings.kmPlannedMonth);
   }, [settings.kmPlannedMonth]);
+  useEffect(() => {
+    setDraftOverride(settings.kmRemainingOverride);
+  }, [settings.kmRemainingOverride]);
 
-  const dirty = draftKm !== settings.kmPlannedMonth;
+  const dirty =
+    draftKm !== settings.kmPlannedMonth || draftOverride !== settings.kmRemainingOverride;
   const invalid = draftKm != null && draftKm <= 0;
+  const overrideInvalid = draftOverride != null && draftOverride <= 0;
 
   const real = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const costs = useMemo(
@@ -43,17 +49,35 @@ export function SmartKmSection() {
         vehicleMonthlyCost: costs.total,
         real,
         workingDaysPerMonth: settings.workingDaysPerMonth,
+        kmRemainingOverride: settings.kmRemainingOverride,
       }),
-    [settings.monthlyGoal, settings.goalType, settings.kmPlannedMonth, costs.total, real, settings.workingDaysPerMonth],
+    [
+      settings.monthlyGoal,
+      settings.goalType,
+      settings.kmPlannedMonth,
+      settings.kmRemainingOverride,
+      costs.total,
+      real,
+      settings.workingDaysPerMonth,
+    ],
   );
+
+  // Live preview for "KM restante estimado" using the current draft of kmPlanned.
+  const previewKmRemaining = useMemo(() => {
+    if (!draftKm || draftKm <= 0) return null;
+    return Math.max(0, draftKm - real.kmThisMonth);
+  }, [draftKm, real.kmThisMonth]);
 
   const handleSave = async () => {
     if (!requirePremium()) return;
-    if (invalid) return;
+    if (invalid || overrideInvalid) return;
     setSaving(true);
     try {
-      await updateSettings({ kmPlannedMonth: draftKm });
-      toast.success("KM planejado salvo");
+      await updateSettings({
+        kmPlannedMonth: draftKm,
+        kmRemainingOverride: draftOverride,
+      });
+      toast.success("KM Inteligente salvo");
     } catch {
       toast.error("Não foi possível salvar");
     } finally {
@@ -61,9 +85,22 @@ export function SmartKmSection() {
     }
   };
 
-  const handleKmFocus = () => {
+  const handleClearOverride = async () => {
+    if (!requirePremium()) return;
+    setDraftOverride(null);
+    try {
+      await updateSettings({ kmRemainingOverride: null });
+      toast.success("Voltamos para o cálculo automático");
+    } catch {
+      toast.error("Não foi possível limpar");
+    }
+  };
+
+  const handleFocus = () => {
     if (!isFull) requirePremium();
   };
+
+
 
   // ---------- Empty states ----------
   if (!activeCar) {
@@ -101,7 +138,7 @@ export function SmartKmSection() {
           inputMode="numeric"
           placeholder="Ex: 4000"
           className={cn(invalid && "border-destructive focus-visible:ring-destructive")}
-          onFocus={handleKmFocus}
+          onFocus={handleFocus}
           onChange={(v) => {
             if (!isFull) {
               requirePremium();
@@ -116,9 +153,57 @@ export function SmartKmSection() {
             Informe um valor maior que zero.
           </div>
         )}
+
+        {/* KM restante estimado */}
+        {isFull && draftKm != null && draftKm > 0 && (
+          <div className="mt-2 flex items-center justify-between text-[12px]">
+            <span className="text-muted-foreground">KM restante estimado</span>
+            <span className="tabular-nums font-semibold">
+              {(previewKmRemaining ?? 0).toLocaleString("pt-BR")} km
+            </span>
+          </div>
+        )}
+
+        {/* KM restante manual (override) */}
+        {isFull && (
+          <div className="mt-3 rounded-xl border border-dashed border-border/60 bg-muted/20 p-3">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <div className="text-[12px] font-semibold">Ajustar KM restante</div>
+              {draftOverride != null && (
+                <button
+                  type="button"
+                  onClick={handleClearOverride}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" /> Limpar
+                </button>
+              )}
+            </div>
+            <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
+              Use se pretende rodar mais ou menos km do que o estimado até o fim do mês.
+            </p>
+            <NumberField
+              value={draftOverride}
+              decimal={false}
+              inputMode="numeric"
+              placeholder={`Ex: ${(previewKmRemaining ?? 0) || 1500}`}
+              className={cn(overrideInvalid && "border-destructive focus-visible:ring-destructive")}
+              onChange={(v) => {
+                if (v == null) return setDraftOverride(null);
+                setDraftOverride(Math.max(0, Math.floor(v)));
+              }}
+            />
+            {overrideInvalid && (
+              <div className="mt-1.5 text-[11px] font-medium text-destructive/90">
+                Informe um valor maior que zero.
+              </div>
+            )}
+          </div>
+        )}
+
         <Button
           onClick={handleSave}
-          disabled={!isFull ? false : (saving || !dirty || invalid)}
+          disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
           className="mt-3 w-full"
         >
           {!isFull ? (
@@ -203,7 +288,7 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
         </div>
         <div className="text-[14px] font-semibold text-amber-500">KM planejado atingido</div>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          Atualize seu KM planejado para recalcular.
+          Atualize seu KM restante para recalcular.
         </p>
         <BaseRow base={state.base} className="mt-3" />
       </div>
@@ -227,6 +312,15 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground/80">
           Priorize corridas iguais ou acima desse valor por km para atingir seus objetivos.
         </p>
+        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-primary/15 pt-2 text-[11px]">
+          <span className="text-muted-foreground">KM usado no cálculo</span>
+          <span className="tabular-nums font-medium text-foreground/90">
+            {state.kmUsed.toLocaleString("pt-BR")} km{" "}
+            <span className="text-muted-foreground/80">
+              {state.kmUsedSource === "manual" ? "ajustados manualmente" : "estimados"}
+            </span>
+          </span>
+        </div>
       </div>
 
       {/* Base card */}

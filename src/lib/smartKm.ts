@@ -109,9 +109,16 @@ export function getCurrentMonthRealData(entries: Entry[], reference: Date = new 
 export type SmartKmState =
   | { kind: "needs-goal" }
   | { kind: "needs-km-planned" }
-  | { kind: "goal-reached"; base: number }
-  | { kind: "km-planned-reached"; base: number }
-  | { kind: "ok"; base: number; smart: number };
+  | { kind: "goal-reached"; base: number; kmRemainingEstimated: number }
+  | { kind: "km-planned-reached"; base: number; kmRemainingEstimated: number }
+  | {
+      kind: "ok";
+      base: number;
+      smart: number;
+      kmRemainingEstimated: number;
+      kmUsed: number;
+      kmUsedSource: "manual" | "estimated";
+    };
 
 export interface SmartKmInput {
   monthlyGoal: number;
@@ -121,6 +128,8 @@ export interface SmartKmInput {
   real: CurrentMonthRealData;
   /** Configured target of working days in a month (Ajustes). May be null. */
   workingDaysPerMonth?: number | null;
+  /** Manual override for KM restante. When > 0, overrides the estimated value. */
+  kmRemainingOverride?: number | null;
   /** Reference date for the current month — defaults to today. */
   reference?: Date;
 }
@@ -131,9 +140,10 @@ export interface SmartKmInput {
  * - Base = initial planning reference, fixed for the whole month. Uses the full
  *   vehicle monthly cost and the full planned km.
  * - Smart = adaptive. Uses what is missing from the goal, the real progress so
- *   far, the remaining planned km, and ONLY the vehicle cost proportional to
- *   the remaining working days of the month — so a R$1.200 monthly cost is
- *   NOT crammed into the final 7 days as if it were spent in that window.
+ *   far, the remaining km (manual override if provided, otherwise
+ *   kmPlanned - kmThisMonth), and ONLY the vehicle cost proportional to the
+ *   remaining working days of the month — so a R$1.200 monthly cost is NOT
+ *   crammed into the final 7 days as if it were spent in that window.
  */
 export function computeSmartKm(input: SmartKmInput): SmartKmState {
   const {
@@ -143,6 +153,7 @@ export function computeSmartKm(input: SmartKmInput): SmartKmState {
     vehicleMonthlyCost,
     real,
     workingDaysPerMonth,
+    kmRemainingOverride,
     reference = new Date(),
   } = input;
 
@@ -153,33 +164,35 @@ export function computeSmartKm(input: SmartKmInput): SmartKmState {
   const baseObjective = goalType === "liquido" ? monthlyGoal + vehicleMonthlyCost : monthlyGoal;
   const base = baseObjective / kmPlanned;
 
+  // ---------- KM remaining ----------
+  const kmRemainingEstimated = Math.max(0, kmPlanned - real.kmThisMonth);
+  const hasManual = kmRemainingOverride != null && kmRemainingOverride > 0;
+  const kmUsed = hasManual ? (kmRemainingOverride as number) : kmRemainingEstimated;
+  const kmUsedSource: "manual" | "estimated" = hasManual ? "manual" : "estimated";
+
   // ---------- Smart (adaptive) ----------
   const daysInMonth = getDaysInMonth(reference);
-  // Reference for "remaining working days": prefer the user-configured target
-  // (workingDaysPerMonth), fall back to the month's calendar size.
   const plannedWorkingDays =
     workingDaysPerMonth && workingDaysPerMonth > 0 ? workingDaysPerMonth : daysInMonth;
   const daysWorkedRemaining = Math.max(0, plannedWorkingDays - real.daysWorkedThisMonth);
 
-  // Goal remaining (always against monthlyGoal, never including vehicle cost
-  // — vehicle cost is added separately and proportionally below).
   const progress = goalType === "liquido" ? real.netThisMonth : real.grossThisMonth;
   const goalRemaining = monthlyGoal - progress;
 
-  if (goalRemaining <= 0) return { kind: "goal-reached", base };
-
-  const kmRemaining = kmPlanned - real.kmThisMonth;
-  if (kmRemaining <= 0) return { kind: "km-planned-reached", base };
+  if (goalRemaining <= 0) return { kind: "goal-reached", base, kmRemainingEstimated };
+  if (kmUsed <= 0) return { kind: "km-planned-reached", base, kmRemainingEstimated };
 
   let remainingTotal = goalRemaining;
   if (goalType === "liquido" && vehicleMonthlyCost > 0 && daysInMonth > 0) {
     const dailyVehicleCost = vehicleMonthlyCost / daysInMonth;
-    const remainingVehicleCost = dailyVehicleCost * daysWorkedRemaining;
-    remainingTotal += remainingVehicleCost;
+    remainingTotal += dailyVehicleCost * daysWorkedRemaining;
   }
 
-  const smart = remainingTotal / kmRemaining;
-  if (!isFinite(smart) || smart < 0) return { kind: "km-planned-reached", base };
+  const smart = remainingTotal / kmUsed;
+  if (!isFinite(smart) || smart < 0) {
+    return { kind: "km-planned-reached", base, kmRemainingEstimated };
+  }
 
-  return { kind: "ok", base, smart };
+  return { kind: "ok", base, smart, kmRemainingEstimated, kmUsed, kmUsedSource };
 }
+
