@@ -155,6 +155,21 @@ export default function Dashboard() {
     return Math.round((s.net / elapsed) * total);
   }, [period, s.net]);
 
+  // KM Inteligente — discrete display under the R$/km cell when valid.
+  const smartKmValue = useMemo(() => {
+    if (!isFull) return null;
+    const real = getCurrentMonthRealData(entries);
+    const costs = computeMonthlyVehicleCosts(activeCar, settings.kmPlannedMonth);
+    const state = computeSmartKm({
+      monthlyGoal: settings.monthlyGoal,
+      goalType: settings.goalType,
+      kmPlanned: settings.kmPlannedMonth,
+      vehicleMonthlyCost: costs.total,
+      real,
+    });
+    return state.kind === "ok" ? state.smart : null;
+  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.monthlyGoal, settings.goalType]);
+
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
   const lastMaint = settings.lastMaintenanceKm > 0 ? settings.lastMaintenanceKm : carInitialKm;
