@@ -189,76 +189,89 @@ export default function Dashboard() {
       </div>
     ) : null,
 
-    goal: widgets.goal ? (
-      <div
-        key="goal"
-        className={cn(
-          "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
-          goalReached
-            ? "border-success/50 bg-gradient-to-br from-success/10 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--success)/0.55)]"
-            : "border-border",
-        )}
-      >
-        {goalReached && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-1 rounded-3xl bg-success/10 blur-2xl animate-fade-in"
-          />
-        )}
-        <div className="relative">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              {goalReached ? (
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success/20 text-success">
-                  <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                </span>
-              ) : (
-                <Target className="h-4 w-4 text-primary" />
-              )}
-              {periodGoal.title}
-              <span
-                className="inline-flex items-center rounded-full border border-success/25 bg-success/[0.08] px-1.5 py-0.5 text-[9.5px] font-medium uppercase tracking-wider text-success/90"
-                title={settings.goalType === "liquido" ? "Calculada sobre o lucro líquido" : "Calculada sobre o ganho bruto"}
-              >
-                {settings.goalType === "liquido" ? "Meta líquida" : "Meta bruta"}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
+    goal: widgets.goal ? (() => {
+      const isLiquido = settings.goalType === "liquido";
+      // Theme tokens: green for líquida, petrol blue for bruta.
+      const themeText = isLiquido ? "text-success" : "text-[hsl(var(--goal-gross))]";
+      const themeBg = isLiquido ? "bg-success/15" : "bg-[hsl(var(--goal-gross))]/15";
+      const themeBar = isLiquido ? "[&>div]:bg-success" : "[&>div]:bg-[hsl(var(--goal-gross))]";
+      const compact = period === "week" || period === "month";
+      return (
+        <div
+          key="goal"
+          className={cn(
+            "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
+            goalReached
+              ? "border-success/50 bg-gradient-to-br from-success/10 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--success)/0.55)]"
+              : "border-border",
+          )}
+        >
+          {goalReached && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-1 rounded-3xl bg-success/10 blur-2xl animate-fade-in"
+            />
+          )}
+          <div className="relative">
+            {/* Header: title + (optional) over-goal badge */}
+            <div className="flex items-center justify-between gap-2">
+              <div className={cn("flex min-w-0 items-center gap-2 text-sm font-semibold", themeText)}>
+                {goalReached ? (
+                  <span className={cn("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full", themeBg)}>
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                  </span>
+                ) : (
+                  <Target className="h-4 w-4 shrink-0" />
+                )}
+                <span className="truncate">{periodGoal.title}</span>
+              </div>
               {overAmount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success animate-fade-in">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success animate-fade-in">
                   <TrendingUp className="h-2.5 w-2.5" />
                   {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
                 </span>
               )}
-              <div className="text-sm tabular-nums text-muted-foreground">
-                {brl(goalProgressValue)} / {brl(periodGoal.value)}
+            </div>
+
+            {/* Values — own line on week/month for breathing room */}
+            <div
+              className={cn(
+                "tabular-nums text-muted-foreground",
+                compact ? "mt-2 text-[13px]" : "mt-1.5 text-sm",
+              )}
+            >
+              <span className="font-semibold text-foreground">{brl(goalProgressValue)}</span>
+              <span className="mx-1 text-muted-foreground/70">/</span>
+              <span>{brl(periodGoal.value)}</span>
+            </div>
+
+            <Progress
+              value={goalPct}
+              className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
+            />
+            <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span className="tabular-nums truncate">
+                {periodGoal.value > 0
+                  ? goalReached
+                    ? overAmount > 0
+                      ? `${brl(overAmount)} acima da meta`
+                      : "Meta atingida"
+                    : `Faltam ${brl(goalRemaining)}`
+                  : "Defina sua meta mensal em Ajustes"}
+              </span>
+              {periodGoal.value > 0 && (
+                <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
+              )}
+            </div>
+            {monthlyProjection !== null && (
+              <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+                Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
               </div>
-            </div>
+            )}
           </div>
-          <Progress
-            value={goalPct}
-            className={cn("mt-3 h-2 transition-all duration-700", goalReached && "[&>div]:bg-success")}
-          />
-          <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-            <span className="tabular-nums">
-              {periodGoal.value > 0
-                ? goalReached
-                  ? overAmount > 0
-                    ? `${brl(overAmount)} acima da meta`
-                    : "Meta atingida"
-                  : `Faltam ${brl(goalRemaining)}`
-                : "Defina sua meta mensal em Ajustes"}
-            </span>
-            {periodGoal.value > 0 && <span className="tabular-nums">{num(goalPct, 0)}%</span>}
-          </div>
-          {monthlyProjection !== null && (
-            <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
-              Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
-            </div>
-          )}
         </div>
-      </div>
-    ) : null,
+      );
+    })() : null,
 
     stats: widgets.stats ? (
       <section key="stats">
