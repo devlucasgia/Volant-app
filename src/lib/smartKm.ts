@@ -10,6 +10,8 @@ export interface SmartKmCostBreakdown {
 export interface SmartKmCostsResult {
   total: number;
   items: SmartKmCostBreakdown[];
+  /** Total mensal dividido pelos dias do mês de referência. */
+  dailyFixed: number;
 }
 
 /**
@@ -20,9 +22,13 @@ export interface SmartKmCostsResult {
  * proportionalizes this total against the remaining working days of the month
  * — see computeSmartKm.
  */
-export function computeMonthlyVehicleCosts(car: Car | null, kmPlanned: number | null): SmartKmCostsResult {
+export function computeMonthlyVehicleCosts(
+  car: Car | null,
+  kmPlanned: number | null,
+  reference: Date = new Date(),
+): SmartKmCostsResult {
   const items: SmartKmCostBreakdown[] = [];
-  if (!car) return { total: 0, items };
+  if (!car) return { total: 0, items, dailyFixed: 0 };
 
   const status = car.ownership_status;
 
@@ -56,7 +62,9 @@ export function computeMonthlyVehicleCosts(car: Car | null, kmPlanned: number | 
   }
 
   const total = items.reduce((s, i) => s + i.value, 0);
-  return { total, items };
+  const daysInMonth = getDaysInMonth(reference);
+  const dailyFixed = daysInMonth > 0 ? total / daysInMonth : 0;
+  return { total, items, dailyFixed };
 }
 
 export interface CurrentMonthRealData {
