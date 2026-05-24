@@ -45,7 +45,7 @@ export function AccessProvider({ isFull, children }: ProviderProps) {
     <Ctx.Provider value={value}>
       {children}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-md w-[calc(100%-1rem)] p-0 border-0 bg-background shadow-2xl overflow-hidden [&>button]:z-50 [&>button]:bg-background/80 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5">
+        <DialogContent className="max-w-md w-[calc(100%-1rem)] max-h-[90dvh] p-0 border-0 bg-background shadow-2xl overflow-y-auto overscroll-contain [&>button]:z-50 [&>button]:bg-background/80 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5">
           <Paywall asModal />
         </DialogContent>
       </Dialog>
