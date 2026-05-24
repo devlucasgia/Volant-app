@@ -342,32 +342,38 @@ export type Database = {
         Row: {
           daily_goal: number
           dashboard_widgets: Json
+          goal_type: string
           last_maintenance_km: number
           maintenance_interval_km: number
           monthly_goal: number
           theme: string
           updated_at: string
           user_id: string
+          working_days_per_month: number | null
         }
         Insert: {
           daily_goal?: number
           dashboard_widgets?: Json
+          goal_type?: string
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
           theme?: string
           updated_at?: string
           user_id: string
+          working_days_per_month?: number | null
         }
         Update: {
           daily_goal?: number
           dashboard_widgets?: Json
+          goal_type?: string
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
           theme?: string
           updated_at?: string
           user_id?: string
+          working_days_per_month?: number | null
         }
         Relationships: []
       }

@@ -51,6 +51,8 @@ const DEFAULT_SETTINGS: Settings = {
   lastMaintenanceKm: 0,
   theme: "dark",
   dashboardWidgets: DEFAULT_WIDGETS,
+  goalType: "bruto",
+  workingDaysPerMonth: null,
 };
 
 function rowToEntry(r: any): Entry {
@@ -99,6 +101,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     setCars((data || []).map((c: any) => ({
       id: c.id, brand: c.brand, model: c.model, plate: c.plate,
       initial_km: Number(c.initial_km) || 0, is_active: !!c.is_active,
+      ownership_status: c.ownership_status ?? null,
+      financing_monthly: c.financing_monthly == null ? null : Number(c.financing_monthly),
+      rental_weekly: c.rental_weekly == null ? null : Number(c.rental_weekly),
+      oil_change_cost: c.oil_change_cost == null ? null : Number(c.oil_change_cost),
+      oil_change_interval_km: c.oil_change_interval_km == null ? null : Number(c.oil_change_interval_km),
+      tires_cost: c.tires_cost == null ? null : Number(c.tires_cost),
+      tires_interval_km: c.tires_interval_km == null ? null : Number(c.tires_interval_km),
+      ipva_yearly: c.ipva_yearly == null ? null : Number(c.ipva_yearly),
+      insurance_monthly: c.insurance_monthly == null ? null : Number(c.insurance_monthly),
+      other_monthly_costs: c.other_monthly_costs == null ? null : Number(c.other_monthly_costs),
     })));
   }, []);
 
@@ -149,6 +161,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setEntries((rows || []).map(rowToEntry));
       if (sRow) {
         const dw = (sRow as any).dashboard_widgets || {};
+        const gt = ((sRow as any).goal_type as "liquido" | "bruto" | undefined) || "bruto";
+        const wd = (sRow as any).working_days_per_month;
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
           monthlyGoal: Number((sRow as any).monthly_goal) || 0,
@@ -156,6 +170,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
           lastMaintenanceKm: Number(sRow.last_maintenance_km) || 0,
           theme: (sRow.theme as "light" | "dark") || "dark",
           dashboardWidgets: { ...DEFAULT_WIDGETS, ...dw },
+          goalType: gt,
+          workingDaysPerMonth: wd == null ? null : Number(wd),
         });
       }
       setLoading(false);
@@ -202,6 +218,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       maintenance_interval_km: next.maintenanceIntervalKm,
       last_maintenance_km: next.lastMaintenanceKm, theme: next.theme,
       dashboard_widgets: next.dashboardWidgets as any,
+      goal_type: next.goalType,
+      working_days_per_month: next.workingDaysPerMonth,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.

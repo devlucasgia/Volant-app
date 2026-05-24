@@ -30,8 +30,11 @@ export function JourneyModule() {
   const { openDrawer } = useUI();
 
   const suggestedDaily = useMemo(
-    () => Math.round(deriveGoals(settings.monthlyGoal, entries).daily),
-    [settings.monthlyGoal, entries]
+    () => Math.round(deriveGoals(settings.monthlyGoal, entries, new Date(), {
+      goalType: settings.goalType,
+      workingDays: settings.workingDaysPerMonth,
+    }).daily),
+    [settings.monthlyGoal, entries, settings.goalType, settings.workingDaysPerMonth]
   );
 
   const [confirmEnd, setConfirmEnd] = useState(false);
