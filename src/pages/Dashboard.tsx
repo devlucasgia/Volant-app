@@ -450,11 +450,11 @@ export default function Dashboard() {
           const heroValue = showGross ? s.gross : s.net;
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
-          const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/30" : "border-success/30";
+          const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/40" : "border-success/30";
           const heroGradient = showGross
-            ? "bg-gradient-to-br from-[hsl(var(--goal-gross))]/22 via-[hsl(var(--goal-gross))]/10 to-[hsl(var(--goal-gross))]/5"
+            ? "bg-gradient-to-br from-[hsl(var(--goal-gross))]/30 via-[hsl(var(--goal-gross))]/14 to-[hsl(var(--goal-gross))]/6"
             : "bg-gradient-to-br from-success/25 via-success/12 to-success/5";
-          const heroBlobMain = showGross ? "bg-[hsl(var(--goal-gross))]/22" : "bg-success/25";
+          const heroBlobMain = showGross ? "bg-[hsl(var(--goal-gross))]/30" : "bg-success/25";
           // Secondary metrics swap when "Bruto" is the hero.
           const secondary: { label: string; value: number; dot: string }[] = showGross
             ? [
