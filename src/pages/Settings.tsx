@@ -447,7 +447,10 @@ export default function SettingsPage() {
     setDraft(buildDraft(settings));
   }, [settings]);
 
-  const goalsDirty = draft.monthlyGoal !== settings.monthlyGoal;
+  const goalsDirty =
+    draft.monthlyGoal !== settings.monthlyGoal ||
+    draft.goalType !== settings.goalType ||
+    draft.workingDaysPerMonth !== settings.workingDaysPerMonth;
   const maintDirty =
     draft.maintenanceIntervalKm !== settings.maintenanceIntervalKm ||
     draft.lastMaintenanceKm !== settings.lastMaintenanceKm;
@@ -458,7 +461,11 @@ export default function SettingsPage() {
   const saveGoals = async () => {
     setSavingGoals(true);
     try {
-      await updateSettings({ monthlyGoal: draft.monthlyGoal });
+      await updateSettings({
+        monthlyGoal: draft.monthlyGoal,
+        goalType: draft.goalType,
+        workingDaysPerMonth: draft.workingDaysPerMonth,
+      });
       toast.success("Meta atualizada");
     } catch {
       toast.error("Não foi possível salvar");
