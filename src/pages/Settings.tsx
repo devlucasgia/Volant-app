@@ -1511,6 +1511,10 @@ export default function SettingsPage() {
                 O Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
               </p>
             </SettingsCard>
+
+            <SettingsCard value="smart-km" icon={<Navigation className="h-4 w-4" />} title="KM Inteligente">
+              <SmartKmSection />
+            </SettingsCard>
           </Accordion>
         </SectionGroup>
 
