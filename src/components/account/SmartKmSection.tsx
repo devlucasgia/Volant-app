@@ -288,7 +288,7 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
         </div>
         <div className="text-[14px] font-semibold text-amber-500">KM planejado atingido</div>
         <p className="mt-1 text-[12px] text-muted-foreground">
-          Atualize seu KM planejado para recalcular.
+          Atualize seu KM restante para recalcular.
         </p>
         <BaseRow base={state.base} className="mt-3" />
       </div>
