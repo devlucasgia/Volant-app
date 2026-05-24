@@ -62,7 +62,7 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${i * 70}ms` });
 
   return (
-    <div className="relative min-h-[100dvh] overflow-y-auto bg-background">
+    <div className={cn("relative bg-background", asModal ? "w-full" : "min-h-[100dvh] overflow-y-auto")}>
       {/* Soft top green glow — elegant, premium, not neon */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/2 h-[22rem] w-[22rem] -translate-x-1/2 rounded-full bg-primary/25 blur-[90px]" />
@@ -71,11 +71,15 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
       </div>
 
       <div
-        className="relative z-10 mx-auto flex w-full max-w-md flex-col px-5"
-        style={{
-          paddingTop: "max(1rem, env(safe-area-inset-top))",
-          paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
-        }}
+        className={cn("relative z-10 mx-auto flex w-full max-w-md flex-col px-5", asModal ? "py-5" : "")}
+        style={
+          asModal
+            ? undefined
+            : {
+                paddingTop: "max(1rem, env(safe-area-inset-top))",
+                paddingBottom: "max(1rem, env(safe-area-inset-bottom))",
+              }
+        }
       >
         {/* Header: small crown + "Volant Premium" left, Sair right */}
         <div className="flex items-center justify-between animate-fade-in" style={stagger(0)}>
