@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import volantLogoSplash from "@/assets/volant-logo-splash.png";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
@@ -215,7 +216,7 @@ function WelcomeStep() {
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
         <div className="h-28 w-28 overflow-hidden rounded-full border border-primary/20 bg-[#0b1220] shadow-[0_0_24px_hsl(var(--primary)/0.45)]">
           <img
-            src="/volant-logo-splash.png"
+            src={volantLogoSplash}
             alt="Volant"
             loading="eager"
             decoding="sync"
@@ -336,23 +337,33 @@ function RegistroStep() {
           </AnimatePresence>
 
           {/* Center FAB — anchored to nav center via flex centering for pixel-perfect alignment */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-20 flex justify-center">
-            <motion.div
-              animate={
-                phase === "idle"
-                  ? { scale: [1, 1.08, 1] }
-                  : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
-              }
-              transition={
-                phase === "idle"
-                  ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
-                  : { duration: 0.25 }
-              }
-              className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
-            >
-              {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
-            </motion.div>
-          </div>
+          <AnimatePresence>
+            {phase !== "drawer" && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.2 }}
+                className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center"
+              >
+                <motion.div
+                  animate={
+                    phase === "idle"
+                      ? { scale: [1, 1.08, 1] }
+                      : { scale: 1, rotate: phase === "radial" ? 45 : 0 }
+                  }
+                  transition={
+                    phase === "idle"
+                      ? { duration: 1.6, repeat: Infinity, ease: "easeInOut" }
+                      : { duration: 0.25 }
+                  }
+                  className="pointer-events-auto grid h-10 w-10 place-items-center rounded-full gradient-success text-primary-foreground shadow-fab ring-4 ring-background"
+                >
+                  {phase === "radial" ? <X className="h-5 w-5" strokeWidth={2.5} /> : <Plus className="h-5 w-5" strokeWidth={2.5} />}
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Drawer mock — mirrors real "Novo registro" form */}
           <AnimatePresence>

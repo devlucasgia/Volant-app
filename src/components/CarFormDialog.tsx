@@ -8,7 +8,6 @@ import { useData } from "@/context/DataContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Car as CarType } from "@/types";
 import { toast } from "sonner";
-import { VehicleCostsSection, EMPTY_VEHICLE_COSTS, type VehicleCosts } from "@/components/vehicle/VehicleCostsSection";
 
 interface Props {
   open: boolean;
@@ -23,7 +22,6 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
   const [model, setModel] = useState("");
   const [plate, setPlate] = useState("");
   const [initialKm, setInitialKm] = useState("");
-  const [costs, setCosts] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -32,19 +30,6 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
       setModel(car?.model || "");
       setPlate(car?.plate || "");
       setInitialKm(car?.initial_km != null ? String(car.initial_km) : "");
-      const c = (car as any) || {};
-      setCosts({
-        ownership_status: c.ownership_status ?? null,
-        financing_monthly: c.financing_monthly ?? null,
-        rental_weekly: c.rental_weekly ?? null,
-        oil_change_cost: c.oil_change_cost ?? null,
-        oil_change_interval_km: c.oil_change_interval_km ?? null,
-        tires_cost: c.tires_cost ?? null,
-        tires_interval_km: c.tires_interval_km ?? null,
-        ipva_yearly: c.ipva_yearly ?? null,
-        insurance_monthly: c.insurance_monthly ?? null,
-        other_monthly_costs: c.other_monthly_costs ?? null,
-      });
     }
   }, [open, car]);
 
@@ -56,7 +41,6 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
       model: model || null,
       plate: plate || null,
       initial_km: parseFloat(initialKm) || 0,
-      ...costs,
     };
     if (car) {
       const { error } = await supabase.from("cars").update(payload).eq("id", car.id);
@@ -101,7 +85,6 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
             <Input type="number" inputMode="decimal" value={initialKm}
               onChange={(e) => setInitialKm(e.target.value)} placeholder="Ex: 45000" />
           </div>
-          <VehicleCostsSection value={costs} onChange={setCosts} />
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>Cancelar</Button>

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CarFormDialog } from "@/components/CarFormDialog";
+import { VehicleCostsCard } from "@/components/vehicle/VehicleCostsCard";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { totalKmAllTime, deriveGoals } from "@/lib/stats";
@@ -1171,6 +1172,10 @@ export default function SettingsPage() {
                   ))}
                 </div>
               )}
+            </SettingsCard>
+
+            <SettingsCard value="vehicle-costs" icon={<Wallet className="h-4 w-4" />} title="Custos do veículo">
+              <VehicleCostsCard />
             </SettingsCard>
 
             <SettingsCard value="maint" icon={<Wrench className="h-4 w-4" />} title="Manutenção preventiva">
