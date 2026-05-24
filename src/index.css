@@ -39,7 +39,7 @@
     --info-foreground: 0 0% 100%;
 
     /* Tipo de meta — azul premium (royal/navy) p/ meta bruta */
-    --goal-gross: 215 55% 56%;
+    --goal-gross: 215 65% 62%;
     --goal-gross-foreground: 0 0% 100%;
 
     /* Brand colors */
@@ -109,7 +109,7 @@
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --goal-gross: 215 60% 48%;
+    --goal-gross: 215 70% 60%;
     --goal-gross-foreground: 0 0% 100%;
 
     --brand-uber: 0 0% 100%;
@@ -167,5 +167,20 @@
   }
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
+  }
+}
+
+@layer base {
+  /*
+   * Global focus-ring polish:
+   * Removes the 2px ring offset so focus rings, active outlines and error
+   * borders never extend outside of rounded cards with `overflow-hidden`.
+   * Rings still render via box-shadow, but flush against the element edge,
+   * preventing the "cut border" look in Settings/forms/onboarding/segmented.
+   */
+  *,
+  *::before,
+  *::after {
+    --tw-ring-offset-width: 0px;
   }
 }
