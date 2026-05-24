@@ -22,9 +22,13 @@ export interface SmartKmCostsResult {
  * proportionalizes this total against the remaining working days of the month
  * — see computeSmartKm.
  */
-export function computeMonthlyVehicleCosts(car: Car | null, kmPlanned: number | null): SmartKmCostsResult {
+export function computeMonthlyVehicleCosts(
+  car: Car | null,
+  kmPlanned: number | null,
+  reference: Date = new Date(),
+): SmartKmCostsResult {
   const items: SmartKmCostBreakdown[] = [];
-  if (!car) return { total: 0, items };
+  if (!car) return { total: 0, items, dailyFixed: 0 };
 
   const status = car.ownership_status;
 
