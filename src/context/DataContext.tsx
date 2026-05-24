@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: Settings = {
   dashboardWidgets: DEFAULT_WIDGETS,
   goalType: "bruto",
   workingDaysPerMonth: null,
+  kmPlannedMonth: null,
 };
 
 function rowToEntry(r: any): Entry {
