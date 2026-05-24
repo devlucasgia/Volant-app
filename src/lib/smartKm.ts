@@ -62,7 +62,9 @@ export function computeMonthlyVehicleCosts(
   }
 
   const total = items.reduce((s, i) => s + i.value, 0);
-  return { total, items };
+  const daysInMonth = getDaysInMonth(reference);
+  const dailyFixed = daysInMonth > 0 ? total / daysInMonth : 0;
+  return { total, items, dailyFixed };
 }
 
 export interface CurrentMonthRealData {
