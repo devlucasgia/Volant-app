@@ -216,6 +216,12 @@ export default function Dashboard() {
                 <Target className="h-4 w-4 text-primary" />
               )}
               {periodGoal.title}
+              <span
+                className="inline-flex items-center rounded-full border border-success/25 bg-success/[0.08] px-1.5 py-0.5 text-[9.5px] font-medium uppercase tracking-wider text-success/90"
+                title={settings.goalType === "liquido" ? "Calculada sobre o lucro líquido" : "Calculada sobre o ganho bruto"}
+              >
+                {settings.goalType === "liquido" ? "Meta líquida" : "Meta bruta"}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               {overAmount > 0 && (
@@ -225,7 +231,7 @@ export default function Dashboard() {
                 </span>
               )}
               <div className="text-sm tabular-nums text-muted-foreground">
-                {brl(s.gross)} / {brl(periodGoal.value)}
+                {brl(goalProgressValue)} / {brl(periodGoal.value)}
               </div>
             </div>
           </div>

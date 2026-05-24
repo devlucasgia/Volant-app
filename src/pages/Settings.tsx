@@ -447,6 +447,15 @@ export default function SettingsPage() {
     setDraft(buildDraft(settings));
   }, [settings]);
 
+  const availableDaysThisMonth = useMemo(() => {
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return end - now.getDate() + 1;
+  }, []);
+  const workingDaysInvalid =
+    draft.workingDaysPerMonth != null &&
+    (draft.workingDaysPerMonth < 1 || draft.workingDaysPerMonth > availableDaysThisMonth);
+
   const goalsDirty =
     draft.monthlyGoal !== settings.monthlyGoal ||
     draft.goalType !== settings.goalType ||
@@ -459,6 +468,7 @@ export default function SettingsPage() {
   const [savingMaint, setSavingMaint] = useState(false);
 
   const saveGoals = async () => {
+    if (workingDaysInvalid) return;
     setSavingGoals(true);
     try {
       await updateSettings({
@@ -1331,7 +1341,7 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas e objetivos">
+            <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas Inteligentes">
               {/* 1. Tipo de meta */}
               <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
                 <div className="mb-3 flex items-start gap-2.5">
@@ -1393,12 +1403,23 @@ export default function SettingsPage() {
                   decimal={false}
                   inputMode="numeric"
                   placeholder="Ex: 22"
+                  className={cn(workingDaysInvalid && "border-destructive focus-visible:ring-destructive")}
                   onChange={(v) => {
                     if (v == null) return setDraft((d) => ({ ...d, workingDaysPerMonth: null }));
                     const n = Math.max(1, Math.min(31, Math.floor(v)));
                     setDraft((d) => ({ ...d, workingDaysPerMonth: n }));
                   }}
                 />
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground">
+                    Dias disponíveis: {availableDaysThisMonth}
+                  </span>
+                  {workingDaysInvalid && (
+                    <span className="text-[11px] font-medium text-destructive">
+                      Você só tem {availableDaysThisMonth} dias disponíveis até o fim deste mês.
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* 3. Meta mensal */}
@@ -1426,7 +1447,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty} className="w-full">
+              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty || workingDaysInvalid} className="w-full">
                 {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
