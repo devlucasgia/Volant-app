@@ -3,6 +3,8 @@ import { PageHeader } from "@/components/ui-bits";
 import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
+import { useAccess } from "@/context/AccessContext";
+import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import { Entry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
@@ -129,6 +131,7 @@ function SwipeRow({ entry, children, onEdit, onDelete }: SwipeRowProps) {
 export default function History() {
   const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
   const { openDrawer } = useUI();
+  const { isLimited, requirePremium } = useAccess();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -167,7 +170,14 @@ export default function History() {
 
   const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-  const handleEdit = (e: Entry) => openDrawer({ editing: e });
+  const handleEdit = (e: Entry) => {
+    if (!requirePremium()) return;
+    openDrawer({ editing: e });
+  };
+  const handleDeleteRequest = (e: Entry) => {
+    if (!requirePremium()) return;
+    setConfirmDelete(e);
+  };
 
   return (
     <>
