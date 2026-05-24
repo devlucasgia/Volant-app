@@ -20,10 +20,13 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
+import { useAccess } from "@/context/AccessContext";
+import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
 
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { isFull } = useAccess();
   const { user } = useAuth();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
@@ -151,6 +154,21 @@ export default function Dashboard() {
     if (s.net <= 0) return null;
     return Math.round((s.net / elapsed) * total);
   }, [period, s.net]);
+
+  // KM Inteligente — discrete display under the R$/km cell when valid.
+  const smartKmValue = useMemo(() => {
+    if (!isFull) return null;
+    const real = getCurrentMonthRealData(entries);
+    const costs = computeMonthlyVehicleCosts(activeCar, settings.kmPlannedMonth);
+    const state = computeSmartKm({
+      monthlyGoal: settings.monthlyGoal,
+      goalType: settings.goalType,
+      kmPlanned: settings.kmPlannedMonth,
+      vehicleMonthlyCost: costs.total,
+      real,
+    });
+    return state.kind === "ok" ? state.smart : null;
+  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.monthlyGoal, settings.goalType]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
@@ -299,6 +317,13 @@ export default function Dashboard() {
             <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
           </div>
         </div>
+        {smartKmValue !== null && (
+          <div className="mt-2 flex items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-1.5 text-[11px]">
+            <Gauge className="h-3 w-3 text-primary" />
+            <span className="text-muted-foreground">R$/km inteligente:</span>
+            <span className="font-bold tabular-nums text-foreground">{brl(smartKmValue)}</span>
+          </div>
+        )}
       </section>
     ) : null,
 

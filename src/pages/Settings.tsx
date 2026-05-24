@@ -23,7 +23,9 @@ import {
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
+  Navigation,
 } from "lucide-react";
+import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -1508,6 +1510,10 @@ export default function SettingsPage() {
               <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
                 O Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
               </p>
+            </SettingsCard>
+
+            <SettingsCard value="smart-km" icon={<Navigation className="h-4 w-4" />} title="KM Inteligente">
+              <SmartKmSection />
             </SettingsCard>
           </Accordion>
         </SectionGroup>
