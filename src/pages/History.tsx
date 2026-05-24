@@ -334,7 +334,7 @@ export default function History() {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => setConfirmDelete(e)}
+                            onClick={() => handleDeleteRequest(e)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
@@ -348,7 +348,7 @@ export default function History() {
                       key={e.id}
                       entry={e}
                       onEdit={() => handleEdit(e)}
-                      onDelete={() => setConfirmDelete(e)}
+                      onDelete={() => handleDeleteRequest(e)}
                     >
                       {card}
                     </SwipeRow>
