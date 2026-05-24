@@ -1403,12 +1403,23 @@ export default function SettingsPage() {
                   decimal={false}
                   inputMode="numeric"
                   placeholder="Ex: 22"
+                  className={cn(workingDaysInvalid && "border-destructive focus-visible:ring-destructive")}
                   onChange={(v) => {
                     if (v == null) return setDraft((d) => ({ ...d, workingDaysPerMonth: null }));
                     const n = Math.max(1, Math.min(31, Math.floor(v)));
                     setDraft((d) => ({ ...d, workingDaysPerMonth: n }));
                   }}
                 />
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground">
+                    Dias disponíveis: {availableDaysThisMonth}
+                  </span>
+                  {workingDaysInvalid && (
+                    <span className="text-[11px] font-medium text-destructive">
+                      Você só tem {availableDaysThisMonth} dias disponíveis até o fim deste mês.
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* 3. Meta mensal */}
