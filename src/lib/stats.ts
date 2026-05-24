@@ -64,14 +64,28 @@ export function byExpenseCategory(entries: Entry[]): Record<string, number> {
 /**
  * Smart goal derivation.
  *
- * Daily and weekly goals are calculated dynamically from:
- *  - the remaining monthly goal amount (monthlyGoal − net earned this month),
- *  - the remaining available days in the current month (including today).
+ * If `workingDays` is provided, the daily goal uses workingDays as the divisor
+ * (Meta mensal / dias trabalhados planejados). Otherwise, falls back to the
+ * remaining calendar-days logic so behavior stays unchanged when not configured.
  *
- * This way goals automatically adapt when the user adds/edits/deletes earnings,
- * when the monthly goal changes, or as the month progresses.
+ * `goalType` controls what is considered "earned" this month:
+ *  - "bruto" → gross earnings (current default, preserves legacy behavior).
+ *  - "liquido" → net (gross − expenses).
  */
-export function deriveGoals(monthlyGoal: number, entries: Entry[], now: Date = new Date()) {
+export interface DeriveGoalsOptions {
+  goalType?: "liquido" | "bruto";
+  workingDays?: number | null;
+}
+
+export function deriveGoals(
+  monthlyGoal: number,
+  entries: Entry[],
+  now: Date = new Date(),
+  opts: DeriveGoalsOptions = {},
+) {
+  const goalType = opts.goalType ?? "bruto";
+  const workingDays = opts.workingDays && opts.workingDays > 0 ? Math.floor(opts.workingDays) : null;
+
   if (!monthlyGoal || monthlyGoal <= 0) {
     return { monthly: 0, weekly: 0, daily: 0, remaining: 0, remainingDays: 0, earnedThisMonth: 0 };
   }
@@ -85,14 +99,26 @@ export function deriveGoals(monthlyGoal: number, entries: Entry[], now: Date = n
     if (e.type === "earning") gross += (e as EarningEntry).gross;
     else if (e.type === "expense") expenses += (e as ExpenseEntry).expense.amount;
   });
-  const earnedThisMonth = Math.max(0, gross - expenses);
+  const earnedThisMonth =
+    goalType === "liquido" ? Math.max(0, gross - expenses) : Math.max(0, gross);
   const remaining = Math.max(0, monthlyGoal - earnedThisMonth);
-  const today = startOfDay(now);
-  const lastDay = startOfDay(mEnd);
-  const remainingDays = Math.max(1, differenceInCalendarDays(lastDay, today) + 1);
-  const daily = remaining / remainingDays;
-  const weeksRemaining = Math.max(1, remainingDays / 7);
-  const weekly = remaining / weeksRemaining;
+
+  let daily: number;
+  let weekly: number;
+  let remainingDays: number;
+  if (workingDays) {
+    // Plan-based: derive daily from the user's planned working days for the month.
+    daily = monthlyGoal / workingDays;
+    weekly = daily * Math.min(7, workingDays);
+    remainingDays = workingDays;
+  } else {
+    const today = startOfDay(now);
+    const lastDay = startOfDay(mEnd);
+    remainingDays = Math.max(1, differenceInCalendarDays(lastDay, today) + 1);
+    daily = remaining / remainingDays;
+    const weeksRemaining = Math.max(1, remainingDays / 7);
+    weekly = remaining / weeksRemaining;
+  }
   return { monthly: monthlyGoal, weekly, daily, remaining, remainingDays, earnedThisMonth };
 }
 
@@ -105,8 +131,9 @@ export function goalForPeriod(
   entries: Entry[],
   customRange?: CustomRange,
   dailyOverride?: number | null,
+  opts: DeriveGoalsOptions = {},
 ): { value: number; title: string } {
-  const g = deriveGoals(monthlyGoal, entries);
+  const g = deriveGoals(monthlyGoal, entries, new Date(), opts);
   if (period === "day") {
     return { value: dailyOverride && dailyOverride > 0 ? dailyOverride : g.daily, title: "Meta do dia" };
   }
