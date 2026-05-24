@@ -125,14 +125,19 @@ export default function Dashboard() {
     } catch { return null; }
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
-  const periodGoal = useMemo(
-    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride),
-    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride]
+  const goalOpts = useMemo(
+    () => ({ goalType: settings.goalType, workingDays: settings.workingDaysPerMonth }),
+    [settings.goalType, settings.workingDaysPerMonth]
   );
-  const goalPct = periodGoal.value > 0 ? Math.min(100, (s.gross / periodGoal.value) * 100) : 0;
-  const goalReached = periodGoal.value > 0 && s.gross >= periodGoal.value;
-  const goalRemaining = Math.max(0, periodGoal.value - s.gross);
-  const overAmount = Math.max(0, s.gross - periodGoal.value);
+  const periodGoal = useMemo(
+    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
+    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride, goalOpts]
+  );
+  const goalProgressValue = settings.goalType === "liquido" ? s.net : s.gross;
+  const goalPct = periodGoal.value > 0 ? Math.min(100, (goalProgressValue / periodGoal.value) * 100) : 0;
+  const goalReached = periodGoal.value > 0 && goalProgressValue >= periodGoal.value;
+  const goalRemaining = Math.max(0, periodGoal.value - goalProgressValue);
+  const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
   // Monthly projection — only when viewing the month. Uses net pace so far.
