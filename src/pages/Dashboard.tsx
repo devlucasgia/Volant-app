@@ -448,6 +448,13 @@ export default function Dashboard() {
           const showGross = heroMetric === "gross";
           const heroTitle = showGross ? "Bruto" : "Lucro líquido";
           const heroValue = showGross ? s.gross : s.net;
+          // Theme follows the hero metric: green for líquido, premium blue for bruto.
+          const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
+          const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/30" : "border-success/30";
+          const heroGradient = showGross
+            ? "bg-gradient-to-br from-[hsl(var(--goal-gross))]/22 via-[hsl(var(--goal-gross))]/10 to-[hsl(var(--goal-gross))]/5"
+            : "bg-gradient-to-br from-success/25 via-success/12 to-success/5";
+          const heroBlobMain = showGross ? "bg-[hsl(var(--goal-gross))]/22" : "bg-success/25";
           // Secondary metrics swap when "Bruto" is the hero.
           const secondary: { label: string; value: number; dot: string }[] = showGross
             ? [
@@ -455,16 +462,16 @@ export default function Dashboard() {
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ]
             : [
-                { label: "Bruto", value: s.gross, dot: "bg-success/70" },
+                { label: "Bruto", value: s.gross, dot: "bg-[hsl(var(--goal-gross))]/80" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
           return (
-            <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
-              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
+            <div className={cn("relative overflow-hidden rounded-2xl border p-5 shadow-elevated", heroBorder, heroGradient)}>
+              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl", heroBlobMain)} />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
               <div className="relative">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
+                  <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
                     <Gauge className="h-3.5 w-3.5" /> {heroTitle}
                   </div>
                   <button
