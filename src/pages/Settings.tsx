@@ -52,13 +52,20 @@ interface DraftSettings {
   monthlyGoal: number;
   maintenanceIntervalKm: number;
   lastMaintenanceKm: number;
+  goalType: "liquido" | "bruto";
+  workingDaysPerMonth: number | null;
 }
 
-function buildDraft(s: { monthlyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number }): DraftSettings {
+function buildDraft(s: {
+  monthlyGoal: number; maintenanceIntervalKm: number; lastMaintenanceKm: number;
+  goalType: "liquido" | "bruto"; workingDaysPerMonth: number | null;
+}): DraftSettings {
   return {
     monthlyGoal: s.monthlyGoal,
     maintenanceIntervalKm: s.maintenanceIntervalKm,
     lastMaintenanceKm: s.lastMaintenanceKm,
+    goalType: s.goalType,
+    workingDaysPerMonth: s.workingDaysPerMonth,
   };
 }
 
