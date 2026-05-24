@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
+import { useAccess } from "@/context/AccessContext";
 import { AppName, Entry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
 import { TrendingUp, TrendingDown, CalendarIcon, Plus, Loader2 } from "lucide-react";
@@ -34,6 +35,7 @@ interface Props {
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const { addEntry, updateEntry, expenseCategories, earningPlatforms, isSimplePlatform } = useData();
+  const { requirePremium } = useAccess();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [tab, setTab] = useState<"earning" | "expense">("earning");
@@ -106,6 +108,11 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
   const submit = async () => {
     if (submitting) return;
+    // Gate operational entry creation / editing behind Premium.
+    if (!requirePremium()) {
+      onOpenChange(false);
+      return;
+    }
     const now = new Date();
     const chosen = new Date(date);
     if (!isEditing) chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);

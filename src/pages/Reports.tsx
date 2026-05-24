@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
+import { useAccess } from "@/context/AccessContext";
+import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
   startOfDay, endOfDay, subMonths, addMonths,
@@ -47,6 +49,7 @@ const CHARTS: { key: ChartKey; label: string; color: string }[] = [
 
 export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { isLimited } = useAccess();
   const [widgets] = useReportWidgets();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
@@ -247,6 +250,7 @@ export default function Reports() {
         title="Relatórios"
         subtitle={periodLabel}
       />
+      <div className="relative">
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
         {/* Mode switch */}
         <Segmented<RangeMode>
@@ -490,6 +494,14 @@ export default function Reports() {
             </div>
           </div>
         )}
+      </div>
+      {isLimited && (
+        <PremiumLockOverlay
+          title="Relatórios completos no Premium"
+          description="Acesse seus relatórios, gráficos e exportações assinando o Volant Premium."
+          intense
+        />
+      )}
       </div>
     </>
   );
