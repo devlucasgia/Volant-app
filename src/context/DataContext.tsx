@@ -223,6 +223,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dashboard_widgets: next.dashboardWidgets as any,
       goal_type: next.goalType,
       working_days_per_month: next.workingDaysPerMonth,
+      km_planned_month: next.kmPlannedMonth,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.
