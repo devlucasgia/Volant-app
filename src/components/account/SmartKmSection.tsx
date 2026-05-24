@@ -42,8 +42,9 @@ export function SmartKmSection() {
         kmPlanned: settings.kmPlannedMonth,
         vehicleMonthlyCost: costs.total,
         real,
+        workingDaysPerMonth: settings.workingDaysPerMonth,
       }),
-    [settings.monthlyGoal, settings.goalType, settings.kmPlannedMonth, costs.total, real],
+    [settings.monthlyGoal, settings.goalType, settings.kmPlannedMonth, costs.total, real, settings.workingDaysPerMonth],
   );
 
   const handleSave = async () => {
