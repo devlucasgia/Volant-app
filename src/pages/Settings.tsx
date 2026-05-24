@@ -1410,13 +1410,14 @@ export default function SettingsPage() {
                     setDraft((d) => ({ ...d, workingDaysPerMonth: n }));
                   }}
                 />
-                <div className="mt-1.5 flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-muted-foreground">
-                    Dias disponíveis: {availableDaysThisMonth}
-                  </span>
-                  {workingDaysInvalid && (
-                    <span className="text-[11px] font-medium text-destructive">
-                      Você só tem {availableDaysThisMonth} dias disponíveis até o fim deste mês.
+                <div className="mt-1.5 min-h-[16px] text-[11px] leading-none">
+                  {workingDaysInvalid ? (
+                    <span className="font-medium text-destructive/90">
+                      Apenas {availableDaysThisMonth} dias disponíveis no mês
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      Dias disponíveis: {availableDaysThisMonth}
                     </span>
                   )}
                 </div>
