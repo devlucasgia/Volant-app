@@ -23,7 +23,8 @@ import type { DateRange } from "react-day-picker";
 
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { isFull } = useAccess();
   const { user } = useAuth();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
