@@ -61,7 +61,19 @@ export interface Car {
   plate: string | null;
   initial_km: number;
   is_active: boolean;
+  ownership_status?: "quitado" | "financiado" | "alugado" | null;
+  financing_monthly?: number | null;
+  rental_weekly?: number | null;
+  oil_change_cost?: number | null;
+  oil_change_interval_km?: number | null;
+  tires_cost?: number | null;
+  tires_interval_km?: number | null;
+  ipva_yearly?: number | null;
+  insurance_monthly?: number | null;
+  other_monthly_costs?: number | null;
 }
+
+export type GoalType = "liquido" | "bruto";
 
 export type MaintenanceType = "oleo" | "bateria" | "pneus" | "outro";
 
@@ -109,6 +121,8 @@ export interface Settings {
   lastMaintenanceKm: number;
   theme: "light" | "dark";
   dashboardWidgets: DashboardWidgets;
+  goalType: GoalType;
+  workingDaysPerMonth: number | null;
 }
 
 export interface CustomCategory {
