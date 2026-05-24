@@ -1530,9 +1530,11 @@ export default function SettingsPage() {
 }
 
 /** Read-only preview of weekly/daily goals derived from the monthly goal. */
-function DerivedGoalsPreview({ monthlyGoal }: { monthlyGoal: number }) {
+function DerivedGoalsPreview({
+  monthlyGoal, goalType, workingDays,
+}: { monthlyGoal: number; goalType: "liquido" | "bruto"; workingDays: number | null }) {
   const { entries } = useData();
-  const g = deriveGoals(monthlyGoal, entries);
+  const g = deriveGoals(monthlyGoal, entries, new Date(), { goalType, workingDays });
   return (
     <div className="grid grid-cols-2 gap-2 pt-1">
       <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
