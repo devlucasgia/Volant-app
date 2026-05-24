@@ -216,7 +216,7 @@ function WelcomeStep() {
         <div className="absolute inset-0 -z-10 animate-pulse rounded-full bg-primary/25 blur-3xl" />
         <div className="h-28 w-28 overflow-hidden rounded-full border border-primary/20 bg-[#0b1220] shadow-[0_0_24px_hsl(var(--primary)/0.45)]">
           <img
-            src="/volant-logo-splash.png"
+            src={volantLogoSplash}
             alt="Volant"
             loading="eager"
             decoding="sync"
