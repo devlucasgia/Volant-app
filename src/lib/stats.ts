@@ -134,16 +134,20 @@ export function goalForPeriod(
   opts: DeriveGoalsOptions = {},
 ): { value: number; title: string } {
   const g = deriveGoals(monthlyGoal, entries, new Date(), opts);
+  const kind = opts.goalType === "liquido" ? "líquida" : "bruta";
   if (period === "day") {
-    return { value: dailyOverride && dailyOverride > 0 ? dailyOverride : g.daily, title: "Meta do dia" };
+    return {
+      value: dailyOverride && dailyOverride > 0 ? dailyOverride : g.daily,
+      title: `Meta ${kind} do dia`,
+    };
   }
-  if (period === "week") return { value: g.weekly, title: "Meta semanal" };
-  if (period === "month") return { value: g.monthly, title: "Meta mensal" };
+  if (period === "week") return { value: g.weekly, title: `Meta ${kind} da semana` };
+  if (period === "month") return { value: g.monthly, title: `Meta ${kind} do mês` };
   if (period === "custom" && customRange) {
     const days = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
-    return { value: g.daily * days, title: "Meta do período" };
+    return { value: g.daily * days, title: `Meta ${kind} do período` };
   }
-  return { value: g.monthly, title: "Meta" };
+  return { value: g.monthly, title: `Meta ${kind}` };
 }
 
 export function monthRange(): CustomRange {

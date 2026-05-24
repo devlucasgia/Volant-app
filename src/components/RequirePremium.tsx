@@ -39,11 +39,22 @@ export function RequirePremium({ children }: { children: React.ReactNode }) {
         .maybeSingle();
       if (cancelled) return;
       if (error) {
-        setOnboarding("error");
+        // Fail-closed: never downgrade from a previously-confirmed "complete"
+        // to "incomplete" because of a transient network error.
+        setOnboarding((prev) => (prev === "complete" ? "complete" : "error"));
+        if (typeof console !== "undefined") {
+          // eslint-disable-next-line no-console
+          console.warn("[RequirePremium] profile load error — gating fail-closed", error);
+        }
         return;
       }
       const d = (data ?? {}) as { onboarded?: boolean; car_onboarded?: boolean; goal_onboarded?: boolean };
-      setOnboarding(d.onboarded && d.car_onboarded && d.goal_onboarded ? "complete" : "incomplete");
+      const complete = Boolean(d.onboarded && d.car_onboarded && d.goal_onboarded);
+      setOnboarding((prev) => {
+        // Sticky: once complete, stay complete for this session.
+        if (prev === "complete") return "complete";
+        return complete ? "complete" : "incomplete";
+      });
     };
     load();
     const refresh = () => load();

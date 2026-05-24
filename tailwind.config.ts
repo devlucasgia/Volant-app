@@ -59,6 +59,10 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        "goal-gross": {
+          DEFAULT: "hsl(var(--goal-gross))",
+          foreground: "hsl(var(--goal-gross-foreground))",
+        },
         brand: {
           uber: { DEFAULT: "hsl(var(--brand-uber))", foreground: "hsl(var(--brand-uber-fg))" },
           "99": { DEFAULT: "hsl(var(--brand-99))", foreground: "hsl(var(--brand-99-fg))" },
