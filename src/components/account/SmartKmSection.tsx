@@ -162,6 +162,10 @@ export function SmartKmSection() {
                 <span className="font-semibold">Total mensal</span>
                 <span className="tabular-nums font-bold">{brl(costs.total)}</span>
               </li>
+              <li className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>Custo fixo por dia</span>
+                <span className="tabular-nums font-medium">{brl(costs.dailyFixed)}/dia</span>
+              </li>
             </ul>
           )}
         </div>
