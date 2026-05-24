@@ -138,7 +138,7 @@ export function SmartKmSection() {
           inputMode="numeric"
           placeholder="Ex: 4000"
           className={cn(invalid && "border-destructive focus-visible:ring-destructive")}
-          onFocus={handleKmFocus}
+          onFocus={handleFocus}
           onChange={(v) => {
             if (!isFull) {
               requirePremium();
@@ -153,9 +153,57 @@ export function SmartKmSection() {
             Informe um valor maior que zero.
           </div>
         )}
+
+        {/* KM restante estimado */}
+        {isFull && draftKm != null && draftKm > 0 && (
+          <div className="mt-2 flex items-center justify-between text-[12px]">
+            <span className="text-muted-foreground">KM restante estimado</span>
+            <span className="tabular-nums font-semibold">
+              {(previewKmRemaining ?? 0).toLocaleString("pt-BR")} km
+            </span>
+          </div>
+        )}
+
+        {/* KM restante manual (override) */}
+        {isFull && (
+          <div className="mt-3 rounded-xl border border-dashed border-border/60 bg-muted/20 p-3">
+            <div className="mb-1.5 flex items-center justify-between gap-2">
+              <div className="text-[12px] font-semibold">Ajustar KM restante</div>
+              {draftOverride != null && (
+                <button
+                  type="button"
+                  onClick={handleClearOverride}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" /> Limpar
+                </button>
+              )}
+            </div>
+            <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
+              Use se pretende rodar mais ou menos km do que o estimado até o fim do mês.
+            </p>
+            <NumberField
+              value={draftOverride}
+              decimal={false}
+              inputMode="numeric"
+              placeholder={`Ex: ${(previewKmRemaining ?? 0) || 1500}`}
+              className={cn(overrideInvalid && "border-destructive focus-visible:ring-destructive")}
+              onChange={(v) => {
+                if (v == null) return setDraftOverride(null);
+                setDraftOverride(Math.max(0, Math.floor(v)));
+              }}
+            />
+            {overrideInvalid && (
+              <div className="mt-1.5 text-[11px] font-medium text-destructive/90">
+                Informe um valor maior que zero.
+              </div>
+            )}
+          </div>
+        )}
+
         <Button
           onClick={handleSave}
-          disabled={!isFull ? false : (saving || !dirty || invalid)}
+          disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
           className="mt-3 w-full"
         >
           {!isFull ? (
