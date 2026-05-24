@@ -1174,6 +1174,10 @@ export default function SettingsPage() {
               )}
             </SettingsCard>
 
+            <SettingsCard value="vehicle-costs" icon={<Wallet className="h-4 w-4" />} title="Custos do veículo">
+              <VehicleCostsCard />
+            </SettingsCard>
+
             <SettingsCard value="maint" icon={<Wrench className="h-4 w-4" />} title="Manutenção preventiva">
               {(() => {
                 const lastMaintKm = draft.lastMaintenanceKm > 0 ? draft.lastMaintenanceKm : carInitialKm;
