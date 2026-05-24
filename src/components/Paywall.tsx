@@ -288,10 +288,10 @@ function TestModeNote() {
 }
 
 function PlanCard({
-  label, price, period, selected, highlight, badge, footnote, onSelect,
+  label, price, period, selected, highlight, badge, footnote, onSelect, compact,
 }: {
   label: string; price: string; period: string; selected: boolean;
-  highlight?: boolean; badge?: string; footnote?: string; onSelect: () => void;
+  highlight?: boolean; badge?: string; footnote?: string; onSelect: () => void; compact?: boolean;
 }) {
   const isAnnual = !!highlight;
   return (
@@ -299,7 +299,8 @@ function PlanCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "relative flex min-h-[140px] flex-col items-center justify-center rounded-2xl border px-4 py-5 text-center transition-all duration-300",
+        "relative flex flex-col items-center justify-center rounded-2xl border px-4 text-center transition-all duration-300",
+        compact ? "min-h-[118px] py-4" : "min-h-[140px] py-5",
         isAnnual
           ? "bg-[linear-gradient(160deg,hsl(var(--card))_0%,hsl(142_40%_10%/0.55)_100%)]"
           : "bg-card",
@@ -322,17 +323,17 @@ function PlanCard({
         </span>
       )}
       {badge && (
-        <span className="absolute -top-2 right-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]">
+        <span className={cn("absolute right-3 rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.5)]", compact ? "-top-1.5 text-[9px]" : "-top-2 text-[10px]")}>
           {badge}
         </span>
       )}
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className={cn("font-semibold uppercase tracking-wider text-muted-foreground", compact ? "text-[10px]" : "text-[11px]")}>{label}</div>
       <div className="mt-1.5 flex items-baseline justify-center gap-0.5 font-bold text-foreground tabular-nums">
-        <span className="text-[19px] leading-none">{price}</span>
-        <span className="text-[11px] font-medium text-muted-foreground">{period}</span>
+        <span className={cn("leading-none", compact ? "text-[17px]" : "text-[19px]")}>{price}</span>
+        <span className={cn("font-medium text-muted-foreground", compact ? "text-[10px]" : "text-[11px]")}>{period}</span>
       </div>
       {footnote && (
-        <div className="mt-1.5 text-[11px] font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]">
+        <div className={cn("mt-1.5 font-semibold tabular-nums text-primary [text-shadow:0_0_10px_hsl(var(--primary)/0.45)]", compact ? "text-[10px]" : "text-[11px]")}>
           {footnote}
         </div>
       )}
