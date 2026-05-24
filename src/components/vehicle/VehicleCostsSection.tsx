@@ -1,6 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { NumberField } from "@/components/NumberField";
 import { Segmented } from "@/components/Segmented";
+import { Wallet, Droplet, CircleDot, Receipt } from "lucide-react";
 
 export type OwnershipStatus = "quitado" | "financiado" | "alugado" | null;
 
@@ -35,21 +36,45 @@ interface Props {
   onChange: (next: VehicleCosts) => void;
 }
 
+/** Premium block card matching Settings > "Destaque do card principal" pattern. */
+function Block({
+  icon, title, description, children,
+}: {
+  icon: React.ReactNode; title: string; description: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-20px_rgba(0,0,0,0.45)]">
+      <div className="mb-3 flex items-start gap-2.5">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          {icon}
+        </span>
+        <div className="min-w-0">
+          <div className="text-[14px] font-semibold leading-tight">{title}</div>
+          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{description}</p>
+        </div>
+      </div>
+      <div className="space-y-3">{children}</div>
+    </div>
+  );
+}
+
 export function VehicleCostsSection({ value, onChange }: Props) {
   const set = <K extends keyof VehicleCosts>(key: K, v: VehicleCosts[K]) =>
     onChange({ ...value, [key]: v });
 
   return (
-    <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
-      <div className="space-y-1">
-        <h3 className="text-sm font-semibold">Custos do veículo</h3>
-        <p className="text-xs text-muted-foreground">
-          Preencha apenas o que quiser considerar nos cálculos futuros do Volant.
-        </p>
+    <div className="space-y-3">
+      <div className="px-1 pt-1">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+          Custos do veículo
+        </h3>
       </div>
 
-      <div className="space-y-2">
-        <Label>Situação do veículo</Label>
+      <Block
+        icon={<Wallet className="h-4 w-4" />}
+        title="Situação do veículo"
+        description="Informe se o carro é quitado, financiado ou alugado."
+      >
         <Segmented
           value={(value.ownership_status ?? "") as "" | "quitado" | "financiado" | "alugado"}
           onChange={(v) => set("ownership_status", (v || null) as OwnershipStatus)}
@@ -59,74 +84,83 @@ export function VehicleCostsSection({ value, onChange }: Props) {
             { key: "alugado", label: "Alugado" },
           ]}
         />
-      </div>
 
-      {value.ownership_status === "financiado" && (
-        <div className="space-y-2">
-          <Label>Parcela mensal do financiamento</Label>
-          <NumberField currency value={value.financing_monthly}
-            onChange={(v) => set("financing_monthly", v)} />
-        </div>
-      )}
+        {value.ownership_status === "financiado" && (
+          <div className="space-y-2 pt-1 animate-fade-in">
+            <Label className="text-xs text-muted-foreground">Parcela mensal do financiamento</Label>
+            <NumberField currency value={value.financing_monthly}
+              onChange={(v) => set("financing_monthly", v)} />
+          </div>
+        )}
 
-      {value.ownership_status === "alugado" && (
-        <div className="space-y-2">
-          <Label>Aluguel semanal</Label>
-          <NumberField currency value={value.rental_weekly}
-            onChange={(v) => set("rental_weekly", v)} />
-        </div>
-      )}
+        {value.ownership_status === "alugado" && (
+          <div className="space-y-2 pt-1 animate-fade-in">
+            <Label className="text-xs text-muted-foreground">Aluguel semanal</Label>
+            <NumberField currency value={value.rental_weekly}
+              onChange={(v) => set("rental_weekly", v)} />
+          </div>
+        )}
+      </Block>
 
-      <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Óleo</div>
+      <Block
+        icon={<Droplet className="h-4 w-4" />}
+        title="Óleo"
+        description="Informe o valor médio da troca e a quilometragem entre trocas."
+      >
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label>Valor da troca</Label>
+            <Label className="text-xs text-muted-foreground">Valor da troca</Label>
             <NumberField currency value={value.oil_change_cost}
               onChange={(v) => set("oil_change_cost", v)} />
           </div>
           <div className="space-y-2">
-            <Label>Intervalo (km)</Label>
+            <Label className="text-xs text-muted-foreground">Intervalo (km)</Label>
             <NumberField value={value.oil_change_interval_km}
               onChange={(v) => set("oil_change_interval_km", v)} placeholder="Ex: 10000" />
           </div>
         </div>
-      </div>
+      </Block>
 
-      <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Pneus</div>
+      <Block
+        icon={<CircleDot className="h-4 w-4" />}
+        title="Pneus"
+        description="Informe o custo médio e a durabilidade estimada dos pneus."
+      >
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <Label>Valor médio da troca</Label>
+            <Label className="text-xs text-muted-foreground">Valor médio da troca</Label>
             <NumberField currency value={value.tires_cost}
               onChange={(v) => set("tires_cost", v)} />
           </div>
           <div className="space-y-2">
-            <Label>Intervalo (km)</Label>
+            <Label className="text-xs text-muted-foreground">Intervalo (km)</Label>
             <NumberField value={value.tires_interval_km}
               onChange={(v) => set("tires_interval_km", v)} placeholder="Ex: 40000" />
           </div>
         </div>
-      </div>
+      </Block>
 
-      <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Impostos e custos fixos</div>
+      <Block
+        icon={<Receipt className="h-4 w-4" />}
+        title="Custos fixos"
+        description="Preencha apenas os custos que quiser considerar no Volant."
+      >
         <div className="space-y-2">
-          <Label>IPVA anual</Label>
+          <Label className="text-xs text-muted-foreground">IPVA anual</Label>
           <NumberField currency value={value.ipva_yearly}
             onChange={(v) => set("ipva_yearly", v)} />
         </div>
         <div className="space-y-2">
-          <Label>Seguro mensal</Label>
+          <Label className="text-xs text-muted-foreground">Seguro mensal</Label>
           <NumberField currency value={value.insurance_monthly}
             onChange={(v) => set("insurance_monthly", v)} />
         </div>
         <div className="space-y-2">
-          <Label>Outros custos mensais</Label>
+          <Label className="text-xs text-muted-foreground">Outros custos mensais</Label>
           <NumberField currency value={value.other_monthly_costs}
             onChange={(v) => set("other_monthly_costs", v)} />
         </div>
-      </div>
+      </Block>
     </div>
   );
 }
