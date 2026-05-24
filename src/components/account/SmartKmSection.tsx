@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw } from "lucide-react";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
@@ -20,14 +20,20 @@ export function SmartKmSection() {
   const { isFull, requirePremium } = useAccess();
 
   const [draftKm, setDraftKm] = useState<number | null>(settings.kmPlannedMonth);
+  const [draftOverride, setDraftOverride] = useState<number | null>(settings.kmRemainingOverride);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setDraftKm(settings.kmPlannedMonth);
   }, [settings.kmPlannedMonth]);
+  useEffect(() => {
+    setDraftOverride(settings.kmRemainingOverride);
+  }, [settings.kmRemainingOverride]);
 
-  const dirty = draftKm !== settings.kmPlannedMonth;
+  const dirty =
+    draftKm !== settings.kmPlannedMonth || draftOverride !== settings.kmRemainingOverride;
   const invalid = draftKm != null && draftKm <= 0;
+  const overrideInvalid = draftOverride != null && draftOverride <= 0;
 
   const real = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const costs = useMemo(
@@ -43,17 +49,35 @@ export function SmartKmSection() {
         vehicleMonthlyCost: costs.total,
         real,
         workingDaysPerMonth: settings.workingDaysPerMonth,
+        kmRemainingOverride: settings.kmRemainingOverride,
       }),
-    [settings.monthlyGoal, settings.goalType, settings.kmPlannedMonth, costs.total, real, settings.workingDaysPerMonth],
+    [
+      settings.monthlyGoal,
+      settings.goalType,
+      settings.kmPlannedMonth,
+      settings.kmRemainingOverride,
+      costs.total,
+      real,
+      settings.workingDaysPerMonth,
+    ],
   );
+
+  // Live preview for "KM restante estimado" using the current draft of kmPlanned.
+  const previewKmRemaining = useMemo(() => {
+    if (!draftKm || draftKm <= 0) return null;
+    return Math.max(0, draftKm - real.kmThisMonth);
+  }, [draftKm, real.kmThisMonth]);
 
   const handleSave = async () => {
     if (!requirePremium()) return;
-    if (invalid) return;
+    if (invalid || overrideInvalid) return;
     setSaving(true);
     try {
-      await updateSettings({ kmPlannedMonth: draftKm });
-      toast.success("KM planejado salvo");
+      await updateSettings({
+        kmPlannedMonth: draftKm,
+        kmRemainingOverride: draftOverride,
+      });
+      toast.success("KM Inteligente salvo");
     } catch {
       toast.error("Não foi possível salvar");
     } finally {
@@ -61,9 +85,22 @@ export function SmartKmSection() {
     }
   };
 
-  const handleKmFocus = () => {
+  const handleClearOverride = async () => {
+    if (!requirePremium()) return;
+    setDraftOverride(null);
+    try {
+      await updateSettings({ kmRemainingOverride: null });
+      toast.success("Voltamos para o cálculo automático");
+    } catch {
+      toast.error("Não foi possível limpar");
+    }
+  };
+
+  const handleFocus = () => {
     if (!isFull) requirePremium();
   };
+
+
 
   // ---------- Empty states ----------
   if (!activeCar) {
