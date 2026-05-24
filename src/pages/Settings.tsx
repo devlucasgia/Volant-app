@@ -447,6 +447,15 @@ export default function SettingsPage() {
     setDraft(buildDraft(settings));
   }, [settings]);
 
+  const availableDaysThisMonth = useMemo(() => {
+    const now = new Date();
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    return end - now.getDate() + 1;
+  }, []);
+  const workingDaysInvalid =
+    draft.workingDaysPerMonth != null &&
+    (draft.workingDaysPerMonth < 1 || draft.workingDaysPerMonth > availableDaysThisMonth);
+
   const goalsDirty =
     draft.monthlyGoal !== settings.monthlyGoal ||
     draft.goalType !== settings.goalType ||
@@ -459,6 +468,7 @@ export default function SettingsPage() {
   const [savingMaint, setSavingMaint] = useState(false);
 
   const saveGoals = async () => {
+    if (workingDaysInvalid) return;
     setSavingGoals(true);
     try {
       await updateSettings({
