@@ -10,6 +10,8 @@ export interface SmartKmCostBreakdown {
 export interface SmartKmCostsResult {
   total: number;
   items: SmartKmCostBreakdown[];
+  /** Total mensal dividido pelos dias do mês de referência. */
+  dailyFixed: number;
 }
 
 /**
