@@ -731,6 +731,41 @@ export default function SettingsPage() {
                   <Sparkles className="mr-2 h-4 w-4 text-primary" /> Refazer tour de boas-vindas
                 </Button>
               </div>
+
+              {/* Reset onboarding (test environment only) */}
+              {(() => {
+                const host = typeof window !== "undefined" ? window.location.hostname : "";
+                const isTestEnv =
+                  host === "localhost" ||
+                  host.startsWith("127.") ||
+                  host.includes("id-preview--") ||
+                  host.includes("lovableproject.com");
+                if (!isTestEnv) return null;
+                return (
+                  <div className="pt-1">
+                    <Button
+                      variant="outline"
+                      className="w-full border-dashed"
+                      onClick={async () => {
+                        if (!user) return;
+                        if (!window.confirm("Resetar onboarding? Os fluxos de boas-vindas, cadastro de veículo e meta aparecerão novamente.")) return;
+                        const { error } = await supabase
+                          .from("profiles")
+                          .update({ onboarded: false, car_onboarded: false, goal_onboarded: false } as any)
+                          .eq("id", user.id);
+                        if (error) {
+                          toast.error("Não foi possível resetar o onboarding.");
+                          return;
+                        }
+                        toast.success("Onboarding resetado. Recarregando...");
+                        setTimeout(() => window.location.reload(), 600);
+                      }}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" /> Resetar onboarding (teste)
+                    </Button>
+                  </div>
+                );
+              })()}
             </SettingsCard>
 
             <SubscriptionCard

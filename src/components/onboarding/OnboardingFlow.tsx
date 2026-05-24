@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import volantLogoSplash from "@/assets/volant-logo-splash.png";
+import volantLogoSplash from "@/assets/volant-logo-splash.webp";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
