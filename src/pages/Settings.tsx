@@ -1447,7 +1447,7 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty} className="w-full">
+              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty || workingDaysInvalid} className="w-full">
                 {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
               </Button>
 
