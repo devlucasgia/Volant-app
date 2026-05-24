@@ -169,3 +169,18 @@
     box-shadow: var(--shadow-elevated);
   }
 }
+
+@layer base {
+  /*
+   * Global focus-ring polish:
+   * Removes the 2px ring offset so focus rings, active outlines and error
+   * borders never extend outside of rounded cards with `overflow-hidden`.
+   * Rings still render via box-shadow, but flush against the element edge,
+   * preventing the "cut border" look in Settings/forms/onboarding/segmented.
+   */
+  *,
+  *::before,
+  *::after {
+    --tw-ring-offset-width: 0px;
+  }
+}
