@@ -38,8 +38,8 @@
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    /* Tipo de meta — azul petróleo discreto p/ meta bruta */
-    --goal-gross: 198 38% 48%;
+    /* Tipo de meta — azul premium (royal/navy) p/ meta bruta */
+    --goal-gross: 215 55% 56%;
     --goal-gross-foreground: 0 0% 100%;
 
     /* Brand colors */
@@ -109,7 +109,7 @@
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
 
-    --goal-gross: 198 42% 55%;
+    --goal-gross: 215 60% 48%;
     --goal-gross-foreground: 0 0% 100%;
 
     --brand-uber: 0 0% 100%;

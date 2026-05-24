@@ -191,30 +191,35 @@ export default function Dashboard() {
 
     goal: widgets.goal ? (() => {
       const isLiquido = settings.goalType === "liquido";
-      // Theme tokens: green for líquida, petrol blue for bruta.
+      // Theme tokens: green for líquida, premium blue for bruta.
       const themeText = isLiquido ? "text-success" : "text-[hsl(var(--goal-gross))]";
       const themeBg = isLiquido ? "bg-success/15" : "bg-[hsl(var(--goal-gross))]/15";
       const themeBar = isLiquido ? "[&>div]:bg-success" : "[&>div]:bg-[hsl(var(--goal-gross))]";
-      const compact = period === "week" || period === "month";
+      const themeBorderReached = isLiquido ? "border-success/50" : "border-[hsl(var(--goal-gross))]/55";
+      const themeGradientReached = isLiquido
+        ? "bg-gradient-to-br from-success/10 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--success)/0.55)]"
+        : "bg-gradient-to-br from-[hsl(var(--goal-gross))]/12 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--goal-gross)/0.55)]";
+      const themeGlow = isLiquido ? "bg-success/10" : "bg-[hsl(var(--goal-gross))]/12";
       return (
         <div
           key="goal"
           className={cn(
             "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
-            goalReached
-              ? "border-success/50 bg-gradient-to-br from-success/10 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--success)/0.55)]"
-              : "border-border",
+            goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
           {goalReached && (
             <div
               aria-hidden
-              className="pointer-events-none absolute -inset-1 rounded-3xl bg-success/10 blur-2xl animate-fade-in"
+              className={cn(
+                "pointer-events-none absolute -inset-1 rounded-3xl blur-2xl animate-fade-in",
+                themeGlow,
+              )}
             />
           )}
           <div className="relative">
-            {/* Header: title + (optional) over-goal badge */}
-            <div className="flex items-center justify-between gap-2">
+            {/* Header: title left, values right — balanced horizontal distribution */}
+            <div className="flex items-start justify-between gap-3">
               <div className={cn("flex min-w-0 items-center gap-2 text-sm font-semibold", themeText)}>
                 {goalReached ? (
                   <span className={cn("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full", themeBg)}>
@@ -225,31 +230,18 @@ export default function Dashboard() {
                 )}
                 <span className="truncate">{periodGoal.title}</span>
               </div>
-              {overAmount > 0 && (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-success/40 bg-success/10 px-2 py-0.5 text-[10px] font-semibold text-success animate-fade-in">
-                  <TrendingUp className="h-2.5 w-2.5" />
-                  {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
-                </span>
-              )}
-            </div>
-
-            {/* Values — own line on week/month for breathing room */}
-            <div
-              className={cn(
-                "tabular-nums text-muted-foreground",
-                compact ? "mt-2 text-[13px]" : "mt-1.5 text-sm",
-              )}
-            >
-              <span className="font-semibold text-foreground">{brl(goalProgressValue)}</span>
-              <span className="mx-1 text-muted-foreground/70">/</span>
-              <span>{brl(periodGoal.value)}</span>
+              <div className="shrink-0 text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
+                <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
+                <span className="mx-1 text-muted-foreground/60">/</span>
+                <span>{brl(periodGoal.value)}</span>
+              </div>
             </div>
 
             <Progress
               value={goalPct}
               className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
             />
-            <div className="mt-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums truncate">
                 {periodGoal.value > 0
                   ? goalReached
@@ -263,6 +255,19 @@ export default function Dashboard() {
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
               )}
             </div>
+            {overAmount > 0 && (
+              <div className="mt-1.5">
+                <span className={cn(
+                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold animate-fade-in",
+                  isLiquido
+                    ? "border-success/40 bg-success/10 text-success"
+                    : "border-[hsl(var(--goal-gross))]/45 bg-[hsl(var(--goal-gross))]/10 text-[hsl(var(--goal-gross))]",
+                )}>
+                  <TrendingUp className="h-2.5 w-2.5" />
+                  {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+                </span>
+              </div>
+            )}
             {monthlyProjection !== null && (
               <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
                 Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
@@ -443,6 +448,13 @@ export default function Dashboard() {
           const showGross = heroMetric === "gross";
           const heroTitle = showGross ? "Bruto" : "Lucro líquido";
           const heroValue = showGross ? s.gross : s.net;
+          // Theme follows the hero metric: green for líquido, premium blue for bruto.
+          const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
+          const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/30" : "border-success/30";
+          const heroGradient = showGross
+            ? "bg-gradient-to-br from-[hsl(var(--goal-gross))]/22 via-[hsl(var(--goal-gross))]/10 to-[hsl(var(--goal-gross))]/5"
+            : "bg-gradient-to-br from-success/25 via-success/12 to-success/5";
+          const heroBlobMain = showGross ? "bg-[hsl(var(--goal-gross))]/22" : "bg-success/25";
           // Secondary metrics swap when "Bruto" is the hero.
           const secondary: { label: string; value: number; dot: string }[] = showGross
             ? [
@@ -450,16 +462,16 @@ export default function Dashboard() {
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ]
             : [
-                { label: "Bruto", value: s.gross, dot: "bg-success/70" },
+                { label: "Bruto", value: s.gross, dot: "bg-[hsl(var(--goal-gross))]/80" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
           return (
-            <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/25 via-success/12 to-success/5 p-5 shadow-elevated">
-              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full bg-success/25 blur-3xl" />
+            <div className={cn("relative overflow-hidden rounded-2xl border p-5 shadow-elevated", heroBorder, heroGradient)}>
+              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl", heroBlobMain)} />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
               <div className="relative">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-success">
+                  <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
                     <Gauge className="h-3.5 w-3.5" /> {heroTitle}
                   </div>
                   <button
