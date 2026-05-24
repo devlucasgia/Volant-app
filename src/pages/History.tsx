@@ -364,15 +364,15 @@ export default function History() {
           <div className="flex items-center justify-center gap-1.5 pt-2 text-[11px] text-muted-foreground">
             <ShieldCheck className="h-3.5 w-3.5" />
             Seus dados estão protegidos
-      </div>
-        {isLimited && (
-          <PremiumLockOverlay
-            title="Histórico completo no Premium"
-            description="Visualize, edite e exclua seus registros assinando o Volant Premium."
-          />
+          </div>
         )}
       </div>
-        )}
+      {isLimited && (
+        <PremiumLockOverlay
+          title="Histórico completo no Premium"
+          description="Visualize, edite e exclua seus registros assinando o Volant Premium."
+        />
+      )}
       </div>
 
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
