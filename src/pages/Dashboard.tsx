@@ -317,6 +317,13 @@ export default function Dashboard() {
             <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
           </div>
         </div>
+        {smartKmValue !== null && (
+          <div className="mt-2 flex items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-1.5 text-[11px]">
+            <Gauge className="h-3 w-3 text-primary" />
+            <span className="text-muted-foreground">R$/km inteligente:</span>
+            <span className="font-bold tabular-nums text-foreground">{brl(smartKmValue)}</span>
+          </div>
+        )}
       </section>
     ) : null,
 
