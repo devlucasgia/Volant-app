@@ -748,12 +748,19 @@ export default function SettingsPage() {
                       className="w-full border-dashed"
                       onClick={async () => {
                         if (!user) return;
-                        if (!window.confirm("Resetar onboarding? Os fluxos de boas-vindas, cadastro de veículo e meta aparecerão novamente.")) return;
-                        const { error } = await supabase
-                          .from("profiles")
-                          .update({ onboarded: false, car_onboarded: false, goal_onboarded: false } as any)
-                          .eq("id", user.id);
-                        if (error) {
+                        if (!window.confirm("Resetar onboarding? Os cadastros de veículos e a meta mensal serão apagados para simular um usuário novo.")) return;
+                        const [{ error: profErr }, { error: carsErr }, { error: setErr }] = await Promise.all([
+                          supabase
+                            .from("profiles")
+                            .update({ onboarded: false, car_onboarded: false, goal_onboarded: false } as any)
+                            .eq("id", user.id),
+                          supabase.from("cars").delete().eq("user_id", user.id),
+                          supabase
+                            .from("user_settings")
+                            .update({ monthly_goal: 0, working_days_per_month: null } as any)
+                            .eq("user_id", user.id),
+                        ]);
+                        if (profErr || carsErr || setErr) {
                           toast.error("Não foi possível resetar o onboarding.");
                           return;
                         }
