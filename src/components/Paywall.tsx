@@ -24,9 +24,10 @@ const BENEFITS: { title: string; desc: string }[] = [
 
 interface PaywallProps {
   onSignOut?: () => void;
+  asModal?: boolean;
 }
 
-export function Paywall({ onSignOut }: PaywallProps) {
+export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
   const { user } = useAuth();
   const [selected, setSelected] = useState<PlanKey>("yearly");
   const [showCheckout, setShowCheckout] = useState(false);
