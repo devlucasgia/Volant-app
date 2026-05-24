@@ -167,9 +167,10 @@ export default function Dashboard() {
       vehicleMonthlyCost: costs.total,
       real,
       workingDaysPerMonth: settings.workingDaysPerMonth,
+      kmRemainingOverride: settings.kmRemainingOverride,
     });
     return state.kind === "ok" ? state.smart : null;
-  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.monthlyGoal, settings.goalType, settings.workingDaysPerMonth]);
+  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.kmRemainingOverride, settings.monthlyGoal, settings.goalType, settings.workingDaysPerMonth]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
