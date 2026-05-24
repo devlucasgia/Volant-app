@@ -123,6 +123,8 @@ export interface Settings {
   dashboardWidgets: DashboardWidgets;
   goalType: GoalType;
   workingDaysPerMonth: number | null;
+  /** KM planejado para o mês corrente — usado pelo módulo KM Inteligente. */
+  kmPlannedMonth: number | null;
 }
 
 export interface CustomCategory {
