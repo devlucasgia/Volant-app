@@ -20,6 +20,8 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
+import { useAccess } from "@/context/AccessContext";
+import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
 
 
 export default function Dashboard() {
