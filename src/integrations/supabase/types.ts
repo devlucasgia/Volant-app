@@ -344,6 +344,7 @@ export type Database = {
           dashboard_widgets: Json
           goal_type: string
           km_planned_month: number | null
+          km_remaining_override: number | null
           last_maintenance_km: number
           maintenance_interval_km: number
           monthly_goal: number
@@ -357,6 +358,7 @@ export type Database = {
           dashboard_widgets?: Json
           goal_type?: string
           km_planned_month?: number | null
+          km_remaining_override?: number | null
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
@@ -370,6 +372,7 @@ export type Database = {
           dashboard_widgets?: Json
           goal_type?: string
           km_planned_month?: number | null
+          km_remaining_override?: number | null
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
