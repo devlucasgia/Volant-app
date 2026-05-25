@@ -221,7 +221,7 @@ function SubscriptionCard({
   );
 
   return (
-    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge}>
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/10 text-amber-400">
       {isGrandfathered ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
