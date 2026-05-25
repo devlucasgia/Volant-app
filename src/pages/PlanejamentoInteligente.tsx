@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Brain, ChevronRight, Route } from "lucide-react";
+import { ArrowLeft, Target, Gauge, ChevronRight, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Sticky page header with a back button — premium Volant identity. */
