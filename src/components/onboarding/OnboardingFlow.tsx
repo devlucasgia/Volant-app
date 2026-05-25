@@ -1014,7 +1014,116 @@ function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
 }
 
 /* ============================================================
- *  STEP 7 — Final
+ *  STEP 7 — KM Inteligente
+ * ============================================================ */
+function KmInteligenteStep() {
+  const reduce = useReducedMotion();
+  const [smartValue, setSmartValue] = useState(0);
+  const TARGET = 2.45;
+
+  useEffect(() => {
+    if (reduce) { setSmartValue(TARGET); return; }
+    const start = performance.now();
+    const duration = 1100;
+    let raf = 0;
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setSmartValue(TARGET * eased);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    const delay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 1400);
+    return () => { clearTimeout(delay); cancelAnimationFrame(raf); };
+  }, [reduce]);
+
+  const inputs: { icon: React.ReactNode; label: string; value: string; delay: number; tone: string }[] = [
+    { icon: <Target className="h-2.5 w-2.5" />, label: "Meta mensal", value: "R$ 6.000", delay: 0.1, tone: "text-success" },
+    { icon: <Wrench className="h-2.5 w-2.5" />, label: "Custos do veículo", value: "R$ 1.280", delay: 0.35, tone: "text-amber-500" },
+    { icon: <Route className="h-2.5 w-2.5" />, label: "Ritmo do mês", value: "62%", delay: 0.6, tone: "text-primary" },
+  ];
+
+  return (
+    <StepShell
+      eyebrow="KM Inteligente"
+      title="Descubra o valor mínimo por km que faz sentido para sua meta."
+      description="Quanto vale aceitar a próxima corrida? O Volant te mostra."
+    >
+      <PhoneFrame compact>
+        <div className="absolute inset-0 flex flex-col bg-background p-2.5">
+          {/* Inputs converging */}
+          <div className="space-y-1.5">
+            {inputs.map((it) => (
+              <motion.div
+                key={it.label}
+                initial={reduce ? {} : { opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: it.delay, duration: 0.4 }}
+                className="flex items-center justify-between rounded-lg border border-border bg-card px-2 py-1.5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("flex h-5 w-5 items-center justify-center rounded-md bg-muted", it.tone)}>
+                    {it.icon}
+                  </span>
+                  <span className="text-[9px] font-medium text-foreground/80">{it.label}</span>
+                </div>
+                <span className={cn("text-[10px] font-bold tabular-nums", it.tone)}>{it.value}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Arrow converging */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.95, duration: 0.3 }}
+            className="my-1.5 flex items-center justify-center"
+          >
+            <ChevronDown className="h-3.5 w-3.5 text-primary animate-pulse" />
+          </motion.div>
+
+          {/* Smart result */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 1.25, duration: 0.5, ease: "easeOut" }}
+            className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-2.5 shadow-[0_0_24px_-12px_hsl(var(--primary)/0.6)]"
+          >
+            <motion.div
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.0, 0.4, 0.0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+              className="pointer-events-none absolute -inset-2 rounded-2xl bg-primary/15 blur-2xl"
+            />
+            <div className="relative">
+              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-primary">
+                <Gauge className="h-2.5 w-2.5" /> R$/km inteligente
+              </div>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-[22px] font-bold tabular-nums text-foreground leading-none">
+                  R$ {smartValue.toFixed(2).replace(".", ",")}
+                </span>
+                <span className="text-[9px] text-muted-foreground">/ km</span>
+              </div>
+              <p className="mt-1 text-[8.5px] leading-snug text-muted-foreground">
+                Priorize corridas a partir desse valor por km.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      </PhoneFrame>
+
+      <div className="mt-3 space-y-1.5">
+        <HighlightRow delay={1.6} text="Aceitar corridas no escuro tira você da meta sem perceber." />
+        <HighlightRow delay={1.75} text="O Volant cruza meta, custos e ritmo para sugerir um R$/km estratégico." />
+        <HighlightRow delay={1.9} text="Você poderá ajustar isso depois nas Metas Inteligentes." />
+      </div>
+    </StepShell>
+  );
+}
+
+/* ============================================================
+ *  STEP 8 — Final
  * ============================================================ */
 function FinalStep({ onMount }: { onMount: () => void }) {
   const { user } = useAuth();
