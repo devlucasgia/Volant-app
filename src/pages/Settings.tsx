@@ -88,20 +88,29 @@ function SectionGroup({ title, children }: { title: string; children: React.Reac
 
 /** Polished accordion card matching the app's premium identity. */
 function SettingsCard({
-  value, icon, title, badge, children, iconTone,
+  value, icon, title, badge, children, iconTone, accent,
 }: {
   value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode;
   children: React.ReactNode; iconTone?: string;
+  /** Optional subtle border accent that matches the section family. */
+  accent?: "amber";
 }) {
+  const accentClass =
+    accent === "amber"
+      ? "border-amber-400/25 shadow-[0_1px_0_0_hsl(var(--border)),0_10px_28px_-18px_rgba(245,158,11,0.35)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_16px_40px_-20px_rgba(245,158,11,0.45)]"
+      : "border-border shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_36px_-20px_rgba(0,0,0,0.55)]";
   return (
     <AccordionItem
       value={value}
-      className="overflow-hidden rounded-2xl border border-border bg-card px-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_36px_-20px_rgba(0,0,0,0.55)] data-[state=open]:bg-card/95"
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-card px-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=open]:bg-card/95",
+        accentClass,
+      )}
     >
       <AccordionTrigger className="py-3.5 hover:no-underline">
         <div className="flex flex-1 items-center gap-2.5">
           <span className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg",
+            "flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]",
             iconTone || "bg-primary/10 text-primary",
           )}>
             {icon}
