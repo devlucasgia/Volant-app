@@ -263,8 +263,9 @@ export function SmartKmSection() {
 
       {/* 7 — CTA when no vehicle costs registered */}
       {isFull && !hasCosts && (
-        <NoCostsCta onGo={() => navigate("/ajustes")} />
+        <NoCostsCta onGo={() => navigate("/ajustes/veiculos/custos")} />
       )}
+
 
       {/* 8 — Brief explanation */}
       <ExplanationCard />
