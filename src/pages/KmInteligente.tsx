@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, ChevronRight } from "lucide-react";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
@@ -29,9 +30,12 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
 
 export default function KmInteligente() {
   const navigate = useNavigate();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={() => navigate("/ajustes/planejamento")} />
+      <ScreenHeader onBack={() => navigate("/ajustes")} />
 
       <div className="space-y-3 px-4 py-5 animate-fade-in">
         <SmartKmSection />
