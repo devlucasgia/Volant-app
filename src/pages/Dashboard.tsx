@@ -473,14 +473,14 @@ export default function Dashboard() {
             <img
               src={volantSymbol}
               alt="Volant"
-              width={36}
-              height={36}
+              width={43}
+              height={43}
               decoding="sync"
               loading="eager"
               fetchPriority="high"
-              className="h-[36px] w-[36px] shrink-0 rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
+              className="h-[43px] w-[43px] shrink-0 self-center rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
             />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
                   <div className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground">
