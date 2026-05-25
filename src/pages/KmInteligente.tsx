@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, ChevronRight, Brain } from "lucide-react";
+import { ArrowLeft, Target, ChevronRight, Gauge } from "lucide-react";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 
 function ScreenHeader({ onBack }: { onBack: () => void }) {
