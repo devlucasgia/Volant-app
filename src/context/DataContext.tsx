@@ -229,6 +229,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       dashboard_widgets: next.dashboardWidgets as any,
       goal_type: next.goalType,
       working_days_per_month: next.workingDaysPerMonth,
+      remaining_working_days: next.remainingWorkingDays,
       km_planned_month: next.kmPlannedMonth,
       km_remaining_override: next.kmRemainingOverride,
     } as any);
