@@ -48,7 +48,7 @@ export function SmartKmSection() {
         kmPlanned: settings.kmPlannedMonth,
         vehicleMonthlyCost: costs.total,
         real,
-        workingDaysPerMonth: settings.workingDaysPerMonth,
+        remainingWorkingDays: settings.remainingWorkingDays,
         kmRemainingOverride: settings.kmRemainingOverride,
       }),
     [
@@ -58,7 +58,7 @@ export function SmartKmSection() {
       settings.kmRemainingOverride,
       costs.total,
       real,
-      settings.workingDaysPerMonth,
+      settings.remainingWorkingDays,
     ],
   );
 
