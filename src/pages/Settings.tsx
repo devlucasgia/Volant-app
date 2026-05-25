@@ -88,9 +88,10 @@ function SectionGroup({ title, children }: { title: string; children: React.Reac
 
 /** Polished accordion card matching the app's premium identity. */
 function SettingsCard({
-  value, icon, title, badge, children,
+  value, icon, title, badge, children, iconTone,
 }: {
-  value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode; children: React.ReactNode;
+  value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode;
+  children: React.ReactNode; iconTone?: string;
 }) {
   return (
     <AccordionItem
@@ -99,7 +100,10 @@ function SettingsCard({
     >
       <AccordionTrigger className="py-3.5 hover:no-underline">
         <div className="flex flex-1 items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-lg",
+            iconTone || "bg-primary/10 text-primary",
+          )}>
             {icon}
           </span>
           <span className="text-[15px] font-semibold">{title}</span>
