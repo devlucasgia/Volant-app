@@ -43,6 +43,7 @@ export default function Dashboard() {
   const [homeOrder] = useHomeOrder();
   const [heroMetric] = useHeroMetric();
   const [greetingStyle] = useGreetingStyle();
+  const [greetingEmoji] = useGreetingEmoji();
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
