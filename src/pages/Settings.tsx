@@ -1528,7 +1528,7 @@ function PlanejamentoInteligenteRow() {
       <div className="min-w-0 flex-1">
         <div className="text-[15px] font-semibold leading-tight">Planejamento Inteligente</div>
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Metas Inteligentes e KM Inteligente em uma única tela.
+          Meta, dias de trabalho e R$/km ideal.
         </p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />

@@ -114,11 +114,6 @@ export function SmartKmSection() {
 
   return (
     <div className="space-y-3">
-      {/* Explanation */}
-      <p className="px-1 text-[12px] leading-snug text-muted-foreground">
-        O Volant ajusta seu R$/km conforme sua meta, seus custos e seu ritmo no mês.
-      </p>
-
       {/* KM planejado */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
@@ -128,7 +123,7 @@ export function SmartKmSection() {
           <div className="min-w-0">
             <div className="text-[14px] font-semibold leading-tight">KM planejado no mês</div>
             <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-              Informe quantos km pretende rodar neste mês.
+              Informe quantos km pretende rodar no mês.
             </p>
           </div>
         </div>
@@ -180,7 +175,7 @@ export function SmartKmSection() {
               )}
             </div>
             <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-              Use se pretende rodar mais ou menos km do que o estimado até o fim do mês.
+              Use se sua previsão mudou.
             </p>
             <NumberField
               value={draftOverride}
@@ -320,10 +315,10 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
           {brl(state.smart)}
         </div>
         <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
-          Atualizado automaticamente conforme seu desempenho mensal.
+          Atualizado conforme seu desempenho no mês.
         </p>
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground/80">
-          Priorize corridas iguais ou acima desse valor por km para atingir seus objetivos.
+          Priorize corridas a partir desse valor por km.
         </p>
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-primary/15 pt-2 text-[11px]">
           <span className="text-muted-foreground">KM usado no cálculo</span>

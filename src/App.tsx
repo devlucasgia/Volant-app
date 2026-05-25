@@ -17,6 +17,8 @@ import Reports from "./pages/Reports";
 
 import SettingsPage from "./pages/Settings";
 import PlanejamentoInteligente from "./pages/PlanejamentoInteligente";
+import MetasInteligentes from "./pages/MetasInteligentes";
+import KmInteligente from "./pages/KmInteligente";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -57,6 +59,8 @@ const App = () => (
                     <Route path="/relatorios" element={<Reports />} />
                     <Route path="/ajustes" element={<SettingsPage />} />
                     <Route path="/ajustes/planejamento" element={<PlanejamentoInteligente />} />
+                    <Route path="/ajustes/planejamento/metas" element={<MetasInteligentes />} />
+                    <Route path="/ajustes/planejamento/km" element={<KmInteligente />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
