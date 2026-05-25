@@ -114,11 +114,6 @@ export function SmartKmSection() {
 
   return (
     <div className="space-y-3">
-      {/* Explanation */}
-      <p className="px-1 text-[12px] leading-snug text-muted-foreground">
-        O Volant ajusta seu R$/km conforme sua meta, seus custos e seu ritmo no mês.
-      </p>
-
       {/* KM planejado */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
@@ -128,7 +123,7 @@ export function SmartKmSection() {
           <div className="min-w-0">
             <div className="text-[14px] font-semibold leading-tight">KM planejado no mês</div>
             <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-              Informe quantos km pretende rodar neste mês.
+              Informe quantos km pretende rodar no mês.
             </p>
           </div>
         </div>
