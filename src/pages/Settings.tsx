@@ -41,7 +41,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { SortableHomeRow } from "@/components/account/SortableHomeRow";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
-import { useHeroMetric, type HeroMetric } from "@/lib/heroMetric";
+
 import { BugReportDialog } from "@/components/account/BugReportDialog";
 import { SuggestionDialog } from "@/components/account/SuggestionDialog";
 import { APP_NAME, APP_VERSION_LABEL } from "@/config/version";
