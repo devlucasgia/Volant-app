@@ -16,9 +16,9 @@ import volantLogoSplash from "@/assets/volant-logo-splash.webp";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
-type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "metas" | "final";
+type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "metas" | "kmInteligente" | "final";
 
-const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "metas", "final"];
+const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "metas", "kmInteligente", "final"];
 
 export function OnboardingFlow() {
   const { user } = useAuth();
