@@ -15,6 +15,9 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Brain className="h-4 w-4" />
+        </span>
         <div className="min-w-0">
           <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
             KM Inteligente
