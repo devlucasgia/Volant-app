@@ -166,6 +166,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const dw = (sRow as any).dashboard_widgets || {};
         const gt = ((sRow as any).goal_type as "liquido" | "bruto" | undefined) || "bruto";
         const wd = (sRow as any).working_days_per_month;
+        const rwd = (sRow as any).remaining_working_days;
         const km = (sRow as any).km_planned_month;
         const kmOv = (sRow as any).km_remaining_override;
         setSettings({
@@ -177,6 +178,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           dashboardWidgets: { ...DEFAULT_WIDGETS, ...dw },
           goalType: gt,
           workingDaysPerMonth: wd == null ? null : Number(wd),
+          remainingWorkingDays: rwd == null ? null : Number(rwd),
           kmPlannedMonth: km == null ? null : Number(km),
           kmRemainingOverride: kmOv == null ? null : Number(kmOv),
         });
