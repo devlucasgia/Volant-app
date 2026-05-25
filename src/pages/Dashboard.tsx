@@ -237,7 +237,7 @@ export default function Dashboard() {
           onClick={() => navigate("/ajustes/planejamento/metas")}
           aria-label="Editar meta"
             className={cn(
-              "relative z-10 -translate-y-2 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
+              "relative z-10 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -346,7 +346,7 @@ export default function Dashboard() {
       return (
         // Negative top margin pulls this card closer to the Meta card above,
         // so the KM Inteligente reads as a subcard of the goal — not a loose card.
-        <div key="smartKm" className="-translate-y-10 flex flex-col items-center">
+        <div key="smartKm" className="flex flex-col items-center">
           {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
@@ -483,7 +483,7 @@ export default function Dashboard() {
             <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
-                  <div className="truncate text-[17.25px] font-bold leading-tight tracking-tight text-foreground">
+                  <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
                     Olá, {greetingName}
                     {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
                   </div>
@@ -502,7 +502,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div className="truncate text-[17.25px] font-bold leading-tight tracking-tight text-foreground">
+                <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
                   Volant
                 </div>
               )}
