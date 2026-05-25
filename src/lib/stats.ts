@@ -75,6 +75,8 @@ export function byExpenseCategory(entries: Entry[]): Record<string, number> {
 export interface DeriveGoalsOptions {
   goalType?: "liquido" | "bruto";
   workingDays?: number | null;
+  /** Dias que o motorista ainda pretende trabalhar até o fim do mês (adaptativo). */
+  remainingWorkingDays?: number | null;
 }
 
 export function deriveGoals(
@@ -85,6 +87,10 @@ export function deriveGoals(
 ) {
   const goalType = opts.goalType ?? "bruto";
   const workingDays = opts.workingDays && opts.workingDays > 0 ? Math.floor(opts.workingDays) : null;
+  const remainingWorkingDays =
+    opts.remainingWorkingDays && opts.remainingWorkingDays > 0
+      ? Math.floor(opts.remainingWorkingDays)
+      : null;
 
   if (!monthlyGoal || monthlyGoal <= 0) {
     return { monthly: 0, weekly: 0, daily: 0, remaining: 0, remainingDays: 0, earnedThisMonth: 0 };
@@ -106,7 +112,12 @@ export function deriveGoals(
   let daily: number;
   let weekly: number;
   let remainingDays: number;
-  if (workingDays) {
+  if (remainingWorkingDays) {
+    // Adaptive: meta diária restante = valor restante / dias restantes de trabalho.
+    remainingDays = remainingWorkingDays;
+    daily = remaining / remainingWorkingDays;
+    weekly = daily * Math.min(7, remainingWorkingDays);
+  } else if (workingDays) {
     // Plan-based: derive daily from the user's planned working days for the month.
     daily = monthlyGoal / workingDays;
     weekly = daily * Math.min(7, workingDays);

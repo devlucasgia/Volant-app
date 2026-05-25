@@ -123,6 +123,8 @@ export interface Settings {
   dashboardWidgets: DashboardWidgets;
   goalType: GoalType;
   workingDaysPerMonth: number | null;
+  /** Dias que o motorista ainda pretende trabalhar do dia atual até o fim do mês. */
+  remainingWorkingDays: number | null;
   /** KM planejado para o mês corrente — usado pelo módulo KM Inteligente. */
   kmPlannedMonth: number | null;
   /** Ajuste manual do KM restante até o fim do mês. Quando preenchido, sobrescreve o cálculo automático. */

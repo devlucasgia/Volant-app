@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
@@ -1390,133 +1391,10 @@ export default function SettingsPage() {
               </div>
             </SettingsCard>
 
-            <SettingsCard value="goals" icon={<Target className="h-4 w-4" />} title="Metas Inteligentes">
-              {/* 1. Tipo de meta */}
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-                <div className="mb-3 flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Flag className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-[14px] font-semibold leading-tight">Tipo de meta</div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                      Escolha se sua meta será calculada pelo lucro líquido ou pelo ganho bruto.
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { key: "liquido", title: "Meta líquida", desc: "Considera o que sobra depois dos gastos." },
-                    { key: "bruto", title: "Meta bruta", desc: "Considera o total de ganhos antes dos gastos." },
-                  ] as const).map((opt) => {
-                    const active = draft.goalType === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => setDraft((d) => ({ ...d, goalType: opt.key }))}
-                        className={cn(
-                          "rounded-xl border p-3 text-left transition-all duration-200 active:scale-[0.98]",
-                          active
-                            ? "border-primary/45 bg-primary/[0.08] shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_4px_14px_-10px_hsl(var(--primary)/0.5)]"
-                            : "border-border/60 bg-muted/25 hover:bg-muted/40",
-                        )}
-                      >
-                        <div className={cn("text-[13px] font-semibold", active ? "text-foreground" : "text-foreground/90")}>
-                          {opt.title}
-                        </div>
-                        <div className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                          {opt.desc}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 2. Dias trabalhados no mês */}
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-                <div className="mb-3 flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <CalendarDays className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <div className="text-[14px] font-semibold leading-tight">Dias trabalhados no mês</div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                      Informe quantos dias pretende trabalhar neste mês. O Volant usará esse número para calcular sua meta diária.
-                    </p>
-                  </div>
-                </div>
-                <NumberField
-                  value={draft.workingDaysPerMonth}
-                  decimal={false}
-                  inputMode="numeric"
-                  placeholder="Ex: 22"
-                  className={cn(workingDaysInvalid && "border-destructive focus-visible:ring-destructive")}
-                  onChange={(v) => {
-                    if (v == null) return setDraft((d) => ({ ...d, workingDaysPerMonth: null }));
-                    const n = Math.max(1, Math.min(31, Math.floor(v)));
-                    setDraft((d) => ({ ...d, workingDaysPerMonth: n }));
-                  }}
-                />
-                <div className="mt-1.5 min-h-[16px] text-[11px] leading-none">
-                  {workingDaysInvalid ? (
-                    <span className="font-medium text-destructive/90">
-                      Apenas {availableDaysThisMonth} dias disponíveis no mês
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">
-                      Dias disponíveis: {availableDaysThisMonth}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* 3. Meta mensal */}
-              <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-                <div className="mb-3 flex items-start gap-2.5">
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <Target className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <div className="text-[14px] font-semibold leading-tight">Meta mensal</div>
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
-                        {new Date().toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
-                      </span>
-                    </div>
-                    <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                      Sua meta principal. O Volant calcula a meta semanal e diária a partir dela.
-                    </p>
-                  </div>
-                </div>
-                <NumberField
-                  currency
-                  value={draft.monthlyGoal || null}
-                  onChange={(v) => setDraft((d) => ({ ...d, monthlyGoal: v ?? 0 }))}
-                />
-              </div>
-
-              <Button onClick={saveGoals} disabled={savingGoals || !goalsDirty || workingDaysInvalid} className="w-full">
-                {savingGoals ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>) : "Salvar"}
-              </Button>
-
-              <DerivedGoalsPreview
-                monthlyGoal={settings.monthlyGoal}
-                goalType={settings.goalType}
-                workingDays={settings.workingDaysPerMonth}
-              />
-
-              <p className="pt-1 text-[11px] leading-snug text-muted-foreground">
-                O Volant usa sua meta mensal e seu histórico de atividade para sugerir metas mais inteligentes.
-              </p>
-            </SettingsCard>
-
-            <SettingsCard value="smart-km" icon={<Navigation className="h-4 w-4" />} title="KM Inteligente">
-              <SmartKmSection />
-            </SettingsCard>
+            <PlanejamentoInteligenteRow />
           </Accordion>
         </SectionGroup>
+
 
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">
@@ -1629,5 +1507,31 @@ function DerivedGoalsPreview({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Single-row entry that opens the dedicated Planejamento Inteligente screen,
+ * grouping the previous "Metas Inteligentes" + "KM Inteligente" cards.
+ */
+function PlanejamentoInteligenteRow() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => navigate("/ajustes/planejamento")}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Sparkles className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold leading-tight">Planejamento Inteligente</div>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          Metas Inteligentes e KM Inteligente em uma única tela.
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </button>
   );
 }

@@ -129,8 +129,12 @@ export default function Dashboard() {
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
   const goalOpts = useMemo(
-    () => ({ goalType: settings.goalType, workingDays: settings.workingDaysPerMonth }),
-    [settings.goalType, settings.workingDaysPerMonth]
+    () => ({
+      goalType: settings.goalType,
+      workingDays: settings.workingDaysPerMonth,
+      remainingWorkingDays: settings.remainingWorkingDays,
+    }),
+    [settings.goalType, settings.workingDaysPerMonth, settings.remainingWorkingDays]
   );
   const periodGoal = useMemo(
     () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
@@ -166,11 +170,11 @@ export default function Dashboard() {
       kmPlanned: settings.kmPlannedMonth,
       vehicleMonthlyCost: costs.total,
       real,
-      workingDaysPerMonth: settings.workingDaysPerMonth,
+      remainingWorkingDays: settings.remainingWorkingDays,
       kmRemainingOverride: settings.kmRemainingOverride,
     });
     return state.kind === "ok" ? state.smart : null;
-  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.kmRemainingOverride, settings.monthlyGoal, settings.goalType, settings.workingDaysPerMonth]);
+  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.kmRemainingOverride, settings.monthlyGoal, settings.goalType, settings.remainingWorkingDays]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;

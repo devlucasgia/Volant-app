@@ -33,8 +33,9 @@ export function JourneyModule() {
     () => Math.round(deriveGoals(settings.monthlyGoal, entries, new Date(), {
       goalType: settings.goalType,
       workingDays: settings.workingDaysPerMonth,
+      remainingWorkingDays: settings.remainingWorkingDays,
     }).daily),
-    [settings.monthlyGoal, entries, settings.goalType, settings.workingDaysPerMonth]
+    [settings.monthlyGoal, entries, settings.goalType, settings.workingDaysPerMonth, settings.remainingWorkingDays]
   );
 
   const [confirmEnd, setConfirmEnd] = useState(false);

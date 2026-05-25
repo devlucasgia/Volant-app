@@ -348,6 +348,7 @@ export type Database = {
           last_maintenance_km: number
           maintenance_interval_km: number
           monthly_goal: number
+          remaining_working_days: number | null
           theme: string
           updated_at: string
           user_id: string
@@ -362,6 +363,7 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          remaining_working_days?: number | null
           theme?: string
           updated_at?: string
           user_id: string
@@ -376,6 +378,7 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          remaining_working_days?: number | null
           theme?: string
           updated_at?: string
           user_id?: string
