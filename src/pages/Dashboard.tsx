@@ -340,7 +340,7 @@ export default function Dashboard() {
         className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Brain className="h-4 w-4" />
+          <Gauge className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
@@ -444,7 +444,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao")}
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-1 pr-2 text-left transition-all duration-200",
+              "flex min-w-0 flex-1 items-center gap-2 rounded-xl py-1 pr-2 text-left transition-all duration-200",
               greetingHasContent && "hover:bg-muted/30 active:scale-[0.99]",
             )}
             aria-label="Editar saudação"
@@ -607,11 +607,11 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className="mt-4 border-t border-border/40" />
-                <div className="mt-3 flex items-center gap-4 text-[13px]">
+                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-border/40")} />
+                <div className="mt-3 flex items-center gap-5 px-0.5 text-[13px]">
                   {secondary.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
-                      {i > 0 && <div className="h-3 w-px bg-border/60" />}
+                      {i > 0 && <div className="h-3 w-px bg-border/50" />}
                       <div className="flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
                         <span className="text-muted-foreground">{m.label}</span>
