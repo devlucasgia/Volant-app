@@ -42,7 +42,7 @@ export default function Dashboard() {
   });
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
-  const [heroMetric] = useHeroMetric();
+  const heroMetric: "net" | "gross" = settings.goalType === "bruto" ? "gross" : "net";
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
