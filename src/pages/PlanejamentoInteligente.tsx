@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Brain, ChevronRight, Route } from "lucide-react";
+import { ArrowLeft, Target, Gauge, ChevronRight, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Sticky page header with a back button — premium Volant identity. */
@@ -104,7 +104,7 @@ export default function PlanejamentoInteligente() {
           />
           <HubCard
             to="/ajustes/planejamento/km"
-            icon={<Brain className="h-5 w-5" />}
+            icon={<Gauge className="h-5 w-5" />}
             title="KM Inteligente"
             description="Descubra o R$/km mínimo aceitável para suas corridas."
             tone="teal"

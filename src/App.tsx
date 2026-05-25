@@ -19,6 +19,10 @@ import SettingsPage from "./pages/Settings";
 import PlanejamentoInteligente from "./pages/PlanejamentoInteligente";
 import MetasInteligentes from "./pages/MetasInteligentes";
 import KmInteligente from "./pages/KmInteligente";
+import CentralVeiculos from "./pages/CentralVeiculos";
+import MeusCarros from "./pages/MeusCarros";
+import CustosVeiculo from "./pages/CustosVeiculo";
+import ManutencaoPreventiva from "./pages/ManutencaoPreventiva";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -61,6 +65,10 @@ const App = () => (
                     <Route path="/ajustes/planejamento" element={<PlanejamentoInteligente />} />
                     <Route path="/ajustes/planejamento/metas" element={<MetasInteligentes />} />
                     <Route path="/ajustes/planejamento/km" element={<KmInteligente />} />
+                    <Route path="/ajustes/veiculos" element={<CentralVeiculos />} />
+                    <Route path="/ajustes/veiculos/carros" element={<MeusCarros />} />
+                    <Route path="/ajustes/veiculos/custos" element={<CustosVeiculo />} />
+                    <Route path="/ajustes/veiculos/manutencao" element={<ManutencaoPreventiva />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>

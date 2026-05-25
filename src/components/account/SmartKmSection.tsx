@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw, Wallet, ChevronRight, Loader2 } from "lucide-react";
+import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw, Wallet, ChevronRight, Loader2 } from "lucide-react";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
@@ -110,11 +110,12 @@ export function SmartKmSection() {
   if (!activeCar) {
     return (
       <div className="space-y-3">
-        <NoVehicleCta onGo={() => navigate("/ajustes")} />
+        <NoVehicleCta onGo={() => navigate("/ajustes/veiculos/carros")} />
         <ExplanationCard />
       </div>
     );
   }
+
 
   const hasCosts = costs.items.length > 0;
 
@@ -131,7 +132,7 @@ export function SmartKmSection() {
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Brain className="h-4 w-4" />
+            <Gauge className="h-4 w-4" />
           </span>
           <div className="min-w-0">
             <div className="text-[14px] font-semibold leading-tight">KM planejado no mês</div>
@@ -262,8 +263,9 @@ export function SmartKmSection() {
 
       {/* 7 — CTA when no vehicle costs registered */}
       {isFull && !hasCosts && (
-        <NoCostsCta onGo={() => navigate("/ajustes")} />
+        <NoCostsCta onGo={() => navigate("/ajustes/veiculos/custos")} />
       )}
+
 
       {/* 8 — Brief explanation */}
       <ExplanationCard />
@@ -326,7 +328,7 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
       {/* Smart — primary result */}
       <div className="relative overflow-hidden rounded-2xl border border-primary/35 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_10px_30px_-18px_hsl(var(--primary)/0.55)]">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-          <Brain className="h-3.5 w-3.5" /> R$/km inteligente
+          <Gauge className="h-3.5 w-3.5" /> R$/km inteligente
         </div>
         <div className="mt-1.5 text-[34px] font-bold tabular-nums text-foreground leading-none">
           {brl(state.smart)}
@@ -396,9 +398,9 @@ function NoVehicleCta({ onGo }: { onGo: () => void }) {
           <CarIcon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <div className="text-[14px] font-semibold leading-tight">Cadastre um carro</div>
+          <div className="text-[14px] font-semibold leading-tight">Cadastre um veículo</div>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Precisamos do seu veículo e custos para calcular o R$/km ideal.
+            Cadastre um veículo para deixar o cálculo mais preciso.
           </p>
         </div>
       </div>
@@ -420,7 +422,7 @@ function NoCostsCta({ onGo }: { onGo: () => void }) {
         <div className="min-w-0">
           <div className="text-[13px] font-semibold leading-tight">Cadastre os custos do veículo</div>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Com seus custos cadastrados, o cálculo fica ainda mais preciso.
+            Cadastre os custos do veículo para deixar o cálculo mais preciso.
           </p>
         </div>
       </div>
@@ -438,13 +440,13 @@ function ExplanationCard() {
       <div className="flex items-start gap-2">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
         <p className="text-[11.5px] leading-snug text-muted-foreground">
-          O KM Inteligente usa sua meta, seu ritmo e os custos do veículo para
-          sugerir um valor mínimo por km nas corridas.
+          O KM Inteligente utiliza os custos fixos do veículo, sua meta líquida ou bruta e todos os seus registros de ganhos e gastos no Volant para definir o valor mínimo por km que você deve priorizar nas corridas para atingir seus objetivos.
         </p>
       </div>
     </div>
   );
 }
+
 
 function LockedPreview({ onUnlock }: { onUnlock: () => void }) {
   return (
