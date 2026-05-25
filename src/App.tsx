@@ -23,6 +23,10 @@ import CentralVeiculos from "./pages/CentralVeiculos";
 import MeusCarros from "./pages/MeusCarros";
 import CustosVeiculo from "./pages/CustosVeiculo";
 import ManutencaoPreventiva from "./pages/ManutencaoPreventiva";
+import Personalizacao from "./pages/Personalizacao";
+import PersonalizacaoAparencia from "./pages/PersonalizacaoAparencia";
+import PersonalizacaoSaudacao from "./pages/PersonalizacaoSaudacao";
+import OrganizacaoCards from "./pages/OrganizacaoCards";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
