@@ -14,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
-import { useHeroMetric } from "@/lib/heroMetric";
+
 import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
