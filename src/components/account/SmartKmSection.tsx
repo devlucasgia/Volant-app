@@ -175,7 +175,7 @@ export function SmartKmSection() {
               )}
             </div>
             <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
-              Use se pretende rodar mais ou menos km do que o estimado até o fim do mês.
+              Use se sua previsão mudou.
             </p>
             <NumberField
               value={draftOverride}
