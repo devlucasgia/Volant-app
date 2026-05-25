@@ -3,35 +3,32 @@ import { useEffect, useState } from "react";
 /**
  * Report cards visibility — each key maps to an actual block in the
  * Reports screen. Toggling a key hides/shows that block in real time.
+ *
+ * Grouped keys (daysGroup, kmGroup, tripsGroup) hide/show their two
+ * historic indicators together (total + average).
  */
 export interface ReportWidgets {
   net: boolean;          // Lucro líquido (hero)
   perHour: boolean;      // Média por hora (hero)
   gross: boolean;        // Bruto
   expenses: boolean;     // Gastos
-  activeDays: boolean;   // Dias ativos
-  perDay: boolean;       // Média por dia
-  totalKm: boolean;      // KM total
-  perKm: boolean;        // R$ / km
-  trips: boolean;        // Corridas
-  perTrip: boolean;      // R$ / corrida
+  daysGroup: boolean;    // Dias ativos + Média / dia
+  kmGroup: boolean;      // KM total + Média / km
+  tripsGroup: boolean;   // Corridas + R$ / corrida
   chart: boolean;        // Painel principal de gráfico
 }
 
-const STORAGE_KEY = "volant.reportWidgets.v2";
-const LEGACY_KEY = "volant.reportWidgets";
+const STORAGE_KEY = "volant.reportWidgets.v3";
+const LEGACY_KEYS = ["volant.reportWidgets", "volant.reportWidgets.v2"];
 
 const DEFAULTS: ReportWidgets = {
   net: true,
   perHour: true,
   gross: true,
   expenses: true,
-  activeDays: true,
-  perDay: true,
-  totalKm: true,
-  perKm: true,
-  trips: true,
-  perTrip: true,
+  daysGroup: true,
+  kmGroup: true,
+  tripsGroup: true,
   chart: true,
 };
 
@@ -40,9 +37,8 @@ function read(): ReportWidgets {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<ReportWidgets>) };
-    // Drop legacy v1 (different schema) — start with defaults.
-    if (window.localStorage.getItem(LEGACY_KEY)) {
-      window.localStorage.removeItem(LEGACY_KEY);
+    for (const k of LEGACY_KEYS) {
+      if (window.localStorage.getItem(k)) window.localStorage.removeItem(k);
     }
     return DEFAULTS;
   } catch {
