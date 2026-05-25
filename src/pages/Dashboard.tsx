@@ -594,7 +594,7 @@ export default function Dashboard() {
           // Secondary metrics swap when "Bruto" is the hero.
           const secondary: { label: string; value: number; dot: string }[] = showGross
             ? [
-                { label: "Lucro líquido", value: s.net, dot: "bg-success/70" },
+                { label: "Líquido", value: s.net, dot: "bg-success/70" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ]
             : [
