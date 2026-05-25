@@ -97,8 +97,8 @@ function SettingsCard({
 }) {
   const accentClass =
     accent === "amber"
-      ? "border-amber-400/25 shadow-[0_1px_0_0_hsl(var(--border)),0_10px_28px_-18px_rgba(245,158,11,0.35)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_16px_40px_-20px_rgba(245,158,11,0.45)]"
-      : "border-border shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_36px_-20px_rgba(0,0,0,0.55)]";
+      ? "border-amber-400/25 shadow-[0_1px_0_0_hsl(var(--border)),0_9px_25px_-18px_rgba(245,158,11,0.31)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_35px_-20px_rgba(245,158,11,0.40)]"
+      : "border-border shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_32px_-20px_rgba(0,0,0,0.48)]";
   return (
     <AccordionItem
       value={value}
@@ -110,7 +110,7 @@ function SettingsCard({
       <AccordionTrigger className="py-3.5 hover:no-underline">
         <div className="flex flex-1 items-center gap-2.5">
           <span className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]",
+            "flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]",
             iconTone || "bg-primary/10 text-primary",
           )}>
             {icon}
@@ -229,7 +229,7 @@ function SubscriptionCard({
   );
 
   return (
-    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/12 text-amber-300 shadow-[0_0_18px_-4px_rgba(245,158,11,0.55)]" accent="amber">
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/12 text-amber-300 shadow-[0_0_16px_-4px_rgba(245,158,11,0.48)]" accent="amber">
 
       {isGrandfathered ? (
         <div className="space-y-2">
@@ -842,9 +842,9 @@ export default function SettingsPage() {
 
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
               <MessageSquare className="h-4 w-4" />
             </span>
             <div>
@@ -963,10 +963,10 @@ function HubRow({
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99] animate-fade-in"
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_10px_26px_-18px_rgba(0,0,0,0.48)] active:scale-[0.99] animate-fade-in"
     >
       <span className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor] transition-colors",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor] transition-colors",
         iconTone || "bg-primary/10 text-primary",
       )}>
         {icon}
