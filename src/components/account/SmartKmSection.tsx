@@ -294,6 +294,19 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
       </div>
     );
   }
+  if (state.kind === "needs-remaining-days") {
+    return (
+      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/5 p-4 text-center">
+        <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/15 text-amber-500">
+          <AlertCircle className="h-5 w-5" />
+        </div>
+        <div className="text-[14px] font-semibold text-amber-500">Atualize seus dias restantes</div>
+        <p className="mt-1 text-[12px] text-muted-foreground">
+          Informe quantos dias ainda pretende trabalhar para recalcular.
+        </p>
+      </div>
+    );
+  }
 
   // ok
   return (
