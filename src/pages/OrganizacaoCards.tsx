@@ -90,7 +90,7 @@ export default function OrganizacaoCards() {
 function HomeOrganizer() {
   const { settings, updateSettings } = useData();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
-  const [heroMetric, setHeroMetric] = useHeroMetric();
+  
   const widgets = settings.dashboardWidgets;
 
   const dndSensors = useSensors(
