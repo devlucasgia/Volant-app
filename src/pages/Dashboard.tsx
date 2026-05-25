@@ -340,13 +340,20 @@ export default function Dashboard() {
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
       const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
       const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
+      const connectorClass = showGross
+        ? "bg-gradient-to-b from-[hsl(var(--goal-gross))]/35 to-transparent"
+        : "bg-gradient-to-b from-success/35 to-transparent";
       return (
-        <div key="smartKm" className="flex justify-center">
+        // Negative top margin pulls this card closer to the Meta card above,
+        // so the KM Inteligente reads as a subcard of the goal — not a loose card.
+        <div key="smartKm" className="-mt-3 flex flex-col items-center">
+          {/* Ultra-subtle vertical connector — premium, almost invisible */}
+          <span aria-hidden className={cn("h-2 w-px", connectorClass)} />
           <button
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
             className={cn(
-              "group relative mx-auto flex w-[80%] items-center rounded-2xl border bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[82%] items-center rounded-2xl border bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
               themeBorder
             )}
           >
@@ -620,7 +627,7 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/50" : "border-success/30")} />
+                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
                 <div className={cn(
                   "mt-3 flex items-center justify-center gap-4 px-2 text-[13px]",
                   showGross && "-translate-x-1.5"
@@ -631,7 +638,7 @@ export default function Dashboard() {
                         <div
                           className={cn(
                             "h-3.5 w-px",
-                            showGross ? "bg-[hsl(var(--goal-gross))]/55" : "bg-success/40",
+                            showGross ? "bg-[hsl(var(--goal-gross))]/65" : "bg-success/55",
                           )}
                         />
                       )}
