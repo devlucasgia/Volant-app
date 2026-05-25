@@ -17,7 +17,7 @@ import { useData } from "@/context/DataContext";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
-import { useHeroMetric, type HeroMetric } from "@/lib/heroMetric";
+
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { DashboardWidgets } from "@/types";
