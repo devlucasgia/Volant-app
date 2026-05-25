@@ -369,11 +369,11 @@ export default function Reports() {
         </Drawer>
 
 
-        {/* Top hierarchy: Lucro líquido + Média por hora */}
-        {(widgets.net || widgets.perHour) && (
-          <div className={cn("grid grid-cols-1 gap-3", widgets.net && widgets.perHour && "lg:grid-cols-2")}>
-            {widgets.net && (
-              <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
+        {/* Cards rendered in user-defined order. Adjacent twin metrics merge into pair layouts. */}
+        {(() => {
+          const renderers: Record<ReportCardKey, () => React.ReactNode> = {
+            net: () => (
+              <div key="net" className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
                 <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
                 <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
                 <div className="relative flex items-center gap-2">
@@ -397,10 +397,9 @@ export default function Reports() {
                   </ResponsiveContainer>
                 </div>
               </div>
-            )}
-
-            {widgets.perHour && (
-              <div className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
+            ),
+            perHour: () => (
+              <div key="perHour" className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
                 <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
                 <div className="relative flex items-center gap-2">
                   <Gauge className="h-4 w-4 text-success" />
@@ -413,89 +412,112 @@ export default function Reports() {
                   com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
                 </div>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* Secondary KPIs: Bruto + Gastos */}
-        {(widgets.gross || widgets.expenses) && (
-          <div className={cn("grid gap-3", widgets.gross && widgets.expenses ? "grid-cols-2" : "grid-cols-1")}>
-            {widgets.gross && <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />}
-            {widgets.expenses && <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />}
-          </div>
-        )}
-
-        {/* Performance pairs */}
-        {(widgets.activeDays || widgets.perDay || widgets.totalKm || widgets.perKm || widgets.trips || widgets.perTrip) && (
-          <div className="grid grid-cols-1 gap-2.5 lg:grid-cols-2 2xl:grid-cols-3">
-            {(widgets.activeDays || widgets.perDay) && (
+            ),
+            gross: () => (
+              <SideStatCard key="gross" label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
+            ),
+            expenses: () => (
+              <SideStatCard key="expenses" label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+            ),
+            activeDays: () => (
               <PairCard
-                showTotal={widgets.activeDays}
-                showAvg={widgets.perDay}
+                key="activeDays"
+                showTotal showAvg={false}
                 totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
                 totalLabel="Dias ativos"
                 totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
+                avgIcon={<Clock className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
+                accent="success"
+              />
+            ),
+            perDay: () => (
+              <PairCard
+                key="perDay"
+                showTotal={false} showAvg
+                totalIcon={<CalendarDays className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Clock className="h-3.5 w-3.5" />}
                 avgLabel="Média / dia"
                 avgValue={brl(avgPerDay)}
                 accent="success"
               />
-            )}
-            {(widgets.totalKm || widgets.perKm) && (
+            ),
+            totalKm: () => (
               <PairCard
-                showTotal={widgets.totalKm}
-                showAvg={widgets.perKm}
+                key="totalKm"
+                showTotal showAvg={false}
                 totalIcon={<Route className="h-3.5 w-3.5" />}
                 totalLabel="KM total"
                 totalValue={`${num(s.totalKm, 0)} km`}
+                avgIcon={<Route className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
+                accent="info"
+              />
+            ),
+            perKm: () => (
+              <PairCard
+                key="perKm"
+                showTotal={false} showAvg
+                totalIcon={<Route className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Route className="h-3.5 w-3.5" />}
                 avgLabel="Média / km"
                 avgValue={brl(s.perKm)}
                 accent="info"
               />
-            )}
-            {(widgets.trips || widgets.perTrip) && (
+            ),
+            trips: () => (
               <PairCard
-                showTotal={widgets.trips}
-                showAvg={widgets.perTrip}
+                key="trips"
+                showTotal showAvg={false}
                 totalIcon={<Flag className="h-3.5 w-3.5" />}
                 totalLabel="Corridas"
                 totalValue={String(s.totalRides)}
+                avgIcon={<Flag className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
+                accent="purple"
+              />
+            ),
+            perTrip: () => (
+              <PairCard
+                key="perTrip"
+                showTotal={false} showAvg
+                totalIcon={<Flag className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Flag className="h-3.5 w-3.5" />}
                 avgLabel="R$ / corrida"
                 avgValue={brl(s.perRide)}
                 accent="purple"
               />
-            )}
-          </div>
-        )}
+            ),
+            chart: () => (
+              <div key="chart" className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+                    <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+                  </div>
+                  <div className="min-w-[150px]">
+                    <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
+                      <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CHARTS.map((c) => (
+                          <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {renderChart()}
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            ),
+          };
+          return (
+            <div className="space-y-3">
+              {reportOrder.map((k) => (widgets[k] ? renderers[k]() : null))}
+            </div>
+          );
+        })()}
 
-        {/* Chart selector + chart */}
-        {widgets.chart && (
-          <div className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="flex flex-col gap-0.5">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-                <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
-              </div>
-              <div className="min-w-[150px]">
-                <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
-                  <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CHARTS.map((c) => (
-                      <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                {renderChart()}
-              </ResponsiveContainer>
-            </div>
-          </div>
-        )}
       </div>
       {isLimited && (
         <PremiumLockOverlay
