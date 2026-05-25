@@ -16,7 +16,7 @@ import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useHeroMetric } from "@/lib/heroMetric";
-import { useGreetingStyle, greetingStyleClass } from "@/lib/greetingStyle";
+import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
