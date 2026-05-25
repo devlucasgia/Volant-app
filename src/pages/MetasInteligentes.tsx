@@ -54,6 +54,11 @@ export default function MetasInteligentes() {
   const navigate = useNavigate();
   const { settings, updateSettings } = useData();
 
+  // Reset scroll on mount so the screen always opens at the top.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
   const [draft, setDraft] = useState<GoalsDraft>(() => buildDraft(settings));
   useEffect(() => setDraft(buildDraft(settings)), [settings]);
 
