@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Palette, MessageSquare, LayoutGrid, ChevronRight, Sparkles } from "lucide-react";
+import { ArrowLeft, Palette, MessageSquare, LayoutGrid, ChevronRight, Paintbrush } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function ScreenHeader({ onBack }: { onBack: () => void }) {
