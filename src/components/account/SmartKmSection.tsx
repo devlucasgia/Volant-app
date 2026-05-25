@@ -110,11 +110,12 @@ export function SmartKmSection() {
   if (!activeCar) {
     return (
       <div className="space-y-3">
-        <NoVehicleCta onGo={() => navigate("/ajustes")} />
+        <NoVehicleCta onGo={() => navigate("/ajustes/veiculos/carros")} />
         <ExplanationCard />
       </div>
     );
   }
+
 
   const hasCosts = costs.items.length > 0;
 
