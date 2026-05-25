@@ -114,7 +114,7 @@ export function SmartKmSection() {
 
   return (
     <div className="space-y-3">
-      {/* KM planejado */}
+      {/* KM planejado — campo principal */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -159,11 +159,35 @@ export function SmartKmSection() {
           </div>
         )}
 
-        {/* KM restante manual (override) */}
-        {isFull && (
-          <div className="mt-3 rounded-xl border border-dashed border-border/60 bg-muted/20 p-3">
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <div className="text-[12px] font-semibold">Ajustar KM restante</div>
+        <Button
+          onClick={handleSave}
+          disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
+          className="mt-3 w-full"
+        >
+          {!isFull ? (
+            <><Lock className="mr-2 h-4 w-4" /> Disponível no Premium</>
+          ) : saving ? (
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+          ) : (
+            "Salvar"
+          )}
+        </Button>
+      </div>
+
+      {/* Ajuste manual — bloco secundário, opcional */}
+      {isFull && (
+        <section className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-px flex-1 bg-border/50" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+              Ajuste manual
+            </span>
+            <span className="h-px flex-1 bg-border/50" />
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-border/50 bg-muted/15 p-4">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="text-[13px] font-semibold text-foreground/90">Ajustar KM restante</div>
               {draftOverride != null && (
                 <button
                   type="button"
@@ -174,8 +198,11 @@ export function SmartKmSection() {
                 </button>
               )}
             </div>
-            <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
+            <p className="text-[11px] leading-snug text-muted-foreground">
               Use se sua previsão mudou.
+            </p>
+            <p className="mt-0.5 mb-2.5 text-[10.5px] leading-snug text-muted-foreground/80">
+              Informe quanto ainda pretende rodar até o fim do mês.
             </p>
             <NumberField
               value={draftOverride}
@@ -194,22 +221,8 @@ export function SmartKmSection() {
               </div>
             )}
           </div>
-        )}
-
-        <Button
-          onClick={handleSave}
-          disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
-          className="mt-3 w-full"
-        >
-          {!isFull ? (
-            <><Lock className="mr-2 h-4 w-4" /> Disponível no Premium</>
-          ) : saving ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
-          ) : (
-            "Salvar"
-          )}
-        </Button>
-      </div>
+        </section>
+      )}
 
       {/* Results */}
       {!isFull ? (
