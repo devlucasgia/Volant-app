@@ -831,7 +831,8 @@ export default function SettingsPage() {
           <PlanejamentoInteligenteRow />
         </SectionGroup>
 
-
+        {/* ============== FEEDBACK ============== */}
+        <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
             <div className="mb-3 flex items-center gap-2.5">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
