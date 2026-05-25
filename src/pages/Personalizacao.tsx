@@ -53,7 +53,7 @@ function HubCard({ to, icon, title, description, delayMs = 0 }: HubCardProps) {
         "animate-fade-in active:scale-[0.985] hover:bg-card/95 hover:border-primary/35",
       )}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-400/10 text-teal-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
