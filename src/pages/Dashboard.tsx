@@ -14,7 +14,7 @@ import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import { JourneyModule } from "@/components/JourneyModule";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
-import { useHeroMetric } from "@/lib/heroMetric";
+
 import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
@@ -42,7 +42,7 @@ export default function Dashboard() {
   });
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
-  const [heroMetric] = useHeroMetric();
+  const heroMetric: "net" | "gross" = settings.goalType === "bruto" ? "gross" : "net";
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -231,10 +231,13 @@ export default function Dashboard() {
         : "bg-gradient-to-br from-[hsl(var(--goal-gross))]/12 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--goal-gross)/0.55)]";
       const themeGlow = isLiquido ? "bg-success/10" : "bg-[hsl(var(--goal-gross))]/12";
       return (
-        <div
+        <button
+          type="button"
           key="goal"
+          onClick={() => navigate("/ajustes/planejamento/metas")}
+          aria-label="Editar meta"
           className={cn(
-            "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
+            "relative w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -304,7 +307,7 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </div>
+        </button>
       );
     })() : null,
 
@@ -351,7 +354,7 @@ export default function Dashboard() {
             <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">/ km</span>
           </div>
         </div>
-        <span className="text-[10px] font-medium text-muted-foreground/70">Ajustar</span>
+        
       </button>
     ) : null,
 
@@ -607,11 +610,18 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-border/40")} />
-                <div className="mt-3 flex items-center gap-5 px-0.5 text-[13px]">
+                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/30" : "border-border/40")} />
+                <div className="mt-3 flex items-center justify-center gap-4 px-2 text-[13px]">
                   {secondary.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
-                      {i > 0 && <div className="h-3 w-px bg-border/50" />}
+                      {i > 0 && (
+                        <div
+                          className={cn(
+                            "h-3.5 w-px",
+                            showGross ? "bg-[hsl(var(--goal-gross))]/35" : "bg-border/55",
+                          )}
+                        />
+                      )}
                       <div className="flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
                         <span className="text-muted-foreground">{m.label}</span>

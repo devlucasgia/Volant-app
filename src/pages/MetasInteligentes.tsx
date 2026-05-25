@@ -114,16 +114,16 @@ export default function MetasInteligentes() {
               <Flag className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <div className="text-[14px] font-semibold leading-tight">Tipo de meta</div>
+              <div className="text-[14px] font-semibold leading-tight">Modo de acompanhamento principal</div>
               <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                Escolha se sua meta será líquida ou bruta.
+                Escolha se o Volant deve acompanhar sua evolução pelo lucro líquido ou pelo ganho bruto.
               </p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { key: "liquido", title: "Meta líquida", desc: "Depois dos gastos." },
-              { key: "bruto", title: "Meta bruta", desc: "Antes dos gastos." },
+              { key: "liquido", title: "Líquido", desc: "Considera o que sobra depois dos gastos." },
+              { key: "bruto", title: "Bruto", desc: "Considera o total de ganhos antes dos gastos." },
             ] as const).map((opt) => {
               const active = draft.goalType === opt.key;
               return (
