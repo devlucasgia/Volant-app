@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
