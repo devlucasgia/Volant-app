@@ -1372,3 +1372,29 @@ function PlanejamentoInteligenteRow() {
   );
 }
 
+/**
+ * Single-row entry that navigates to the dedicated Central de Veículos hub.
+ */
+function CentralVeiculosRow() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => navigate("/ajustes/veiculos")}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Car className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold leading-tight">Central de Veículos</div>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          Organize seus carros, custos e manutenções.
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+}
+
+
