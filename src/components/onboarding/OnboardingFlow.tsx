@@ -148,6 +148,7 @@ export function OnboardingFlow() {
                   {step === "relatorios" && <RelatoriosStep />}
                   {step === "customizacao" && <CustomizacaoStep />}
                   {step === "metas" && <MetasStep />}
+                  {step === "kmInteligente" && <KmInteligenteStep />}
                   {step === "final" && <FinalStep onMount={fireConfetti} />}
                 </motion.div>
               </AnimatePresence>
