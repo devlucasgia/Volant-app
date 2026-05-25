@@ -657,6 +657,13 @@ export default function SettingsPage() {
         {/* ============== CONTA ============== */}
         <SectionGroup title="Conta">
           <Accordion type="multiple" className="space-y-2.5">
+            <SubscriptionCard
+              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenUpgrade={() => setUpgradeOpen(true)}
+              onManage={openPortal}
+              managing={portalLoading}
+            />
+
             <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
@@ -783,13 +790,6 @@ export default function SettingsPage() {
               })()}
             </SettingsCard>
 
-            <SubscriptionCard
-              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
-              onOpenUpgrade={() => setUpgradeOpen(true)}
-              onManage={openPortal}
-              managing={portalLoading}
-            />
-
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
@@ -814,8 +814,8 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
-        {/* ============== PERSONALIZAÇÃO ============== */}
-        <SectionGroup title="Personalização">
+        {/* ============== EXPERIÊNCIA ============== */}
+        <SectionGroup title="Experiência">
           <PersonalizacaoRow />
         </SectionGroup>
 
@@ -832,8 +832,6 @@ export default function SettingsPage() {
         </SectionGroup>
 
 
-        {/* ============== FEEDBACK ============== */}
-        <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
             <div className="mb-3 flex items-center gap-2.5">
               <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
