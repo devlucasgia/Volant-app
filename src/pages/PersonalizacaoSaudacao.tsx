@@ -149,7 +149,7 @@ export default function PersonalizacaoSaudacao() {
       <div className="space-y-3 px-4 py-5 animate-fade-in">
 
         {/* Preview at top — main hero of the screen */}
-        <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
             Pré-visualização
           </div>
