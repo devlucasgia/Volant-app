@@ -101,7 +101,7 @@ export default function MetasInteligentes() {
   return (
     <div className="min-h-screen">
       <ScreenHeader
-        onBack={() => navigate("/ajustes/planejamento")}
+        onBack={() => navigate("/ajustes")}
         title="Metas Inteligentes"
         subtitle="Planeje sua meta e seus dias de trabalho."
       />
