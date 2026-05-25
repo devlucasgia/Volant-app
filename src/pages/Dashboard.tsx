@@ -201,8 +201,8 @@ export default function Dashboard() {
   // Build the renderer map for each reorderable / hideable card.
   const blocks: Record<HomeCardKey, React.ReactNode> = {
     greeting: widgets.greeting ? (
-      <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
-        <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
+        <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
+          <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName}{greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
         </div>
         {greetingMessage && (
@@ -236,8 +236,8 @@ export default function Dashboard() {
           key="goal"
           onClick={() => navigate("/ajustes/planejamento/metas")}
           aria-label="Editar meta"
-          className={cn(
-            "relative z-10 -mt-8 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
+            className={cn(
+              "relative z-10 -translate-y-2 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -346,7 +346,7 @@ export default function Dashboard() {
       return (
         // Negative top margin pulls this card closer to the Meta card above,
         // so the KM Inteligente reads as a subcard of the goal — not a loose card.
-        <div key="smartKm" className="-mt-14 flex flex-col items-center">
+        <div key="smartKm" className="-translate-y-10 flex flex-col items-center">
           {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
@@ -483,14 +483,14 @@ export default function Dashboard() {
             <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
-                  <div className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground">
+                  <div className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
                     Olá, {greetingName}
                     {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
                   </div>
                   {greetingMessage && (
                     <div
                       className={cn(
-                        "truncate text-[12px] leading-snug text-muted-foreground/90",
+                        "truncate text-[11px] leading-snug text-muted-foreground/90",
                         greetingStyleClass(greetingStyle),
                       )}
                     >
@@ -502,7 +502,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground">
+                <div className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
                   Volant
                 </div>
               )}
