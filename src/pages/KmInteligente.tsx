@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, ChevronRight } from "lucide-react";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
