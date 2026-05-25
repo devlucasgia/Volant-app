@@ -50,7 +50,7 @@ export default function MeusCarros() {
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
             <Car className="h-4 w-4" />
           </span>
           <div className="min-w-0">
