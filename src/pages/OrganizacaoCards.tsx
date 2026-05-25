@@ -126,55 +126,7 @@ function HomeOrganizer() {
 
   return (
     <div className="space-y-4">
-      {/* Hero metric block */}
-      <div className="rounded-2xl border border-primary/20 bg-primary/[0.04] p-3">
-        <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-            <ArrowLeftRight className="h-3.5 w-3.5" />
-          </span>
-          <div className="min-w-0">
-            <div className="text-[13px] font-semibold leading-tight">Destaque do card principal</div>
-            <div className="text-[11px] text-muted-foreground leading-snug">
-              Escolha qual valor aparece em maior evidência na tela inicial.
-            </div>
-          </div>
-        </div>
-        <div role="radiogroup" aria-label="Destaque do card principal" className="mt-3 grid grid-cols-2 gap-2">
-          {([
-            { k: "net" as HeroMetric, label: "Lucro líquido", hint: "Valor após gastos" },
-            { k: "gross" as HeroMetric, label: "Bruto", hint: "Total dos ganhos" },
-          ]).map((o) => {
-            const active = heroMetric === o.k;
-            return (
-              <button
-                key={o.k}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => {
-                  if (heroMetric === o.k) return;
-                  setHeroMetric(o.k);
-                  notifySaved();
-                }}
-                className={cn(
-                  "relative rounded-xl border px-3 py-2.5 text-left transition-all duration-300 active:scale-[0.98]",
-                  active
-                    ? "border-primary/55 bg-primary/[0.08] shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_4px_14px_-10px_hsl(var(--primary)/0.5)]"
-                    : "border-border/60 bg-muted/25 hover:bg-muted/40",
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <div className={cn("text-[13px] font-semibold", active ? "text-foreground" : "text-muted-foreground/90")}>
-                    {o.label}
-                  </div>
-                  {active && <Check className="h-3.5 w-3.5 text-primary" strokeWidth={3} />}
-                </div>
-                <div className="mt-0.5 text-[10.5px] text-muted-foreground/80">{o.hint}</div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+
 
       <div>
         <div className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
