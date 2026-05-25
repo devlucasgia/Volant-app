@@ -52,6 +52,7 @@ export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isLimited } = useAccess();
   const [widgets] = useReportWidgets();
+  const [reportOrder] = useReportOrder();
   const [mode, setMode] = useState<RangeMode>("month");
   const [monthRef, setMonthRef] = useState<Date>(startOfMonth(new Date()));
   const [yearRef, setYearRef] = useState<Date>(startOfYear(new Date()));
