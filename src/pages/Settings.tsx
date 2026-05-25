@@ -217,9 +217,7 @@ function SubscriptionCard({
     <span className={goldBadge}>
       {isTrialing ? "Teste ativo" : "Premium"}
     </span>
-  ) : (
-    <span className={goldBadge}>Assinar Premium</span>
-  );
+  ) : null;
 
   // Premium dark-green upgrade button (no neon).
   const upgradeBtnClass = cn(
