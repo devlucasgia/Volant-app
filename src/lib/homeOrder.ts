@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 
 /** Keys of reorderable Home cards. Net hero and maintenance alert are fixed and not part of this list. */
-export type HomeCardKey = "greeting" | "goal" | "stats" | "byApp" | "byExpense" | "journey";
+export type HomeCardKey = "greeting" | "goal" | "smartKm" | "stats" | "byApp" | "byExpense" | "journey";
 
 export const DEFAULT_HOME_ORDER: HomeCardKey[] = [
   "greeting",
   "goal",
+  "smartKm",
   "stats",
   "byApp",
   "byExpense",
