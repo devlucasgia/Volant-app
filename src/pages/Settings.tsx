@@ -377,7 +377,7 @@ export default function SettingsPage() {
   const fontScaleLabel = FONT_SCALE_OPTIONS.find((o) => o.value === fontScale)?.label ?? "Padrão";
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
-  const [heroMetric, setHeroMetric] = useHeroMetric();
+  
   const [customizeOpen, setCustomizeOpen] = useState<string>("");
   const [greetingStyle, setGreetingStyle] = useGreetingStyle();
 
