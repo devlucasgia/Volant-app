@@ -483,14 +483,14 @@ export default function Dashboard() {
             <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
-                  <div className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
+                  <div className="truncate text-[17.25px] font-bold leading-tight tracking-tight text-foreground">
                     Olá, {greetingName}
                     {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
                   </div>
                   {greetingMessage && (
                     <div
                       className={cn(
-                        "truncate text-[11px] leading-snug text-muted-foreground/90",
+                        "truncate text-[10.8px] leading-snug text-muted-foreground/90",
                         greetingStyleClass(greetingStyle),
                       )}
                     >
@@ -502,7 +502,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
+                <div className="truncate text-[17.25px] font-bold leading-tight tracking-tight text-foreground">
                   Volant
                 </div>
               )}
