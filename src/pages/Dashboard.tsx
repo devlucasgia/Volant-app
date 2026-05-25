@@ -45,6 +45,8 @@ export default function Dashboard() {
   const [heroMetric] = useHeroMetric();
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const unreadNotifs = 0; // base: nenhuma regra inteligente nesta sprint
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
