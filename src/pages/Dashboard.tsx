@@ -346,14 +346,14 @@ export default function Dashboard() {
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
             className={cn(
-              "group mx-auto flex w-[80%] items-center justify-center gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[80%] items-center rounded-2xl border bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
               themeBorder
             )}
           >
             <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
               <Gauge className="h-[18px] w-[18px]" />
             </span>
-            <div className="text-center">
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
                 R$/km inteligente
               </div>
@@ -362,6 +362,7 @@ export default function Dashboard() {
                 <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
               </div>
             </div>
+
           </button>
         </div>
       );
