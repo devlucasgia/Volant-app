@@ -16,6 +16,7 @@ import History from "./pages/History";
 import Reports from "./pages/Reports";
 
 import SettingsPage from "./pages/Settings";
+import PlanejamentoInteligente from "./pages/PlanejamentoInteligente";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
