@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Gauge, ChevronRight, Route } from "lucide-react";
+import { ArrowLeft, Target, Gauge, ChevronRight, Route, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Sticky page header with a back button — premium Volant identity. */
@@ -16,6 +16,9 @@ function PlanHeader({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+          <Brain className="h-4 w-4" />
+        </span>
         <div className="min-w-0">
           <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
             Planejamento Inteligente

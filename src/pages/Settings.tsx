@@ -88,20 +88,29 @@ function SectionGroup({ title, children }: { title: string; children: React.Reac
 
 /** Polished accordion card matching the app's premium identity. */
 function SettingsCard({
-  value, icon, title, badge, children, iconTone,
+  value, icon, title, badge, children, iconTone, accent,
 }: {
   value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode;
   children: React.ReactNode; iconTone?: string;
+  /** Optional subtle border accent that matches the section family. */
+  accent?: "amber";
 }) {
+  const accentClass =
+    accent === "amber"
+      ? "border-amber-400/25 shadow-[0_1px_0_0_hsl(var(--border)),0_10px_28px_-18px_rgba(245,158,11,0.35)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_16px_40px_-20px_rgba(245,158,11,0.45)]"
+      : "border-border shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_36px_-20px_rgba(0,0,0,0.55)]";
   return (
     <AccordionItem
       value={value}
-      className="overflow-hidden rounded-2xl border border-border bg-card px-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=open]:shadow-[0_1px_0_0_hsl(var(--border)),0_14px_36px_-20px_rgba(0,0,0,0.55)] data-[state=open]:bg-card/95"
+      className={cn(
+        "overflow-hidden rounded-2xl border bg-card px-4 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[state=open]:bg-card/95",
+        accentClass,
+      )}
     >
       <AccordionTrigger className="py-3.5 hover:no-underline">
         <div className="flex flex-1 items-center gap-2.5">
           <span className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-lg",
+            "flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]",
             iconTone || "bg-primary/10 text-primary",
           )}>
             {icon}
@@ -201,13 +210,12 @@ function SubscriptionCard({
   const trialEnd = isTrialing ? formatDate(subscription?.current_period_end) : null;
   const nextBilling = subscription && !isTrialing ? formatDate(subscription.current_period_end) : null;
 
+  const goldBadge = "rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300 shadow-[0_0_10px_-4px_rgba(245,158,11,0.55)]";
   const badge = isGrandfathered ? (
-    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-      Premium Vitalício
-    </span>
+    <span className={goldBadge}>Premium Vitalício</span>
   ) : isActive ? (
-    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-      {isTrialing ? "Teste ativo" : "Ativa"}
+    <span className={goldBadge}>
+      {isTrialing ? "Teste ativo" : "Premium"}
     </span>
   ) : null;
 
@@ -221,7 +229,8 @@ function SubscriptionCard({
   );
 
   return (
-    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/10 text-amber-400">
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/12 text-amber-300 shadow-[0_0_18px_-4px_rgba(245,158,11,0.55)]" accent="amber">
+
       {isGrandfathered ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
@@ -664,7 +673,7 @@ export default function SettingsPage() {
               managing={portalLoading}
             />
 
-            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
+            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil" iconTone="bg-amber-300/10 text-amber-200/90">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
                   <Avatar className="h-14 w-14 ring-2 ring-border">
@@ -790,7 +799,7 @@ export default function SettingsPage() {
               })()}
             </SettingsCard>
 
-            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
+            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados" iconTone="bg-amber-300/10 text-amber-200/90">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
               </Button>
@@ -834,11 +843,11 @@ export default function SettingsPage() {
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
-            <div className="mb-3 flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-400">
-                <MessageSquare className="h-4 w-4" />
-              </span>
-              <div>
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+              <MessageSquare className="h-4 w-4" />
+            </span>
+            <div>
                 <div className="text-[15px] font-semibold">Feedback</div>
                 <p className="text-[11px] text-muted-foreground">
                   Encontrou um problema ou tem uma ideia para melhorar o Volant?
@@ -954,10 +963,10 @@ function HubRow({
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99]"
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99] animate-fade-in"
     >
       <span className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor] transition-colors",
         iconTone || "bg-primary/10 text-primary",
       )}>
         {icon}
@@ -966,7 +975,7 @@ function HubRow({
         <div className="text-[15px] font-semibold leading-tight">{title}</div>
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-1" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
     </button>
   );
 }
@@ -989,7 +998,7 @@ function CentralVeiculosRow() {
       icon={<Warehouse className="h-4 w-4" />}
       title="Central de Veículos"
       subtitle="Organize seus carros, custos e manutenções."
-      iconTone="bg-sky-400/10 text-sky-400"
+      iconTone="bg-cyan-500/10 text-cyan-300"
     />
   );
 }
