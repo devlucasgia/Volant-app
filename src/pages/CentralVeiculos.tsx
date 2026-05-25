@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Car, Wallet, Wrench, ChevronRight } from "lucide-react";
+import { ArrowLeft, Car, Wallet, Wrench, ChevronRight, Warehouse } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function ScreenHeader({ onBack }: { onBack: () => void }) {
