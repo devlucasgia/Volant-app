@@ -80,6 +80,9 @@ const App = () => (
                     <Route path="/ajustes/personalizacao/aparencia" element={<PersonalizacaoAparencia />} />
                     <Route path="/ajustes/personalizacao/saudacao" element={<PersonalizacaoSaudacao />} />
                     <Route path="/ajustes/personalizacao/cards" element={<OrganizacaoCards />} />
+                    <Route path="/ajustes/categorias" element={<Categorias />} />
+                    <Route path="/ajustes/categorias/ganhos" element={<CategoriasGanhos />} />
+                    <Route path="/ajustes/categorias/gastos" element={<CategoriasGastos />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
