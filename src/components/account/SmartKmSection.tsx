@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Brain, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw, Wallet, ChevronRight, Loader2 } from "lucide-react";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
@@ -8,14 +9,23 @@ import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } f
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 /**
  * KM Inteligente — planning module that suggests a target R$/km based on the
  * user's monthly goal, vehicle costs and real progress so far in the month.
- * Limited-access users see a preview but interactions open the paywall.
+ *
+ * Layout hierarchy (top → bottom):
+ *  1. R$/km inteligente (primary result)
+ *  2. R$/km base (reference)
+ *  3. KM planejado no mês (field + estimated remaining)
+ *  4. AJUSTE MANUAL — separator + optional override field
+ *  5. Calcular KM button
+ *  6. Custos considerados
+ *  7. Empty CTA when no vehicle/costs are set
+ *  8. Brief explanation
  */
 export function SmartKmSection() {
+  const navigate = useNavigate();
   const { settings, entries, activeCar, updateSettings } = useData();
   const { isFull, requirePremium } = useAccess();
 
@@ -23,12 +33,8 @@ export function SmartKmSection() {
   const [draftOverride, setDraftOverride] = useState<number | null>(settings.kmRemainingOverride);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    setDraftKm(settings.kmPlannedMonth);
-  }, [settings.kmPlannedMonth]);
-  useEffect(() => {
-    setDraftOverride(settings.kmRemainingOverride);
-  }, [settings.kmRemainingOverride]);
+  useEffect(() => { setDraftKm(settings.kmPlannedMonth); }, [settings.kmPlannedMonth]);
+  useEffect(() => { setDraftOverride(settings.kmRemainingOverride); }, [settings.kmRemainingOverride]);
 
   const dirty =
     draftKm !== settings.kmPlannedMonth || draftOverride !== settings.kmRemainingOverride;
@@ -68,7 +74,7 @@ export function SmartKmSection() {
     return Math.max(0, draftKm - real.kmThisMonth);
   }, [draftKm, real.kmThisMonth]);
 
-  const handleSave = async () => {
+  const handleCalculate = async () => {
     if (!requirePremium()) return;
     if (invalid || overrideInvalid) return;
     setSaving(true);
@@ -77,7 +83,7 @@ export function SmartKmSection() {
         kmPlannedMonth: draftKm,
         kmRemainingOverride: draftOverride,
       });
-      toast.success("KM Inteligente salvo");
+      toast.success("KM Inteligente recalculado");
     } catch {
       toast.error("Não foi possível salvar");
     } finally {
@@ -100,25 +106,32 @@ export function SmartKmSection() {
     if (!isFull) requirePremium();
   };
 
-
-
-  // ---------- Empty states ----------
+  // ---------- No vehicle: full empty state with CTA ----------
   if (!activeCar) {
     return (
-      <EmptyState
-        icon={<CarIcon className="h-4 w-4" />}
-        title="Cadastre um carro para usar o KM Inteligente."
-      />
+      <div className="space-y-3">
+        <NoVehicleCta onGo={() => navigate("/ajustes")} />
+        <ExplanationCard />
+      </div>
     );
   }
 
+  const hasCosts = costs.items.length > 0;
+
   return (
     <div className="space-y-3">
-      {/* KM planejado — campo principal */}
+      {/* 1 & 2 — Results */}
+      {!isFull ? (
+        <LockedPreview onUnlock={() => requirePremium()} />
+      ) : (
+        <ResultsBlock state={state} />
+      )}
+
+      {/* 3 — KM planejado no mês */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Gauge className="h-4 w-4" />
+            <Brain className="h-4 w-4" />
           </span>
           <div className="min-w-0">
             <div className="text-[14px] font-semibold leading-tight">KM planejado no mês</div>
@@ -135,10 +148,7 @@ export function SmartKmSection() {
           className={cn(invalid && "border-destructive focus-visible:ring-destructive")}
           onFocus={handleFocus}
           onChange={(v) => {
-            if (!isFull) {
-              requirePremium();
-              return;
-            }
+            if (!isFull) { requirePremium(); return; }
             if (v == null) return setDraftKm(null);
             setDraftKm(Math.max(0, Math.floor(v)));
           }}
@@ -148,8 +158,6 @@ export function SmartKmSection() {
             Informe um valor maior que zero.
           </div>
         )}
-
-        {/* KM restante estimado */}
         {isFull && draftKm != null && draftKm > 0 && (
           <div className="mt-2 flex items-center justify-between text-[12px]">
             <span className="text-muted-foreground">KM restante estimado</span>
@@ -158,25 +166,11 @@ export function SmartKmSection() {
             </span>
           </div>
         )}
-
-        <Button
-          onClick={handleSave}
-          disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
-          className="mt-3 w-full"
-        >
-          {!isFull ? (
-            <><Lock className="mr-2 h-4 w-4" /> Disponível no Premium</>
-          ) : saving ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
-          ) : (
-            "Salvar"
-          )}
-        </Button>
       </div>
 
-      {/* Ajuste manual — bloco secundário, opcional */}
+      {/* 4 — AJUSTE MANUAL separator + optional override */}
       {isFull && (
-        <section className="space-y-2">
+        <section className="space-y-2 pt-1">
           <div className="flex items-center gap-2 px-1">
             <span className="h-px flex-1 bg-border/50" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
@@ -224,45 +218,55 @@ export function SmartKmSection() {
         </section>
       )}
 
-      {/* Results */}
-      {!isFull ? (
-        <LockedPreview onUnlock={() => requirePremium()} />
-      ) : (
-        <ResultsBlock state={state} />
-      )}
+      {/* 5 — Calcular KM button (covers both fields) */}
+      <Button
+        onClick={handleCalculate}
+        disabled={!isFull ? false : (saving || !dirty || invalid || overrideInvalid)}
+        className="w-full"
+      >
+        {!isFull ? (
+          <><Lock className="mr-2 h-4 w-4" /> Disponível no Premium</>
+        ) : saving ? (
+          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Calculando...</>
+        ) : (
+          "Calcular KM"
+        )}
+      </Button>
 
-      {/* Custos considerados */}
-      {isFull && (
+      {/* 6 — Custos considerados (only when has data) */}
+      {isFull && hasCosts && (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
           <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <Info className="h-3.5 w-3.5" /> Custos considerados
           </div>
-          {costs.items.length === 0 ? (
-            <p className="text-[12px] text-muted-foreground">
-              Nenhum custo do veículo cadastrado.
-            </p>
-          ) : (
-            <ul className="space-y-1.5">
-              {costs.items.map((c) => (
-                <li key={c.label} className="flex items-center justify-between text-[12px]">
-                  <span className="text-muted-foreground">{c.label}</span>
-                  <span className="tabular-nums font-medium text-foreground/90">
-                    {brl(c.value)}/mês
-                  </span>
-                </li>
-              ))}
-              <li className="mt-2 flex items-center justify-between border-t border-border/60 pt-2 text-[12px]">
-                <span className="font-semibold">Total mensal</span>
-                <span className="tabular-nums font-bold">{brl(costs.total)}</span>
+          <ul className="space-y-1.5">
+            {costs.items.map((c) => (
+              <li key={c.label} className="flex items-center justify-between text-[12px]">
+                <span className="text-muted-foreground">{c.label}</span>
+                <span className="tabular-nums font-medium text-foreground/90">
+                  {brl(c.value)}/mês
+                </span>
               </li>
-              <li className="flex items-center justify-between text-[11px] text-muted-foreground">
-                <span>Custo fixo por dia</span>
-                <span className="tabular-nums font-medium">{brl(costs.dailyFixed)}/dia</span>
-              </li>
-            </ul>
-          )}
+            ))}
+            <li className="mt-2 flex items-center justify-between border-t border-border/60 pt-2 text-[12px]">
+              <span className="font-semibold">Total mensal</span>
+              <span className="tabular-nums font-bold">{brl(costs.total)}</span>
+            </li>
+            <li className="flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Custo fixo por dia</span>
+              <span className="tabular-nums font-medium">{brl(costs.dailyFixed)}/dia</span>
+            </li>
+          </ul>
         </div>
       )}
+
+      {/* 7 — CTA when no vehicle costs registered */}
+      {isFull && !hasCosts && (
+        <NoCostsCta onGo={() => navigate("/ajustes")} />
+      )}
+
+      {/* 8 — Brief explanation */}
+      <ExplanationCard />
     </div>
   );
 }
@@ -319,12 +323,12 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
   // ok
   return (
     <div className="space-y-2.5">
-      {/* Smart card */}
+      {/* Smart — primary result */}
       <div className="relative overflow-hidden rounded-2xl border border-primary/35 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_10px_30px_-18px_hsl(var(--primary)/0.55)]">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-          <Gauge className="h-3.5 w-3.5" /> R$/km inteligente
+          <Brain className="h-3.5 w-3.5" /> R$/km inteligente
         </div>
-        <div className="mt-1.5 text-3xl font-bold tabular-nums text-foreground leading-none">
+        <div className="mt-1.5 text-[34px] font-bold tabular-nums text-foreground leading-none">
           {brl(state.smart)}
         </div>
         <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
@@ -344,7 +348,7 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
         </div>
       </div>
 
-      {/* Base card */}
+      {/* Base — reference */}
       <div className="rounded-2xl border border-border/60 bg-card/60 p-3.5">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
@@ -380,6 +384,64 @@ function EmptyState({ icon, title }: { icon: React.ReactNode; title: string }) {
         {icon}
       </div>
       <p className="text-[12px] text-muted-foreground">{title}</p>
+    </div>
+  );
+}
+
+function NoVehicleCta({ onGo }: { onGo: () => void }) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+      <div className="mb-2 flex items-start gap-2.5">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <CarIcon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="text-[14px] font-semibold leading-tight">Cadastre um carro</div>
+          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+            Precisamos do seu veículo e custos para calcular o R$/km ideal.
+          </p>
+        </div>
+      </div>
+      <Button onClick={onGo} className="w-full">
+        Cadastrar veículo
+        <ChevronRight className="ml-1 h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function NoCostsCta({ onGo }: { onGo: () => void }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-4">
+      <div className="mb-2 flex items-start gap-2.5">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <Wallet className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <div className="text-[13px] font-semibold leading-tight">Cadastre os custos do veículo</div>
+          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+            Com seus custos cadastrados, o cálculo fica ainda mais preciso.
+          </p>
+        </div>
+      </div>
+      <Button onClick={onGo} variant="outline" className="w-full">
+        Cadastrar custos do veículo
+        <ChevronRight className="ml-1 h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+function ExplanationCard() {
+  return (
+    <div className="rounded-2xl border border-border/40 bg-muted/10 p-3.5">
+      <div className="flex items-start gap-2">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
+        <p className="text-[11.5px] leading-snug text-muted-foreground">
+          O KM Inteligente usa sua meta, seu ritmo e os custos do veículo para
+          sugerir um valor mínimo por km nas corridas.
+        </p>
+      </div>
     </div>
   );
 }
