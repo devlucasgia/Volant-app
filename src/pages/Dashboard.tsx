@@ -354,7 +354,7 @@ export default function Dashboard() {
             <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">/ km</span>
           </div>
         </div>
-        <span className="text-[10px] font-medium text-muted-foreground/70">Ajustar</span>
+        
       </button>
     ) : null,
 
