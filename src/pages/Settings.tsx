@@ -1047,6 +1047,7 @@ export default function SettingsPage() {
               {(() => {
                 const labels: Partial<Record<HomeCardKey, { label: string; icon: React.ReactNode }>> = {
                   goal:      { label: "Meta",        icon: <Target className="h-4 w-4" /> },
+                  smartKm:   { label: "R$/km inteligente", icon: <Brain className="h-4 w-4" /> },
                   stats:     { label: "Performance", icon: <Gauge className="h-4 w-4" /> },
                   byApp:     { label: "Por app",     icon: <BarChart3 className="h-4 w-4" /> },
                   byExpense: { label: "Gastos",      icon: <Receipt className="h-4 w-4" /> },
