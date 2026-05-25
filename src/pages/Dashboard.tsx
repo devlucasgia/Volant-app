@@ -627,7 +627,7 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/50" : "border-success/30")} />
+                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
                 <div className={cn(
                   "mt-3 flex items-center justify-center gap-4 px-2 text-[13px]",
                   showGross && "-translate-x-1.5"
@@ -638,7 +638,7 @@ export default function Dashboard() {
                         <div
                           className={cn(
                             "h-3.5 w-px",
-                            showGross ? "bg-[hsl(var(--goal-gross))]/55" : "bg-success/40",
+                            showGross ? "bg-[hsl(var(--goal-gross))]/65" : "bg-success/55",
                           )}
                         />
                       )}
