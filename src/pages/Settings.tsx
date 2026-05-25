@@ -823,62 +823,8 @@ export default function SettingsPage() {
 
         {/* ============== FINANCEIRO ============== */}
         <SectionGroup title="Financeiro">
-          <Accordion type="multiple" className="space-y-2.5">
-            <SettingsCard value="plats" icon={<Tags className="h-4 w-4" />} title="Plataformas de ganho">
-              <Button size="sm" variant="outline" className="w-full" onClick={() => setPlatDialog({ open: true, editing: null })}>
-                <Plus className="mr-1 h-4 w-4" /> Nova plataforma
-              </Button>
-              <div className="space-y-2">
-                {earningPlatforms.map((p) => (
-                  <div key={p.key} className="flex items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:bg-muted/30">
-                    <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" imageUrl={p.imageUrl} />
-                    <div className="min-w-0 flex-1 truncate text-sm font-medium">{p.label}</div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <Button size="icon" variant="ghost" className="h-8 w-8"
-                        onClick={() => setPlatDialog({ open: true, editing: { id: p.id, key: p.key, label: p.label, emoji: p.emoji, color: p.hex, platformType: p.type, imageUrl: p.imageUrl } })}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {p.isCustom && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
-                          onClick={() => tryDeletePlatform(p)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </SettingsCard>
-
-            <SettingsCard value="cats" icon={<Tags className="h-4 w-4" />} title="Categorias de gasto">
-              <Button size="sm" variant="outline" className="w-full" onClick={() => setCatDialog({ open: true, editing: null })}>
-                <Plus className="mr-1 h-4 w-4" /> Nova categoria
-              </Button>
-              <div className="space-y-2">
-                {expenseCategories.map((c) => (
-                  <div key={c.key} className="flex items-center gap-3 rounded-xl border border-border p-2.5 transition-colors hover:bg-muted/30">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base"
-                      style={{ backgroundColor: c.hex + "33" }}>{c.emoji}</span>
-                    <div className="min-w-0 flex-1 truncate text-sm font-medium">{c.label}</div>
-                    <div className="flex shrink-0 items-center gap-0.5">
-                      <Button size="icon" variant="ghost" className="h-8 w-8"
-                        onClick={() => setCatDialog({ open: true, editing: { id: c.id, key: c.key, label: c.label, emoji: c.emoji, color: c.hex } })}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      {c.isCustom && (
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive"
-                          onClick={() => c.id && confirm(`Excluir "${c.label}"?`) && deleteCategory(c.id)}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </SettingsCard>
-
-            <PlanejamentoInteligenteRow />
-          </Accordion>
+          <CategoriasRow />
+          <PlanejamentoInteligenteRow />
         </SectionGroup>
 
 
