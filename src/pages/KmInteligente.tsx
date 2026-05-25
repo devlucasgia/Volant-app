@@ -38,7 +38,7 @@ export default function KmInteligente() {
   }, []);
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={() => navigate("/ajustes")} />
+      <ScreenHeader onBack={() => navigate("/ajustes/planejamento")} />
 
       <div className="space-y-3 px-4 py-5 animate-fade-in">
         <SmartKmSection />
