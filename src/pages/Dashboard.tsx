@@ -200,7 +200,7 @@ export default function Dashboard() {
     greeting: widgets.greeting ? (
       <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
         <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
-          Olá, {greetingName} <span aria-hidden>👋</span>
+          Olá, {greetingName}{greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
         </div>
         {greetingMessage && (
           <div className={cn(
