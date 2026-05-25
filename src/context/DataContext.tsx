@@ -53,6 +53,7 @@ const DEFAULT_SETTINGS: Settings = {
   dashboardWidgets: DEFAULT_WIDGETS,
   goalType: "bruto",
   workingDaysPerMonth: null,
+  remainingWorkingDays: null,
   kmPlannedMonth: null,
   kmRemainingOverride: null,
 };
