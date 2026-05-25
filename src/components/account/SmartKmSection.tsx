@@ -398,9 +398,9 @@ function NoVehicleCta({ onGo }: { onGo: () => void }) {
           <CarIcon className="h-4 w-4" />
         </span>
         <div className="min-w-0">
-          <div className="text-[14px] font-semibold leading-tight">Cadastre um carro</div>
+          <div className="text-[14px] font-semibold leading-tight">Cadastre um veículo</div>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Precisamos do seu veículo e custos para calcular o R$/km ideal.
+            Cadastre um veículo para deixar o cálculo mais preciso.
           </p>
         </div>
       </div>
@@ -422,7 +422,7 @@ function NoCostsCta({ onGo }: { onGo: () => void }) {
         <div className="min-w-0">
           <div className="text-[13px] font-semibold leading-tight">Cadastre os custos do veículo</div>
           <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Com seus custos cadastrados, o cálculo fica ainda mais preciso.
+            Cadastre os custos do veículo para deixar o cálculo mais preciso.
           </p>
         </div>
       </div>
@@ -440,13 +440,13 @@ function ExplanationCard() {
       <div className="flex items-start gap-2">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/80" />
         <p className="text-[11.5px] leading-snug text-muted-foreground">
-          O KM Inteligente usa sua meta, seu ritmo e os custos do veículo para
-          sugerir um valor mínimo por km nas corridas.
+          O KM Inteligente utiliza os custos fixos do veículo, sua meta líquida ou bruta e todos os seus registros de ganhos e gastos no Volant para definir o valor mínimo por km que você deve priorizar nas corridas para atingir seus objetivos.
         </p>
       </div>
     </div>
   );
 }
+
 
 function LockedPreview({ onUnlock }: { onUnlock: () => void }) {
   return (
