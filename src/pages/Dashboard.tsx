@@ -335,27 +335,36 @@ export default function Dashboard() {
       </section>
     ) : null,
 
-    smartKm: widgets.smartKm && smartKmValue !== null ? (
-      <button
-        key="smartKm"
-        type="button"
-        onClick={() => navigate("/ajustes/planejamento/km")}
-        className="group flex w-full items-center justify-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-center shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]"
-      >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-          <Gauge className="h-4 w-4" />
-        </span>
-        <div className="min-w-0">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-            R$/km inteligente
+    smartKm: widgets.smartKm && smartKmValue !== null ? (() => {
+      const showGross = settings.goalType === "bruto";
+      const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
+      const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
+      const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
+      return (
+        <button
+          key="smartKm"
+          type="button"
+          onClick={() => navigate("/ajustes/planejamento/km")}
+          className={cn(
+            "group flex w-full items-center gap-2.5 rounded-2xl border bg-card p-2.5 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+            themeBorder
+          )}
+        >
+          <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
+            <Gauge className="h-[18px] w-[18px]" />
+          </span>
+          <div className="min-w-1 flex-1">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+              R$/km inteligente
+            </div>
+            <div className="mt-0 text-[16px] font-bold tabular-nums text-foreground leading-tight">
+              {brl(smartKmValue)}
+              <span className="ml-1 text-[11px] font-normal text-muted-foreground">/ km</span>
+            </div>
           </div>
-          <div className="mt-0.5 text-[15px] font-bold tabular-nums text-foreground leading-tight">
-            {brl(smartKmValue)}
-            <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">/ km</span>
-          </div>
-        </div>
-      </button>
-    ) : null,
+        </button>
+      );
+    })() : null,
 
     byApp: widgets.byApp ? (
       <div key="byApp" className="rounded-2xl border border-border bg-card p-4">
