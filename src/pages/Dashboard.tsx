@@ -346,20 +346,20 @@ export default function Dashboard() {
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
             className={cn(
-              "group mx-auto inline-flex w-auto max-w-[88%] items-center justify-center gap-2.5 rounded-2xl border bg-card px-3.5 py-2 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group mx-auto flex w-[80%] items-center justify-center gap-3 rounded-2xl border bg-card px-4 py-2.5 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
               themeBorder
             )}
           >
-            <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
-              <Gauge className="h-[17px] w-[17px]" />
+            <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
+              <Gauge className="h-[18px] w-[18px]" />
             </span>
-            <div className="min-w-0">
-              <div className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
+            <div className="min-w-1 flex-1">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
                 R$/km inteligente
               </div>
-              <div className="mt-0.5 text-[16px] font-bold tabular-nums text-foreground leading-tight">
+              <div className="mt-0.5 text-[17px] font-bold tabular-nums text-foreground leading-tight">
                 {brl(smartKmValue)}
-                <span className="ml-1 text-[11px] font-normal text-muted-foreground">/ km</span>
+                <span className="ml-1 text-[12px] font-normal text-muted-foreground">/ km</span>
               </div>
             </div>
           </button>
