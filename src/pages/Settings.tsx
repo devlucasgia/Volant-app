@@ -998,7 +998,7 @@ function CentralVeiculosRow() {
       icon={<Warehouse className="h-4 w-4" />}
       title="Central de Veículos"
       subtitle="Organize seus carros, custos e manutenções."
-      iconTone="bg-sky-400/10 text-sky-400"
+      iconTone="bg-cyan-500/10 text-cyan-300"
     />
   );
 }
