@@ -19,6 +19,10 @@ import SettingsPage from "./pages/Settings";
 import PlanejamentoInteligente from "./pages/PlanejamentoInteligente";
 import MetasInteligentes from "./pages/MetasInteligentes";
 import KmInteligente from "./pages/KmInteligente";
+import CentralVeiculos from "./pages/CentralVeiculos";
+import MeusCarros from "./pages/MeusCarros";
+import CustosVeiculo from "./pages/CustosVeiculo";
+import ManutencaoPreventiva from "./pages/ManutencaoPreventiva";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
