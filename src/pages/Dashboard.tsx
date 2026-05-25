@@ -609,15 +609,18 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/30" : "border-border/40")} />
-                <div className="mt-3 flex items-center justify-center gap-4 px-2 text-[13px]">
+                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/50" : "border-success/30")} />
+                <div className={cn(
+                  "mt-3 flex items-center justify-center gap-4 px-2 text-[13px]",
+                  showGross && "-translate-x-1.5"
+                )}>
                   {secondary.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
                       {i > 0 && (
                         <div
                           className={cn(
                             "h-3.5 w-px",
-                            showGross ? "bg-[hsl(var(--goal-gross))]/35" : "bg-border/55",
+                            showGross ? "bg-[hsl(var(--goal-gross))]/55" : "bg-success/40",
                           )}
                         />
                       )}
