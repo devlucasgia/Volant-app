@@ -332,7 +332,7 @@ export default function Dashboard() {
       <button
         key="smartKm"
         type="button"
-        onClick={() => window.location.assign("/ajustes/planejamento/km")}
+        onClick={() => navigate("/ajustes/planejamento/km")}
         className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]"
       >
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
