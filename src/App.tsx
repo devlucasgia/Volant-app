@@ -73,6 +73,10 @@ const App = () => (
                     <Route path="/ajustes/veiculos/carros" element={<MeusCarros />} />
                     <Route path="/ajustes/veiculos/custos" element={<CustosVeiculo />} />
                     <Route path="/ajustes/veiculos/manutencao" element={<ManutencaoPreventiva />} />
+                    <Route path="/ajustes/personalizacao" element={<Personalizacao />} />
+                    <Route path="/ajustes/personalizacao/aparencia" element={<PersonalizacaoAparencia />} />
+                    <Route path="/ajustes/personalizacao/saudacao" element={<PersonalizacaoSaudacao />} />
+                    <Route path="/ajustes/personalizacao/cards" element={<OrganizacaoCards />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
