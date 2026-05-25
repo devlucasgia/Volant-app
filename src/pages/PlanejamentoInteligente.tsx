@@ -104,7 +104,7 @@ export default function PlanejamentoInteligente() {
           />
           <HubCard
             to="/ajustes/planejamento/km"
-            icon={<Brain className="h-5 w-5" />}
+            icon={<Gauge className="h-5 w-5" />}
             title="KM Inteligente"
             description="Descubra o R$/km mínimo aceitável para suas corridas."
             tone="teal"
