@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Car, Wallet, Wrench, ChevronRight, Warehouse } from "lucide-react";
+import { ArrowLeft, Palette, MessageSquare, LayoutGrid, ChevronRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function ScreenHeader({ onBack }: { onBack: () => void }) {
@@ -16,14 +16,14 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Warehouse className="h-4 w-4" />
+          <Sparkles className="h-4 w-4" />
         </span>
         <div className="min-w-0">
           <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
-            Central de Veículos
+            Personalização
           </h1>
           <p className="text-[11px] leading-tight text-muted-foreground/80">
-            Organize seus carros, custos e manutenções.
+            Ajuste a aparência e organize sua experiência no Volant.
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@ function HubCard({ to, icon, title, description, delayMs = 0 }: HubCardProps) {
   );
 }
 
-export default function CentralVeiculos() {
+export default function Personalizacao() {
   const navigate = useNavigate();
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -76,24 +76,24 @@ export default function CentralVeiculos() {
       <ScreenHeader onBack={() => navigate("/ajustes")} />
       <div className="space-y-2.5 px-4 py-6">
         <HubCard
-          to="/ajustes/veiculos/carros"
-          icon={<Car className="h-5 w-5" />}
-          title="Meus carros"
-          description="Cadastre e gerencie seus veículos."
+          to="/ajustes/personalizacao/aparencia"
+          icon={<Palette className="h-5 w-5" />}
+          title="Aparência"
+          description="Ajuste tema, modo de exibição e tamanho do texto."
           delayMs={0}
         />
         <HubCard
-          to="/ajustes/veiculos/custos"
-          icon={<Wallet className="h-5 w-5" />}
-          title="Custos do veículo"
-          description="Cadastre os custos usados nos cálculos do Volant."
+          to="/ajustes/personalizacao/saudacao"
+          icon={<MessageSquare className="h-5 w-5" />}
+          title="Saudação"
+          description="Personalize como o Volant conversa com você."
           delayMs={60}
         />
         <HubCard
-          to="/ajustes/veiculos/manutencao"
-          icon={<Wrench className="h-5 w-5" />}
-          title="Manutenção preventiva"
-          description="Acompanhe revisões, trocas e cuidados importantes."
+          to="/ajustes/personalizacao/cards"
+          icon={<LayoutGrid className="h-5 w-5" />}
+          title="Organização dos cards"
+          description="Escolha o que aparece e ajuste a ordem dos cards."
           delayMs={120}
         />
       </div>

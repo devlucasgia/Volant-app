@@ -23,6 +23,10 @@ import CentralVeiculos from "./pages/CentralVeiculos";
 import MeusCarros from "./pages/MeusCarros";
 import CustosVeiculo from "./pages/CustosVeiculo";
 import ManutencaoPreventiva from "./pages/ManutencaoPreventiva";
+import Personalizacao from "./pages/Personalizacao";
+import PersonalizacaoAparencia from "./pages/PersonalizacaoAparencia";
+import PersonalizacaoSaudacao from "./pages/PersonalizacaoSaudacao";
+import OrganizacaoCards from "./pages/OrganizacaoCards";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -69,6 +73,10 @@ const App = () => (
                     <Route path="/ajustes/veiculos/carros" element={<MeusCarros />} />
                     <Route path="/ajustes/veiculos/custos" element={<CustosVeiculo />} />
                     <Route path="/ajustes/veiculos/manutencao" element={<ManutencaoPreventiva />} />
+                    <Route path="/ajustes/personalizacao" element={<Personalizacao />} />
+                    <Route path="/ajustes/personalizacao/aparencia" element={<PersonalizacaoAparencia />} />
+                    <Route path="/ajustes/personalizacao/saudacao" element={<PersonalizacaoSaudacao />} />
+                    <Route path="/ajustes/personalizacao/cards" element={<OrganizacaoCards />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
