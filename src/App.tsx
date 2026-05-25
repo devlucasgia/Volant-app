@@ -65,6 +65,10 @@ const App = () => (
                     <Route path="/ajustes/planejamento" element={<PlanejamentoInteligente />} />
                     <Route path="/ajustes/planejamento/metas" element={<MetasInteligentes />} />
                     <Route path="/ajustes/planejamento/km" element={<KmInteligente />} />
+                    <Route path="/ajustes/veiculos" element={<CentralVeiculos />} />
+                    <Route path="/ajustes/veiculos/carros" element={<MeusCarros />} />
+                    <Route path="/ajustes/veiculos/custos" element={<CustosVeiculo />} />
+                    <Route path="/ajustes/veiculos/manutencao" element={<ManutencaoPreventiva />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
