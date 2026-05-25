@@ -315,10 +315,10 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
           {brl(state.smart)}
         </div>
         <p className="mt-2 text-[12px] leading-snug text-muted-foreground">
-          Atualizado automaticamente conforme seu desempenho mensal.
+          Atualizado conforme seu desempenho no mês.
         </p>
         <p className="mt-1 text-[11px] leading-snug text-muted-foreground/80">
-          Priorize corridas iguais ou acima desse valor por km para atingir seus objetivos.
+          Priorize corridas a partir desse valor por km.
         </p>
         <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-primary/15 pt-2 text-[11px]">
           <span className="text-muted-foreground">KM usado no cálculo</span>
