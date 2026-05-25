@@ -326,7 +326,7 @@ function ResultsBlock({ state }: { state: ReturnType<typeof computeSmartKm> }) {
       {/* Smart — primary result */}
       <div className="relative overflow-hidden rounded-2xl border border-primary/35 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 shadow-[0_0_0_1px_hsl(var(--primary)/0.12),0_10px_30px_-18px_hsl(var(--primary)/0.55)]">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-          <Brain className="h-3.5 w-3.5" /> R$/km inteligente
+          <Gauge className="h-3.5 w-3.5" /> R$/km inteligente
         </div>
         <div className="mt-1.5 text-[34px] font-bold tabular-nums text-foreground leading-none">
           {brl(state.smart)}
