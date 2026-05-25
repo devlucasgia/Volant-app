@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
@@ -9,7 +8,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Brain } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Brain, Bell } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -23,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
+import volantSymbol from "@/assets/volant-symbol-header.png";
+import { NotificationsSheet } from "@/components/NotificationsSheet";
 
 
 export default function Dashboard() {
@@ -44,6 +45,8 @@ export default function Dashboard() {
   const [heroMetric] = useHeroMetric();
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const unreadNotifs = 0; // base: nenhuma regra inteligente nesta sprint
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
@@ -428,18 +431,80 @@ export default function Dashboard() {
   };
 
   // Header gets a small extra top breath when greeting is enabled.
-  const topPadding = widgets.greeting ? "pt-5" : "pt-4";
+  const topPadding = widgets.greeting ? "pt-3" : "pt-2";
+
+  const greetingHasContent = widgets.greeting;
 
   return (
     <>
-      <PageHeader
-        brand
-        title="Volant"
-        subtitle="Seu controle financeiro"
-      />
+      {/* Header compacto da Home — símbolo do Volant + saudação clicável + sino */}
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-lg">
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+          <button
+            type="button"
+            onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao")}
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-2.5 rounded-xl py-1 pr-2 text-left transition-all duration-200",
+              greetingHasContent && "hover:bg-muted/30 active:scale-[0.99]",
+            )}
+            aria-label="Editar saudação"
+          >
+            <img
+              src={volantSymbol}
+              alt="Volant"
+              width={30}
+              height={30}
+              decoding="sync"
+              loading="eager"
+              fetchPriority="high"
+              className="h-[30px] w-[30px] shrink-0 rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
+            />
+            <div className="min-w-0 flex-1">
+              {greetingHasContent ? (
+                <>
+                  <div className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground">
+                    Olá, {greetingName}
+                    {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
+                  </div>
+                  {greetingMessage && (
+                    <div
+                      className={cn(
+                        "truncate text-[12px] leading-snug text-muted-foreground/90",
+                        greetingStyleClass(greetingStyle),
+                      )}
+                    >
+                      {greetingMessage}
+                    </div>
+                  )}
+                  <div className="truncate text-[11px] leading-snug text-muted-foreground/70">
+                    {contextualDate}
+                  </div>
+                </>
+              ) : (
+                <div className="truncate text-[15px] font-bold leading-tight tracking-tight text-foreground">
+                  Volant
+                </div>
+              )}
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setNotifOpen(true)}
+            aria-label="Abrir notificações"
+            className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-all duration-200 hover:bg-muted/40 hover:text-foreground active:scale-95"
+          >
+            <Bell className="h-[18px] w-[18px]" />
+            {unreadNotifs > 0 && (
+              <span className="absolute right-1.5 top-1.5 inline-flex h-2 w-2 rounded-full bg-success ring-2 ring-background" />
+            )}
+          </button>
+        </div>
+      </header>
+
+      <NotificationsSheet open={notifOpen} onOpenChange={setNotifOpen} />
+
       <div className={cn("space-y-5 px-4", topPadding)}>
-        {/* Greeting (fixed at top of body, toggleable via personalization) */}
-        {blocks.greeting}
 
         {/* Period switcher — Hoje | Semana | Mês | Calendário */}
         <PeriodBar
@@ -542,10 +607,11 @@ export default function Dashboard() {
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className="mt-4 flex items-center gap-4 text-xs">
+                <div className="mt-4 border-t border-border/40" />
+                <div className="mt-3 flex items-center gap-4 text-[13px]">
                   {secondary.map((m, i) => (
                     <div key={m.label} className="flex items-center gap-3">
-                      {i > 0 && <div className="h-3 w-px bg-border" />}
+                      {i > 0 && <div className="h-3 w-px bg-border/60" />}
                       <div className="flex items-center gap-1.5">
                         <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
                         <span className="text-muted-foreground">{m.label}</span>
