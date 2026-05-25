@@ -203,41 +203,56 @@ export default function MetasInteligentes() {
           </div>
         </div>
 
-        {/* Dias restantes */}
-        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-          <div className="mb-3 flex items-start gap-2.5">
-            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <CalendarClock className="h-4 w-4" />
+        {/* Ajuste do mês atual — bloco secundário, claramente opcional */}
+        <section className="space-y-2 pt-2">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-px flex-1 bg-border/50" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+              Ajuste do mês atual
             </span>
-            <div className="min-w-0">
-              <div className="text-[14px] font-semibold leading-tight">Dias restantes de trabalho</div>
-              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                Quantos dias ainda pretende trabalhar neste mês.
-              </p>
+            <span className="h-px flex-1 bg-border/50" />
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-border/50 bg-muted/15 p-4">
+            <div className="mb-3 flex items-start gap-2.5">
+              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-muted-foreground">
+                <CalendarClock className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="text-[13px] font-semibold leading-tight text-foreground/90">
+                  Dias restantes de trabalho
+                </div>
+                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                  Use se seu planejamento mudou.
+                </p>
+                <p className="mt-0.5 text-[10.5px] leading-snug text-muted-foreground/80">
+                  Informe quantos dias ainda pretende trabalhar até o fim do mês.
+                </p>
+              </div>
+            </div>
+            <NumberField
+              value={draft.remainingWorkingDays}
+              decimal={false}
+              inputMode="numeric"
+              placeholder={`Ex: ${Math.min(availableRemainingDays, 7)}`}
+              className={cn(remainingInvalid && "border-destructive focus-visible:ring-destructive")}
+              onChange={(v) => {
+                if (v == null) return setDraft((d) => ({ ...d, remainingWorkingDays: null }));
+                const n = Math.max(1, Math.min(availableRemainingDays, Math.floor(v)));
+                setDraft((d) => ({ ...d, remainingWorkingDays: n }));
+              }}
+            />
+            <div className="mt-1.5 min-h-[16px] text-[11px] leading-none">
+              {remainingInvalid ? (
+                <span className="font-medium text-destructive/90">
+                  Apenas {availableRemainingDays} dias disponíveis no mês
+                </span>
+              ) : (
+                <span className="text-muted-foreground">Dias disponíveis: {availableRemainingDays}</span>
+              )}
             </div>
           </div>
-          <NumberField
-            value={draft.remainingWorkingDays}
-            decimal={false}
-            inputMode="numeric"
-            placeholder={`Ex: ${Math.min(availableRemainingDays, 7)}`}
-            className={cn(remainingInvalid && "border-destructive focus-visible:ring-destructive")}
-            onChange={(v) => {
-              if (v == null) return setDraft((d) => ({ ...d, remainingWorkingDays: null }));
-              const n = Math.max(1, Math.min(availableRemainingDays, Math.floor(v)));
-              setDraft((d) => ({ ...d, remainingWorkingDays: n }));
-            }}
-          />
-          <div className="mt-1.5 min-h-[16px] text-[11px] leading-none">
-            {remainingInvalid ? (
-              <span className="font-medium text-destructive/90">
-                Apenas {availableRemainingDays} dias disponíveis no mês
-              </span>
-            ) : (
-              <span className="text-muted-foreground">Dias disponíveis: {availableRemainingDays}</span>
-            )}
-          </div>
-        </div>
+        </section>
 
         <Button
           onClick={save}
