@@ -963,10 +963,10 @@ function HubRow({
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99]"
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99] animate-fade-in"
     >
       <span className={cn(
-        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor] transition-colors",
         iconTone || "bg-primary/10 text-primary",
       )}>
         {icon}
@@ -975,7 +975,7 @@ function HubRow({
         <div className="text-[15px] font-semibold leading-tight">{title}</div>
         <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-1" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
     </button>
   );
 }
