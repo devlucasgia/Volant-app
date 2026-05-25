@@ -210,15 +210,16 @@ function SubscriptionCard({
   const trialEnd = isTrialing ? formatDate(subscription?.current_period_end) : null;
   const nextBilling = subscription && !isTrialing ? formatDate(subscription.current_period_end) : null;
 
+  const goldBadge = "rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300 shadow-[0_0_10px_-4px_rgba(245,158,11,0.55)]";
   const badge = isGrandfathered ? (
-    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-      Premium Vitalício
-    </span>
+    <span className={goldBadge}>Premium Vitalício</span>
   ) : isActive ? (
-    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-      {isTrialing ? "Teste ativo" : "Ativa"}
+    <span className={goldBadge}>
+      {isTrialing ? "Teste ativo" : "Premium"}
     </span>
-  ) : null;
+  ) : (
+    <span className={goldBadge}>Assinar Premium</span>
+  );
 
   // Premium dark-green upgrade button (no neon).
   const upgradeBtnClass = cn(
@@ -230,7 +231,8 @@ function SubscriptionCard({
   );
 
   return (
-    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/10 text-amber-400">
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/12 text-amber-300 shadow-[0_0_18px_-4px_rgba(245,158,11,0.55)]" accent="amber">
+
       {isGrandfathered ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
