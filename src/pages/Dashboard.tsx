@@ -231,10 +231,13 @@ export default function Dashboard() {
         : "bg-gradient-to-br from-[hsl(var(--goal-gross))]/12 via-card to-card shadow-[0_0_24px_-8px_hsl(var(--goal-gross)/0.55)]";
       const themeGlow = isLiquido ? "bg-success/10" : "bg-[hsl(var(--goal-gross))]/12";
       return (
-        <div
+        <button
+          type="button"
           key="goal"
+          onClick={() => navigate("/ajustes/planejamento/metas")}
+          aria-label="Editar meta"
           className={cn(
-            "relative overflow-hidden rounded-2xl border bg-card p-4 transition-all duration-500",
+            "relative w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
