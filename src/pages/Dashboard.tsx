@@ -237,7 +237,7 @@ export default function Dashboard() {
           onClick={() => navigate("/ajustes/planejamento/metas")}
           aria-label="Editar meta"
           className={cn(
-            "relative -mt-4 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
+            "relative z-10 -mt-8 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -346,14 +346,14 @@ export default function Dashboard() {
       return (
         // Negative top margin pulls this card closer to the Meta card above,
         // so the KM Inteligente reads as a subcard of the goal — not a loose card.
-        <div key="smartKm" className="-mt-10 flex flex-col items-center">
+        <div key="smartKm" className="-mt-14 flex flex-col items-center">
           {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
             className={cn(
-              "group relative mx-auto flex w-[96%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
               themeBorder
             )}
           >
