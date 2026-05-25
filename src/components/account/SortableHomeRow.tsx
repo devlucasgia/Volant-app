@@ -28,7 +28,7 @@ export function SortableHomeRow({ id, disabled, active, children }: Props) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        "flex items-center gap-1 rounded-xl border p-2 transition-colors duration-200 touch-none",
+        "flex items-center gap-1 rounded-xl border px-1.5 py-1 transition-colors duration-200",
         active ? "border-primary/40 bg-primary/[0.06]" : "border-border/60 bg-muted/20",
         isDragging && "shadow-lg ring-1 ring-primary/30",
       )}
@@ -36,7 +36,7 @@ export function SortableHomeRow({ id, disabled, active, children }: Props) {
       <button
         type="button"
         className={cn(
-          "flex h-8 w-6 shrink-0 cursor-grab items-center justify-center text-muted-foreground/60 active:cursor-grabbing",
+          "flex h-7 w-7 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground/60 touch-none active:cursor-grabbing hover:bg-muted/40",
           disabled && "invisible",
         )}
         aria-label="Arrastar para reordenar"

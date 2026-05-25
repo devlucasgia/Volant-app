@@ -3,18 +3,18 @@ import { useEffect, useState, useCallback } from "react";
 /**
  * Order of report cards on the Reports screen.
  * Each key maps to a visible block that can be toggled via reportWidgets.
+ *
+ * Grouped keys (daysGroup, kmGroup, tripsGroup) render the historic
+ * "pair" layout (total + average together) as a single compact card.
  */
 export type ReportCardKey =
   | "net"
   | "perHour"
   | "gross"
   | "expenses"
-  | "activeDays"
-  | "perDay"
-  | "totalKm"
-  | "perKm"
-  | "trips"
-  | "perTrip"
+  | "daysGroup"   // Dias ativos + Média / dia
+  | "kmGroup"     // KM total + Média / km
+  | "tripsGroup"  // Corridas + R$ / corrida
   | "chart";
 
 export const DEFAULT_REPORT_ORDER: ReportCardKey[] = [
@@ -22,16 +22,13 @@ export const DEFAULT_REPORT_ORDER: ReportCardKey[] = [
   "perHour",
   "gross",
   "expenses",
-  "activeDays",
-  "perDay",
-  "totalKm",
-  "perKm",
-  "trips",
-  "perTrip",
+  "daysGroup",
+  "kmGroup",
+  "tripsGroup",
   "chart",
 ];
 
-const STORAGE_KEY = "volant.reportOrder.v1";
+const STORAGE_KEY = "volant.reportOrder.v2";
 
 function read(): ReportCardKey[] {
   if (typeof window === "undefined") return DEFAULT_REPORT_ORDER;
