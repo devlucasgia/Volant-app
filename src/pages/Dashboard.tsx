@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
@@ -9,7 +8,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Brain } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Brain, Bell } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -23,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
+import volantSymbol from "@/assets/volant-symbol-header.png";
+import { NotificationsSheet } from "@/components/NotificationsSheet";
 
 
 export default function Dashboard() {
