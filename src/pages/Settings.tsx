@@ -843,11 +843,11 @@ export default function SettingsPage() {
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
-            <div className="mb-3 flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-400">
-                <MessageSquare className="h-4 w-4" />
-              </span>
-              <div>
+          <div className="mb-3 flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+              <MessageSquare className="h-4 w-4" />
+            </span>
+            <div>
                 <div className="text-[15px] font-semibold">Feedback</div>
                 <p className="text-[11px] text-muted-foreground">
                   Encontrou um problema ou tem uma ideia para melhorar o Volant?
