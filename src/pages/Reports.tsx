@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
+import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
 import { useAccess } from "@/context/AccessContext";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import {
