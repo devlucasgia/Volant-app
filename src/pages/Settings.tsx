@@ -1512,84 +1512,27 @@ function DerivedGoalsPreview({
 }
 
 /**
- * Single-row entry that opens a compact bottom-sheet with the two planning options:
- * Metas Inteligentes and KM Inteligente. Each option opens its own full screen.
+ * Single-row entry that navigates to the dedicated Planejamento Inteligente hub.
  */
 function PlanejamentoInteligenteRow() {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-
-  const go = (path: string) => {
-    setOpen(false);
-    setTimeout(() => navigate(path), 80);
-  };
-
   return (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
-      >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <Navigation className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="text-[15px] font-semibold leading-tight">Planejamento Inteligente</div>
-          <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-            Meta, dias de trabalho e R$/km ideal.
-          </p>
-        </div>
-        <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-      </button>
-
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent className="border-border bg-card pb-[max(env(safe-area-inset-bottom),1rem)]">
-          <DrawerHeader className="pb-2 pt-3 text-left">
-            <DrawerTitle className="text-[16px] font-bold tracking-tight">
-              Planejamento Inteligente
-            </DrawerTitle>
-            <p className="text-[12px] leading-snug text-muted-foreground">
-              Escolha o que deseja ajustar.
-            </p>
-          </DrawerHeader>
-          <div className="space-y-2 px-4 pb-2">
-            <button
-              type="button"
-              onClick={() => go("/ajustes/planejamento/metas")}
-              className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/60 px-3.5 py-3 text-left transition-all duration-200 hover:bg-muted/40 active:scale-[0.985]"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <Target className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-semibold leading-tight">Metas Inteligentes</div>
-                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                  Meta mensal e dias de trabalho.
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => go("/ajustes/planejamento/km")}
-              className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/60 px-3.5 py-3 text-left transition-all duration-200 hover:bg-muted/40 active:scale-[0.985]"
-            >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/15 text-teal-300">
-                <Gauge className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-semibold leading-tight">KM Inteligente</div>
-                <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                  R$/km mínimo para suas corridas.
-                </p>
-              </div>
-              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-            </button>
-          </div>
-        </DrawerContent>
-      </Drawer>
-    </>
+    <button
+      type="button"
+      onClick={() => navigate("/ajustes/planejamento")}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Brain className="h-4 w-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold leading-tight">Planejamento Inteligente</div>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+          Meta, dias de trabalho e R$/km ideal.
+        </p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </button>
   );
 }
+
