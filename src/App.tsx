@@ -56,6 +56,7 @@ const App = () => (
                     <Route path="/historico" element={<History />} />
                     <Route path="/relatorios" element={<Reports />} />
                     <Route path="/ajustes" element={<SettingsPage />} />
+                    <Route path="/ajustes/planejamento" element={<PlanejamentoInteligente />} />
                   </Route>
                   <Route path="*" element={<NotFound />} />
                 </Routes>
