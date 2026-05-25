@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CarFormDialog } from "@/components/CarFormDialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { VehicleCostsCard } from "@/components/vehicle/VehicleCostsCard";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { PlatformLogo } from "@/components/PlatformLogo";
