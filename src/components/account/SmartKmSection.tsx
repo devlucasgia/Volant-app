@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Brain, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw, Wallet, ChevronRight, Loader2 } from "lucide-react";
+import { Gauge, Lock, Car as CarIcon, Crown, AlertCircle, CheckCircle2, Info, RotateCcw, Wallet, ChevronRight, Loader2 } from "lucide-react";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
