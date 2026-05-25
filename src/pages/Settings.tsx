@@ -25,7 +25,7 @@ import {
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
-  Brain, Warehouse,
+  Brain, Warehouse, Paintbrush,
 } from "lucide-react";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
@@ -88,9 +88,10 @@ function SectionGroup({ title, children }: { title: string; children: React.Reac
 
 /** Polished accordion card matching the app's premium identity. */
 function SettingsCard({
-  value, icon, title, badge, children,
+  value, icon, title, badge, children, iconTone,
 }: {
-  value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode; children: React.ReactNode;
+  value: string; icon: React.ReactNode; title: string; badge?: React.ReactNode;
+  children: React.ReactNode; iconTone?: string;
 }) {
   return (
     <AccordionItem
@@ -99,7 +100,10 @@ function SettingsCard({
     >
       <AccordionTrigger className="py-3.5 hover:no-underline">
         <div className="flex flex-1 items-center gap-2.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <span className={cn(
+            "flex h-7 w-7 items-center justify-center rounded-lg",
+            iconTone || "bg-primary/10 text-primary",
+          )}>
             {icon}
           </span>
           <span className="text-[15px] font-semibold">{title}</span>
@@ -217,7 +221,7 @@ function SubscriptionCard({
   );
 
   return (
-    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge}>
+    <SettingsCard value="subscription" icon={<Crown className="h-4 w-4" />} title="Assinatura" badge={badge} iconTone="bg-amber-400/10 text-amber-400">
       {isGrandfathered ? (
         <div className="space-y-2">
           <p className="text-sm font-medium text-foreground">Premium Vitalício</p>
@@ -653,6 +657,13 @@ export default function SettingsPage() {
         {/* ============== CONTA ============== */}
         <SectionGroup title="Conta">
           <Accordion type="multiple" className="space-y-2.5">
+            <SubscriptionCard
+              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenUpgrade={() => setUpgradeOpen(true)}
+              onManage={openPortal}
+              managing={portalLoading}
+            />
+
             <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
@@ -779,13 +790,6 @@ export default function SettingsPage() {
               })()}
             </SettingsCard>
 
-            <SubscriptionCard
-              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
-              onOpenUpgrade={() => setUpgradeOpen(true)}
-              onManage={openPortal}
-              managing={portalLoading}
-            />
-
             <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados">
               <Button variant="outline" className="w-full" onClick={signOut}>
                 <LogOut className="mr-2 h-4 w-4" /> Sair da conta
@@ -810,8 +814,8 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
-        {/* ============== PERSONALIZAÇÃO ============== */}
-        <SectionGroup title="Personalização">
+        {/* ============== EXPERIÊNCIA ============== */}
+        <SectionGroup title="Experiência">
           <PersonalizacaoRow />
         </SectionGroup>
 
@@ -827,12 +831,11 @@ export default function SettingsPage() {
           <PlanejamentoInteligenteRow />
         </SectionGroup>
 
-
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)]">
             <div className="mb-3 flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-400">
                 <MessageSquare className="h-4 w-4" />
               </span>
               <div>
@@ -942,105 +945,75 @@ function DerivedGoalsPreview({
   );
 }
 
-/**
- * Single-row entry that navigates to the dedicated Planejamento Inteligente hub.
- */
+/** Reusable polished navigation row used in the Settings hub. */
+function HubRow({
+  to, icon, title, subtitle, iconTone,
+}: { to: string; icon: React.ReactNode; title: string; subtitle: string; iconTone?: string }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(to)}
+      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_12px_30px_-18px_rgba(0,0,0,0.55)] active:scale-[0.99]"
+    >
+      <span className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors",
+        iconTone || "bg-primary/10 text-primary",
+      )}>
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold leading-tight">{title}</div>
+        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">{subtitle}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 group-hover:translate-x-0.5 group-active:translate-x-1" />
+    </button>
+  );
+}
+
 function PlanejamentoInteligenteRow() {
-  const navigate = useNavigate();
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/ajustes/planejamento")}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
-    >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Brain className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-semibold leading-tight">Planejamento Inteligente</div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Meta, dias de trabalho e R$/km ideal.
-        </p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </button>
+    <HubRow
+      to="/ajustes/planejamento"
+      icon={<Brain className="h-4 w-4" />}
+      title="Planejamento Inteligente"
+      subtitle="Meta, dias de trabalho e R$/km ideal."
+    />
   );
 }
 
-/**
- * Single-row entry that navigates to the dedicated Central de Veículos hub.
- */
 function CentralVeiculosRow() {
-  const navigate = useNavigate();
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/ajustes/veiculos")}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
-    >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Warehouse className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-semibold leading-tight">Central de Veículos</div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Organize seus carros, custos e manutenções.
-        </p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </button>
+    <HubRow
+      to="/ajustes/veiculos"
+      icon={<Warehouse className="h-4 w-4" />}
+      title="Central de Veículos"
+      subtitle="Organize seus carros, custos e manutenções."
+      iconTone="bg-sky-400/10 text-sky-400"
+    />
   );
 }
 
-/**
- * Single-row entry that navigates to the dedicated Personalização hub.
- */
 function PersonalizacaoRow() {
-  const navigate = useNavigate();
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/ajustes/personalizacao")}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
-    >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Sparkles className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-semibold leading-tight">Personalização</div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Aparência, saudação e organização dos cards.
-        </p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </button>
+    <HubRow
+      to="/ajustes/personalizacao"
+      icon={<Paintbrush className="h-4 w-4" />}
+      title="Personalização"
+      subtitle="Aparência, saudação e organização dos cards."
+      iconTone="bg-teal-400/10 text-teal-400"
+    />
   );
 }
 
-
-
-
-/**
- * Single-row entry that navigates to the Categorias hub (Ganhos + Gastos).
- */
 function CategoriasRow() {
-  const navigate = useNavigate();
   return (
-    <button
-      type="button"
-      onClick={() => navigate("/ajustes/categorias")}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-18px_rgba(0,0,0,0.45)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 active:scale-[0.99]"
-    >
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-        <Tags className="h-4 w-4" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-semibold leading-tight">Categorias</div>
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          Organize seus ganhos e gastos no app.
-        </p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-    </button>
+    <HubRow
+      to="/ajustes/categorias"
+      icon={<Tags className="h-4 w-4" />}
+      title="Categorias"
+      subtitle="Gerencie suas fontes de ganho e categorias de gasto."
+    />
   );
 }
+
