@@ -346,19 +346,19 @@ export default function Dashboard() {
       return (
         // Negative top margin pulls this card closer to the Meta card above,
         // so the KM Inteligente reads as a subcard of the goal — not a loose card.
-        <div key="smartKm" className="-mt-3 flex flex-col items-center">
+        <div key="smartKm" className="-mt-5 flex flex-col items-center">
           {/* Ultra-subtle vertical connector — premium, almost invisible */}
-          <span aria-hidden className={cn("h-2 w-px", connectorClass)} />
+          <span aria-hidden className={cn("h-1.5 w-px", connectorClass)} />
           <button
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
             className={cn(
-              "group relative mx-auto flex w-[82%] items-center rounded-2xl border bg-card px-3 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[82%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
               themeBorder
             )}
           >
-            <span className={cn("flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
-              <Gauge className="h-[18px] w-[18px]" />
+            <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
+              <Gauge className="h-5 w-5" />
             </span>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
@@ -369,7 +369,8 @@ export default function Dashboard() {
                 <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
               </div>
             </div>
-
+            {/* Invisible spacer mirrors the icon width so the centered text reads visually symmetric */}
+            <span aria-hidden className="h-10 w-10 shrink-0" />
           </button>
         </div>
       );
@@ -593,7 +594,7 @@ export default function Dashboard() {
           // Secondary metrics swap when "Bruto" is the hero.
           const secondary: { label: string; value: number; dot: string }[] = showGross
             ? [
-                { label: "Lucro líquido", value: s.net, dot: "bg-success/70" },
+                { label: "Líquido", value: s.net, dot: "bg-success/70" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ]
             : [
