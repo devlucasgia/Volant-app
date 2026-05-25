@@ -525,7 +525,7 @@ export default function Dashboard() {
 
       <NotificationsSheet open={notifOpen} onOpenChange={setNotifOpen} />
 
-      <div className={cn("space-y-5 px-4", topPadding)}>
+      <div className={cn("px-4", topPadding)}>
 
         {/* Period switcher — Hoje | Semana | Mês | Calendário */}
         <PeriodBar
@@ -580,6 +580,7 @@ export default function Dashboard() {
         </Drawer>
 
         {/* Hero highlight — user can switch between Lucro líquido (default) and Bruto */}
+        <div className="mt-5">
         {(() => {
           const showGross = heroMetric === "gross";
           const heroTitle = showGross ? "Bruto" : "Lucro líquido";
@@ -662,6 +663,7 @@ export default function Dashboard() {
             </div>
           );
         })()}
+        </div>
 
         {/* Maintenance alert (conditional, fixed position, not in personalization) */}
         {showMaintAlert && (
@@ -669,7 +671,7 @@ export default function Dashboard() {
             type="button"
             onClick={() => openDrawer({ tab: "expense", category: "manutencao" })}
             className={cn(
-              "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
+              "mt-4 flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
               kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
             )}
           >
@@ -691,7 +693,24 @@ export default function Dashboard() {
         {/* Reorderable / hideable cards (excluding greeting which renders above) */}
         {homeOrder
           .filter((k) => k !== "greeting")
-          .map((k) => blocks[k])
+          .map((k, index, arr) => {
+            const block = blocks[k];
+            if (!block) return null;
+
+            const prev = index > 0 ? arr[index - 1] : null;
+            const marginClass =
+              prev === "goal" && k === "smartKm"
+                ? "mt-2"
+                : prev === "smartKm"
+                  ? "mt-3"
+                  : "mt-5";
+
+            return (
+              <div key={k} className={marginClass}>
+                {block}
+              </div>
+            );
+          })
           .filter(Boolean)}
       </div>
     </>
