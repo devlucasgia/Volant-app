@@ -17,6 +17,8 @@ import Reports from "./pages/Reports";
 
 import SettingsPage from "./pages/Settings";
 import PlanejamentoInteligente from "./pages/PlanejamentoInteligente";
+import MetasInteligentes from "./pages/MetasInteligentes";
+import KmInteligente from "./pages/KmInteligente";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import NotFound from "./pages/NotFound.tsx";
 
