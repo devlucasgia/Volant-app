@@ -673,7 +673,7 @@ export default function SettingsPage() {
               managing={portalLoading}
             />
 
-            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
+            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil" iconTone="bg-amber-300/10 text-amber-200/90">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
                   <Avatar className="h-14 w-14 ring-2 ring-border">
