@@ -5,6 +5,7 @@ import {
   ArrowRight, ArrowLeft, X, Plus, Play, StopCircle, Target,
   Clock, BarChart3, Sliders, GripVertical, CheckCircle2, Sparkles,
   TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
+  Brain, Route, Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
