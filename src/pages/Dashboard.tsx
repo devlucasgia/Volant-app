@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/ui-bits";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
@@ -8,7 +9,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Brain } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
+  const navigate = useNavigate();
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
@@ -323,14 +325,30 @@ export default function Dashboard() {
             <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
           </div>
         </div>
-        {smartKmValue !== null && (
-          <div className="mt-2 flex items-center justify-center gap-1.5 rounded-xl border border-primary/25 bg-primary/[0.06] px-3 py-1.5 text-[11px]">
-            <Gauge className="h-3 w-3 text-primary" />
-            <span className="text-muted-foreground">R$/km inteligente:</span>
-            <span className="font-bold tabular-nums text-foreground">{brl(smartKmValue)}</span>
-          </div>
-        )}
       </section>
+    ) : null,
+
+    smartKm: widgets.smartKm && smartKmValue !== null ? (
+      <button
+        key="smartKm"
+        type="button"
+        onClick={() => navigate("/ajustes/planejamento/km")}
+        className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3.5 text-left shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]"
+      >
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <Brain className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            R$/km inteligente
+          </div>
+          <div className="mt-0.5 text-[15px] font-bold tabular-nums text-foreground leading-tight">
+            {brl(smartKmValue)}
+            <span className="ml-1.5 text-[11px] font-normal text-muted-foreground">/ km</span>
+          </div>
+        </div>
+        <span className="text-[10px] font-medium text-muted-foreground/70">Ajustar</span>
+      </button>
     ) : null,
 
     byApp: widgets.byApp ? (

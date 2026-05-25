@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Gauge, ChevronRight, Route } from "lucide-react";
+import { ArrowLeft, Target, Brain, ChevronRight, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** Sticky page header with a back button — premium Volant identity. */
@@ -83,6 +84,9 @@ function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardPro
 
 export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -100,7 +104,7 @@ export default function PlanejamentoInteligente() {
           />
           <HubCard
             to="/ajustes/planejamento/km"
-            icon={<Gauge className="h-5 w-5" />}
+            icon={<Brain className="h-5 w-5" />}
             title="KM Inteligente"
             description="Descubra o R$/km mínimo aceitável para suas corridas."
             tone="teal"

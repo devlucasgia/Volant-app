@@ -101,7 +101,7 @@ export default function MetasInteligentes() {
   return (
     <div className="min-h-screen">
       <ScreenHeader
-        onBack={() => navigate("/ajustes")}
+        onBack={() => navigate("/ajustes/planejamento")}
         title="Metas Inteligentes"
         subtitle="Planeje sua meta e seus dias de trabalho."
       />
@@ -313,25 +313,25 @@ function DerivedGoalsPreview({
   );
   const goalReached = monthlyGoal > 0 && g.remaining <= 0;
   return (
-    <div className="grid grid-cols-2 gap-2 pt-1">
-      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Meta semanal estimada
-        </div>
-        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
-          {g.weekly > 0 ? `R$ ${g.weekly.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
-        </div>
-      </div>
-      <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="grid grid-cols-2 gap-2.5 pt-1">
+      <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent p-3.5 shadow-[0_0_0_1px_hsl(var(--primary)/0.08),0_8px_22px_-16px_hsl(var(--primary)/0.45)]">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/90">
           {remainingWorkingDays ? "Meta diária restante" : "Meta diária sugerida"}
         </div>
-        <div className="mt-1 text-base font-bold tabular-nums text-foreground">
+        <div className="mt-1.5 text-2xl font-bold tabular-nums text-foreground leading-none">
           {goalReached
-            ? "Meta atingida"
+            ? <span className="text-base text-success">Meta atingida</span>
             : g.daily > 0
               ? `R$ ${g.daily.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`
               : "—"}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-border/60 bg-card/70 p-3.5">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+          Meta semanal estimada
+        </div>
+        <div className="mt-1.5 text-2xl font-bold tabular-nums text-foreground/90 leading-none">
+          {g.weekly > 0 ? `R$ ${g.weekly.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}` : "—"}
         </div>
       </div>
     </div>
