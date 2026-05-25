@@ -112,6 +112,7 @@ export interface DashboardWidgets {
   byExpense: boolean;
   greeting: boolean;
   journey: boolean;
+  smartKm: boolean;
 }
 
 export interface Settings {
