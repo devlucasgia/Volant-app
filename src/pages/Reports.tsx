@@ -419,66 +419,39 @@ export default function Reports() {
             expenses: () => (
               <SideStatCard key="expenses" label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
             ),
-            activeDays: () => (
+            daysGroup: () => (
               <PairCard
-                key="activeDays"
-                showTotal showAvg={false}
+                key="daysGroup"
+                showTotal showAvg
                 totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
                 totalLabel="Dias ativos"
                 totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
-                avgIcon={<Clock className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
-                accent="success"
-              />
-            ),
-            perDay: () => (
-              <PairCard
-                key="perDay"
-                showTotal={false} showAvg
-                totalIcon={<CalendarDays className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Clock className="h-3.5 w-3.5" />}
                 avgLabel="Média / dia"
                 avgValue={brl(avgPerDay)}
                 accent="success"
               />
             ),
-            totalKm: () => (
+            kmGroup: () => (
               <PairCard
-                key="totalKm"
-                showTotal showAvg={false}
+                key="kmGroup"
+                showTotal showAvg
                 totalIcon={<Route className="h-3.5 w-3.5" />}
                 totalLabel="KM total"
                 totalValue={`${num(s.totalKm, 0)} km`}
-                avgIcon={<Route className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
-                accent="info"
-              />
-            ),
-            perKm: () => (
-              <PairCard
-                key="perKm"
-                showTotal={false} showAvg
-                totalIcon={<Route className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Route className="h-3.5 w-3.5" />}
                 avgLabel="Média / km"
                 avgValue={brl(s.perKm)}
                 accent="info"
               />
             ),
-            trips: () => (
+            tripsGroup: () => (
               <PairCard
-                key="trips"
-                showTotal showAvg={false}
+                key="tripsGroup"
+                showTotal showAvg
                 totalIcon={<Flag className="h-3.5 w-3.5" />}
                 totalLabel="Corridas"
                 totalValue={String(s.totalRides)}
-                avgIcon={<Flag className="h-3.5 w-3.5" />} avgLabel="" avgValue=""
-                accent="purple"
-              />
-            ),
-            perTrip: () => (
-              <PairCard
-                key="perTrip"
-                showTotal={false} showAvg
-                totalIcon={<Flag className="h-3.5 w-3.5" />} totalLabel="" totalValue=""
                 avgIcon={<Flag className="h-3.5 w-3.5" />}
                 avgLabel="R$ / corrida"
                 avgValue={brl(s.perRide)}
