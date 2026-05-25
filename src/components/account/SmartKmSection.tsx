@@ -131,7 +131,7 @@ export function SmartKmSection() {
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-3 flex items-start gap-2.5">
           <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Brain className="h-4 w-4" />
+            <Gauge className="h-4 w-4" />
           </span>
           <div className="min-w-0">
             <div className="text-[14px] font-semibold leading-tight">KM planejado no mês</div>
