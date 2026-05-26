@@ -25,7 +25,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { CATEGORY_LABEL, type AppNotification, type NotificationIcon } from "@/lib/notifications";
-import { VolantLogo } from "@/components/VolantLogo";
+import { VolantNotificationIcon } from "@/components/VolantNotificationIcon";
 
 /**
  * Central de Notificações.
