@@ -301,17 +301,8 @@ function Hero({ mode }: { mode: HeroMode }) {
             highlighted
             compact
           />
-          <FloatingCard
-            className="hero-anim hero-anim-card-4 absolute -left-2 bottom-12 md:hidden"
-            label="Meta"
-            value="78%"
-            icon={<Target className="h-3 w-3" />}
-            compact
-          />
         </div>
       </div>
-
-      <HeroStyles />
     </section>
   );
 }
