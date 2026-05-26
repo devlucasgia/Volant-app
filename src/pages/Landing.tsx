@@ -97,14 +97,85 @@ function BackgroundGlow() {
 
 /* --------------------------------- hero ----------------------------------- */
 
+type HeroMode = "liquido" | "bruto";
+
+function useHeroMode(intervalMs = 7000): HeroMode {
+  const [mode, setMode] = useState<HeroMode>("liquido");
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setMode((m) => (m === "liquido" ? "bruto" : "liquido"));
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [intervalMs]);
+  return mode;
+}
+
+/** Countup animado — interpola entre valores quando `value` muda. */
+function AnimatedNumber({
+  value,
+  format = (n) => n.toFixed(0),
+  durationMs = 900,
+  className,
+}: {
+  value: number;
+  format?: (n: number) => string;
+  durationMs?: number;
+  className?: string;
+}) {
+  const [display, setDisplay] = useState(value);
+  const fromRef = useRef(value);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setDisplay(value);
+      fromRef.current = value;
+      return;
+    }
+    const from = fromRef.current;
+    const to = value;
+    if (from === to) return;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      const current = from + (to - from) * eased;
+      setDisplay(current);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        fromRef.current = to;
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [value, durationMs]);
+
+  return <span className={cn("tabular-nums", className)}>{format(display)}</span>;
+}
+
+const fmtBRL = (n: number) =>
+  `R$ ${n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtBRLInt = (n: number) =>
+  `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
+
 function Hero() {
+  const mode = useHeroMode();
+
   return (
     <section
       id="top"
       className="hero-section relative overflow-hidden px-4 pt-8 pb-20 md:pt-16 md:pb-28"
+      data-mode={mode}
     >
-      {/* Atmosfera: glow verde + linhas de rota animadas (decorativas) */}
-      <HeroAtmosphere />
+      {/* Atmosfera: glow verde/azul + linhas de rota animadas (decorativas) */}
+      <HeroAtmosphere mode={mode} />
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
         {/* ------------------ Coluna de texto ------------------ */}
@@ -161,32 +232,42 @@ function Hero() {
 
         {/* ------------------ Coluna do mockup ------------------ */}
         <div className="hero-anim hero-anim-mockup relative mx-auto w-full max-w-[290px] md:max-w-none">
-          {/* halo atrás do celular */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/25 blur-[80px] hero-breath"
-          />
+          {/* halo dinâmico (verde + azul cross-fade) */}
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2">
+            <div
+              className="absolute inset-0 rounded-full blur-[80px] transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hero-breath"
+              style={{
+                backgroundColor: "hsl(var(--primary) / 0.30)",
+                opacity: mode === "liquido" ? 1 : 0,
+              }}
+            />
+            <div
+              className="absolute inset-0 rounded-full blur-[80px] transition-opacity duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hero-breath"
+              style={{
+                backgroundColor: "hsl(var(--goal-gross) / 0.32)",
+                opacity: mode === "bruto" ? 1 : 0,
+              }}
+            />
+          </div>
 
           <div className="hero-float">
             <PhoneFrame>
-              <HomeMockup />
+              <HomeMockup mode={mode} />
             </PhoneFrame>
           </div>
 
-          {/* Cards flutuantes — visíveis no desktop, 2 menores no mobile */}
+          {/* Cards flutuantes — neutros (verde), não trocam com o modo */}
           <FloatingCard
             className="hero-anim hero-anim-card-1 absolute -left-3 top-10 hidden md:block"
             label="Meta do mês"
             value="78%"
             icon={<Target className="h-3.5 w-3.5" />}
-            accent="primary"
           />
           <FloatingCard
             className="hero-anim hero-anim-card-2 absolute -right-4 top-28 hidden md:block hero-glow-soft"
             label="R$/KM Inteligente"
-            value="R$ 2,34"
+            value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
-            accent="primary"
             highlighted
           />
           <FloatingCard
@@ -194,23 +275,20 @@ function Hero() {
             label="R$/hora"
             value="R$ 75,00"
             icon={<Clock className="h-3.5 w-3.5" />}
-            accent="primary"
           />
           <FloatingCard
             className="hero-anim hero-anim-card-4 absolute -right-2 bottom-8 hidden md:block"
             label="Lucro líquido hoje"
             value="R$ 464,00"
             icon={<TrendingUp className="h-3.5 w-3.5" />}
-            accent="primary"
           />
 
-          {/* Mobile: 2 cards compactos pra dar prova rápida sem cobrir nada */}
+          {/* Mobile: 2 cards compactos */}
           <FloatingCard
             className="hero-anim hero-anim-card-2 absolute -right-2 top-16 md:hidden hero-glow-soft"
             label="R$/KM"
-            value="R$ 2,34"
+            value="R$ 2,42"
             icon={<Gauge className="h-3 w-3" />}
-            accent="primary"
             highlighted
             compact
           />
@@ -219,7 +297,6 @@ function Hero() {
             label="Meta"
             value="78%"
             icon={<Target className="h-3 w-3" />}
-            accent="primary"
             compact
           />
         </div>
@@ -231,48 +308,40 @@ function Hero() {
 }
 
 /* ----- Hero: atmosfera (glow + linhas de rota) ----- */
-function HeroAtmosphere() {
+function HeroAtmosphere({ mode }: { mode: HeroMode }) {
+  const lineColor = mode === "liquido" ? "hsl(var(--primary))" : "hsl(var(--goal-gross))";
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      {/* glow superior pulsante */}
-      <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/20 blur-[100px] hero-breath" />
-      {/* glow lateral */}
+      {/* glow superior pulsante — cross-fade entre verde e azul */}
+      <div className="absolute -top-40 left-1/2 h-[520px] w-[520px] -translate-x-1/2">
+        <div
+          className="absolute inset-0 rounded-full blur-[100px] transition-opacity duration-700 hero-breath"
+          style={{ backgroundColor: "hsl(var(--primary) / 0.22)", opacity: mode === "liquido" ? 1 : 0 }}
+        />
+        <div
+          className="absolute inset-0 rounded-full blur-[100px] transition-opacity duration-700 hero-breath"
+          style={{ backgroundColor: "hsl(var(--goal-gross) / 0.22)", opacity: mode === "bruto" ? 1 : 0 }}
+        />
+      </div>
+      {/* glow lateral neutro */}
       <div className="absolute right-[-10%] top-[30%] h-[360px] w-[360px] rounded-full bg-primary/10 blur-[90px]" />
-      {/* linhas de rota em SVG */}
+      {/* linhas de rota em SVG (cor acompanha o modo) */}
       <svg
-        className="absolute inset-0 h-full w-full opacity-[0.18]"
+        className="absolute inset-0 h-full w-full opacity-[0.18] transition-[stroke] duration-700"
         viewBox="0 0 1200 800"
         preserveAspectRatio="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
           <linearGradient id="hero-line" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0" />
-            <stop offset="50%" stopColor="hsl(var(--primary))" stopOpacity="1" />
-            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0" />
+            <stop offset="0%" stopColor={lineColor} stopOpacity="0" />
+            <stop offset="50%" stopColor={lineColor} stopOpacity="1" />
+            <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <path
-          d="M -50 620 Q 300 540 600 600 T 1260 520"
-          stroke="url(#hero-line)"
-          strokeWidth="1.2"
-          fill="none"
-          className="hero-route hero-route-1"
-        />
-        <path
-          d="M -50 680 Q 400 720 750 660 T 1260 700"
-          stroke="url(#hero-line)"
-          strokeWidth="1"
-          fill="none"
-          className="hero-route hero-route-2"
-        />
-        <path
-          d="M -50 200 Q 300 260 700 220 T 1260 280"
-          stroke="url(#hero-line)"
-          strokeWidth="0.8"
-          fill="none"
-          className="hero-route hero-route-3"
-        />
+        <path d="M -50 620 Q 300 540 600 600 T 1260 520" stroke="url(#hero-line)" strokeWidth="1.2" fill="none" className="hero-route hero-route-1" />
+        <path d="M -50 680 Q 400 720 750 660 T 1260 700" stroke="url(#hero-line)" strokeWidth="1" fill="none" className="hero-route hero-route-2" />
+        <path d="M -50 200 Q 300 260 700 220 T 1260 280" stroke="url(#hero-line)" strokeWidth="0.8" fill="none" className="hero-route hero-route-3" />
       </svg>
       {/* grade discreta */}
       <div
@@ -300,7 +369,6 @@ function FloatingCard({
   label: string;
   value: string;
   icon: React.ReactNode;
-  accent?: "primary";
   highlighted?: boolean;
   compact?: boolean;
 }) {
@@ -308,15 +376,13 @@ function FloatingCard({
     <div
       className={cn(
         "rounded-2xl border bg-card/85 backdrop-blur-md shadow-[0_18px_40px_-18px_hsl(0_0%_0%/0.7)]",
-        highlighted
-          ? "border-primary/50 ring-1 ring-primary/30"
-          : "border-border/60",
+        highlighted ? "border-primary/50 ring-1 ring-primary/30" : "border-border/60",
         compact ? "px-2.5 py-1.5" : "px-3 py-2",
         className,
       )}
     >
       <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className={cn("text-primary", compact ? "" : "")}>{icon}</span>
+        <span className="text-primary">{icon}</span>
         {label}
       </div>
       <div
@@ -355,7 +421,7 @@ function HeroStyles() {
       @keyframes heroFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
       .hero-breath { animation: heroBreath 5s ease-in-out infinite; }
-      @keyframes heroBreath { 0%,100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.06); } }
+      @keyframes heroBreath { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
       .hero-glow-soft { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35), 0 0 28px -6px hsl(var(--primary) / 0.45); animation: heroGlowSoft 3.6s ease-in-out infinite; }
       @keyframes heroGlowSoft {
@@ -368,13 +434,94 @@ function HeroStyles() {
       .hero-route-3 { animation-duration: 14s; }
       @keyframes heroRoute { to { stroke-dashoffset: -220; } }
 
+      /* ---------- Hero mode (Líquido / Bruto) ---------- */
+      .mode-toggle {
+        position: relative;
+        display: inline-flex;
+        padding: 3px;
+        border-radius: 9999px;
+        background: hsl(var(--muted) / 0.5);
+        border: 1px solid hsl(var(--border) / 0.6);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .mode-toggle__pill {
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        width: calc(50% - 3px);
+        border-radius: 9999px;
+        transition: transform 700ms cubic-bezier(0.22,1,0.36,1), background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms;
+      }
+      [data-mode="liquido"] .mode-toggle__pill {
+        transform: translateX(0);
+        background: hsl(var(--primary));
+        box-shadow: 0 4px 14px -4px hsl(var(--primary) / 0.6);
+      }
+      [data-mode="bruto"] .mode-toggle__pill {
+        transform: translateX(100%);
+        background: hsl(var(--goal-gross));
+        box-shadow: 0 4px 14px -4px hsl(var(--goal-gross) / 0.6);
+      }
+      .mode-toggle__option {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        padding: 4px 10px;
+        text-align: center;
+        color: hsl(var(--muted-foreground));
+        transition: color 500ms;
+      }
+      [data-mode="liquido"] .mode-toggle__option[data-opt="liquido"],
+      [data-mode="bruto"] .mode-toggle__option[data-opt="bruto"] {
+        color: hsl(var(--primary-foreground));
+      }
+
+      /* Cards do mockup que reagem ao modo */
+      .mode-card {
+        transition: border-color 700ms cubic-bezier(0.22,1,0.36,1), background 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms;
+      }
+      [data-mode="liquido"] .mode-card--primary {
+        border-color: hsl(var(--primary) / 0.4);
+        background: radial-gradient(120% 120% at 0% 0%, hsl(var(--primary) / 0.18), transparent 55%);
+        box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.15);
+      }
+      [data-mode="bruto"] .mode-card--primary {
+        border-color: hsl(var(--goal-gross) / 0.45);
+        background: radial-gradient(120% 120% at 0% 0%, hsl(var(--goal-gross) / 0.20), transparent 55%);
+        box-shadow: inset 0 0 0 1px hsl(var(--goal-gross) / 0.18);
+      }
+      .mode-text { transition: color 700ms cubic-bezier(0.22,1,0.36,1); }
+      [data-mode="liquido"] .mode-text { color: hsl(var(--primary)); }
+      [data-mode="bruto"] .mode-text { color: hsl(var(--goal-gross)); }
+
+      .mode-bar { transition: background-color 700ms, width 1100ms cubic-bezier(0.22,1,0.36,1); }
+      [data-mode="liquido"] .mode-bar { background-color: hsl(var(--primary)); }
+      [data-mode="bruto"] .mode-bar { background-color: hsl(var(--goal-gross)); }
+
+      .mode-icon-bg { transition: background-color 700ms, border-color 700ms, color 700ms; }
+      [data-mode="liquido"] .mode-icon-bg {
+        background-color: hsl(var(--primary) / 0.10);
+        border-color: hsl(var(--primary) / 0.30);
+        color: hsl(var(--primary));
+      }
+      [data-mode="bruto"] .mode-icon-bg {
+        background-color: hsl(var(--goal-gross) / 0.12);
+        border-color: hsl(var(--goal-gross) / 0.32);
+        color: hsl(var(--goal-gross));
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .hero-anim, .hero-anim-mockup { opacity: 1 !important; transform: none !important; animation: none !important; }
         .hero-float, .hero-breath, .hero-glow-soft, .hero-route { animation: none !important; }
+        .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg { transition: none !important; }
       }
     `}</style>
   );
 }
+
 
 /* ------------------------------ pain strip -------------------------------- */
 
