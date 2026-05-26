@@ -11,6 +11,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { RequirePremium } from "@/components/RequirePremium";
 import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
 import Reports from "./pages/Reports";
@@ -46,6 +47,7 @@ const App = () => (
               <Sonner />
               <BrowserRouter>
                 <Routes>
+                  <Route path="/" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />
                   {/* Checkout return must bypass the paywall so the webhook can confirm */}
                   <Route
@@ -65,7 +67,7 @@ const App = () => (
                       </RequireAuth>
                     }
                   >
-                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/app" element={<Dashboard />} />
                     <Route path="/historico" element={<History />} />
                     <Route path="/relatorios" element={<Reports />} />
                     <Route path="/ajustes" element={<SettingsPage />} />

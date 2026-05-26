@@ -54,7 +54,7 @@ export default function CheckoutReturn() {
             : "Estamos sincronizando seu pagamento. Isso leva poucos segundos."}
         </p>
         <Button asChild className="mt-6 gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]">
-          <Link to="/">Continuar para o app</Link>
+          <Link to="/app">Continuar para o app</Link>
         </Button>
       </div>
     </div>
