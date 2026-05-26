@@ -198,11 +198,11 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           <h1 className="hero-anim hero-anim-2 mt-5 text-balance text-[2.05rem] font-extrabold leading-[1.08] tracking-tight md:text-[3.4rem]">
             Saiba quanto você{" "}
-            <span className="relative inline-block text-primary">
+            <span className="relative inline-block accent-text">
               realmente lucra
               <span
                 aria-hidden
-                className="absolute inset-x-0 -bottom-1 h-[3px] rounded-full bg-gradient-to-r from-primary/0 via-primary/80 to-primary/0"
+                className="absolute inset-x-0 -bottom-1 h-[3px] rounded-full accent-underline"
               />
             </span>{" "}
             como motorista de aplicativo.
@@ -216,7 +216,7 @@ function Hero({ mode }: { mode: HeroMode }) {
           <div className="hero-anim hero-anim-4 mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
             <Link
               to="/auth"
-              className="group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-8px_hsl(var(--primary)/0.55)] transition hover:brightness-110 sm:w-auto"
+              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
             >
               <span
                 aria-hidden
@@ -234,9 +234,10 @@ function Hero({ mode }: { mode: HeroMode }) {
           </div>
 
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 text-primary" /> 7 dias grátis. Cancele quando quiser.
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Cancele quando quiser.
           </p>
         </div>
+
 
         {/* ------------------ Coluna do mockup ------------------ */}
         <div className="hero-anim hero-anim-mockup relative mx-auto w-full max-w-[290px] md:max-w-none">
