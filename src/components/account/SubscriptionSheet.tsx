@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Loader2, ShieldCheck, ArrowUpRight, Sparkles } from "lucide-react";
+import { Check, Crown, Loader2, ShieldCheck, ArrowUpRight, Sparkles, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -33,7 +33,7 @@ const PRICE_IDS: Record<PlanKey, string> = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  trialing: "Teste de 7 dias ativo",
+  trialing: "Assinatura ativa",
   active: "Assinatura ativa",
   past_due: "Pagamento pendente",
   canceled: "Cancelada",
@@ -56,15 +56,18 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
   const [showPlans, setShowPlans] = useState(initialView === "plans");
   const [portalLoading, setPortalLoading] = useState(false);
   const { user } = useAuth();
-  const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
+  const {
+    isPaidPremium,
+    isGrandfathered,
+    subscription,
+    internalTrialActive,
+    internalTrialExpired,
+    internalTrialEndsAt,
+  } = useSubscription(user?.id);
   const isTestMode = getStripeEnvironment() === "sandbox";
 
-  // Has the user ever had a subscription row in this environment?
-  // Used to suppress "Começar teste de 7 dias" copy for users that already used it.
-  const hasUsedTrial = !!subscription;
   const isYearly = subscription?.price_id === "volant_premium_yearly";
   const isMonthly = subscription?.price_id === "volant_premium_monthly";
-  const isTrialing = subscription?.status === "trialing";
 
   const handleStart = () => {
     if (!user) {
@@ -100,27 +103,37 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
     onOpenChange(next);
   };
 
-  // Decide which view to render. Grandfathered always wins.
-  const view: "lifetime" | "active" | "checkout" | "plans" =
-    isGrandfathered ? "lifetime"
-      : showCheckout ? "checkout"
-      : showPlans ? "plans"
-      : isActive ? "active"
-      : "plans";
+  // Decide which view to render. Grandfathered always wins; paid subs next;
+  // then internal trial states; default to plans for fresh / unknown users.
+  const view:
+    | "lifetime"
+    | "active"
+    | "checkout"
+    | "plans"
+    | "trial_internal"
+    | "expired" =
+    isGrandfathered
+      ? "lifetime"
+      : showCheckout
+        ? "checkout"
+        : showPlans
+          ? "plans"
+          : isPaidPremium
+            ? "active"
+            : internalTrialActive
+              ? "trial_internal"
+              : internalTrialExpired
+                ? "expired"
+                : "plans";
 
-  const trialEnd = isTrialing ? formatDate(subscription?.current_period_end) : null;
-  const nextBilling = subscription && !isTrialing
-    ? formatDate(subscription.current_period_end)
-    : null;
+  const nextBilling = subscription ? formatDate(subscription.current_period_end) : null;
+  const trialEndLabel = formatDate(internalTrialEndsAt);
 
-  // Plans-view flavor:
+  // Plans-view flavor (paid flows only):
   // - upgrade: active monthly subscriber considering annual
-  // - reactivate: had a sub before (or trialing), no first-time trial CTA
-  // - acquisition: brand new user, show "Começar teste de 7 dias"
-  const plansFlavor: "upgrade" | "reactivate" | "acquisition" =
-    isMonthly && isActive ? "upgrade"
-      : (hasUsedTrial || isActive) ? "reactivate"
-      : "acquisition";
+  // - default: anyone else lands here as "subscribe" (reactivate copy)
+  const plansFlavor: "upgrade" | "subscribe" =
+    isMonthly && isPaidPremium ? "upgrade" : "subscribe";
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -135,18 +148,22 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                 <Badge variant="outline" className="border-primary/40 text-primary">
                   {STATUS_LABEL[subscription?.status ?? ""] ?? "Assinatura ativa"}
                 </Badge>
+              ) : view === "trial_internal" ? (
+                <Badge variant="outline" className="border-primary/40 text-primary">Teste ativo</Badge>
+              ) : view === "expired" ? (
+                <Badge variant="outline" className="border-destructive/50 text-destructive">Expirado</Badge>
               ) : view === "plans" && plansFlavor === "upgrade" ? (
                 <Badge variant="outline" className="border-primary/40 text-primary">Upgrade disponível</Badge>
-              ) : view === "plans" && plansFlavor === "reactivate" ? (
-                <Badge variant="outline" className="border-primary/40 text-primary">Reativar Premium</Badge>
               ) : (
-                <Badge variant="outline" className="border-primary/40 text-primary">7 dias grátis</Badge>
+                <Badge variant="outline" className="border-primary/40 text-primary">Volant Premium</Badge>
               )}
             </div>
             <SheetTitle className="text-xl">
               {view === "lifetime" ? "Volant Premium Vitalício"
+                : view === "trial_internal" ? "Acesso Premium por 7 dias"
+                : view === "expired" ? "Seu acesso Premium terminou"
                 : view === "plans" && plansFlavor === "upgrade" ? "Economize com o plano anual"
-                : view === "plans" && plansFlavor === "reactivate" ? "Escolha seu plano Premium"
+                : view === "plans" ? "Escolha seu plano Premium"
                 : "Volant Premium"}
             </SheetTitle>
             <SheetDescription className="text-sm">
@@ -156,11 +173,13 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                   ? isYearly
                     ? "Você está no melhor plano do Volant."
                     : "Sua assinatura está ativa. Gerencie pagamento e plano pelo portal."
-                  : view === "plans" && plansFlavor === "upgrade"
-                    ? "Faça upgrade para o plano anual e economize 62%."
-                    : view === "plans" && plansFlavor === "reactivate"
-                      ? "Escolha o plano ideal para continuar com o Volant Premium."
-                      : "Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual."}
+                  : view === "trial_internal"
+                    ? "Você está usando todos os recursos Premium do Volant, sem cartão e sem cobrança automática."
+                    : view === "expired"
+                      ? "Seus dados continuam salvos. Assine para voltar a usar os recursos Premium do Volant."
+                      : view === "plans" && plansFlavor === "upgrade"
+                        ? "Faça upgrade para o plano anual e economize 62%."
+                        : "Escolha o plano ideal para continuar com o Volant Premium."}
             </SheetDescription>
           </SheetHeader>
 
@@ -191,9 +210,6 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                   Status: {STATUS_LABEL[subscription?.status ?? ""] ?? subscription?.status}
                   {subscription?.cancel_at_period_end ? " · cancelamento agendado" : ""}
                 </div>
-                {trialEnd && (
-                  <div className="text-xs text-muted-foreground">Seu teste termina em {trialEnd}</div>
-                )}
                 {nextBilling && (
                   <div className="text-xs text-muted-foreground">Próxima cobrança: {nextBilling}</div>
                 )}
@@ -220,6 +236,57 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                 {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerenciar assinatura"}
               </Button>
             </div>
+          ) : view === "trial_internal" ? (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
+                <div className="flex items-center gap-2 font-medium text-primary">
+                  <Clock className="h-4 w-4" /> 7 dias grátis, sem cartão
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {trialEndLabel
+                    ? `Seu acesso termina em ${trialEndLabel}. Depois, você decide se quer continuar.`
+                    : "Sem cobrança automática. Depois, você decide se quer continuar."}
+                </p>
+              </div>
+              <ul className="space-y-2">
+                {FEATURES.map((f) => (
+                  <li key={f} className="flex items-center gap-2 text-sm text-foreground/90">
+                    <Check className="h-4 w-4 text-primary" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <div className="space-y-2">
+                <Button
+                  onClick={() => setShowPlans(true)}
+                  className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+                >
+                  Assinar agora
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowPlans(true)}
+                  className="w-full"
+                >
+                  Ver planos
+                </Button>
+              </div>
+            </div>
+          ) : view === "expired" ? (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-2xl border border-border bg-card p-4 text-sm">
+                <p className="text-muted-foreground">
+                  Ao final do acesso gratuito, os recursos Premium são bloqueados até você assinar.
+                  Seus dados continuam salvos.
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowPlans(true)}
+                className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+              >
+                Ver planos
+              </Button>
+            </div>
           ) : view === "lifetime" ? (
             <div className="mt-6 space-y-4">
               <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
@@ -242,7 +309,7 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
           ) : (
             // plans view
             <>
-              {plansFlavor === "upgrade" && isActive && (
+              {plansFlavor === "upgrade" && isPaidPremium && (
                 <button
                   onClick={() => setShowPlans(false)}
                   className="mt-4 text-xs text-muted-foreground underline-offset-2 hover:underline"
@@ -285,27 +352,18 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                   >
                     {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mudar para o anual"}
                   </Button>
-                ) : plansFlavor === "reactivate" ? (
+                ) : (
                   <Button
                     onClick={handleStart}
                     className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
                   >
                     Assinar {selected === "yearly" ? "plano anual" : "plano mensal"}
                   </Button>
-                ) : (
-                  <Button
-                    onClick={handleStart}
-                    className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
-                  >
-                    Começar teste de 7 dias
-                  </Button>
                 )}
                 <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
                   {plansFlavor === "upgrade"
                     ? "A troca de plano é feita com segurança pelo portal de assinatura."
-                    : plansFlavor === "reactivate"
-                      ? "Você pode cancelar quando quiser pelo portal de assinatura."
-                      : "Sem cobrança nos 7 primeiros dias. Cancele quando quiser pelo portal."}
+                    : "Cobrança imediata. Cancele quando quiser pelo portal de assinatura."}
                 </p>
                 {isTestMode && <TestModeNote />}
               </div>

@@ -54,12 +54,8 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
     return () => { cancelled = true; };
   }, [user]);
 
-  const ctaLabel = hasUsedTrial
-    ? `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`
-    : "Começar teste de 7 dias";
-  const ctaHint = hasUsedTrial
-    ? "Cancele quando quiser pelo portal de assinatura."
-    : "Cancele quando quiser pelo portal de assinatura.";
+  const ctaLabel = `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`;
+  const ctaHint = "Cobrança imediata. Cancele quando quiser pelo portal de assinatura.";
 
   // Subtle staggered entrance for each section.
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${i * 70}ms` });
@@ -171,7 +167,7 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
             <div className={cn("flex justify-center animate-fade-in-up", asModal ? "mt-3.5" : "mt-5")} style={stagger(1)}>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/35 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
                 <ShieldCheck className="h-3 w-3" />
-                {hasUsedTrial ? "Reative seu acesso" : "7 dias grátis"}
+                {hasUsedTrial ? "Reative seu acesso" : "Volant Premium"}
               </span>
             </div>
 
@@ -184,7 +180,7 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
               <p className={cn("mx-auto max-w-xs leading-relaxed text-muted-foreground", asModal ? "mt-1.5 text-[12px]" : "mt-2 text-[12.5px]")}>
                 {hasUsedTrial
                   ? "Escolha o plano ideal para retomar todos os recursos Premium."
-                  : "Teste todos os recursos por 7 dias. Cancele quando quiser, sem cobrança no período de teste."}
+                  : "Assine e tenha acesso a todos os recursos Premium do Volant. Seus dados continuam salvos."}
               </p>
             </div>
 
