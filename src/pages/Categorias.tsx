@@ -57,9 +57,9 @@ export default function Categorias() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-[100dvh] flex-col">
       <ScreenHeader onBack={() => navigate("/ajustes")} />
-      <div className="mx-auto w-full max-w-md space-y-2.5 px-4 py-4">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-2.5 px-4 py-6 pb-28">
         <HubCard
           to="/ajustes/categorias/ganhos"
           icon={<Wallet className="h-4 w-4" />}
