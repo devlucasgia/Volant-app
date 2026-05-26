@@ -820,21 +820,59 @@ function MockTabs({ active = "Hoje" }: { active?: string }) {
 }
 
 function MockBottomNav({ active = "Início" }: { active?: string }) {
-  const items = ["Início", "Ganhos", "Despesas", "Mais"];
+  const items = [
+    { label: "Início", icon: HomeIcon },
+    { label: "Histórico", icon: HistoryIcon },
+    { label: "Relatórios", icon: BarChart3 },
+    { label: "Ajustes", icon: SettingsIcon },
+  ];
   return (
-    <div className="absolute inset-x-0 bottom-0 flex justify-around border-t border-border/40 bg-card/80 px-2 py-2 backdrop-blur">
-      {items.map((i) => (
-        <span
-          key={i}
-          className={cn(
-            "text-[10px] font-medium",
-            active === i ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {i}
-        </span>
-      ))}
-    </div>
+    <>
+      <div className="absolute inset-x-0 bottom-0 z-10 border-t border-border/40 bg-card/90 backdrop-blur">
+        <div className="grid grid-cols-5 px-1 pt-1.5 pb-2">
+          {items.map((it, idx) => {
+            const Icon = it.icon;
+            const isActive = active === it.label;
+            return (
+              <div
+                key={it.label}
+                className={cn(
+                  "flex flex-col items-center gap-0.5",
+                  idx === 2 && "col-start-4",
+                  idx === 3 && "col-start-5",
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4",
+                    isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                  strokeWidth={isActive ? 2.4 : 2}
+                />
+                <span
+                  className={cn(
+                    "text-[9px] font-medium",
+                    isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {it.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* FAB central verde "+"  — replica o BottomNav do app */}
+      <div
+        className="absolute left-1/2 z-20 -translate-x-1/2"
+        style={{ bottom: "10px" }}
+        aria-hidden
+      >
+        <div className="grid h-10 w-10 place-items-center rounded-full text-primary-foreground bg-gradient-to-b from-success to-success/85 ring-1 ring-success/30 shadow-[0_6px_16px_-4px_hsl(var(--success)/0.55),0_2px_4px_hsl(var(--success)/0.25)]">
+          <Plus className="h-4 w-4" strokeWidth={2.6} />
+        </div>
+      </div>
+    </>
   );
 }
 
