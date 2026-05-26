@@ -24,6 +24,8 @@ import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Segmented } from "@/components/Segmented";
 
 
 export default function Dashboard() {
