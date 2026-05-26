@@ -844,7 +844,7 @@ export default function SettingsPage() {
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-400/10 text-slate-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
               <MessageSquare className="h-4 w-4" />
             </span>
             <div>
@@ -963,7 +963,7 @@ function HubRow({
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="group flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_10px_26px_-18px_rgba(0,0,0,0.48)] active:scale-[0.99] animate-fade-in"
+      className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_10px_26px_-18px_rgba(0,0,0,0.48)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 animate-fade-in"
     >
       <span className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor] transition-colors",
@@ -1010,7 +1010,7 @@ function PersonalizacaoRow() {
       icon={<Paintbrush className="h-4 w-4" />}
       title="Personalização"
       subtitle="Aparência, saudação e organização dos cards."
-      iconTone="bg-teal-400/10 text-teal-400"
+      iconTone="bg-violet-400/10 text-violet-300"
     />
   );
 }

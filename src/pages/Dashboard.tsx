@@ -8,7 +8,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -241,9 +241,9 @@ export default function Dashboard() {
           type="button"
           key="goal"
           onClick={() => navigate("/ajustes/planejamento/metas")}
-          aria-label="Editar meta"
+          aria-label="Ver meta"
             className={cn(
-              "relative z-10 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
+              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -269,10 +269,13 @@ export default function Dashboard() {
                 )}
                 <span className="truncate">{periodGoal.title}</span>
               </div>
-              <div className="shrink-0 text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
-                <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
-                <span className="mx-1 text-muted-foreground/60">/</span>
-                <span>{brl(periodGoal.value)}</span>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
+                  <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
+                  <span className="mx-1 text-muted-foreground/60">/</span>
+                  <span>{brl(periodGoal.value)}</span>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
               </div>
             </div>
 
@@ -358,8 +361,9 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
+            aria-label="Ver cálculo"
             className={cn(
-              "group relative mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder
             )}
           >
@@ -375,8 +379,10 @@ export default function Dashboard() {
                 <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
               </div>
             </div>
-            {/* Invisible spacer mirrors the icon width so the centered text reads visually symmetric */}
-            <span aria-hidden className="h-10 w-10 shrink-0" />
+            {/* Discreet chevron mirrors the icon width so the centered text reads visually symmetric */}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-end">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+            </span>
           </button>
         </div>
       );

@@ -58,9 +58,10 @@ function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardPro
       onClick={() => navigate(to)}
       style={{ animationDelay: `${delayMs}ms` }}
       className={cn(
-        "group flex w-full items-center gap-3.5 rounded-2xl border p-4 text-left",
+        "group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border p-4 text-left",
         "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        "animate-fade-in active:scale-[0.985]",
+        "animate-fade-in active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2",
+        tone === "primary" ? "focus-visible:ring-primary/40" : "focus-visible:ring-teal-400/40",
         toneClasses,
       )}
     >
@@ -80,7 +81,7 @@ function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardPro
           {description}
         </p>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
     </button>
   );
 }
@@ -95,7 +96,7 @@ export default function PlanejamentoInteligente() {
     <div className="min-h-screen">
       <PlanHeader onBack={() => navigate("/ajustes")} />
 
-      <div className="space-y-4 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
         <div className="space-y-2.5">
           <HubCard
             to="/ajustes/planejamento/metas"
