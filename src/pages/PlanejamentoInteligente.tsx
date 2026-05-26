@@ -96,7 +96,7 @@ export default function PlanejamentoInteligente() {
     <div className="min-h-screen">
       <PlanHeader onBack={() => navigate("/ajustes")} />
 
-      <div className="space-y-4 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-4">
         <div className="space-y-2.5">
           <HubCard
             to="/ajustes/planejamento/metas"
