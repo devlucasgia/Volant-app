@@ -24,10 +24,12 @@ import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Segmented } from "@/components/Segmented";
 
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, updateSettings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isFull } = useAccess();
   const { user } = useAuth();
   const { openDrawer } = useUI();
@@ -46,7 +48,7 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
-  const unreadNotifs = 0; // base: nenhuma regra inteligente nesta sprint
+  const { unread: unreadNotifs } = useNotifications(user?.id, user?.created_at);
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
@@ -583,7 +585,8 @@ export default function Dashboard() {
         <div className="mt-5">
         {(() => {
           const showGross = heroMetric === "gross";
-          const heroTitle = showGross ? "Bruto" : "Lucro líquido";
+          const heroTitle = showGross ? "Ganho bruto" : "Lucro líquido";
+          const heroSubtitle = showGross ? "Antes dos gastos" : "Depois dos gastos";
           const heroValue = showGross ? s.gross : s.net;
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
@@ -607,29 +610,46 @@ export default function Dashboard() {
               <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl", heroBlobMain)} />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
               <div className="relative">
-                <div className="flex items-center justify-between">
-                  <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
-                    <Gauge className="h-3.5 w-3.5" /> {heroTitle}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
+                      <Gauge className="h-3.5 w-3.5" /> {heroTitle}
+                    </div>
+                    <div className="mt-0.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
+                      {heroSubtitle}
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
-                    onClick={() => setHideValues((v) => !v)}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
-                  >
-                    {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <Segmented
+                      size="sm"
+                      className="w-[148px] shrink-0"
+                      options={[
+                        { key: "liquido", label: "Líquido" },
+                        { key: "bruto", label: "Bruto" },
+                      ]}
+                      value={settings.goalType}
+                      onChange={(v) => { void updateSettings({ goalType: v }); }}
+                    />
+                    <button
+                      type="button"
+                      aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
+                      onClick={() => setHideValues((v) => !v)}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
+                    >
+                      {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div
                   key={heroMetric}
                   className={cn(
-                    "mt-1.5 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300 animate-fade-in-up",
+                    "mt-2 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300 animate-fade-in-up",
                     hideValues && "blur-[4px] select-none"
                   )}
                 >
                   {hideValues ? "R$ •••••" : brl(heroValue)}
                 </div>
-                <div className={cn("mt-4 border-t", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
+                <div className={cn("mt-4 border-t transition-colors duration-500", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
                 <div className={cn(
                   "mt-3 flex items-center justify-center gap-4 px-2 text-[13px]",
                   showGross && "-translate-x-1.5"
