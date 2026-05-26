@@ -240,7 +240,7 @@ export default function Dashboard() {
         <button
           type="button"
           key="goal"
-          onClick={() => navigate("/ajustes/planejamento/metas")}
+          onClick={() => navigate("/ajustes/planejamento/metas", { state: { from: "/app" } })}
           aria-label="Ver meta"
             className={cn(
               "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -360,7 +360,7 @@ export default function Dashboard() {
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
             type="button"
-            onClick={() => navigate("/ajustes/planejamento/km")}
+            onClick={() => navigate("/ajustes/planejamento/km", { state: { from: "/app" } })}
             aria-label="Ver cálculo"
             className={cn(
               "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
@@ -475,7 +475,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between gap-3 px-4 py-2.5">
           <button
             type="button"
-            onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao")}
+            onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao", { state: { from: "/app" } })}
             className={cn(
               "flex min-w-0 flex-1 items-center gap-3 rounded-xl py-1 pr-2 text-left transition-all duration-200",
               greetingHasContent && "hover:bg-muted/30 active:scale-[0.99]",

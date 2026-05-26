@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 
 /**
@@ -8,17 +8,23 @@ import { ArrowLeft } from "lucide-react";
  * advogado antes da abertura comercial.
  */
 export default function Termos() {
+  const navigate = useNavigate();
+  const handleBack = () => {
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
+  };
   return (
     <div className="dark min-h-[100dvh] bg-background text-foreground">
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
-          <Link
-            to="/"
-            aria-label="Voltar para o início"
+          <button
+            type="button"
+            onClick={handleBack}
+            aria-label="Voltar"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted/50 active:scale-[0.96]"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Link>
+          </button>
           <h1 className="text-[17px] font-bold leading-tight tracking-tight">Termos de Uso</h1>
         </div>
       </header>

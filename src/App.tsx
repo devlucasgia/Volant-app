@@ -10,6 +10,7 @@ import { UIProvider } from "@/context/UIContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequireAuth } from "@/components/RequireAuth";
 import { RequirePremium } from "@/components/RequirePremium";
+import ScrollToTop from "@/components/ScrollToTop";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Termos from "./pages/Termos";
@@ -49,6 +50,7 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
+                <ScrollToTop />
                 <Routes>
                   <Route path="/" element={<Landing />} />
                   <Route path="/auth" element={<Auth />} />

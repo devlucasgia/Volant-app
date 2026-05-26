@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, Flag, CalendarDays, CalendarClock, Loader2, Gauge, ChevronRight } from "lucide-react";
 import { useData } from "@/context/DataContext";
 import { NumberField } from "@/components/NumberField";
@@ -52,6 +52,8 @@ function ScreenHeader({ onBack, title, subtitle }: { onBack: () => void; title: 
 
 export default function MetasInteligentes() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as { from?: string } | null)?.from ?? "/ajustes/planejamento";
   const { settings, updateSettings } = useData();
 
   // Reset scroll on mount so the screen always opens at the top.
@@ -101,7 +103,7 @@ export default function MetasInteligentes() {
   return (
     <div className="min-h-screen">
       <ScreenHeader
-        onBack={() => navigate("/ajustes/planejamento")}
+        onBack={() => navigate(backTo)}
         title="Metas Inteligentes"
         subtitle="Planeje sua meta e seus dias de trabalho."
       />
