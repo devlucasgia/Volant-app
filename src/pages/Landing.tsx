@@ -12,6 +12,11 @@ import {
   Wrench,
   Clock,
   ShieldCheck,
+  Home as HomeIcon,
+  History as HistoryIcon,
+  BarChart3,
+  Settings as SettingsIcon,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import volantSymbol from "@/assets/volant-symbol-header.png";
