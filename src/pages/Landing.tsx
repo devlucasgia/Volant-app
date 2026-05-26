@@ -513,10 +513,45 @@ function HeroStyles() {
         color: hsl(var(--goal-gross));
       }
 
+      /* ---------- Tema global Líquido (verde) ↔ Bruto (azul) ---------- */
+      [data-hero-mode] { --accent-now: var(--primary); }
+      [data-hero-mode="bruto"] { --accent-now: var(--goal-gross); }
+
+      .accent-text {
+        color: hsl(var(--accent-now));
+        transition: color 700ms cubic-bezier(0.22,1,0.36,1);
+      }
+      .accent-underline {
+        background-image: linear-gradient(to right, transparent, hsl(var(--accent-now) / 0.85), transparent);
+        transition: background-image 700ms cubic-bezier(0.22,1,0.36,1);
+      }
+      .accent-cta {
+        background-color: hsl(var(--accent-now));
+        box-shadow: 0 10px 40px -8px hsl(var(--accent-now) / 0.55);
+        transition: background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1), filter 200ms;
+      }
+      .accent-badge {
+        border-color: hsl(var(--accent-now) / 0.35);
+        background-color: hsl(var(--accent-now) / 0.10);
+        color: hsl(var(--accent-now));
+        transition: color 700ms, background-color 700ms, border-color 700ms;
+      }
+      .accent-dot {
+        background-color: hsl(var(--accent-now));
+        transition: background-color 700ms;
+      }
+      .accent-dot-ping {
+        background-color: hsl(var(--accent-now) / 0.7);
+        transition: background-color 700ms;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .hero-anim, .hero-anim-mockup { opacity: 1 !important; transform: none !important; animation: none !important; }
         .hero-float, .hero-breath, .hero-glow-soft, .hero-route { animation: none !important; }
-        .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg { transition: none !important; }
+        .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg,
+        .accent-text, .accent-underline, .accent-cta, .accent-badge, .accent-dot, .accent-dot-ping {
+          transition: none !important;
+        }
       }
     `}</style>
   );
