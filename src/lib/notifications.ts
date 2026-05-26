@@ -73,13 +73,17 @@ function read(userId: string): StoredState {
     if (!raw) return empty;
     const parsed = JSON.parse(raw);
     // Back-compat: storage anterior era um array puro.
-    if (Array.isArray(parsed)) {
-      return { items: parsed as AppNotification[], dismissedIds: [] };
-    }
-    return {
-      items: Array.isArray(parsed?.items) ? parsed.items : [],
-      dismissedIds: Array.isArray(parsed?.dismissedIds) ? parsed.dismissedIds : [],
-    };
+    let items: AppNotification[] = Array.isArray(parsed)
+      ? (parsed as AppNotification[])
+      : Array.isArray(parsed?.items)
+        ? parsed.items
+        : [];
+    const dismissedIds: string[] = Array.isArray(parsed?.dismissedIds)
+      ? parsed.dismissedIds
+      : [];
+    // Remove notificações com IDs descontinuados (ex.: bump de template).
+    items = items.filter((n) => !DEPRECATED_NOTIFICATION_IDS.has(n.id));
+    return { items, dismissedIds };
   } catch {
     return empty;
   }
