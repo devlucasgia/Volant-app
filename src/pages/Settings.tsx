@@ -844,7 +844,7 @@ export default function SettingsPage() {
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-400/10 text-violet-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-400/10 text-slate-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
               <MessageSquare className="h-4 w-4" />
             </span>
             <div>
