@@ -26,6 +26,7 @@ import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Segmented } from "@/components/Segmented";
+import { useCountUp } from "@/hooks/useCountUp";
 
 
 export default function Dashboard() {
@@ -113,6 +114,9 @@ export default function Dashboard() {
     [entries, period, customRange]
   );
   const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
+  // Animated hero value — count-up between Líquido/Bruto swaps.
+  const heroValueRaw = heroMetric === "gross" ? s.gross : s.net;
+  const animatedHeroValue = useCountUp(heroValueRaw, 380);
   const apps = useMemo(() => byApp(filtered), [filtered]);
   const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
@@ -532,6 +536,7 @@ export default function Dashboard() {
         {/* Period switcher — Hoje | Semana | Mês | Calendário */}
         <PeriodBar
           period={period}
+          tone={heroMetric === "gross" ? "gross" : "net"}
           onSelect={(p) => { setPeriod(p); setCustomRange(null); }}
           onCalendarClick={() => {
             setCalDraft(customRange ? { from: customRange.from, to: customRange.to } : undefined);
@@ -587,7 +592,7 @@ export default function Dashboard() {
           const showGross = heroMetric === "gross";
           const heroTitle = showGross ? "Ganho bruto" : "Lucro líquido";
           const heroSubtitle = showGross ? "Antes dos gastos" : "Depois dos gastos";
-          const heroValue = showGross ? s.gross : s.net;
+          const animatedHero = animatedHeroValue;
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
           const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/40" : "border-success/30";
@@ -605,24 +610,45 @@ export default function Dashboard() {
                 { label: "Bruto", value: s.gross, dot: "bg-[hsl(var(--goal-gross))]/80" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
+          const toggleHero = () => {
+            void updateSettings({ goalType: showGross ? "liquido" : "bruto" });
+          };
           return (
-            <div className={cn("relative overflow-hidden rounded-2xl border p-5 shadow-elevated", heroBorder, heroGradient)}>
-              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl", heroBlobMain)} />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
+              aria-pressed={showGross}
+              onClick={toggleHero}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleHero();
+                }
+              }}
+              className={cn(
+                "relative overflow-hidden rounded-2xl border p-5 shadow-elevated cursor-pointer select-none transition-all duration-500 active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                heroBorder,
+                heroGradient,
+              )}
+            >
+              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl transition-colors duration-500", heroBlobMain)} />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
               <div className="relative">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
+                    <div className={cn("flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] transition-colors duration-500", heroAccentText)}>
                       <Gauge className="h-3.5 w-3.5" /> {heroTitle}
                     </div>
-                    <div className="mt-0.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
+                    <div className="mt-0.5 text-[9.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground/55">
                       {heroSubtitle}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Segmented
-                      size="sm"
-                      className="w-[148px] shrink-0"
+                      size="xs"
+                      tone="contextual"
+                      className="w-[124px] shrink-0"
                       options={[
                         { key: "liquido", label: "Líquido" },
                         { key: "bruto", label: "Bruto" },
@@ -633,7 +659,7 @@ export default function Dashboard() {
                     <button
                       type="button"
                       aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
-                      onClick={() => setHideValues((v) => !v)}
+                      onClick={(e) => { e.stopPropagation(); setHideValues((v) => !v); }}
                       className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
                     >
                       {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -641,13 +667,12 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div
-                  key={heroMetric}
                   className={cn(
-                    "mt-2 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300 animate-fade-in-up",
+                    "mt-2 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300",
                     hideValues && "blur-[4px] select-none"
                   )}
                 >
-                  {hideValues ? "R$ •••••" : brl(heroValue)}
+                  {hideValues ? "R$ •••••" : brl(animatedHero)}
                 </div>
                 <div className={cn("mt-4 border-t transition-colors duration-500", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
                 <div className={cn(
@@ -659,13 +684,13 @@ export default function Dashboard() {
                       {i > 0 && (
                         <div
                           className={cn(
-                            "h-3.5 w-px",
+                            "h-3.5 w-px transition-colors duration-500",
                             showGross ? "bg-[hsl(var(--goal-gross))]/65" : "bg-success/55",
                           )}
                         />
                       )}
                       <div className="flex items-center gap-1.5">
-                        <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
+                        <span className={cn("h-1.5 w-1.5 rounded-full transition-colors duration-500", m.dot)} />
                         <span className="text-muted-foreground">{m.label}</span>
                         <span
                           className={cn(
@@ -742,19 +767,21 @@ export default function Dashboard() {
  * share the same green active state used elsewhere in the app.
  */
 function PeriodBar({
-  period, onSelect, onCalendarClick,
+  period, onSelect, onCalendarClick, tone = "net",
 }: {
   period: Period;
   onSelect: (p: Period) => void;
   onCalendarClick: () => void;
+  tone?: "net" | "gross";
 }) {
   const items: { key: Period; label: string }[] = [
     { key: "day", label: "Hoje" },
     { key: "week", label: "Semana" },
     { key: "month", label: "Mês" },
   ];
-  const activeClass =
-    "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
+  const activeClass = tone === "gross"
+    ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_10px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-[hsl(var(--goal-gross))]/40"
+    : "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
   const inactiveClass = "text-muted-foreground hover:text-foreground";
   return (
     <div role="tablist" className="flex w-full items-stretch gap-1 rounded-xl border border-border/60 bg-muted/60 p-1">
@@ -767,7 +794,7 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200",
+              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-300",
               active ? activeClass : inactiveClass
             )}
           >
@@ -782,7 +809,7 @@ function PeriodBar({
         aria-selected={period === "custom"}
         onClick={onCalendarClick}
         className={cn(
-          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
           period === "custom" ? activeClass : inactiveClass
         )}
       >

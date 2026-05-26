@@ -10,8 +10,7 @@ import { useEffect, useState, useCallback } from "react";
 export type ReportCardKey =
   | "net"
   | "perHour"
-  | "gross"
-  | "expenses"
+  | "grossExpenses" // Bruto + Gastos lado a lado (bloco combinado)
   | "daysGroup"   // Dias ativos + Média / dia
   | "kmGroup"     // KM total + Média / km
   | "tripsGroup"  // Corridas + R$ / corrida
@@ -20,13 +19,19 @@ export type ReportCardKey =
 export const DEFAULT_REPORT_ORDER: ReportCardKey[] = [
   "net",
   "perHour",
-  "gross",
-  "expenses",
+  "grossExpenses",
   "daysGroup",
   "kmGroup",
   "tripsGroup",
   "chart",
 ];
+
+// Legacy keys ("gross", "expenses") are stripped during migration so the
+// new combined block ("grossExpenses") is appended cleanly by read().
+const LEGACY_KEY_MAP: Record<string, ReportCardKey | null> = {
+  gross: "grossExpenses",
+  expenses: null,
+};
 
 const STORAGE_KEY = "volant.reportOrder.v2";
 
@@ -35,10 +40,18 @@ function read(): ReportCardKey[] {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_REPORT_ORDER;
-    const parsed = JSON.parse(raw) as ReportCardKey[];
+    const parsed = JSON.parse(raw) as string[];
     const known = new Set<ReportCardKey>(DEFAULT_REPORT_ORDER);
-    const filtered = parsed.filter((k) => known.has(k));
-    for (const k of DEFAULT_REPORT_ORDER) if (!filtered.includes(k)) filtered.push(k);
+    const seen = new Set<ReportCardKey>();
+    const filtered: ReportCardKey[] = [];
+    for (const k of parsed) {
+      const mapped = (LEGACY_KEY_MAP[k] !== undefined ? LEGACY_KEY_MAP[k] : (k as ReportCardKey));
+      if (mapped && known.has(mapped) && !seen.has(mapped)) {
+        seen.add(mapped);
+        filtered.push(mapped);
+      }
+    }
+    for (const k of DEFAULT_REPORT_ORDER) if (!seen.has(k)) filtered.push(k);
     return filtered;
   } catch {
     return DEFAULT_REPORT_ORDER;

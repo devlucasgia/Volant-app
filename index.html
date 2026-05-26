@@ -39,7 +39,23 @@
   <meta name="twitter:title" content="Volant — Gestão financeira para motoristas">
   <meta property="og:description" content="Controle ganhos, gastos, metas, jornada e desempenho em um app moderno criado para motoristas de Uber, 99, inDrive e particulares.">
   <meta name="twitter:description" content="Controle ganhos, gastos, metas, jornada e desempenho em um app moderno criado para motoristas de Uber, 99, inDrive e particulares.">
-</head>
+    <script>
+      // Apply persisted theme synchronously before first paint to avoid a
+      // light-mode flash for users whose preference is dark (which is the
+      // default for new accounts). Reads `volant.theme` from localStorage
+      // and falls back to "dark".
+      (function () {
+        try {
+          var t = localStorage.getItem("volant.theme");
+          if (t !== "light") {
+            document.documentElement.classList.add("dark");
+          }
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
+  </head>
 
   <body>
     <div id="root"></div>

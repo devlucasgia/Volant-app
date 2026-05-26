@@ -22,6 +22,7 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
+  Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
@@ -36,6 +37,9 @@ import {
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 type RangeMode = "range" | "month" | "year";
@@ -200,6 +204,127 @@ export default function Reports() {
     toast.success("PDF exportado!");
   };
 
+  const summaryRows: [string, string][] = [
+    ["Lucro líquido", brl(s.net)],
+    ["Bruto", brl(s.gross)],
+    ["Gastos", brl(s.totalExpenses)],
+    ["Dias trabalhados", String(workedDays)],
+    ["KM total", num(s.totalKm, 1)],
+    ["Corridas total", String(s.totalRides)],
+    ["R$ / hora", brl(s.perHour)],
+    ["R$ / dia", brl(avgPerDay)],
+    ["R$ / km", brl(s.perKm)],
+    ["R$ / corrida", brl(s.perRide)],
+  ];
+
+  const exportXLSX = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const wb = XLSX.utils.book_new();
+
+      const resumo = XLSX.utils.aoa_to_sheet([
+        ["Volant — Relatório"],
+        [`Período: ${periodLabel}`],
+        [`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`],
+        [],
+        ["Indicador", "Valor"],
+        ...summaryRows,
+      ]);
+      XLSX.utils.book_append_sheet(wb, resumo, "Resumo");
+
+      const lancHeader = ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Corridas", "Valor (R$)", "Observações"];
+      const lancRows = filtered.map((e) =>
+        e.type === "earning"
+          ? [format(new Date(e.date), "dd/MM/yyyy HH:mm"), "Ganho", platformMetaFor(e.app).label, e.km, e.hours, e.rides ?? "", Number(e.gross.toFixed(2)), e.notes || ""]
+          : [format(new Date(e.date), "dd/MM/yyyy HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "", "", "", Number(e.expense.amount.toFixed(2)), e.expense.description || ""]
+      );
+      const lanc = XLSX.utils.aoa_to_sheet([lancHeader, ...lancRows]);
+      XLSX.utils.book_append_sheet(wb, lanc, "Lançamentos");
+
+      XLSX.writeFile(wb, `volant-${format(new Date(), "yyyyMMdd")}.xlsx`);
+      toast.success("Excel exportado!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível exportar Excel agora.");
+    }
+  };
+
+  const exportDOCX = async () => {
+    try {
+      const docx = await import("docx");
+      const {
+        Document, Packer, Paragraph, HeadingLevel, AlignmentType,
+        Table, TableRow, TableCell, WidthType, TextRun, BorderStyle,
+      } = docx;
+
+      const border = { style: BorderStyle.SINGLE, size: 4, color: "DDDDDD" };
+      const cellBorders = { top: border, bottom: border, left: border, right: border };
+
+      const headerCell = (text: string) =>
+        new TableCell({
+          borders: cellBorders,
+          children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
+        });
+      const cell = (text: string) =>
+        new TableCell({ borders: cellBorders, children: [new Paragraph(text)] });
+
+      const summaryTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({ children: [headerCell("Indicador"), headerCell("Valor")] }),
+          ...summaryRows.map(([k, v]) => new TableRow({ children: [cell(k), cell(v)] })),
+        ],
+      });
+
+      const entriesHeader = ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor"];
+      const entryRows = filtered.map((e) =>
+        e.type === "earning"
+          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), brl(e.gross)]
+          : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
+      );
+      const entriesTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({ children: entriesHeader.map(headerCell) }),
+          ...entryRows.map((r) => new TableRow({ children: r.map(cell) })),
+        ],
+      });
+
+      const wordDoc = new Document({
+        sections: [{
+          children: [
+            new Paragraph({
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.LEFT,
+              children: [new TextRun({ text: "Volant — Relatório", bold: true })],
+            }),
+            new Paragraph({ children: [new TextRun({ text: `Período: ${periodLabel}` })] }),
+            new Paragraph({ children: [new TextRun({ text: `Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}` })] }),
+            new Paragraph(""),
+            new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Resumo", bold: true })] }),
+            summaryTable,
+            new Paragraph(""),
+            new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Lançamentos", bold: true })] }),
+            entriesTable,
+          ],
+        }],
+      });
+
+      const blob = await Packer.toBlob(wordDoc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `volant-${format(new Date(), "yyyyMMdd")}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Word exportado!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível exportar Word agora.");
+    }
+  };
+
+
   const chartMeta = CHARTS.find((c) => c.key === chart)!;
   const dataKey = chart === "net" ? "net" : chart === "expenses" ? "expense" : chart === "km" ? "km" : "hours";
   const isMoney = chart === "net" || chart === "expenses";
@@ -254,17 +379,47 @@ export default function Reports() {
       />
       <div className="relative">
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
-        {/* Mode switch */}
-        <Segmented<RangeMode>
-          options={[
-            { key: "month", label: "Por mês" },
-            { key: "year", label: "Por ano" },
-            { key: "range", label: "Personalizado" },
-          ]}
-          value={mode}
-          onChange={setMode}
-          size="sm"
-        />
+        {/* Mode switch + Export */}
+        <div className="flex items-center gap-2">
+          <Segmented<RangeMode>
+            options={[
+              { key: "month", label: "Por mês" },
+              { key: "year", label: "Por ano" },
+              { key: "range", label: "Personalizado" },
+            ]}
+            value={mode}
+            onChange={setMode}
+            size="sm"
+            className="flex-1"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Exportar relatório"
+                className="h-9 w-9 shrink-0 rounded-xl"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={exportXLSX}>
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-success" /> Exportar Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportDOCX}>
+                <FileType2 className="mr-2 h-4 w-4 text-info" /> Exportar Word
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF}>
+                <FileText className="mr-2 h-4 w-4 text-destructive" /> Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportCSV}>
+                <FileDown className="mr-2 h-4 w-4 text-muted-foreground" /> Exportar CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
 
         {mode === "month" ? (
           <div className="flex items-center gap-2">
@@ -413,11 +568,11 @@ export default function Reports() {
                 </div>
               </div>
             ),
-            gross: () => (
-              <SideStatCard key="gross" label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
-            ),
-            expenses: () => (
-              <SideStatCard key="expenses" label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+            grossExpenses: () => (
+              <div key="grossExpenses" className="grid grid-cols-2 gap-3">
+                <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
+                <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+              </div>
             ),
             daysGroup: () => (
               <PairCard

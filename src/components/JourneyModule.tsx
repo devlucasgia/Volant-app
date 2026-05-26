@@ -29,6 +29,12 @@ export function JourneyModule() {
   const { settings, entries } = useData();
   const { openDrawer } = useUI();
 
+  // Visually mirrors the Home Líquido/Bruto mode. Lógica intacta.
+  const isGross = settings.goalType === "bruto";
+  const journeyAccentBtn = isGross
+    ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_12px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] hover:from-[hsl(var(--goal-gross))]/95 hover:to-[hsl(var(--goal-gross))]/80"
+    : "gradient-success text-primary-foreground";
+
   const suggestedDaily = useMemo(
     () => Math.round(deriveGoals(settings.monthlyGoal, entries, new Date(), {
       goalType: settings.goalType,
@@ -120,7 +126,7 @@ export function JourneyModule() {
       {/* Controls */}
       <div className="mt-3 space-y-2">
         {state === "idle" && (
-          <Button onClick={() => openGoal(false)} className="h-11 w-full gradient-success text-primary-foreground">
+          <Button onClick={() => openGoal(false)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Iniciar jornada
           </Button>
         )}
@@ -130,7 +136,7 @@ export function JourneyModule() {
           </Button>
         )}
         {state === "resting" && (
-          <Button onClick={resumeWork} className="h-11 w-full gradient-success text-primary-foreground">
+          <Button onClick={resumeWork} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Retornar do descanso
           </Button>
         )}
@@ -145,7 +151,7 @@ export function JourneyModule() {
         )}
         {isEnded && (
           <>
-            <Button onClick={() => openGoal(true)} className="h-11 w-full gradient-success text-primary-foreground">
+            <Button onClick={() => openGoal(true)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
               <Play className="mr-2 h-4 w-4" /> Iniciar nova jornada
             </Button>
             <Button onClick={reset} variant="ghost" className="h-9 w-full text-muted-foreground">
