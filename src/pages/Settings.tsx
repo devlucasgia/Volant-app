@@ -1010,7 +1010,7 @@ function PersonalizacaoRow() {
       icon={<Paintbrush className="h-4 w-4" />}
       title="Personalização"
       subtitle="Aparência, saudação e organização dos cards."
-      iconTone="bg-teal-400/10 text-teal-400"
+      iconTone="bg-violet-400/10 text-violet-300"
     />
   );
 }
