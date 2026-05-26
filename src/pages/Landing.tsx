@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 export default function Landing() {
   const { user, loading } = useAuth();
+  const mode = useHeroMode(9000);
 
   // Força o tema escuro só enquanto a landing está montada.
   useEffect(() => {
@@ -45,11 +46,14 @@ export default function Landing() {
   if (!loading && user) return <Navigate to="/app" replace />;
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
+    <div
+      className="min-h-screen bg-background text-foreground antialiased"
+      data-hero-mode={mode}
+    >
       <BackgroundGlow />
       <Header />
       <main className="relative">
-        <Hero />
+        <Hero mode={mode} />
         <PainStrip />
         <FeatureKmInteligente />
         <FeatureMetas />
@@ -58,6 +62,7 @@ export default function Landing() {
         <FinalCta />
       </main>
       <Footer />
+      <HeroStyles />
     </div>
   );
 }
