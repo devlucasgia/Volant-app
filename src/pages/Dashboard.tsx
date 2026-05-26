@@ -361,8 +361,9 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => navigate("/ajustes/planejamento/km")}
+            aria-label="Ver cálculo"
             className={cn(
-              "group relative mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99]",
+              "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder
             )}
           >
@@ -378,8 +379,10 @@ export default function Dashboard() {
                 <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
               </div>
             </div>
-            {/* Invisible spacer mirrors the icon width so the centered text reads visually symmetric */}
-            <span aria-hidden className="h-10 w-10 shrink-0" />
+            {/* Discreet chevron mirrors the icon width so the centered text reads visually symmetric */}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-end">
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+            </span>
           </button>
         </div>
       );
