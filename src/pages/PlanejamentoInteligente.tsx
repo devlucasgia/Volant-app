@@ -58,9 +58,10 @@ function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardPro
       onClick={() => navigate(to)}
       style={{ animationDelay: `${delayMs}ms` }}
       className={cn(
-        "group flex w-full items-center gap-3.5 rounded-2xl border p-4 text-left",
+        "group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border p-4 text-left",
         "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        "animate-fade-in active:scale-[0.985]",
+        "animate-fade-in active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2",
+        tone === "primary" ? "focus-visible:ring-primary/40" : "focus-visible:ring-teal-400/40",
         toneClasses,
       )}
     >
