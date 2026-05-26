@@ -25,14 +25,16 @@ import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } f
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 
 
 export default function Dashboard() {
-  const { entries, settings, updateSettings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, updateSettings, carInitialKm, activeCar, cars, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isFull } = useAccess();
   const { user } = useAuth();
+  const { isPaidPremium } = useSubscription(user?.id);
   const { openDrawer } = useUI();
   const [period, setPeriod] = useState<Period>("day");
   const navigate = useNavigate();
@@ -49,7 +51,19 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
-  const { unread: unreadNotifs } = useNotifications(user?.id, user?.created_at);
+  const planningSnapshot = useMemo(
+    () => ({
+      monthlyGoal: settings.monthlyGoal,
+      kmPlannedMonth: settings.kmPlannedMonth,
+      workingDaysPerMonth: settings.workingDaysPerMonth,
+    }),
+    [settings.monthlyGoal, settings.kmPlannedMonth, settings.workingDaysPerMonth],
+  );
+  const { unread: unreadNotifs } = useNotifications(user?.id, user?.created_at, {
+    isPaidPremium,
+    planning: planningSnapshot,
+    cars: cars as any,
+  });
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }

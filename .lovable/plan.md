@@ -1,46 +1,105 @@
-# Sprint — Acesso Premium 7 dias (sem cartão) + Stripe sem trial
+# Sprint — Central de Notificações 1.0
 
-## Mudanças aplicadas
+## 0. Hotfix — trial de 7 dias para conta de teste em sandbox
 
-### 1. Banco (`profiles`)
-- Adicionados: `trial_started_at`, `trial_ends_at`, `trial_access_granted` (default false).
+Liberar manualmente para `lucasti.ludorecriare@gmail.com` no banco sandbox:
 
-### 2. `useSubscription` (`src/hooks/useSubscription.ts`)
-- Novos campos no retorno: `isPaidPremium`, `internalTrialActive`, `internalTrialExpired`, `internalTrialEndsAt`.
-- `isActive` agora é `isPaidPremium || internalTrialActive`.
-- Concessão do acesso gratuito de 7 dias acontece **apenas em live** (`getStripeEnvironment() === "live"`), no primeiro carregamento do hook, quando:
-  - usuário não é vitalício;
-  - não há assinatura paga ativa;
-  - `trial_access_granted = false`.
-- Update protegido por `.eq("trial_access_granted", false)` para evitar corrida entre abas.
+```sql
+UPDATE public.profiles
+SET trial_started_at = now(),
+    trial_ends_at = now() + interval '7 days',
+    trial_access_granted = true
+WHERE id = (SELECT id FROM auth.users WHERE email = 'lucasti.ludorecriare@gmail.com');
+```
 
-### 3. Stripe Checkout (`supabase/functions/create-checkout/index.ts`)
-- Removido `subscription_data.trial_period_days: 7`. Mensal e anual cobram imediatamente.
+Sem mudança de código. Lógica `env === "live"` em `useSubscription.ts` permanece.
 
-### 4. Paywall (`src/components/Paywall.tsx`)
-- Removidos textos "7 dias grátis", "Começar teste de 7 dias", "sem cobrança no período de teste".
-- CTA: "Assinar plano mensal/anual". Hint: "Cobrança imediata. Cancele quando quiser pelo portal."
+---
 
-### 5. Ajustes > Assinatura
-- **`SubscriptionSheet.tsx`**: novas views `trial_internal` (badge "Teste ativo") e `expired` (badge "Expirado"). View `active` perdeu menção a "trial".
-- **`Settings.tsx`**: card de Assinatura reescrito com 4 ramos — vitalício, pago, trial interno ativo, trial expirado, sem acesso.
+## 1. Reorganização lista → detalhe
 
-### 6. CheckoutReturn
-- "Seu teste de 7 dias está ativo" → "Sua assinatura está ativa".
+`NotificationsSheet` vira máquina de estado interna de 2 níveis no mesmo `Drawer`:
 
-## Distinção paid vs trial interno
-- `isPaidPremium`: apenas assinante real ou vitalício. Use para notificações/copy de Premium pago.
-- `internalTrialActive`: somente acesso gratuito interno.
-- `isActive`: união (libera recursos no app).
+- **view = "list"** → header "Notificações / Acompanhe avisos importantes do Volant" + lista de cards resumidos (categoria, ícone, título, summary, dot de não lida, chevron).
+- **view = "detail"** → header com `ChevronLeft` voltar + título + corpo completo (mensagem, tópicos, CTA).
 
-## Configurações externas Stripe a revisar manualmente
-1. **Painel Stripe > Products** (`volant_premium_monthly` e `volant_premium_yearly`): conferir se o campo "Free trial" no Price está vazio.
-2. **Customer Portal > Settings**: remover menções a "trial / teste grátis" da descrição visível.
-3. **Billing > Settings > Customer emails**: desativar templates de "Trial ending" e "Trial started".
-4. **Webhooks**: nenhuma ação — `customer.subscription.trial_will_end` simplesmente deixa de ser disparado.
+Transição fade/slide curto. Fechar Drawer reseta para "list". Sem rota nova.
 
-## Não alterado
-- Landing pública (textos remanescentes mantidos conforme restrição do escopo).
-- Home, Relatórios, Histórico, KM Inteligente, Metas.
-- Onboarding, autenticação, banco crítico, webhooks, RLS, vitalício, upgrade mensal→anual.
-- Stripe live (chaves não tocadas).
+## 2. Estado lida/não lida
+
+- Remover o `useEffect` que marca tudo como lido ao abrir o sheet (linha 35 de `NotificationsSheet.tsx`).
+- Marcar individualmente como lida **somente** ao abrir o detalhe.
+- Adicionar em `src/lib/notifications.ts`: `markAsRead(userId, id)` que atualiza `readAt` do item e dispara `NOTIFICATIONS_EVENT`.
+- `useNotifications` expõe `markAsRead`.
+
+## 3. Badge no sino (Dashboard)
+
+`useNotifications` já retorna `unread`. Adicionar dot pequeno verde (`bg-success`, sem contador) absoluto sobre o ícone do sino quando `unread > 0`. Sem alterar layout do header.
+
+## 4. Anti-duplicidade
+
+Manter persistência em `localStorage` por usuário (sem nova tabela). Cada notificação tem `id` único (dedupe key). Criar helper genérico `ensureNotification(userId, template, condition)`:
+
+1. Lê lista do usuário.
+2. Se já existe item com mesmo `id`, ignora.
+3. Se `condition()` é `true`, insere como não lida.
+
+Substitui `ensureWelcomeNotification` por essa versão genérica.
+
+## 5. Notificações desta sprint
+
+| ID | Categoria | Ícone | Condição |
+|---|---|---|---|
+| `general_welcome_group_notification` | Sistema | Símbolo V do Volant | conta ≥ 30 min (já existe, adaptar) |
+| `premium_welcome_notification` | Premium | `Crown` | `isPaidPremium === true` (assinatura paga OU `beta_grandfathered`). **Não** dispara em `internalTrialActive`. |
+| `planning_incomplete_notification` | Planejamento | ícone real de Planejamento Inteligente | conta ≥ 30 min E (`user_settings.monthly_goal = 0` OU `km_planned_month` nulo/0 OU `working_days_per_month` nulo) |
+| `vehicle_costs_missing_notification` | Veículo | ícone real de Custos do veículo | conta ≥ 30 min E nenhum `cars` do usuário tem custos preenchidos (todos `rental_weekly`, `financing_monthly`, `insurance_monthly`, `ipva_yearly`, `oil_change_cost`, `tires_cost`, `other_monthly_costs` nulos/zero) |
+
+Cada uma criada uma única vez por usuário. Se marcada como lida e depois a condição for resolvida, não recria.
+
+## 6. Fora do escopo (sprints futuras)
+
+Push, service worker, e-mail, WhatsApp, recorrentes, IA, cron backend, notificações diárias/semanais, alertas de desempenho, permissão do navegador. Categorias extras (KM Inteligente, Metas, Relatórios, Suporte, Novidades) ficam preparadas no tipo `category` mas sem notificação ainda.
+
+## 7. Regra de ícones
+
+- `iconType: "volant"` → componente local `<VolantSymbol />` (reusar `VolantLogo` em modo símbolo, sem fetch remoto — render imediato).
+- `iconType: "premium"` → `Crown` (lucide).
+- `iconType: "planning" | "vehicle-costs"` → mesmo ícone lucide já usado na tela correspondente (vou verificar em `PlanejamentoInteligente.tsx` e `CustosVeiculo.tsx` antes de codar e reusar o import idêntico).
+- Sem emojis, `Sparkles`, ou imagens remotas como ícone principal.
+
+## 8. Arquivos alterados
+
+**Editados:**
+- `src/lib/notifications.ts` — novo shape (`category`, `summary`, `content`, `iconType`, `dedupeKey`), `ensureNotification`, `markAsRead`, templates das 4 notificações.
+- `src/hooks/useNotifications.ts` — receber contexto extra (settings, cars, isPaidPremium) e disparar os `ensure*`; expor `markAsRead`.
+- `src/components/NotificationsSheet.tsx` — refatorar para máquina lista/detalhe; remover auto-mark; novo card de lista; tela de detalhe com botão voltar.
+- `src/pages/Dashboard.tsx` — passar `userSettings`, `cars`, `isPaidPremium` para o hook; adicionar badge no sino se ainda não tiver.
+
+**Sem** novas tabelas, migrations ou edge functions.
+
+## 9. Não-regressão
+
+Não tocar: `create-checkout`, `payments-webhook`, `useSubscription` (só leitura de `isPaidPremium`), tabelas `subscriptions`/`profiles`/`user_settings`/`cars`, `AuthContext`, `AccessContext`, `RequirePremium`, `OnboardingFlow`, `Landing`, `Paywall`, `SubscriptionSheet`, PWA, Home (exceto badge), Relatórios, Histórico, lógica KM/Metas, acesso 7 dias.
+
+## Detalhe técnico — novo shape
+
+```ts
+export type NotificationCategory = "sistema" | "premium" | "planejamento" | "veiculo";
+export type NotificationIcon = "volant" | "premium" | "planning" | "vehicle-costs";
+
+export interface AppNotification {
+  id: string;
+  category: NotificationCategory;
+  iconType: NotificationIcon;
+  title: string;
+  summary: string;       // lista
+  content: string;       // detalhe
+  topics?: { title: string; desc: string }[];
+  cta?: { label: string; url?: string; route?: string };
+  createdAt: number;
+  readAt: number | null;
+}
+```
+
+Item 0 já aprovado (opção a). Aguardando aprovação geral para executar.
