@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Target, Gauge, ChevronRight, Route, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,13 +88,15 @@ function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardPro
 
 export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
-      <PlanHeader onBack={() => navigate("/ajustes")} />
+      <PlanHeader onBack={() => navigate(returnTo ?? "/ajustes")} />
 
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-4 px-4 py-6 pb-28">
         <div className="space-y-2.5">
