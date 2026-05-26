@@ -54,12 +54,8 @@ export function Paywall({ onSignOut, asModal = false }: PaywallProps) {
     return () => { cancelled = true; };
   }, [user]);
 
-  const ctaLabel = hasUsedTrial
-    ? `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`
-    : "Começar teste de 7 dias";
-  const ctaHint = hasUsedTrial
-    ? "Cancele quando quiser pelo portal de assinatura."
-    : "Cancele quando quiser pelo portal de assinatura.";
+  const ctaLabel = `Assinar ${selected === "yearly" ? "plano anual" : "plano mensal"}`;
+  const ctaHint = "Cobrança imediata. Cancele quando quiser pelo portal de assinatura.";
 
   // Subtle staggered entrance for each section.
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${i * 70}ms` });
