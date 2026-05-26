@@ -9,7 +9,7 @@ export function TimerFab() {
   const location = useLocation();
 
   if (state === "idle" || state === "ended") return null;
-  if (location.pathname === "/") return null;
+  if (location.pathname === "/app") return null;
 
   const isRest = state === "resting";
 
