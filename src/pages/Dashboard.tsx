@@ -590,6 +590,7 @@ export default function Dashboard() {
           const heroTitle = showGross ? "Ganho bruto" : "Lucro líquido";
           const heroSubtitle = showGross ? "Antes dos gastos" : "Depois dos gastos";
           const heroValue = showGross ? s.gross : s.net;
+          const animatedHero = useCountUp(heroValue, 380);
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
           const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/40" : "border-success/30";
@@ -607,24 +608,45 @@ export default function Dashboard() {
                 { label: "Bruto", value: s.gross, dot: "bg-[hsl(var(--goal-gross))]/80" },
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
+          const toggleHero = () => {
+            void updateSettings({ goalType: showGross ? "liquido" : "bruto" });
+          };
           return (
-            <div className={cn("relative overflow-hidden rounded-2xl border p-5 shadow-elevated", heroBorder, heroGradient)}>
-              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl", heroBlobMain)} />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
+              aria-pressed={showGross}
+              onClick={toggleHero}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleHero();
+                }
+              }}
+              className={cn(
+                "relative overflow-hidden rounded-2xl border p-5 shadow-elevated cursor-pointer select-none transition-all duration-500 active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                heroBorder,
+                heroGradient,
+              )}
+            >
+              <div className={cn("absolute -right-12 -top-16 h-44 w-44 rounded-full blur-3xl transition-colors duration-500", heroBlobMain)} />
               <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-primary-glow/15 blur-3xl" />
               <div className="relative">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className={cn("flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em]", heroAccentText)}>
+                    <div className={cn("flex items-center gap-1.5 text-[12px] font-semibold uppercase tracking-[0.14em] transition-colors duration-500", heroAccentText)}>
                       <Gauge className="h-3.5 w-3.5" /> {heroTitle}
                     </div>
-                    <div className="mt-0.5 text-[10.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">
+                    <div className="mt-0.5 text-[9.5px] font-medium uppercase tracking-[0.12em] text-muted-foreground/55">
                       {heroSubtitle}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Segmented
-                      size="sm"
-                      className="w-[148px] shrink-0"
+                      size="xs"
+                      tone="contextual"
+                      className="w-[124px] shrink-0"
                       options={[
                         { key: "liquido", label: "Líquido" },
                         { key: "bruto", label: "Bruto" },
@@ -635,7 +657,7 @@ export default function Dashboard() {
                     <button
                       type="button"
                       aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
-                      onClick={() => setHideValues((v) => !v)}
+                      onClick={(e) => { e.stopPropagation(); setHideValues((v) => !v); }}
                       className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
                     >
                       {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -643,13 +665,12 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div
-                  key={heroMetric}
                   className={cn(
-                    "mt-2 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300 animate-fade-in-up",
+                    "mt-2 text-[2.5rem] font-bold leading-tight tabular-nums text-foreground transition-all duration-300",
                     hideValues && "blur-[4px] select-none"
                   )}
                 >
-                  {hideValues ? "R$ •••••" : brl(heroValue)}
+                  {hideValues ? "R$ •••••" : brl(animatedHero)}
                 </div>
                 <div className={cn("mt-4 border-t transition-colors duration-500", showGross ? "border-[hsl(var(--goal-gross))]/60" : "border-success/45")} />
                 <div className={cn(
@@ -661,13 +682,13 @@ export default function Dashboard() {
                       {i > 0 && (
                         <div
                           className={cn(
-                            "h-3.5 w-px",
+                            "h-3.5 w-px transition-colors duration-500",
                             showGross ? "bg-[hsl(var(--goal-gross))]/65" : "bg-success/55",
                           )}
                         />
                       )}
                       <div className="flex items-center gap-1.5">
-                        <span className={cn("h-1.5 w-1.5 rounded-full", m.dot)} />
+                        <span className={cn("h-1.5 w-1.5 rounded-full transition-colors duration-500", m.dot)} />
                         <span className="text-muted-foreground">{m.label}</span>
                         <span
                           className={cn(
