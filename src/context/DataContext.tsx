@@ -138,6 +138,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", settings.theme === "dark");
+    // Persist for the inline pre-paint script in index.html so the next
+    // session boots in the correct theme without a light-mode flash.
+    try { window.localStorage.setItem("volant.theme", settings.theme); } catch { /* ignore */ }
   }, [settings.theme]);
 
   useEffect(() => {
