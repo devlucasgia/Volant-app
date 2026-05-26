@@ -694,24 +694,37 @@ function MockBottomNav({ active = "Início" }: { active?: string }) {
 function HomeMockup() {
   return (
     <>
-      <MockHeader title="Olá, Lucas 👋" subtitle="Seja bem-vindo(a) de volta!" />
+      <MockHeader title="Olá, Lucas ☕" subtitle="Foco, disciplina e constância!" />
       <MockTabs />
       <div className="space-y-3 px-4 pb-20 pt-3">
-        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
-          <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Faturamento de hoje
+        {/* Card principal — Lucro Líquido */}
+        <div className="rounded-2xl border border-primary/40 bg-[radial-gradient(120%_120%_at_0%_0%,hsl(var(--primary)/0.18),transparent_55%)] p-3 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]">
+          <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
+            <Gauge className="h-2.5 w-2.5" /> Lucro Líquido
           </div>
-          <div className="mt-1 text-2xl font-extrabold tabular-nums">R$ 464,00</div>
-          <div className="mt-1 flex gap-3 text-[10px] text-muted-foreground">
-            <span><span className="text-primary">+ R$ 46,00</span> (11,0%)</span>
-            <span>Gasolina <span className="text-foreground">R$ 18,00</span></span>
+          <div className="mt-1 text-[26px] font-extrabold leading-none tabular-nums">R$ 464,00</div>
+          <div className="mt-3 border-t border-primary/20 pt-2 flex items-center justify-between text-[10px]">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Bruto
+              <span className="text-foreground font-semibold">R$ 600,00</span>
+            </span>
+            <span className="text-border">|</span>
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Gastos
+              <span className="text-foreground font-semibold">R$ 136,00</span>
+            </span>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
+        {/* Meta líquida do dia */}
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="font-semibold text-foreground/80">Meta líquida do dia</span>
-            <span className="text-muted-foreground">R$ 464,00 / R$ 714,00</span>
+            <span className="flex items-center gap-1 font-semibold text-primary">
+              <Target className="h-2.5 w-2.5" /> Meta líquida do dia
+            </span>
+            <span className="text-muted-foreground tabular-nums">
+              <span className="text-foreground font-semibold">R$ 464,00</span> / R$ 714,00
+            </span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
             <div className="h-full w-[65%] rounded-full bg-primary" />
@@ -722,23 +735,41 @@ function HomeMockup() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
-          <div className="text-[9px] font-semibold uppercase tracking-wider text-primary">
-            Lucro líquido estimado
+        {/* R$/KM Inteligente — horizontal */}
+        <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-card/60 p-2.5">
+          <span className="grid h-9 w-9 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+            <Gauge className="h-4 w-4" />
+          </span>
+          <div className="flex-1 text-center">
+            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+              R$/KM Inteligente
+            </div>
+            <div className="mt-0.5 text-[15px] font-extrabold tabular-nums">
+              R$ 2,34 <span className="text-[10px] font-medium text-muted-foreground">/ km</span>
+            </div>
           </div>
-          <div className="mt-1 text-xl font-extrabold tabular-nums">R$ 2,34 <span className="text-xs text-muted-foreground">/km</span></div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl border border-border/50 bg-card/60 p-3">
-            <div className="text-[9px] uppercase text-muted-foreground">R$/hora líq.</div>
-            <div className="mt-0.5 text-base font-bold tabular-nums">R$ 75,00</div>
-            <div className="text-[9px] text-primary">+ 8,2%</div>
+        {/* Performance */}
+        <div>
+          <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <Gauge className="h-2.5 w-2.5" /> Performance
           </div>
-          <div className="rounded-xl border border-border/50 bg-card/60 p-3">
-            <div className="text-[9px] uppercase text-muted-foreground">R$/km</div>
-            <div className="mt-0.5 text-base font-bold tabular-nums">R$ 2,31</div>
-            <div className="text-[9px] text-primary">+ 5,1%</div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-primary">
+                R$ / Hora
+              </div>
+              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 75,00</div>
+              <div className="text-[9px] text-muted-foreground">8,0h trabalhadas</div>
+            </div>
+            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
+              <div className="text-[9px] font-semibold uppercase tracking-wider text-sky-400">
+                R$ / Km
+              </div>
+              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 2,31</div>
+              <div className="text-[9px] text-muted-foreground">260,0 km</div>
+            </div>
           </div>
         </div>
       </div>
