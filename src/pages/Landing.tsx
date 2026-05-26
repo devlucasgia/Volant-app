@@ -838,19 +838,45 @@ function MockBottomNav({ active = "Início" }: { active?: string }) {
   );
 }
 
-function HomeMockup() {
+function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
+  const isLiq = mode === "liquido";
+  // Valores reativos ao modo
+  const mainValue = isLiq ? 350 : 600;
+  const mainLabel = isLiq ? "Lucro Líquido" : "Faturamento Bruto";
+  const mainTag = isLiq ? "LUCRO LÍQUIDO" : "FATURAMENTO BRUTO";
+
+  const metaLabel = isLiq ? "Meta líquida do dia" : "Meta bruta do dia";
+  const metaCurrent = isLiq ? 350 : 600;
+  const metaTarget = isLiq ? 714 : 1000;
+  const metaPct = isLiq ? 49 : 60;
+  const metaRemaining = isLiq ? 364 : 400;
+
+  const kmLabel = isLiq ? "R$/KM Inteligente" : "R$/KM Bruto";
+  const kmValue = isLiq ? 2.42 : 4.15;
+
   return (
-    <>
+    <div data-mode={mode} className="contents">
       <MockHeader title="Olá, Lucas ☕" subtitle="Foco, disciplina e constância!" />
-      <MockTabs />
+
+      {/* Toggle Líquido / Bruto (decorativo, alterna sozinho) */}
+      <div className="px-4 pt-3">
+        <div className="mode-toggle w-full">
+          <span className="mode-toggle__pill" aria-hidden />
+          <span className="mode-toggle__option" data-opt="liquido">Líquido</span>
+          <span className="mode-toggle__option" data-opt="bruto">Bruto</span>
+        </div>
+      </div>
+
       <div className="space-y-3 px-4 pb-20 pt-3">
-        {/* Card principal — Lucro Líquido */}
-        <div className="rounded-2xl border border-primary/40 bg-[radial-gradient(120%_120%_at_0%_0%,hsl(var(--primary)/0.18),transparent_55%)] p-3 shadow-[inset_0_0_0_1px_hsl(var(--primary)/0.15)]">
-          <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-primary">
-            <Gauge className="h-2.5 w-2.5" /> Lucro Líquido
+        {/* Card principal — alterna Líquido / Bruto */}
+        <div className="mode-card mode-card--primary rounded-2xl border p-3">
+          <div className="mode-text flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider" aria-label={mainTag}>
+            <Gauge className="h-2.5 w-2.5" /> {mainLabel}
           </div>
-          <div className="mt-1 text-[26px] font-extrabold leading-none tabular-nums">R$ 464,00</div>
-          <div className="mt-3 border-t border-primary/20 pt-2 flex items-center justify-between text-[10px]">
+          <div className="mt-1 text-[26px] font-extrabold leading-none tabular-nums">
+            <AnimatedNumber value={mainValue} format={fmtBRL} />
+          </div>
+          <div className="mt-3 border-t border-current/15 pt-2 flex items-center justify-between text-[10px]" style={{ borderColor: "hsl(var(--border) / 0.6)" }}>
             <span className="flex items-center gap-1 text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Bruto
               <span className="text-foreground font-semibold">R$ 600,00</span>
@@ -858,46 +884,58 @@ function HomeMockup() {
             <span className="text-border">|</span>
             <span className="flex items-center gap-1 text-muted-foreground">
               <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Gastos
-              <span className="text-foreground font-semibold">R$ 136,00</span>
+              <span className="text-foreground font-semibold">R$ 250,00</span>
             </span>
           </div>
         </div>
 
-        {/* Meta líquida do dia */}
+        {/* Meta do dia */}
         <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="flex items-center gap-1 font-semibold text-primary">
-              <Target className="h-2.5 w-2.5" /> Meta líquida do dia
+            <span className="mode-text flex items-center gap-1 font-semibold">
+              <Target className="h-2.5 w-2.5" /> {metaLabel}
             </span>
             <span className="text-muted-foreground tabular-nums">
-              <span className="text-foreground font-semibold">R$ 464,00</span> / R$ 714,00
+              <span className="text-foreground font-semibold">
+                <AnimatedNumber value={metaCurrent} format={fmtBRLInt} />
+              </span>{" "}
+              / <AnimatedNumber value={metaTarget} format={fmtBRLInt} />
             </span>
           </div>
           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-[65%] rounded-full bg-primary" />
+            <div
+              key={mode /* força re-anim da largura na troca */}
+              className="mode-bar h-full rounded-full"
+              style={{ width: `${metaPct}%` }}
+            />
           </div>
           <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>Faltam R$ 250,00</span>
-            <span className="font-semibold text-primary">65%</span>
+            <span>
+              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRLInt} />
+            </span>
+            <span className="mode-text font-semibold">
+              <AnimatedNumber value={metaPct} format={(n) => `${Math.round(n)}%`} />
+            </span>
           </div>
         </div>
 
         {/* R$/KM Inteligente — horizontal */}
         <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-card/60 p-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+          <span className="mode-icon-bg grid h-9 w-9 place-items-center rounded-xl border">
             <Gauge className="h-4 w-4" />
           </span>
           <div className="flex-1 text-center">
             <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-              R$/KM Inteligente
+              {kmLabel}
             </div>
             <div className="mt-0.5 text-[15px] font-extrabold tabular-nums">
-              R$ 2,34 <span className="text-[10px] font-medium text-muted-foreground">/ km</span>
+              <AnimatedNumber value={kmValue} format={(n) => `R$ ${n.toFixed(2).replace(".", ",")}`} />{" "}
+              <span className="text-[10px] font-medium text-muted-foreground">/ km</span>
             </div>
           </div>
         </div>
 
-        {/* Performance */}
+        {/* Performance (neutro) */}
         <div>
           <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
             <Gauge className="h-2.5 w-2.5" /> Performance
@@ -921,9 +959,10 @@ function HomeMockup() {
         </div>
       </div>
       <MockBottomNav />
-    </>
+    </div>
   );
 }
+
 
 function KmMockup() {
   return (
