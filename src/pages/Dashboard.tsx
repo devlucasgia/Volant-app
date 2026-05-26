@@ -533,6 +533,7 @@ export default function Dashboard() {
         {/* Period switcher — Hoje | Semana | Mês | Calendário */}
         <PeriodBar
           period={period}
+          tone={heroMetric === "gross" ? "gross" : "net"}
           onSelect={(p) => { setPeriod(p); setCustomRange(null); }}
           onCalendarClick={() => {
             setCalDraft(customRange ? { from: customRange.from, to: customRange.to } : undefined);
