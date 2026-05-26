@@ -530,7 +530,7 @@ function PainStrip() {
     <section className="border-y border-border/40 bg-card/30 px-4 py-10 md:py-14">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
-          Você sabe quanto <span className="text-primary">sobra de verdade</span> no fim do dia?
+          Você sabe quanto <span className="accent-text">sobra de verdade</span> no fim do dia?
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
           Faturar bem é fácil. Difícil é saber o lucro real depois da gasolina, manutenção, IPVA e
@@ -549,7 +549,7 @@ function FeatureKmInteligente() {
       id="km"
       tag="Diferencial #1"
       tagIcon={<Gauge className="h-3 w-3" />}
-      title={<>KM Inteligente: <span className="text-primary">nunca mais aceite corrida no prejuízo.</span></>}
+      title={<>KM Inteligente: <span className="accent-text">nunca mais aceite corrida no prejuízo.</span></>}
       description="Volant calcula em tempo real o R$/km mínimo que cada corrida precisa pagar pra você bater sua meta — considerando gasolina, custos do veículo e quantos dias você ainda vai rodar."
       bullets={[
         "Cálculo adaptativo: se você rodou mais hoje, o mínimo de amanhã cai.",
@@ -570,7 +570,7 @@ function FeatureMetas() {
       id="metas"
       tag="Diferencial #2"
       tagIcon={<Target className="h-3 w-3" />}
-      title={<>Metas que <span className="text-primary">se adaptam</span> a como você roda.</>}
+      title={<>Metas que <span className="accent-text">se adaptam</span> a como você roda.</>}
       description="Defina uma meta mensal e o Volant redistribui automaticamente o quanto falta a cada dia trabalhado — se você rodou bem na segunda, sua meta de terça relaxa. Se ficou pra trás, ela ajusta."
       bullets={[
         "Meta diária, semanal e mensal sempre atualizadas.",
@@ -591,7 +591,7 @@ function FeaturePersonalizacao() {
       id="personalizacao"
       tag="Diferencial #3"
       tagIcon={<LayoutGrid className="h-3 w-3" />}
-      title={<>Sua tela do seu jeito — <span className="text-primary">do seu jeito mesmo.</span></>}
+      title={<>Sua tela do seu jeito — <span className="accent-text">do seu jeito mesmo.</span></>}
       description="A maioria dos apps de motorista é engessada. No Volant, você reorganiza os cards da home, escolhe o cumprimento, ajusta categorias e deixa o app com a sua cara."
       bullets={[
         "Arraste e solte os cards da tela inicial.",
@@ -636,7 +636,7 @@ function SecondaryFeatures() {
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Sparkles className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
           <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-            Recursos que <span className="text-primary">trabalham por você</span>.
+            Recursos que <span className="accent-text">trabalham por você</span>.
           </h2>
         </div>
 
@@ -667,7 +667,7 @@ function FinalCta() {
       <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-8 text-center md:p-14">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
         <h2 className="text-balance text-3xl font-extrabold tracking-tight md:text-4xl">
-          Comece a dirigir com clareza <span className="text-primary">hoje mesmo</span>.
+          Comece a dirigir com clareza <span className="accent-text">hoje mesmo</span>.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
           Teste o Volant por 7 dias sem pagar nada. Sem cartão. Sem amarração.
