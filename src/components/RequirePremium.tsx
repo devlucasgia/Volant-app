@@ -26,13 +26,7 @@ export function RequirePremium({ children }: { children: React.ReactNode }) {
 
   if (!user) return <>{children}</>;
 
-  if (loading) {
-    return (
-      <div className="grid min-h-[100dvh] place-items-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <SplashScreen />;
 
   return <AccessProvider isFull={isActive}>{children}</AccessProvider>;
 }
