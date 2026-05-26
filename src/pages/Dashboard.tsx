@@ -25,6 +25,7 @@ import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } f
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 
