@@ -59,7 +59,7 @@ export default function Categorias() {
   return (
     <div className="min-h-screen">
       <ScreenHeader onBack={() => navigate("/ajustes")} />
-      <div className="space-y-3 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-2.5 px-4 py-4">
         <HubCard
           to="/ajustes/categorias/ganhos"
           icon={<Wallet className="h-4 w-4" />}
@@ -74,6 +74,9 @@ export default function Categorias() {
           subtitle="Gerencie suas categorias de despesas."
           onClick={() => navigate("/ajustes/categorias/gastos")}
         />
+        <p className="pt-2 text-center text-[10.5px] text-muted-foreground/60">
+          Toque em um item para abrir.
+        </p>
       </div>
     </div>
   );
