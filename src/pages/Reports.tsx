@@ -413,11 +413,11 @@ export default function Reports() {
                 </div>
               </div>
             ),
-            gross: () => (
-              <SideStatCard key="gross" label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
-            ),
-            expenses: () => (
-              <SideStatCard key="expenses" label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+            grossExpenses: () => (
+              <div key="grossExpenses" className="grid grid-cols-2 gap-3">
+                <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
+                <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
+              </div>
             ),
             daysGroup: () => (
               <PairCard
