@@ -61,7 +61,8 @@ async function createCheckoutSession(options: {
       metadata: { userId: options.userId },
       ...(isRecurring && {
         subscription_data: {
-          trial_period_days: 7,
+          // No trial_period_days: the 7-day free access is granted in-app
+          // (see useSubscription). Stripe Checkout charges immediately.
           metadata: { userId: options.userId },
         },
       }),
