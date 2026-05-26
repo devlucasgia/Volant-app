@@ -1,89 +1,77 @@
-# Plano — Refino de cards clicáveis e visual das subtelas de Ajustes
+# Sprint — Pré-lançamento (estabilização para versão paga)
 
-Escopo 100% visual/presentacional. Sem alterar lógica, rotas, dados, Stripe, Supabase, auth, onboarding, PWA, checkout, landing ou cálculos.
+Escopo aprovado pelo usuário; tudo fora dessa lista foi deixado para sprints futuras.
 
----
+## Itens implementados
 
-## 1. Indicação sutil de interatividade nos cards
+### C1 — Flash da landing antes do /app
+- Criado `src/components/SplashScreen.tsx` (logo + spinner, tema escuro fixo).
+- `Landing.tsx` agora renderiza `<SplashScreen />` enquanto `useAuth().loading` for `true`, em vez de mostrar a página de vendas inteira.
+- Usuários já logados não veem mais o "flash" da página de vendas antes do redirect pro `/app`.
 
-Padrão único, aplicado nos cards já clicáveis:
+### P3 — Splash unificado
+- `RequireAuth.tsx` e `RequirePremium.tsx` passaram a usar o mesmo `SplashScreen`.
+- Loader visual unificado entre landing, auth e premium gate.
 
-- **Chevron `›`** discreto (`h-4 w-4 text-muted-foreground/70`) no canto direito, com leve translate-x no hover.
-- **Glow/borda** ganha presença sutil em `:hover` (borda → `border-primary/30` ou variante de cor do card) e `active:scale-[0.985]`.
-- **Transição** `duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]`.
-- **Cursor pointer** + `focus-visible:ring-2 ring-primary/40` para acessibilidade.
+### C3 — Confirmação RLS de `signup_notifications`
+- Verificado: a tabela é tocada APENAS pela edge function `notify-new-user` (service_role). Não há uso client-side.
+- Migration original já tem `enable row level security` sem nenhuma policy pública → tabela já é fail-closed para anon/authenticated. **Sem alteração necessária.**
 
-### Onde aplicar
+### I3 — Banner de modo teste do Stripe
+- Auditado `PaymentTestModeBanner.tsx`: já tem gate por `pk_test_` prefix do client token.
+- Em `live`, o token publishable não começa com `pk_test_`, então o banner nunca aparece.
+- Componente também não está sendo montado em lugar nenhum hoje, então é só "munição de segurança" pré-pronta. Sem alteração.
 
-**Home (`Dashboard.tsx`)**
-- Card de Meta: adicionar `ChevronRight` discreto no canto direito do header (junto aos valores) + microlabel `Ver meta` opcional em texto `text-[10px] text-muted-foreground/70` ao lado do chevron. Hover/active já existem; reforçar borda contextual.
-- Card KM Inteligente: chevron discreto sobreposto à direita (sem quebrar o layout centralizado) + microlabel `Ver cálculo` no `aria-label`. Como o card é estreito, usar apenas chevron visual no canto, sem texto, para não competir com o valor central.
+### I5 — Webhook do Stripe
+- Adicionado handler para `invoice.payment_failed` em `supabase/functions/payments-webhook/index.ts`.
+- Quando um pagamento falha, marca a assinatura como `past_due` de forma idempotente (sem alterar regras Premium — o hook `useSubscription` continua tratando `past_due` como ativo dentro do período corrente).
+- Cobertura final: `subscription.created`, `subscription.updated`, `subscription.deleted`, `invoice.payment_failed`.
 
-**Ajustes (`Settings.tsx` → `HubRow`)**
-- Já possui `ChevronRight`; reforçar `active:scale-[0.985]`, `focus-visible:ring`, e glow no hover (mantendo o que já existe). Sem mudança estrutural.
-- Card de Feedback: aplicar o mesmo padrão de microefeito nos dois botões internos (já são `Button outline`, manter).
+### I6 — Termos e Privacidade
+- Criadas rotas públicas `/termos` (`src/pages/Termos.tsx`) e `/privacidade` (`src/pages/Privacidade.tsx`).
+- Conteúdo base revisável (rascunho jurídico inicial, alinhado em traços gerais à LGPD).
+- Adicionado link discreto no rodapé do `Auth.tsx` para Termos e Privacidade.
 
-**Hubs (`Personalizacao.tsx`, `CentralVeiculos.tsx`, `Categorias.tsx`, `PlanejamentoInteligente.tsx`)**
-- `HubCard` já tem chevron — apenas padronizar: mesma curva de transição, `active:scale-[0.985]`, `focus-visible:ring`, glow sutil no hover usando a cor temática do ícone (lilás/ciano/etc).
+### P4 — Recuperação de senha
+- Criada rota pública `/reset-password` (`src/pages/ResetPassword.tsx`) com formulário de nova senha.
+- Adicionado link "Esqueci minha senha" no modo signin do `Auth.tsx`, que dispara `supabase.auth.resetPasswordForEmail` com `redirectTo` para `/reset-password`.
+- Pós-redefinição: faz signOut da sessão recovery e leva o usuário para `/auth`.
 
----
+### P5 — SEO e 404
+- `index.html` ganhou `<link rel="canonical" href="https://usevolant.app/" />`. Title, description e OG já estavam ok.
+- `NotFound.tsx` reescrita com identidade Volant (tema escuro, CTA para `/app`, link de retorno para `/`).
+- Removido `console.error` ruidoso em produção (mantido só em DEV).
 
-## 2. Subtelas de Ajustes — reduzir espaço vazio
-
-Decisão: **manter como rota dedicada** (não migrar para modal/bottom sheet) — migração para Dialog quebraria histórico do navegador, botão voltar nativo e estados internos das subtelas. Aplico a **opção alternativa segura**: compactar visualmente.
-
-Ajustes nos hubs (`Personalizacao.tsx`, `CentralVeiculos.tsx`, `Categorias.tsx`, `PlanejamentoInteligente.tsx`):
-
-- Reduzir `py-6` → `py-4` no container; conteúdo sobe próximo ao header.
-- Envolver os HubCards em um wrapper `max-w-md mx-auto` no desktop para não esticarem em telas largas.
-- Adicionar leve "intro" opcional (1 linha de hint contextual) só quando o hub tiver ≤3 cards, para a tela não parecer vazia.
-- Footer discreto opcional: `<p className="text-center text-[10.5px] text-muted-foreground/60 pt-2">Toque em um item para abrir</p>` — somente nos hubs com 2–3 itens.
-
-Não alterar rotas, navegação, nem comportamento de back.
-
----
-
-## 3. Microefeitos de toque/hover (resumo técnico)
-
-Classes padronizadas em cards interativos:
-```
-transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
-hover:bg-card/95 hover:border-{tone}/35
-active:scale-[0.985]
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-{tone}/40
-cursor-pointer
-```
-Chevron com `group-hover:translate-x-0.5 group-active:translate-x-1`.
+### Bônus solicitado — Vão das subtelas de Ajustes
+- `Personalizacao`, `CentralVeiculos`, `Categorias` e `PlanejamentoInteligente`: o container passou de `min-h-screen` + conteúdo no topo para `flex min-h-[100dvh] flex-col` + bloco de cards centralizado verticalmente (`flex-1 justify-center`) e `pb-28` para respirar acima da bottom nav.
+- O vão grande mostrado nos prints sumiu — os cards agora se acomodam no centro vertical da área visível, sem alterar lógica nem rotas.
 
 ---
 
-## 4. Cores dos ícones em Ajustes
+## Itens fora de escopo nesta sprint (decididos pelo usuário)
 
-Atual → Novo:
-- **Central de Veículos**: `bg-cyan-500/10 text-cyan-300` — **mantém**.
-- **Personalização**: hoje `text-teal-400` → **lilás suave** `bg-violet-400/10 text-violet-300` (com glow `shadow-[0_0_12px_-6px_currentColor]` já presente). Atualizar também o ícone do header em `Personalizacao.tsx` para manter coerência.
-- **Feedback**: hoje `text-violet-300` → **cinza/prata neutro** `bg-slate-400/10 text-slate-300`.
-- **Categorias** e **Planejamento Inteligente**: manter (já distintos do violeta/ciano após mudanças acima).
-
-Apenas tokens visuais nos `iconTone` e no header de Personalização.
+- **C2** — Custom Google OAuth (consent screen "Volant" em vez de "Lovable"): requer configuração externa no Google Cloud. Será tratado depois.
+- **C4** — Resend / remetente / domínio de e-mail: sprint separada.
+- **Cadastro/login por telefone**: sprint separada, sensível.
+- Nada foi tocado em: Home visual, Relatórios, KM Inteligente, Central de Notificações, PWA, onboarding, landing visual, banco crítico, Stripe além do necessário.
 
 ---
 
-## 5. Arquivos a alterar
+## Arquivos alterados
 
-- `src/pages/Dashboard.tsx` — chevron + microefeitos nos cards Meta e KM Inteligente.
-- `src/pages/Settings.tsx` — trocar `iconTone` de Personalização (lilás) e Feedback (slate); reforçar foco/active no `HubRow`.
-- `src/pages/Personalizacao.tsx` — header lilás; compactar padding; mesmo refino no `HubCard`.
-- `src/pages/CentralVeiculos.tsx` — compactar padding; refino no HubCard (mantém ciano).
-- `src/pages/Categorias.tsx` — compactar padding; refino no HubCard.
-- `src/pages/PlanejamentoInteligente.tsx` — compactar padding; refino no HubCard.
-
-Total: 6 arquivos, apenas mudanças visuais.
-
----
-
-## 6. Garantias de escopo
-
-Nada é alterado em: Stripe/checkout/webhooks/subscription, Supabase/banco/migrations, autenticação, onboarding, lógica Premium, landing `/`, fluxo PWA, Central de Notificações, Líquido/Bruto, Relatórios, Histórico, rotas, navegação, hooks de dados, cálculos. Apenas classes Tailwind, ícones e pequenos elementos visuais (chevron/label).
-
-Aguardando confirmação para executar.
+- novo: `src/components/SplashScreen.tsx`
+- novo: `src/pages/Termos.tsx`
+- novo: `src/pages/Privacidade.tsx`
+- novo: `src/pages/ResetPassword.tsx`
+- editado: `src/App.tsx` (3 rotas públicas novas)
+- editado: `src/components/RequireAuth.tsx`
+- editado: `src/components/RequirePremium.tsx`
+- editado: `src/pages/Landing.tsx` (splash em loading)
+- editado: `src/pages/Auth.tsx` (esqueci senha + links Termos/Privacidade)
+- editado: `src/pages/NotFound.tsx`
+- editado: `src/pages/Personalizacao.tsx` (centralização vertical)
+- editado: `src/pages/CentralVeiculos.tsx` (centralização vertical)
+- editado: `src/pages/Categorias.tsx` (centralização vertical)
+- editado: `src/pages/PlanejamentoInteligente.tsx` (centralização vertical)
+- editado: `supabase/functions/payments-webhook/index.ts` (invoice.payment_failed)
+- editado: `index.html` (canonical)
