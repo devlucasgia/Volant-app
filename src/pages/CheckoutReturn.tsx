@@ -46,7 +46,7 @@ export default function CheckoutReturn() {
           <Loader2 className="h-14 w-14 animate-spin text-primary" />
         )}
         <h1 className="mt-5 text-xl font-bold">
-          {confirmed ? "Tudo certo! Seu teste de 7 dias está ativo." : "Confirmando sua assinatura..."}
+          {confirmed ? "Tudo certo! Sua assinatura está ativa." : "Confirmando sua assinatura..."}
         </h1>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">
           {confirmed
