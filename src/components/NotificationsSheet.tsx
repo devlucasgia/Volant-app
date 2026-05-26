@@ -317,16 +317,12 @@ function NotificationIconBadge({
   // para o "V" aparecer com identidade clara em vez de se diluir no verde.
   if (iconType === "volant") {
     return (
-      <span
+      <VolantNotificationIcon
+        size={large ? 40 : 36}
         className={cn(
-          "relative inline-flex shrink-0 items-center justify-center rounded-xl bg-background ring-1 ring-inset ring-border/60",
-          sizeBox,
-          "shadow-[0_0_18px_-6px_hsl(var(--primary)/0.55)]",
-          unread && "shadow-[0_0_22px_-6px_hsl(var(--primary)/0.7)]",
+          unread && "shadow-[0_0_22px_-6px_hsl(var(--primary)/0.75)]",
         )}
-      >
-        <VolantLogo size={large ? 22 : 18} />
-      </span>
+      />
     );
   }
 
