@@ -241,9 +241,9 @@ export default function Dashboard() {
           type="button"
           key="goal"
           onClick={() => navigate("/ajustes/planejamento/metas")}
-          aria-label="Editar meta"
+          aria-label="Ver meta"
             className={cn(
-              "relative z-10 w-full overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95",
+              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
         >
@@ -269,10 +269,13 @@ export default function Dashboard() {
                 )}
                 <span className="truncate">{periodGoal.title}</span>
               </div>
-              <div className="shrink-0 text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
-                <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
-                <span className="mx-1 text-muted-foreground/60">/</span>
-                <span>{brl(periodGoal.value)}</span>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
+                  <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
+                  <span className="mx-1 text-muted-foreground/60">/</span>
+                  <span>{brl(periodGoal.value)}</span>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
               </div>
             </div>
 
