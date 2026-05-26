@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
@@ -7,7 +7,17 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { BellOff, ChevronLeft, ChevronRight, ExternalLink, Crown, Brain, Wallet } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { BellOff, ChevronLeft, ChevronRight, ExternalLink, Crown, Brain, Wallet, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
@@ -25,6 +35,8 @@ import { VolantLogo } from "@/components/VolantLogo";
  *   - detail → conteúdo completo da notificação selecionada.
  *
  * A notificação só é marcada como lida quando o usuário abre o detalhe.
+ * CTAs internas preservam a rota de origem em `state.returnTo` para que
+ * o "voltar" das telas-alvo retorne à origem real do usuário.
  */
 export function NotificationsSheet({
   open,
@@ -34,8 +46,9 @@ export function NotificationsSheet({
   onOpenChange: (v: boolean) => void;
 }) {
   const { user } = useAuth();
-  const { settings, cars } = useData();
+  const { settings, cars, loading } = useData();
   const { isPaidPremium } = useSubscription(user?.id);
+  const location = useLocation();
 
   const planning = useMemo(
     () => ({
@@ -46,40 +59,80 @@ export function NotificationsSheet({
     [settings.monthlyGoal, settings.kmPlannedMonth, settings.workingDaysPerMonth],
   );
 
-  const { items, markAsRead } = useNotifications(user?.id, user?.created_at, {
+  const { items, markAsRead, clearAll } = useNotifications(user?.id, user?.created_at, {
     isPaidPremium,
     planning,
     cars: cars as any,
+    ready: !loading,
   });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+  // Snapshot da rota onde o sheet foi aberto — preservado para CTAs.
+  const [originPath, setOriginPath] = useState<string>("/");
+
   const selected = useMemo(
     () => (selectedId ? items.find((n) => n.id === selectedId) ?? null : null),
     [selectedId, items],
   );
 
-  // Sempre reset para a lista ao fechar.
   useEffect(() => {
-    if (!open) setSelectedId(null);
-  }, [open]);
+    if (open) {
+      setOriginPath(location.pathname);
+    } else {
+      setSelectedId(null);
+    }
+  }, [open, location.pathname]);
 
   const openDetail = (n: AppNotification) => {
     setSelectedId(n.id);
     if (!n.readAt) markAsRead(n.id);
   };
 
+  const handleClearAll = () => {
+    clearAll();
+    setConfirmClear(false);
+    setSelectedId(null);
+  };
+
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent>
-        <div className="mx-auto w-full max-w-md">
-          {selected ? (
-            <NotificationDetail notification={selected} onBack={() => setSelectedId(null)} />
-          ) : (
-            <NotificationList items={items} onOpen={openDetail} />
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+    <>
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-md">
+            {selected ? (
+              <NotificationDetail
+                notification={selected}
+                onBack={() => setSelectedId(null)}
+                originPath={originPath}
+                onCtaNavigate={() => onOpenChange(false)}
+              />
+            ) : (
+              <NotificationList
+                items={items}
+                onOpen={openDetail}
+                onRequestClearAll={() => setConfirmClear(true)}
+              />
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <AlertDialog open={confirmClear} onOpenChange={setConfirmClear}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover todas as notificações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              As notificações serão removidas da sua lista e não voltam a aparecer automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearAll}>Limpar todas</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -87,17 +140,33 @@ export function NotificationsSheet({
 function NotificationList({
   items,
   onOpen,
+  onRequestClearAll,
 }: {
   items: AppNotification[];
   onOpen: (n: AppNotification) => void;
+  onRequestClearAll: () => void;
 }) {
   return (
     <>
       <DrawerHeader className="text-left">
-        <DrawerTitle className="text-base font-semibold">Notificações</DrawerTitle>
-        <DrawerDescription className="text-[12px]">
-          Acompanhe avisos importantes do Volant.
-        </DrawerDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <DrawerTitle className="text-base font-semibold">Notificações</DrawerTitle>
+            <DrawerDescription className="text-[12px]">
+              Acompanhe avisos importantes do Volant.
+            </DrawerDescription>
+          </div>
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={onRequestClearAll}
+              className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              <Trash2 className="h-3 w-3" />
+              Limpar todas
+            </button>
+          )}
+        </div>
       </DrawerHeader>
 
       <div className="space-y-2 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
@@ -158,9 +227,13 @@ function NotificationList({
 function NotificationDetail({
   notification: n,
   onBack,
+  originPath,
+  onCtaNavigate,
 }: {
   notification: AppNotification;
   onBack: () => void;
+  originPath: string;
+  onCtaNavigate: () => void;
 }) {
   const navigate = useNavigate();
   const handleCta = () => {
@@ -170,7 +243,8 @@ function NotificationDetail({
       return;
     }
     if (n.cta.route) {
-      navigate(n.cta.route);
+      onCtaNavigate();
+      navigate(n.cta.route, { state: { returnTo: originPath } });
     }
   };
 
@@ -236,20 +310,34 @@ function NotificationIconBadge({
   unread?: boolean;
   large?: boolean;
 }) {
+  const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
+  const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
+
+  // Símbolo institucional do Volant: fundo escuro + glow verde sutil,
+  // para o "V" aparecer com identidade clara em vez de se diluir no verde.
+  if (iconType === "volant") {
+    return (
+      <span
+        className={cn(
+          "relative inline-flex shrink-0 items-center justify-center rounded-xl bg-background ring-1 ring-inset ring-border/60",
+          sizeBox,
+          "shadow-[0_0_18px_-6px_hsl(var(--primary)/0.55)]",
+          unread && "shadow-[0_0_22px_-6px_hsl(var(--primary)/0.7)]",
+        )}
+      >
+        <VolantLogo size={large ? 22 : 18} />
+      </span>
+    );
+  }
+
   const tone =
     iconType === "premium"
       ? "bg-warning/15 text-warning"
       : iconType === "vehicle-costs"
         ? "bg-primary/15 text-primary"
-        : iconType === "planning"
-          ? "bg-primary/15 text-primary"
-          : "bg-success/15 text-success";
-
-  const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
-  const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
+        : "bg-primary/15 text-primary"; // planning
 
   const Icon = () => {
-    if (iconType === "volant") return <VolantLogo size={large ? 22 : 18} />;
     if (iconType === "premium") return <Crown className={sizeIcon} />;
     if (iconType === "planning") return <Brain className={sizeIcon} />;
     return <Wallet className={sizeIcon} />;

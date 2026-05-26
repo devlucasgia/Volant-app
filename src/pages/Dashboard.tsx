@@ -31,7 +31,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 
 
 export default function Dashboard() {
-  const { entries, settings, updateSettings, carInitialKm, activeCar, cars, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, updateSettings, carInitialKm, activeCar, cars, expenseMetaFor, platformMetaFor, isSimplePlatform, loading: dataLoading } = useData();
   const { isFull } = useAccess();
   const { user } = useAuth();
   const { isPaidPremium } = useSubscription(user?.id);
@@ -63,6 +63,7 @@ export default function Dashboard() {
     isPaidPremium,
     planning: planningSnapshot,
     cars: cars as any,
+    ready: !dataLoading,
   });
 
   useEffect(() => {

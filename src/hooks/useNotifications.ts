@@ -4,6 +4,7 @@ import {
   NOTIFICATIONS_EVENT,
   PlanningSnapshot,
   VehicleCostsSnapshot,
+  clearAllNotifications,
   ensurePlanningIncompleteNotification,
   ensurePremiumWelcomeNotification,
   ensureVehicleCostsMissingNotification,
@@ -17,6 +18,12 @@ interface NotificationsContext {
   isPaidPremium?: boolean;
   planning?: PlanningSnapshot | null;
   cars?: VehicleCostsSnapshot[] | null;
+  /**
+   * Só dispara notificações condicionais quando os dados do usuário
+   * (settings/cars) terminaram de carregar. Evita criar notificações
+   * indevidas com base no estado inicial vazio.
+   */
+  ready?: boolean;
 }
 
 export function useNotifications(
@@ -37,18 +44,20 @@ export function useNotifications(
     setUnread(unreadCount(userId));
   }, [userId]);
 
-  // Garante notificações elegíveis + re-agenda welcome se ainda faltam
-  // minutos para a conta completar 30 min.
   const isPaidPremium = context?.isPaidPremium === true;
   const planning = context?.planning ?? null;
   const cars = context?.cars ?? null;
+  const ready = context?.ready !== false; // default true para chamadas sem contexto
 
   useEffect(() => {
     if (!userId) return;
     ensureWelcomeNotification(userId, accountCreatedAt);
     ensurePremiumWelcomeNotification(userId, isPaidPremium);
-    ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
-    ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+    // Condicionais dependem dos dados carregados.
+    if (ready) {
+      ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
+      ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+    }
     refresh();
 
     if (!accountCreatedAt) return;
@@ -61,13 +70,15 @@ export function useNotifications(
     if (remaining > 0 && remaining < 60 * 60 * 1000) {
       const t = window.setTimeout(() => {
         ensureWelcomeNotification(userId, accountCreatedAt);
-        ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
-        ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+        if (ready) {
+          ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
+          ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+        }
         refresh();
       }, remaining + 500);
       return () => window.clearTimeout(t);
     }
-  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, refresh]);
+  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, ready, refresh]);
 
   useEffect(() => {
     const onChange = () => refresh();
@@ -87,5 +98,10 @@ export function useNotifications(
     [userId],
   );
 
-  return { items, unread, markAsRead };
+  const clearAll = useCallback(() => {
+    if (!userId) return;
+    clearAllNotifications(userId);
+  }, [userId]);
+
+  return { items, unread, markAsRead, clearAll };
 }

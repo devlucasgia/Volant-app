@@ -1,10 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Wallet } from "lucide-react";
 import { VehicleCostsCard } from "@/components/vehicle/VehicleCostsCard";
 
 export default function CustosVeiculo() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
@@ -15,7 +17,7 @@ export default function CustosVeiculo() {
         <div className="flex items-center gap-3 px-3 py-3">
           <button
             type="button"
-            onClick={() => navigate("/ajustes/veiculos")}
+            onClick={() => navigate(returnTo ?? "/ajustes/veiculos")}
             aria-label="Voltar"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted/50 active:scale-[0.96]"
           >
