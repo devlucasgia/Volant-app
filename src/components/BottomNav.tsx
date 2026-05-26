@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useUI } from "@/context/UIContext";
 
 const navItems = [
-  { to: "/", label: "Início", icon: Home, end: true },
+  { to: "/app", label: "Início", icon: Home, end: true },
   { to: "/historico", label: "Histórico", icon: History },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/ajustes", label: "Ajustes", icon: SettingsIcon },

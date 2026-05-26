@@ -20,7 +20,7 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate("/", { replace: true });
+    if (!loading && user) navigate("/app", { replace: true });
   }, [user, loading, navigate]);
 
   const submit = async (e: React.FormEvent) => {
