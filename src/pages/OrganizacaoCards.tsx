@@ -204,14 +204,13 @@ function ReportsOrganizer() {
   );
 
   const labels: Record<ReportCardKey, { label: string; icon: React.ReactNode }> = {
-    net:        { label: "Lucro líquido",            icon: <Wallet className="h-4 w-4" /> },
-    perHour:    { label: "R$ / hora",                icon: <Gauge className="h-4 w-4" /> },
-    gross:      { label: "Bruto",                    icon: <Wallet className="h-4 w-4" /> },
-    expenses:   { label: "Gastos",                   icon: <Receipt className="h-4 w-4" /> },
-    daysGroup:  { label: "Dias ativos + Média / dia", icon: <CalendarDays className="h-4 w-4" /> },
-    kmGroup:    { label: "KM total + Média / km",     icon: <Route className="h-4 w-4" /> },
-    tripsGroup: { label: "Corridas + R$ / corrida",   icon: <Flag className="h-4 w-4" /> },
-    chart:      { label: "Gráfico",                  icon: <LineChart className="h-4 w-4" /> },
+    net:           { label: "Lucro líquido",              icon: <Wallet className="h-4 w-4" /> },
+    perHour:       { label: "R$ / hora",                  icon: <Gauge className="h-4 w-4" /> },
+    grossExpenses: { label: "Bruto e Gastos",             icon: <Wallet className="h-4 w-4" /> },
+    daysGroup:     { label: "Dias ativos + Média / dia",  icon: <CalendarDays className="h-4 w-4" /> },
+    kmGroup:       { label: "KM total + Média / km",      icon: <Route className="h-4 w-4" /> },
+    tripsGroup:    { label: "Corridas + R$ / corrida",    icon: <Flag className="h-4 w-4" /> },
+    chart:         { label: "Gráfico",                    icon: <LineChart className="h-4 w-4" /> },
   };
 
   const onDragEnd = (e: DragEndEvent) => {
