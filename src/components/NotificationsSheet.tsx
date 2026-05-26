@@ -271,7 +271,7 @@ function NotificationDetail({
       <div className="space-y-3 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
           <NotificationIconBadge iconType={n.iconType} large />
-          <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
+          <p className="flex-1 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
         </div>
 
         {n.topics && n.topics.length > 0 && (
