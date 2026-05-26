@@ -156,14 +156,13 @@ const WELCOME_TEMPLATE: Omit<AppNotification, "createdAt" | "readAt"> = {
   category: "sistema",
   iconType: "volant",
   title: "Bem-vindo ao Volant",
-  summary: "Conheça as principais ferramentas e entre no grupo oficial.",
+  summary: "Entre no grupo oficial e acompanhe as novidades da versão 1.0.",
   content:
-    "O Volant foi criado para ajudar motoristas de aplicativo a entender melhor seus ganhos, gastos, metas, desempenho e R$/km. Use as ferramentas do app para acompanhar sua rotina com mais clareza e tomar decisões melhores no dia a dia.",
+    "O Volant está entrando em uma nova fase. A versão 1.0 foi criada para ajudar motoristas de aplicativo a acompanhar ganhos, gastos, metas, R$/km e custos do veículo com mais clareza.\n\nEntre no grupo oficial para receber novidades, acompanhar melhorias e trocar ideias sobre o uso do app.",
   topics: [
-    { title: "Metas Inteligentes", desc: "Acompanhe sua evolução pelo lucro líquido ou ganho bruto." },
-    { title: "KM Inteligente", desc: "Veja uma referência de R$/km para rodar com mais estratégia." },
-    { title: "Relatórios e Histórico", desc: "Entenda seus ganhos, gastos, KM, horas e desempenho por período." },
-    { title: "Central de Veículos", desc: "Considere custos, manutenção e informações do veículo na sua rotina." },
+    { title: "Ganhos e gastos", desc: "Acompanhe sua rotina financeira." },
+    { title: "Metas e R$/km", desc: "Veja referências para decidir melhor." },
+    { title: "Veículo", desc: "Considere custos e manutenção na sua rotina." },
   ],
   cta: {
     label: "Entrar no grupo oficial",
