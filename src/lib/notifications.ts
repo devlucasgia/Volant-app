@@ -49,7 +49,11 @@ export const CATEGORY_LABEL: Record<NotificationCategory, string> = {
 };
 
 // ---------- IDs (dedupe keys) ----------
-export const WELCOME_NOTIFICATION_ID = "general_welcome_group_notification";
+export const WELCOME_NOTIFICATION_ID = "general_welcome_group_notification_v2";
+/** IDs descontinuados — removidos automaticamente da lista no próximo read. */
+const DEPRECATED_NOTIFICATION_IDS = new Set<string>([
+  "general_welcome_group_notification",
+]);
 export const PREMIUM_WELCOME_NOTIFICATION_ID = "premium_welcome_notification";
 export const PLANNING_INCOMPLETE_NOTIFICATION_ID = "planning_incomplete_notification";
 export const VEHICLE_COSTS_MISSING_NOTIFICATION_ID = "vehicle_costs_missing_notification";
