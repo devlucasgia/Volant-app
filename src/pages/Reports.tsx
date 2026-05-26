@@ -22,6 +22,7 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
+  Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
@@ -36,6 +37,9 @@ import {
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 type RangeMode = "range" | "month" | "year";
