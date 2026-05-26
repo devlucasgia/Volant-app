@@ -585,7 +585,8 @@ export default function Dashboard() {
         <div className="mt-5">
         {(() => {
           const showGross = heroMetric === "gross";
-          const heroTitle = showGross ? "Bruto" : "Lucro líquido";
+          const heroTitle = showGross ? "Ganho bruto" : "Lucro líquido";
+          const heroSubtitle = showGross ? "Antes dos gastos" : "Depois dos gastos";
           const heroValue = showGross ? s.gross : s.net;
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
