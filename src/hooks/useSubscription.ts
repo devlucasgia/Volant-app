@@ -10,10 +10,26 @@ type SubRow = {
   stripe_customer_id: string;
 };
 
+type ProfileTrial = {
+  beta_grandfathered: boolean | null;
+  trial_started_at: string | null;
+  trial_ends_at: string | null;
+  trial_access_granted: boolean | null;
+};
+
 export interface SubscriptionState {
   loading: boolean;
+  /** True if the user has access to premium features (paid OR internal 7-day trial). */
   isActive: boolean;
+  /** True only for paid premium (active sub or beta grandfathered). Use for "premium pago" copy/notifications. */
+  isPaidPremium: boolean;
   isGrandfathered: boolean;
+  /** True while the internal 7-day free access is still valid. */
+  internalTrialActive: boolean;
+  /** True if the user already received and consumed the internal 7-day free access. */
+  internalTrialExpired: boolean;
+  /** ISO date when the internal free access ends. */
+  internalTrialEndsAt: string | null;
   subscription: SubRow | null;
   refetch: () => Promise<void>;
 }
@@ -21,7 +37,7 @@ export interface SubscriptionState {
 export function useSubscription(userId: string | null | undefined): SubscriptionState {
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubRow | null>(null);
-  const [isGrandfathered, setIsGrandfathered] = useState(false);
+  const [profile, setProfile] = useState<ProfileTrial | null>(null);
   const [loadError, setLoadError] = useState(false);
 
   const env = getStripeEnvironment();
@@ -34,7 +50,11 @@ export function useSubscription(userId: string | null | undefined): Subscription
     setLoading(true);
     try {
       const [profRes, subRes] = await Promise.all([
-        supabase.from("profiles").select("beta_grandfathered").eq("id", userId).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("beta_grandfathered, trial_started_at, trial_ends_at, trial_access_granted")
+          .eq("id", userId)
+          .maybeSingle(),
         supabase
           .from("subscriptions")
           .select("status, price_id, current_period_end, cancel_at_period_end, stripe_customer_id")
@@ -47,16 +67,54 @@ export function useSubscription(userId: string | null | undefined): Subscription
       // Fail-closed: if either query errored, treat as no access until next successful refetch.
       if (profRes.error || subRes.error) {
         setLoadError(true);
-        setIsGrandfathered(false);
+        setProfile(null);
         setSubscription(null);
-      } else {
-        setLoadError(false);
-        setIsGrandfathered(Boolean(profRes.data?.beta_grandfathered));
-        setSubscription((subRes.data as SubRow | null) ?? null);
+        return;
+      }
+      setLoadError(false);
+      const profData = (profRes.data as ProfileTrial | null) ?? null;
+      const subData = (subRes.data as SubRow | null) ?? null;
+      setProfile(profData);
+      setSubscription(subData);
+
+      // Grant internal 7-day access on FIRST live access, when no paid access exists.
+      // Why "live only": preview/dev would otherwise burn the user's free week
+      // before the new logic is even published.
+      const isGrandfathered = Boolean(profData?.beta_grandfathered);
+      const subHasAccess = isPaidSubActive(subData);
+      const shouldGrant =
+        env === "live" &&
+        profData &&
+        !profData.trial_access_granted &&
+        !isGrandfathered &&
+        !subHasAccess;
+
+      if (shouldGrant) {
+        const startedAt = new Date();
+        const endsAt = new Date(startedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const { error: grantError } = await supabase
+          .from("profiles")
+          .update({
+            trial_started_at: startedAt.toISOString(),
+            trial_ends_at: endsAt.toISOString(),
+            trial_access_granted: true,
+          })
+          .eq("id", userId)
+          // Belt-and-suspenders: never overwrite an existing grant, even
+          // under a race condition with another tab.
+          .eq("trial_access_granted", false);
+        if (!grantError) {
+          setProfile({
+            ...profData,
+            trial_started_at: startedAt.toISOString(),
+            trial_ends_at: endsAt.toISOString(),
+            trial_access_granted: true,
+          });
+        }
       }
     } catch {
       setLoadError(true);
-      setIsGrandfathered(false);
+      setProfile(null);
       setSubscription(null);
     } finally {
       setLoading(false);
@@ -76,7 +134,6 @@ export function useSubscription(userId: string | null | undefined): Subscription
       )
       .subscribe();
 
-    // Re-validate aggressively whenever the app regains focus / connectivity / visibility.
     const onFocus = () => load();
     const onVisibility = () => {
       if (document.visibilityState === "visible") load();
@@ -94,21 +151,39 @@ export function useSubscription(userId: string | null | undefined): Subscription
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  const now = Date.now();
-  const end = subscription?.current_period_end ? new Date(subscription.current_period_end).getTime() : null;
-  const subActive = !!subscription && (
-    (["active", "trialing", "past_due"].includes(subscription.status) && (!end || end > now)) ||
-    (subscription.status === "canceled" && end !== null && end > now)
-  );
+  const isGrandfathered = Boolean(profile?.beta_grandfathered);
+  const subActive = isPaidSubActive(subscription);
+  const isPaidPremium = !loadError && (isGrandfathered || subActive);
 
-  // Fail-closed: any load error forces isActive=false until a successful refetch.
-  const isActive = !loadError && (isGrandfathered || subActive);
+  const trialEndsAt = profile?.trial_ends_at ?? null;
+  const trialEndMs = trialEndsAt ? new Date(trialEndsAt).getTime() : null;
+  const now = Date.now();
+  const internalTrialActive =
+    !loadError && !isPaidPremium && !!trialEndMs && trialEndMs > now;
+  const internalTrialExpired =
+    !loadError && !isPaidPremium && !!profile?.trial_access_granted && !!trialEndMs && trialEndMs <= now;
+
+  const isActive = isPaidPremium || internalTrialActive;
 
   return {
     loading,
     isActive,
+    isPaidPremium,
     isGrandfathered,
+    internalTrialActive,
+    internalTrialExpired,
+    internalTrialEndsAt: trialEndsAt,
     subscription,
     refetch: load,
   };
+}
+
+function isPaidSubActive(sub: SubRow | null): boolean {
+  if (!sub) return false;
+  const end = sub.current_period_end ? new Date(sub.current_period_end).getTime() : null;
+  const now = Date.now();
+  return (
+    (["active", "trialing", "past_due"].includes(sub.status) && (!end || end > now)) ||
+    (sub.status === "canceled" && end !== null && end > now)
+  );
 }
