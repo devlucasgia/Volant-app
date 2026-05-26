@@ -1,81 +1,131 @@
 
-# Sprint 1.1C — Bottom nav fiel, mobile mais limpo e tema global Líquido↔Bruto
+## Antes do plano — como testar o que já foi feito (Sprint 1.2 PWA)
 
-Tudo continua em **um único arquivo**: `src/pages/Landing.tsx`. Sem mudanças em `/app`, `/auth`, `index.css`, `tailwind.config.ts` ou qualquer lógica interna.
+Sim, o preview do Lovable já é o app Volant real rodando — você está dentro do app autenticado (mesma base de código, mesmo backend Lovable Cloud). Não é necessário publicar para testar.
 
-## 1. Bottom nav do mockup igual ao app real
+Passo a passo para testar a instalação PWA da sprint anterior:
 
-Hoje o `MockBottomNav` mostra `Início / Ganhos / Despesas / Mais` — não é o que o app real tem. Vou refazer pra reproduzir fielmente o `BottomNav.tsx` do app:
+1. **Abrir o preview em uma aba nova do navegador** (não dentro do iframe do editor). Use o ícone “abrir em nova janela” do preview ou cole a URL `https://id-preview--185df6ff-9e46-459a-a25d-323f7411f3f9.lovable.app` no Chrome/Edge desktop, ou abra a URL publicada `https://usevolant.lovable.app` no celular.
+2. **Fazer login** com sua conta normalmente (`/auth`) e cair em `/app`.
+3. **Aguardar 8 segundos** parado dentro do app. O card/bottom sheet deve aparecer:
+   - Android Chrome / Edge desktop → card “Instale o Volant” com botão nativo.
+   - iPhone Safari → tutorial animado com Compartilhar → Adicionar à Tela de Início.
+   - iPhone Chrome → orientação curta para abrir no Safari.
+4. **Testar “Depois”** → fechar deve sumir o card e não voltar por 7 dias (chave `volant.pwa.snoozeUntil` no localStorage).
+5. **Testar “Instalar agora”** no Android/desktop → após instalar, abrir o app instalado: o card não aparece mais (display-mode: standalone).
+6. **Resetar para testar de novo**: DevTools → Application → Local Storage → apagar chaves `volant.pwa.*`. No Chrome desktop, também é possível remover o app instalado em `chrome://apps`.
+7. **Confirmar que NÃO aparece** em `/`, `/auth` e `/checkout/return`.
 
-- 4 itens: **Início, Histórico, Relatórios, Ajustes** (com os ícones `Home`, `History`, `BarChart3`, `Settings` — mesmos do app).
-- Layout `grid-cols-5` com o item Ajustes na coluna 4 (igual ao real), deixando o slot central reservado.
-- **FAB central verde com "+"** sobreposto, em gradiente `success`, com sombra/glow verde, ligeiramente elevado acima da barra (igual ao app).
-- Item ativo (Início) em verde, demais em muted.
-- Tudo permanece **decorativo** (sem onClick reais — é mockup).
+---
 
-Aplico o novo `MockBottomNav` em **todos os mockups** da página (Hero, KM Inteligente, Metas, Personalização, Comparativo) pra ficar consistente.
+## Plano da nova sprint
 
-## 2. Remover o card "Meta 78%" solto no mobile
+### 1. Arquivos/componentes que serão alterados ou criados
 
-Linhas 295–301: removo o `FloatingCard` "Meta" que aparece no mobile (`md:hidden`). Mantenho só o card "R$/KM" flutuante no mobile (lado direito) — fica mais limpo, sem elemento órfão embaixo.
+Alterados:
+- `src/pages/Dashboard.tsx` — adicionar controle segmentado Líquido/Bruto no card principal e disparar `updateSettings({ goalType })`.
+- `src/components/NotificationsSheet.tsx` — passar a renderizar a lista real de notificações com a notificação de boas-vindas, marcar como lida ao abrir.
+- `src/pages/Dashboard.tsx` — o sino existente (`unreadNotifs`) passará a refletir o estado real (não mais hardcoded 0).
 
-Desktop continua com os 4 cards flutuantes como está.
+Criados (mínimos):
+- `src/lib/notifications.ts` — store leve da Central de Notificações em `localStorage` por usuário (chave `volant.notifications.v1.{userId}`), com helpers `ensureWelcomeNotification(user)`, `listNotifications(userId)`, `markRead(userId, id)`, `unreadCount(userId)`, e um event bus simples (`window.dispatchEvent("volant:notificationsChanged")`).
+- `src/hooks/useNotifications.ts` — hook React fino sobre o store, com `items` e `unread`, ouvindo o evento acima.
 
-## 3. Tema global sincronizado com o modo Líquido↔Bruto
+Sem novas tabelas no Supabase, sem alteração de schema, sem service worker, sem push externo.
 
-A ideia funciona muito bem. Implementação:
+### 2. Alternância Líquido/Bruto na Home
 
-- **Intervalo aumentado de 7s → 9s** (700ms de cross-fade), pra dar tempo do olho processar a mudança em toda a página.
-- O `useHeroMode()` hoje só vive dentro do Hero. Vou movê-lo pro **componente `Landing`** (raiz) e passar o `mode` como prop pra todas as seções **OU** — mais simples e elegante — aplicar `data-hero-mode="liquido" | "bruto"` no `<div>` raiz da página e usar uma classe utilitária local `.accent-mode` que troca a cor via CSS quando o `data-hero-mode` muda.
-- Vou criar no `HeroStyles` (CSS local que já existe) variáveis CSS de "accent atual":
-  ```css
-  [data-hero-mode="liquido"] { --accent-now: var(--primary); --accent-now-fg: var(--primary-foreground); }
-  [data-hero-mode="bruto"]   { --accent-now: var(--goal-gross); --accent-now-fg: 0 0% 100%; }
-  ```
-  Com `transition: color/background-color/border-color/box-shadow 700ms cubic-bezier(.22,1,.36,1)` aplicado nos elementos que devem trocar.
-- **O que troca de cor com o modo** (apenas elementos *de destaque*, não tudo — pra não virar discoteca):
-  - Badge "DE MOTORISTA, PARA MOTORISTAS" (borda + texto + pontinho).
-  - A palavra destacada no headline ("**realmente lucra**") e seu sublinhado.
-  - Botão primário CTA "Testar grátis" do header e do Hero (background + glow).
-  - Link âncora "Testar grátis" do header.
-  - Eyebrows (chips de seção) das seções abaixo: KM Inteligente, Metas, Personalização, Comparativo, FAQ, CTA final.
-  - Botões CTA das seções inferiores ("Quero testar", "Começar agora", etc.).
-  - Ícones decorativos em destaque dos cards de feature.
-  - Linha gradiente sob o headline.
-- **O que NÃO troca** (mantém verde fixo, pra preservar identidade):
-  - Logo Volant.
-  - Bottom nav (item ativo "Início" sempre verde — é o app real).
-  - FAB central "+" (sempre verde — é o app real).
-  - Cards "Lucro líquido" em comparativos onde verde tem significado semântico ("este é o líquido").
-  - Floating cards do Hero (já decidido na sprint anterior).
-  - Textos de corpo, ícones de UI utilitários, bordas neutras.
-- `prefers-reduced-motion`: fica travado em `liquido` (verde) — sem troca automática, sem transição.
+- Importar `Segmented` (`src/components/Segmented.tsx`, já padrão do app) dentro do bloco `hero` em `Dashboard.tsx`.
+- Inserir o controle no topo do card principal, na mesma linha do título “Lucro líquido / Bruto”, alinhado à direita. Opções: `Líquido | Bruto`. `value` derivado de `settings.goalType` (`liquido | bruto`).
+- `onChange` chama `updateSettings({ goalType: next })`. Nenhum estado local extra — a Home já reage automaticamente (`heroMetric`, card de meta, KM Inteligente, glows, gradientes já dependem de `settings.goalType`).
+- Microtransição: aproveitar o `transition-all duration-500/700` já presente no card; manter o `key={heroMetric}` que já reanima o valor principal (count-up curto via animação atual). Sem novas libs.
+- Textos:
+  - Líquido: título `Lucro líquido`, apoio `Depois dos gastos`.
+  - Bruto: título `Ganho bruto`, apoio `Antes dos gastos`.
+- Card de Meta e R$/KM Inteligente continuam usando `settings.goalType` (já implementado), portanto trocam de identidade verde/azul automaticamente. Clique no card de meta continua indo para `/ajustes/planejamento/metas`.
+- Responsividade: o `Segmented` em `size="sm"` cabe em 360–430px ao lado do título; em telas muito estreitas o controle quebra para uma segunda linha dentro do card sem comprimir o valor.
+- Acessibilidade: `role="tablist"` já vem do componente; foco visível e contraste mantidos.
+- `prefers-reduced-motion`: respeitar reduzindo as transições visuais (sem flash).
 
-### Como aplicar sem reescrever 800 linhas
+### 3. Sincronização com Metas Inteligentes
 
-Crio uma classe utilitária local `accent-dynamic` no `HeroStyles`:
-```css
-.accent-dynamic { color: hsl(var(--accent-now)); transition: color .7s cubic-bezier(.22,1,.36,1), background-color .7s, border-color .7s, box-shadow .7s; }
-.accent-dynamic-bg { background-color: hsl(var(--accent-now)); ... }
-.accent-dynamic-border { border-color: hsl(var(--accent-now) / 0.4); ... }
-.accent-dynamic-glow { box-shadow: 0 0 40px -8px hsl(var(--accent-now) / 0.5); ... }
+- Não é criada nova fonte de verdade. A Home grava em `settings.goalType` via `updateSettings`, exatamente o mesmo campo lido por `MetasInteligentes.tsx`. O `DataContext` já propaga, então:
+  - Trocar na Home reflete em Metas Inteligentes ao abrir a tela.
+  - Trocar em Metas Inteligentes reflete na Home na volta.
+- Nenhuma migração ou nova coluna. Persistência continua em `user_settings.goal_type`.
+
+### 4. Notificação geral de boas-vindas
+
+Conteúdo (em `src/lib/notifications.ts` como constante):
+- `id`: `general_welcome_group_notification` (também usado como dedupe key).
+- Título: **Bem-vindo ao Volant**.
+- Corpo: texto definido na sprint + 4 tópicos curtos (Metas Inteligentes, KM Inteligente, Relatórios e Histórico, Central de Veículos).
+- CTA: botão “Entrar no grupo oficial” → abre `https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=3` em `_blank` com `rel="noopener noreferrer"`. URL nunca aparece no texto.
+
+Regra de criação (em `ensureWelcomeNotification(user)` chamada uma vez por render do `Dashboard` montar):
+- Lê `user.created_at` (já vem do Supabase auth).
+- Se `Date.now() - createdAt >= 30 min` e ainda não existe registro com o id no store do usuário → cria como `unread`, `createdAt: now`.
+- Se já existe → não faz nada.
+- Para usuários antigos (criados há mais de 30 min), entra no primeiro acesso após a sprint — atende automaticamente o critério “usuários existentes recebem na próxima abertura”.
+
+Render em `NotificationsSheet.tsx`:
+- Lista as notificações do hook. Item da boas-vindas: card escuro, borda sutil, glow verde discreto, ícone (ex.: `Sparkles`/`PartyPopper`), título, corpo, lista de tópicos e botão CTA.
+- Ao abrir o drawer, todas viram `read` (marca timestamp). Indicador “não lida” como bolinha verde antes da leitura.
+- Quando vazio, mantém o estado vazio atual.
+
+Sino no header:
+- `unreadNotifs` em `Dashboard.tsx` passa a vir de `useNotifications().unread`. Badge discreto já existente é exibido quando `unread > 0`.
+
+### 5. Como será evitada a duplicidade
+
+- Chave de storage por usuário: `volant.notifications.v1.{userId}` — isola contas que usam o mesmo navegador.
+- Dedupe pelo `id` único `general_welcome_group_notification` antes de inserir.
+- A função `ensureWelcomeNotification` é idempotente: chamadas repetidas (re-render, navegação) não criam cópias.
+- Marcar como lida não remove o registro, então a regra de “criar apenas uma vez” permanece válida.
+
+Limitação consciente (declarada): o store é por dispositivo/navegador (localStorage). Atende aos critérios da sprint sem criar tabela nova; se mais à frente quiser sincronizar entre dispositivos, evoluímos para uma tabela `notifications` em outra sprint.
+
+### 6. Garantias de escopo
+
+Não serão tocados:
+- Stripe, `supabase/functions/*` (checkout, webhooks, portal), `CheckoutReturn.tsx`.
+- Tabelas `subscriptions`, `profiles`, `user_settings` (schema) — apenas leitura/escrita já existentes de `goal_type`.
+- Autenticação (`AuthContext`, `RequireAuth`, `RequirePremium`).
+- Onboarding (`OnboardingFlow`, `CarOnboardingDialog`, `MonthlyGoalOnboardingDialog`).
+- Lógica Premium e `useSubscription`.
+- Landing pública `/` (`src/pages/Landing.tsx`) e rota `/auth`.
+- Fluxo PWA (`InstallPromptManager`, `usePwaInstall`, `pwaInstall.ts`, `public/manifest.json`, service worker).
+- Relatórios, Histórico e demais páginas fora da Home.
+- Nenhuma migração SQL será criada.
+
+### Detalhes técnicos resumidos
+
+```text
+Dashboard hero card
+ ├─ título: Lucro líquido | Ganho bruto  (depende de settings.goalType)
+ ├─ Segmented [Líquido | Bruto] -> updateSettings({ goalType })
+ ├─ valor: s.net | s.gross  (já existe)
+ └─ tema verde/azul: já reativo a settings.goalType
+
+NotificationsSheet
+ ├─ useNotifications() -> { items, unread, markAllRead }
+ ├─ render lista (welcome card) + estado vazio
+ └─ CTA -> abre WhatsApp em nova aba
+
+src/lib/notifications.ts (novo, ~80 linhas)
+ ├─ STORAGE_KEY = `volant.notifications.v1.${userId}`
+ ├─ WELCOME = { id: 'general_welcome_group_notification', ... }
+ ├─ ensureWelcomeNotification(user)  // regra dos 30min
+ ├─ listNotifications / markRead / unreadCount
+ └─ dispatch 'volant:notificationsChanged'
 ```
-E aplico essas classes nos ~10–15 pontos da página listados acima, substituindo `text-primary`, `bg-primary`, `border-primary/40` etc. **apenas** nesses elementos de destaque. Resto da página intacto.
 
-## Fora de escopo
+### Critérios de aceite que serão validados
 
-- Animações de Personalização (drag/toggle) — fica pra Sprint 1.1D.
-- Nova seção "Lançamento rápido de gastos" — Sprint 1.1E.
+- Home tem segmented Líquido/Bruto integrado ao card principal; troca atualiza valor, meta e KM Inteligente; identidade verde/azul aplicada apenas aos elementos previstos; nav, FAB, logo, gastos (vermelho) e Premium (dourado) permanecem estáveis.
+- Trocar na Home reflete em Metas Inteligentes e vice-versa (mesma fonte: `settings.goalType`).
+- Notificação “Bem-vindo ao Volant” aparece na Central, nasce não lida, sino mostra badge, CTA abre o grupo, link não aparece cru, não duplica.
+- Usuários novos: criada 30 min após `user.created_at`. Usuários existentes: criada na próxima abertura.
+- Stripe, checkout, Supabase crítico, onboarding, PWA e landing pública permanecem intactos.
 
-## Critérios de aceitação
-
-- Bottom nav do mockup tem 4 ícones (Início/Histórico/Relatórios/Ajustes) + FAB verde central com "+", visualmente igual ao app real.
-- Card "Meta 78%" não aparece mais no mobile do Hero.
-- A cada 9s a página inteira faz cross-fade verde ↔ azul nos elementos de destaque (CTAs, badges, headline highlight, eyebrows), sem flicker.
-- Logo, bottom nav, FAB e textos neutros **não** trocam de cor.
-- `prefers-reduced-motion` mantém tudo verde estático.
-- `/app` e `/auth` não tocados. Sem libs novas. Sem alterar `index.css`/Tailwind config.
-
-## Estimativa
-
-10–14 créditos.
+Aguardo seu OK para executar.
