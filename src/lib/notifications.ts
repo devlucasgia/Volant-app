@@ -2,8 +2,9 @@
  * Central de Notificações — persistência leve em localStorage por usuário.
  * Sem novas tabelas no banco. Cada usuário tem sua própria lista isolada.
  *
- * v2: novo shape com `category`, `iconType`, `summary`, `content` e
- * marcação de leitura individual (não mais ao abrir o sheet).
+ * v2.1: storage agora guarda `{ items, dismissedIds }`. `dismissedIds`
+ * funciona como dedupe permanente — uma vez limpa, a notificação não é
+ * recriada automaticamente.
  */
 
 const EVENT = "volant:notificationsChanged";
@@ -35,6 +36,11 @@ export interface AppNotification {
   readAt: number | null;
 }
 
+interface StoredState {
+  items: AppNotification[];
+  dismissedIds: string[];
+}
+
 export const CATEGORY_LABEL: Record<NotificationCategory, string> = {
   sistema: "Sistema",
   premium: "Premium",
@@ -55,21 +61,29 @@ function storageKey(userId: string) {
   return `${STORAGE_PREFIX}${userId}`;
 }
 
-function read(userId: string): AppNotification[] {
-  if (!userId || typeof window === "undefined") return [];
+function read(userId: string): StoredState {
+  const empty: StoredState = { items: [], dismissedIds: [] };
+  if (!userId || typeof window === "undefined") return empty;
   try {
     const raw = window.localStorage.getItem(storageKey(userId));
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? (arr as AppNotification[]) : [];
+    if (!raw) return empty;
+    const parsed = JSON.parse(raw);
+    // Back-compat: storage anterior era um array puro.
+    if (Array.isArray(parsed)) {
+      return { items: parsed as AppNotification[], dismissedIds: [] };
+    }
+    return {
+      items: Array.isArray(parsed?.items) ? parsed.items : [],
+      dismissedIds: Array.isArray(parsed?.dismissedIds) ? parsed.dismissedIds : [],
+    };
   } catch {
-    return [];
+    return empty;
   }
 }
 
-function write(userId: string, items: AppNotification[]) {
+function write(userId: string, state: StoredState) {
   try {
-    window.localStorage.setItem(storageKey(userId), JSON.stringify(items));
+    window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
     window.dispatchEvent(new Event(EVENT));
   } catch {
     /* ignore */
@@ -78,27 +92,33 @@ function write(userId: string, items: AppNotification[]) {
 
 // ---------- Public API ----------
 export function listNotifications(userId: string): AppNotification[] {
-  // Mais recente primeiro.
-  return read(userId).slice().sort((a, b) => b.createdAt - a.createdAt);
+  return read(userId).items.slice().sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export function unreadCount(userId: string): number {
-  return read(userId).filter((n) => !n.readAt).length;
+  return read(userId).items.filter((n) => !n.readAt).length;
 }
 
 export function markAsRead(userId: string, id: string) {
   if (!userId || !id) return;
-  const items = read(userId);
-  const target = items.find((n) => n.id === id);
+  const state = read(userId);
+  const target = state.items.find((n) => n.id === id);
   if (!target || target.readAt) return;
   target.readAt = Date.now();
-  write(userId, items);
+  write(userId, state);
+}
+
+export function clearAllNotifications(userId: string) {
+  if (!userId) return;
+  const state = read(userId);
+  if (state.items.length === 0) return;
+  const dismissed = new Set([...state.dismissedIds, ...state.items.map((n) => n.id)]);
+  write(userId, { items: [], dismissedIds: Array.from(dismissed) });
 }
 
 /**
- * Helper genérico: cria uma notificação se ainda não existir e a condição
- * for satisfeita. Idempotente — chamadas repetidas não duplicam, e uma
- * notificação já lida não é recriada se a condição voltar a ser verdadeira.
+ * Helper genérico: cria uma notificação se ainda não existir, se não foi
+ * descartada anteriormente e se a condição for satisfeita.
  */
 function ensureNotification(
   userId: string,
@@ -106,11 +126,12 @@ function ensureNotification(
   condition: () => boolean,
 ) {
   if (!userId) return;
-  const items = read(userId);
-  if (items.some((n) => n.id === template.id)) return;
+  const state = read(userId);
+  if (state.dismissedIds.includes(template.id)) return;
+  if (state.items.some((n) => n.id === template.id)) return;
   if (!condition()) return;
   const notif: AppNotification = { ...template, createdAt: Date.now(), readAt: null };
-  write(userId, [...items, notif]);
+  write(userId, { ...state, items: [...state.items, notif] });
 }
 
 function accountIsOldEnough(accountCreatedAt: string | number | Date | null | undefined) {
@@ -220,6 +241,10 @@ export interface PlanningSnapshot {
   workingDaysPerMonth: number | null | undefined;
 }
 
+/**
+ * Só notifica quando TODOS os campos principais de planejamento estão
+ * ausentes/zerados. Qualquer um já configurado evita a notificação.
+ */
 export function ensurePlanningIncompleteNotification(
   userId: string | null | undefined,
   accountCreatedAt: string | number | Date | null | undefined,
@@ -231,8 +256,8 @@ export function ensurePlanningIncompleteNotification(
     if (!planning) return true;
     const goalEmpty = !planning.monthlyGoal || planning.monthlyGoal <= 0;
     const kmEmpty = planning.kmPlannedMonth == null || planning.kmPlannedMonth <= 0;
-    const daysEmpty = planning.workingDaysPerMonth == null;
-    return goalEmpty || kmEmpty || daysEmpty;
+    const daysEmpty = planning.workingDaysPerMonth == null || planning.workingDaysPerMonth <= 0;
+    return goalEmpty && kmEmpty && daysEmpty;
   });
 }
 
