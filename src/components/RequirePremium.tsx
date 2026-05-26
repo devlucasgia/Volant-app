@@ -1,7 +1,7 @@
-import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { AccessProvider } from "@/context/AccessContext";
+import { SplashScreen } from "./SplashScreen";
 
 /**
  * Wraps the app in an access mode (full vs. limited) based on subscription state.
@@ -26,13 +26,7 @@ export function RequirePremium({ children }: { children: React.ReactNode }) {
 
   if (!user) return <>{children}</>;
 
-  if (loading) {
-    return (
-      <div className="grid min-h-[100dvh] place-items-center bg-background">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <SplashScreen />;
 
   return <AccessProvider isFull={isActive}>{children}</AccessProvider>;
 }

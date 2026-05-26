@@ -18,6 +18,27 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const sendReset = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      toast.error("Digite seu e-mail para receber o link.");
+      return;
+    }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link de recuperação para seu e-mail.");
+    } catch (err) {
+      toast.error(friendlyAuthError(err));
+    } finally {
+      setSendingReset(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && user) navigate("/app", { replace: true });
@@ -94,7 +115,19 @@ export default function Auth() {
             <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Senha</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Senha</Label>
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={sendReset}
+                  disabled={sendingReset}
+                  className="text-[12px] text-muted-foreground hover:text-foreground disabled:opacity-60"
+                >
+                  {sendingReset ? "Enviando..." : "Esqueci minha senha"}
+                </button>
+              )}
+            </div>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete={mode === "signup" ? "new-password" : "current-password"} />
           </div>
           <Button type="submit" className="w-full gradient-success text-primary-foreground" disabled={busy}>
@@ -110,6 +143,13 @@ export default function Auth() {
         >
           {mode === "signin" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
         </button>
+
+        <p className="pt-2 text-center text-[11px] text-muted-foreground/70">
+          Ao continuar, você concorda com nossos{" "}
+          <a href="/termos" className="text-primary hover:underline">Termos</a>
+          {" "}e{" "}
+          <a href="/privacidade" className="text-primary hover:underline">Política de Privacidade</a>.
+        </p>
       </div>
     </div>
   );

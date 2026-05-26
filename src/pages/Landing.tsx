@@ -19,6 +19,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { SplashScreen } from "@/components/SplashScreen";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { cn } from "@/lib/utils";
 
@@ -42,8 +43,13 @@ export default function Landing() {
     };
   }, []);
 
+  // Enquanto a sessão ainda está sendo resolvida, mostramos o splash neutro
+  // em vez do markup completo da landing. Isso evita o "flash" da página de
+  // vendas para usuários já autenticados (que serão redirecionados pro /app).
+  if (loading) return <SplashScreen />;
+
   // Usuário logado pula direto pro app.
-  if (!loading && user) return <Navigate to="/app" replace />;
+  if (user) return <Navigate to="/app" replace />;
 
   return (
     <div
