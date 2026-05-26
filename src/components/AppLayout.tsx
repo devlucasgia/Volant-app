@@ -5,6 +5,7 @@ import { CarOnboardingDialog } from "./CarOnboardingDialog";
 import { MonthlyGoalOnboardingDialog } from "./MonthlyGoalOnboardingDialog";
 import { OnboardingFlow } from "./onboarding/OnboardingFlow";
 import { TimerFab } from "./TimerFab";
+import { InstallPromptManager } from "./pwa/InstallPromptManager";
 import { useUI } from "@/context/UIContext";
 
 export function AppLayout() {
@@ -23,6 +24,7 @@ export function AppLayout() {
       <CarOnboardingDialog />
       <MonthlyGoalOnboardingDialog />
       <OnboardingFlow />
+      <InstallPromptManager />
     </div>
   );
 }
