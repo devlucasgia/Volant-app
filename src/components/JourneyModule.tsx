@@ -126,7 +126,7 @@ export function JourneyModule() {
       {/* Controls */}
       <div className="mt-3 space-y-2">
         {state === "idle" && (
-          <Button onClick={() => openGoal(false)} className="h-11 w-full gradient-success text-primary-foreground">
+          <Button onClick={() => openGoal(false)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Iniciar jornada
           </Button>
         )}
@@ -136,7 +136,7 @@ export function JourneyModule() {
           </Button>
         )}
         {state === "resting" && (
-          <Button onClick={resumeWork} className="h-11 w-full gradient-success text-primary-foreground">
+          <Button onClick={resumeWork} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Retornar do descanso
           </Button>
         )}
@@ -151,7 +151,7 @@ export function JourneyModule() {
         )}
         {isEnded && (
           <>
-            <Button onClick={() => openGoal(true)} className="h-11 w-full gradient-success text-primary-foreground">
+            <Button onClick={() => openGoal(true)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
               <Play className="mr-2 h-4 w-4" /> Iniciar nova jornada
             </Button>
             <Button onClick={reset} variant="ghost" className="h-9 w-full text-muted-foreground">
