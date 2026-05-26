@@ -175,9 +175,7 @@ const fmtBRL = (n: number) =>
 const fmtBRLInt = (n: number) =>
   `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
 
-function Hero() {
-  const mode = useHeroMode();
-
+function Hero({ mode }: { mode: HeroMode }) {
   return (
     <section
       id="top"
@@ -190,10 +188,10 @@ function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
         {/* ------------------ Coluna de texto ------------------ */}
         <div className="relative text-center md:text-left">
-          <div className="hero-anim hero-anim-1 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary backdrop-blur">
+          <div className="hero-anim hero-anim-1 accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full accent-dot" />
             </span>
             De motorista, para motoristas.
           </div>
