@@ -765,19 +765,21 @@ export default function Dashboard() {
  * share the same green active state used elsewhere in the app.
  */
 function PeriodBar({
-  period, onSelect, onCalendarClick,
+  period, onSelect, onCalendarClick, tone = "net",
 }: {
   period: Period;
   onSelect: (p: Period) => void;
   onCalendarClick: () => void;
+  tone?: "net" | "gross";
 }) {
   const items: { key: Period; label: string }[] = [
     { key: "day", label: "Hoje" },
     { key: "week", label: "Semana" },
     { key: "month", label: "Mês" },
   ];
-  const activeClass =
-    "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
+  const activeClass = tone === "gross"
+    ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_10px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-[hsl(var(--goal-gross))]/40"
+    : "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
   const inactiveClass = "text-muted-foreground hover:text-foreground";
   return (
     <div role="tablist" className="flex w-full items-stretch gap-1 rounded-xl border border-border/60 bg-muted/60 p-1">
@@ -790,7 +792,7 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200",
+              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-300",
               active ? activeClass : inactiveClass
             )}
           >
@@ -805,7 +807,7 @@ function PeriodBar({
         aria-selected={period === "custom"}
         onClick={onCalendarClick}
         className={cn(
-          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-200",
+          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
           period === "custom" ? activeClass : inactiveClass
         )}
       >
