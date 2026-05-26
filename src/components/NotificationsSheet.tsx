@@ -25,7 +25,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { CATEGORY_LABEL, type AppNotification, type NotificationIcon } from "@/lib/notifications";
-import { VolantLogo } from "@/components/VolantLogo";
+import { VolantNotificationIcon } from "@/components/VolantNotificationIcon";
 
 /**
  * Central de Notificações.
@@ -271,7 +271,7 @@ function NotificationDetail({
       <div className="space-y-3 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
           <NotificationIconBadge iconType={n.iconType} large />
-          <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
+          <p className="flex-1 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
         </div>
 
         {n.topics && n.topics.length > 0 && (
@@ -317,16 +317,12 @@ function NotificationIconBadge({
   // para o "V" aparecer com identidade clara em vez de se diluir no verde.
   if (iconType === "volant") {
     return (
-      <span
+      <VolantNotificationIcon
+        size={large ? 40 : 36}
         className={cn(
-          "relative inline-flex shrink-0 items-center justify-center rounded-xl bg-background ring-1 ring-inset ring-border/60",
-          sizeBox,
-          "shadow-[0_0_18px_-6px_hsl(var(--primary)/0.55)]",
-          unread && "shadow-[0_0_22px_-6px_hsl(var(--primary)/0.7)]",
+          unread && "shadow-[0_0_22px_-6px_hsl(var(--primary)/0.75)]",
         )}
-      >
-        <VolantLogo size={large ? 22 : 18} />
-      </span>
+      />
     );
   }
 

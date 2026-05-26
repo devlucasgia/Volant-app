@@ -49,7 +49,11 @@ export const CATEGORY_LABEL: Record<NotificationCategory, string> = {
 };
 
 // ---------- IDs (dedupe keys) ----------
-export const WELCOME_NOTIFICATION_ID = "general_welcome_group_notification";
+export const WELCOME_NOTIFICATION_ID = "general_welcome_group_notification_v2";
+/** IDs descontinuados — removidos automaticamente da lista no próximo read. */
+const DEPRECATED_NOTIFICATION_IDS = new Set<string>([
+  "general_welcome_group_notification",
+]);
 export const PREMIUM_WELCOME_NOTIFICATION_ID = "premium_welcome_notification";
 export const PLANNING_INCOMPLETE_NOTIFICATION_ID = "planning_incomplete_notification";
 export const VEHICLE_COSTS_MISSING_NOTIFICATION_ID = "vehicle_costs_missing_notification";
@@ -69,13 +73,17 @@ function read(userId: string): StoredState {
     if (!raw) return empty;
     const parsed = JSON.parse(raw);
     // Back-compat: storage anterior era um array puro.
-    if (Array.isArray(parsed)) {
-      return { items: parsed as AppNotification[], dismissedIds: [] };
-    }
-    return {
-      items: Array.isArray(parsed?.items) ? parsed.items : [],
-      dismissedIds: Array.isArray(parsed?.dismissedIds) ? parsed.dismissedIds : [],
-    };
+    let items: AppNotification[] = Array.isArray(parsed)
+      ? (parsed as AppNotification[])
+      : Array.isArray(parsed?.items)
+        ? parsed.items
+        : [];
+    const dismissedIds: string[] = Array.isArray(parsed?.dismissedIds)
+      ? parsed.dismissedIds
+      : [];
+    // Remove notificações com IDs descontinuados (ex.: bump de template).
+    items = items.filter((n) => !DEPRECATED_NOTIFICATION_IDS.has(n.id));
+    return { items, dismissedIds };
   } catch {
     return empty;
   }
@@ -148,14 +156,13 @@ const WELCOME_TEMPLATE: Omit<AppNotification, "createdAt" | "readAt"> = {
   category: "sistema",
   iconType: "volant",
   title: "Bem-vindo ao Volant",
-  summary: "Conheça as principais ferramentas e entre no grupo oficial.",
+  summary: "Entre no grupo oficial e acompanhe as novidades da versão 1.0.",
   content:
-    "O Volant foi criado para ajudar motoristas de aplicativo a entender melhor seus ganhos, gastos, metas, desempenho e R$/km. Use as ferramentas do app para acompanhar sua rotina com mais clareza e tomar decisões melhores no dia a dia.",
+    "O Volant está entrando em uma nova fase. A versão 1.0 foi criada para ajudar motoristas de aplicativo a acompanhar ganhos, gastos, metas, R$/km e custos do veículo com mais clareza.\n\nEntre no grupo oficial para receber novidades, acompanhar melhorias e trocar ideias sobre o uso do app.",
   topics: [
-    { title: "Metas Inteligentes", desc: "Acompanhe sua evolução pelo lucro líquido ou ganho bruto." },
-    { title: "KM Inteligente", desc: "Veja uma referência de R$/km para rodar com mais estratégia." },
-    { title: "Relatórios e Histórico", desc: "Entenda seus ganhos, gastos, KM, horas e desempenho por período." },
-    { title: "Central de Veículos", desc: "Considere custos, manutenção e informações do veículo na sua rotina." },
+    { title: "Ganhos e gastos", desc: "Acompanhe sua rotina financeira." },
+    { title: "Metas e R$/km", desc: "Veja referências para decidir melhor." },
+    { title: "Veículo", desc: "Considere custos e manutenção na sua rotina." },
   ],
   cta: {
     label: "Entrar no grupo oficial",
