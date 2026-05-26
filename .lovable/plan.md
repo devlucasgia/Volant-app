@@ -1,77 +1,57 @@
-# Sprint — Pré-lançamento (estabilização para versão paga)
+# Plano — 3 ajustes de navegação no /app
 
-Escopo aprovado pelo usuário; tudo fora dessa lista foi deixado para sprints futuras.
-
-## Itens implementados
-
-### C1 — Flash da landing antes do /app
-- Criado `src/components/SplashScreen.tsx` (logo + spinner, tema escuro fixo).
-- `Landing.tsx` agora renderiza `<SplashScreen />` enquanto `useAuth().loading` for `true`, em vez de mostrar a página de vendas inteira.
-- Usuários já logados não veem mais o "flash" da página de vendas antes do redirect pro `/app`.
-
-### P3 — Splash unificado
-- `RequireAuth.tsx` e `RequirePremium.tsx` passaram a usar o mesmo `SplashScreen`.
-- Loader visual unificado entre landing, auth e premium gate.
-
-### C3 — Confirmação RLS de `signup_notifications`
-- Verificado: a tabela é tocada APENAS pela edge function `notify-new-user` (service_role). Não há uso client-side.
-- Migration original já tem `enable row level security` sem nenhuma policy pública → tabela já é fail-closed para anon/authenticated. **Sem alteração necessária.**
-
-### I3 — Banner de modo teste do Stripe
-- Auditado `PaymentTestModeBanner.tsx`: já tem gate por `pk_test_` prefix do client token.
-- Em `live`, o token publishable não começa com `pk_test_`, então o banner nunca aparece.
-- Componente também não está sendo montado em lugar nenhum hoje, então é só "munição de segurança" pré-pronta. Sem alteração.
-
-### I5 — Webhook do Stripe
-- Adicionado handler para `invoice.payment_failed` em `supabase/functions/payments-webhook/index.ts`.
-- Quando um pagamento falha, marca a assinatura como `past_due` de forma idempotente (sem alterar regras Premium — o hook `useSubscription` continua tratando `past_due` como ativo dentro do período corrente).
-- Cobertura final: `subscription.created`, `subscription.updated`, `subscription.deleted`, `invoice.payment_failed`.
-
-### I6 — Termos e Privacidade
-- Criadas rotas públicas `/termos` (`src/pages/Termos.tsx`) e `/privacidade` (`src/pages/Privacidade.tsx`).
-- Conteúdo base revisável (rascunho jurídico inicial, alinhado em traços gerais à LGPD).
-- Adicionado link discreto no rodapé do `Auth.tsx` para Termos e Privacidade.
-
-### P4 — Recuperação de senha
-- Criada rota pública `/reset-password` (`src/pages/ResetPassword.tsx`) com formulário de nova senha.
-- Adicionado link "Esqueci minha senha" no modo signin do `Auth.tsx`, que dispara `supabase.auth.resetPasswordForEmail` com `redirectTo` para `/reset-password`.
-- Pós-redefinição: faz signOut da sessão recovery e leva o usuário para `/auth`.
-
-### P5 — SEO e 404
-- `index.html` ganhou `<link rel="canonical" href="https://usevolant.app/" />`. Title, description e OG já estavam ok.
-- `NotFound.tsx` reescrita com identidade Volant (tema escuro, CTA para `/app`, link de retorno para `/`).
-- Removido `console.error` ruidoso em produção (mantido só em DEV).
-
-### Bônus solicitado — Vão das subtelas de Ajustes
-- `Personalizacao`, `CentralVeiculos`, `Categorias` e `PlanejamentoInteligente`: o container passou de `min-h-screen` + conteúdo no topo para `flex min-h-[100dvh] flex-col` + bloco de cards centralizado verticalmente (`flex-1 justify-center`) e `pb-28` para respirar acima da bottom nav.
-- O vão grande mostrado nos prints sumiu — os cards agora se acomodam no centro vertical da área visível, sem alterar lógica nem rotas.
+Os três pontos são simples, seguros e isolados (só camada de navegação/UI, nada de banco, cálculo, auth ou Stripe). Minha opinião: todos fazem sentido e devem ser corrigidos juntos.
 
 ---
 
-## Itens fora de escopo nesta sprint (decididos pelo usuário)
+## 1. Scroll preso entre telas
 
-- **C2** — Custom Google OAuth (consent screen "Volant" em vez de "Lovable"): requer configuração externa no Google Cloud. Será tratado depois.
-- **C4** — Resend / remetente / domínio de e-mail: sprint separada.
-- **Cadastro/login por telefone**: sprint separada, sensível.
-- Nada foi tocado em: Home visual, Relatórios, KM Inteligente, Central de Notificações, PWA, onboarding, landing visual, banco crítico, Stripe além do necessário.
+**Problema:** ao trocar de rota, o React Router não reseta o scroll. Se o usuário rolou a Home até o fim e abre Ajustes, a nova tela aparece rolada.
+
+**Correção:** criar um componente `ScrollToTop` que escuta `useLocation()` e faz `window.scrollTo({ top: 0, left: 0 })` sempre que o `pathname` muda. Montar dentro do `<BrowserRouter>` em `App.tsx`.
+
+Algumas telas (KM, Personalização etc.) já têm `window.scrollTo` no `useEffect` — vou manter, pois o `ScrollToTop` global cobre o resto sem conflito.
+
+**Não afeta:** modais/drawers (Sheet, Dialog, EntryDrawer) — eles não mudam rota, então continuam como estão. O comportamento desejado para modais já é o padrão (abrem do topo do próprio conteúdo).
 
 ---
 
-## Arquivos alterados
+## 2. Voltar de Termos/Privacidade indo para `/` em vez de `/auth`
 
-- novo: `src/components/SplashScreen.tsx`
-- novo: `src/pages/Termos.tsx`
-- novo: `src/pages/Privacidade.tsx`
-- novo: `src/pages/ResetPassword.tsx`
-- editado: `src/App.tsx` (3 rotas públicas novas)
-- editado: `src/components/RequireAuth.tsx`
-- editado: `src/components/RequirePremium.tsx`
-- editado: `src/pages/Landing.tsx` (splash em loading)
-- editado: `src/pages/Auth.tsx` (esqueci senha + links Termos/Privacidade)
-- editado: `src/pages/NotFound.tsx`
-- editado: `src/pages/Personalizacao.tsx` (centralização vertical)
-- editado: `src/pages/CentralVeiculos.tsx` (centralização vertical)
-- editado: `src/pages/Categorias.tsx` (centralização vertical)
-- editado: `src/pages/PlanejamentoInteligente.tsx` (centralização vertical)
-- editado: `supabase/functions/payments-webhook/index.ts` (invoice.payment_failed)
-- editado: `index.html` (canonical)
+**Problema:** o botão "voltar" em `Termos.tsx` e `Privacidade.tsx` é um `<Link to="/">` fixo. Se o usuário abriu a partir do `/auth`, ele cai na landing.
+
+**Correção:** trocar o `<Link to="/">` por um `<button onClick={() => navigate(-1)}>`, com fallback para `/` caso não haja histórico (ex.: usuário abriu o link direto). Isso devolve para a tela exata de origem (auth, app, landing, etc.).
+
+---
+
+## 3. Cards da Home → retorno para origem (Home), não para Ajustes
+
+**Problema:** `MetasInteligentes`, `KmInteligente` e `PersonalizacaoSaudacao` têm o "voltar" hard-coded para `/ajustes/planejamento` ou `/ajustes/personalizacao`. Quando abertos pela Home, o retorno vai para Ajustes em vez de voltar para a Home.
+
+**Correção:** ao navegar a partir da Home (`Dashboard.tsx`), passar `state: { from: "/app" }` no `navigate(...)`. Nas três telas de destino, o handler de voltar lê `location.state?.from` e usa:
+- se `from` existir → `navigate(from)`
+- senão → fallback para a rota de Ajustes correspondente (mantém comportamento atual quando abre via Ajustes)
+
+Telas afetadas:
+- `src/pages/Dashboard.tsx` — 3 `navigate(...)` recebem `{ state: { from: "/app" } }`
+- `src/pages/MetasInteligentes.tsx` — `onBack` lê `location.state?.from`, fallback `/ajustes/planejamento`
+- `src/pages/KmInteligente.tsx` — idem
+- `src/pages/PersonalizacaoSaudacao.tsx` — idem, fallback `/ajustes/personalizacao`
+
+Não vou alterar as outras subtelas de Ajustes (que não são acessíveis pela Home) para não expandir o escopo.
+
+---
+
+## Arquivos a alterar
+
+- **Novo:** `src/components/ScrollToTop.tsx`
+- **Editar:** `src/App.tsx` (montar `<ScrollToTop />`)
+- **Editar:** `src/pages/Termos.tsx`, `src/pages/Privacidade.tsx` (voltar com `navigate(-1)`)
+- **Editar:** `src/pages/Dashboard.tsx` (passar `state.from`)
+- **Editar:** `src/pages/MetasInteligentes.tsx`, `src/pages/KmInteligente.tsx`, `src/pages/PersonalizacaoSaudacao.tsx` (ler `state.from` no voltar)
+
+## Segurança / fora de escopo
+
+Nada de Stripe, Supabase, autenticação, cálculos, banco, onboarding, PWA ou landing pública é tocado. Mudanças são exclusivamente de roteamento e UX.
+
+Aprova para eu implementar?
