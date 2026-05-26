@@ -237,38 +237,45 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
               </Button>
             </div>
           ) : view === "trial_internal" ? (
-            <div className="mt-6 space-y-4">
-              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
-                <div className="flex items-center gap-2 font-medium text-primary">
-                  <Clock className="h-4 w-4" /> 7 dias grátis, sem cartão
+            <div className="mt-6 space-y-3">
+              {/* Bloco 1 — Status do acesso */}
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <div className="text-sm font-semibold text-foreground">
+                  Acesso Premium por 7 dias
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {trialEndLabel
-                    ? `Seu acesso termina em ${trialEndLabel}. Depois, você decide se quer continuar.`
-                    : "Sem cobrança automática. Depois, você decide se quer continuar."}
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Todos os recursos estão liberados, sem cartão e sem cobrança automática.
                 </p>
               </div>
-              <ul className="space-y-2">
-                {FEATURES.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-foreground/90">
-                    <Check className="h-4 w-4 text-primary" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="space-y-2">
+
+              {/* Bloco 2 — Período */}
+              <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-primary">
+                  <Clock className="h-4 w-4" />
+                  {trialEndLabel ? (
+                    <span>
+                      Termina em <span className="font-semibold">{trialEndLabel}</span>
+                    </span>
+                  ) : (
+                    <span>Período de acesso ativo</span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Depois disso, você decide se quer continuar.
+                </p>
+              </div>
+
+              {/* Bloco 3 — CTA */}
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-muted-foreground">
+                  Quer continuar usando sem interrupções?
+                </p>
                 <Button
                   onClick={() => setShowPlans(true)}
                   className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
                 >
+                  <Crown className="h-4 w-4" />
                   Assinar agora
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowPlans(true)}
-                  className="w-full"
-                >
-                  Ver planos
                 </Button>
               </div>
             </div>
