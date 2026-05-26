@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
@@ -6,17 +7,24 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from "@/components/ui/drawer";
-import { BellOff, Sparkles, ExternalLink } from "lucide-react";
+import { BellOff, ChevronLeft, ChevronRight, ExternalLink, Crown, Brain, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useData } from "@/context/DataContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import type { AppNotification } from "@/lib/notifications";
+import { CATEGORY_LABEL, type AppNotification, type NotificationIcon } from "@/lib/notifications";
+import { VolantLogo } from "@/components/VolantLogo";
 
 /**
  * Central de Notificações.
- * Renderiza as notificações persistidas em localStorage por usuário.
- * Ao abrir, marca todas como lidas.
+ *
+ * Máquina de estado interna de dois níveis:
+ *   - list   → lista de notificações resumidas.
+ *   - detail → conteúdo completo da notificação selecionada.
+ *
+ * A notificação só é marcada como lida quando o usuário abre o detalhe.
  */
 export function NotificationsSheet({
   open,
@@ -26,97 +34,176 @@ export function NotificationsSheet({
   onOpenChange: (v: boolean) => void;
 }) {
   const { user } = useAuth();
-  const { items, markAllAsRead } = useNotifications(user?.id, user?.created_at);
+  const { settings, cars } = useData();
+  const { isPaidPremium } = useSubscription(user?.id);
 
+  const planning = useMemo(
+    () => ({
+      monthlyGoal: settings.monthlyGoal,
+      kmPlannedMonth: settings.kmPlannedMonth,
+      workingDaysPerMonth: settings.workingDaysPerMonth,
+    }),
+    [settings.monthlyGoal, settings.kmPlannedMonth, settings.workingDaysPerMonth],
+  );
+
+  const { items, markAsRead } = useNotifications(user?.id, user?.created_at, {
+    isPaidPremium,
+    planning,
+    cars: cars as any,
+  });
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = useMemo(
+    () => (selectedId ? items.find((n) => n.id === selectedId) ?? null : null),
+    [selectedId, items],
+  );
+
+  // Sempre reset para a lista ao fechar.
   useEffect(() => {
-    if (open) {
-      // Pequeno delay para o usuário ver a "bolinha" antes de marcar como lida.
-      const t = window.setTimeout(() => markAllAsRead(), 400);
-      return () => window.clearTimeout(t);
-    }
-  }, [open, markAllAsRead]);
+    if (!open) setSelectedId(null);
+  }, [open]);
+
+  const openDetail = (n: AppNotification) => {
+    setSelectedId(n.id);
+    if (!n.readAt) markAsRead(n.id);
+  };
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent>
         <div className="mx-auto w-full max-w-md">
-          <DrawerHeader className="text-left">
-            <DrawerTitle className="text-base font-semibold">Notificações</DrawerTitle>
-            <DrawerDescription className="text-[12px]">
-              Acompanhe avisos importantes do Volant.
-            </DrawerDescription>
-          </DrawerHeader>
-
-          <div className="space-y-3 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card/60 px-6 py-10 text-center">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground/80 ring-1 ring-inset ring-border/60">
-                  <BellOff className="h-5 w-5" />
-                </span>
-                <div className="text-[14px] font-semibold text-foreground">
-                  Nenhuma notificação por enquanto.
-                </div>
-                <div className="max-w-[260px] text-[12px] leading-snug text-muted-foreground">
-                  Quando houver algo importante sobre suas metas, veículo ou assinatura, você verá aqui.
-                </div>
-              </div>
-            ) : (
-              items.map((n) => <NotificationCard key={n.id} n={n} />)
-            )}
-          </div>
+          {selected ? (
+            <NotificationDetail notification={selected} onBack={() => setSelectedId(null)} />
+          ) : (
+            <NotificationList items={items} onOpen={openDetail} />
+          )}
         </div>
       </DrawerContent>
     </Drawer>
   );
 }
 
-function NotificationCard({ n }: { n: AppNotification }) {
-  const isWelcome = n.kind === "welcome";
+// ---------- List ----------
+function NotificationList({
+  items,
+  onOpen,
+}: {
+  items: AppNotification[];
+  onOpen: (n: AppNotification) => void;
+}) {
   return (
-    <article
-      className={cn(
-        "relative overflow-hidden rounded-2xl border bg-card p-4 shadow-sm",
-        isWelcome
-          ? "border-success/30 shadow-[0_0_24px_-12px_hsl(var(--success)/0.45)]"
-          : "border-border",
-      )}
-    >
-      {isWelcome && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-success/15 blur-3xl"
-        />
-      )}
-      <div className="relative">
-        <div className="flex items-start gap-2.5">
-          <span
-            className={cn(
-              "mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-              isWelcome ? "bg-success/15 text-success" : "bg-muted text-muted-foreground",
-            )}
-          >
-            <Sparkles className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-[14px] font-semibold leading-tight text-foreground">
-                {n.title}
-              </h3>
-              {!n.readAt && (
-                <span
-                  aria-label="Não lida"
-                  className="inline-block h-2 w-2 rounded-full bg-success shadow-[0_0_8px_hsl(var(--success)/0.7)]"
-                />
-              )}
+    <>
+      <DrawerHeader className="text-left">
+        <DrawerTitle className="text-base font-semibold">Notificações</DrawerTitle>
+        <DrawerDescription className="text-[12px]">
+          Acompanhe avisos importantes do Volant.
+        </DrawerDescription>
+      </DrawerHeader>
+
+      <div className="space-y-2 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-card/60 px-6 py-10 text-center">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground/80 ring-1 ring-inset ring-border/60">
+              <BellOff className="h-5 w-5" />
+            </span>
+            <div className="text-[14px] font-semibold text-foreground">
+              Nenhuma notificação por enquanto
             </div>
-            <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">{n.body}</p>
+            <div className="max-w-[280px] text-[12px] leading-snug text-muted-foreground">
+              Quando houver avisos importantes sobre sua conta, planejamento ou recursos do Volant, eles aparecerão aqui.
+            </div>
           </div>
+        ) : (
+          items.map((n) => (
+            <button
+              key={n.id}
+              type="button"
+              onClick={() => onOpen(n)}
+              className={cn(
+                "group flex w-full items-start gap-3 rounded-2xl border bg-card p-3 text-left shadow-sm transition-all",
+                "hover:border-border/80 hover:bg-card/80 active:scale-[0.99]",
+                !n.readAt ? "border-success/30" : "border-border",
+              )}
+            >
+              <NotificationIconBadge iconType={n.iconType} unread={!n.readAt} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    {CATEGORY_LABEL[n.category]}
+                  </span>
+                  {!n.readAt && (
+                    <span
+                      aria-label="Não lida"
+                      className="inline-block h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]"
+                    />
+                  )}
+                </div>
+                <div className="mt-0.5 truncate text-[14px] font-semibold leading-tight text-foreground">
+                  {n.title}
+                </div>
+                <div className="mt-1 line-clamp-2 text-[12.5px] leading-snug text-muted-foreground">
+                  {n.summary}
+                </div>
+              </div>
+              <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+// ---------- Detail ----------
+function NotificationDetail({
+  notification: n,
+  onBack,
+}: {
+  notification: AppNotification;
+  onBack: () => void;
+}) {
+  const navigate = useNavigate();
+  const handleCta = () => {
+    if (!n.cta) return;
+    if (n.cta.url) {
+      window.open(n.cta.url, "_blank", "noopener,noreferrer");
+      return;
+    }
+    if (n.cta.route) {
+      navigate(n.cta.route);
+    }
+  };
+
+  return (
+    <>
+      <DrawerHeader className="text-left">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label="Voltar"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            {CATEGORY_LABEL[n.category]}
+          </span>
+        </div>
+        <DrawerTitle className="mt-1 text-base font-semibold">{n.title}</DrawerTitle>
+        <DrawerDescription className="sr-only">Detalhe da notificação</DrawerDescription>
+      </DrawerHeader>
+
+      <div className="space-y-3 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+        <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <NotificationIconBadge iconType={n.iconType} large />
+          <p className="flex-1 text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
         </div>
 
         {n.topics && n.topics.length > 0 && (
-          <ul className="mt-3 space-y-2 rounded-xl border border-border/60 bg-muted/20 p-3">
+          <ul className="space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3">
             {n.topics.map((t) => (
-              <li key={t.title} className="text-[12px] leading-snug">
+              <li key={t.title} className="text-[12.5px] leading-snug">
                 <div className="font-semibold text-foreground">{t.title}</div>
                 <div className="text-muted-foreground">{t.desc}</div>
               </li>
@@ -126,16 +213,58 @@ function NotificationCard({ n }: { n: AppNotification }) {
 
         {n.cta && (
           <Button
-            asChild
-            className="mt-3 w-full bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40 hover:from-success hover:to-success/80"
+            type="button"
+            onClick={handleCta}
+            className="w-full bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40 hover:from-success hover:to-success/80"
           >
-            <a href={n.cta.url} target="_blank" rel="noopener noreferrer">
-              {n.cta.label}
-              <ExternalLink className="h-4 w-4" />
-            </a>
+            {n.cta.label}
+            {n.cta.url && <ExternalLink className="h-4 w-4" />}
           </Button>
         )}
       </div>
-    </article>
+    </>
+  );
+}
+
+// ---------- Icon badge ----------
+function NotificationIconBadge({
+  iconType,
+  unread,
+  large,
+}: {
+  iconType: NotificationIcon;
+  unread?: boolean;
+  large?: boolean;
+}) {
+  const tone =
+    iconType === "premium"
+      ? "bg-warning/15 text-warning"
+      : iconType === "vehicle-costs"
+        ? "bg-primary/15 text-primary"
+        : iconType === "planning"
+          ? "bg-primary/15 text-primary"
+          : "bg-success/15 text-success";
+
+  const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
+  const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
+
+  const Icon = () => {
+    if (iconType === "volant") return <VolantLogo size={large ? 22 : 18} />;
+    if (iconType === "premium") return <Crown className={sizeIcon} />;
+    if (iconType === "planning") return <Brain className={sizeIcon} />;
+    return <Wallet className={sizeIcon} />;
+  };
+
+  return (
+    <span
+      className={cn(
+        "relative inline-flex shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-border/50",
+        sizeBox,
+        tone,
+        unread && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+      )}
+    >
+      <Icon />
+    </span>
   );
 }
