@@ -12,6 +12,11 @@ import {
   Wrench,
   Clock,
   ShieldCheck,
+  Home as HomeIcon,
+  History as HistoryIcon,
+  BarChart3,
+  Settings as SettingsIcon,
+  Plus,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import volantSymbol from "@/assets/volant-symbol-header.png";
@@ -25,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 export default function Landing() {
   const { user, loading } = useAuth();
+  const mode = useHeroMode(9000);
 
   // Força o tema escuro só enquanto a landing está montada.
   useEffect(() => {
@@ -40,11 +46,14 @@ export default function Landing() {
   if (!loading && user) return <Navigate to="/app" replace />;
 
   return (
-    <div className="min-h-screen bg-background text-foreground antialiased">
+    <div
+      className="min-h-screen bg-background text-foreground antialiased"
+      data-hero-mode={mode}
+    >
       <BackgroundGlow />
       <Header />
       <main className="relative">
-        <Hero />
+        <Hero mode={mode} />
         <PainStrip />
         <FeatureKmInteligente />
         <FeatureMetas />
@@ -53,6 +62,7 @@ export default function Landing() {
         <FinalCta />
       </main>
       <Footer />
+      <HeroStyles />
     </div>
   );
 }
@@ -75,7 +85,7 @@ function Header() {
         </nav>
         <Link
           to="/auth"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-fab)] transition hover:brightness-110"
+          className="accent-cta inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
         >
           Testar grátis
           <ArrowRight className="h-3.5 w-3.5" />
@@ -165,9 +175,7 @@ const fmtBRL = (n: number) =>
 const fmtBRLInt = (n: number) =>
   `R$ ${Math.round(n).toLocaleString("pt-BR")}`;
 
-function Hero() {
-  const mode = useHeroMode();
-
+function Hero({ mode }: { mode: HeroMode }) {
   return (
     <section
       id="top"
@@ -180,21 +188,21 @@ function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
         {/* ------------------ Coluna de texto ------------------ */}
         <div className="relative text-center md:text-left">
-          <div className="hero-anim hero-anim-1 inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary backdrop-blur">
+          <div className="hero-anim hero-anim-1 accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full accent-dot" />
             </span>
             De motorista, para motoristas.
           </div>
 
           <h1 className="hero-anim hero-anim-2 mt-5 text-balance text-[2.05rem] font-extrabold leading-[1.08] tracking-tight md:text-[3.4rem]">
             Saiba quanto você{" "}
-            <span className="relative inline-block text-primary">
+            <span className="relative inline-block accent-text">
               realmente lucra
               <span
                 aria-hidden
-                className="absolute inset-x-0 -bottom-1 h-[3px] rounded-full bg-gradient-to-r from-primary/0 via-primary/80 to-primary/0"
+                className="absolute inset-x-0 -bottom-1 h-[3px] rounded-full accent-underline"
               />
             </span>{" "}
             como motorista de aplicativo.
@@ -208,7 +216,7 @@ function Hero() {
           <div className="hero-anim hero-anim-4 mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
             <Link
               to="/auth"
-              className="group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-primary px-7 text-sm font-semibold text-primary-foreground shadow-[0_10px_40px_-8px_hsl(var(--primary)/0.55)] transition hover:brightness-110 sm:w-auto"
+              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
             >
               <span
                 aria-hidden
@@ -226,9 +234,10 @@ function Hero() {
           </div>
 
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 text-primary" /> 7 dias grátis. Cancele quando quiser.
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Cancele quando quiser.
           </p>
         </div>
+
 
         {/* ------------------ Coluna do mockup ------------------ */}
         <div className="hero-anim hero-anim-mockup relative mx-auto w-full max-w-[290px] md:max-w-none">
@@ -292,17 +301,8 @@ function Hero() {
             highlighted
             compact
           />
-          <FloatingCard
-            className="hero-anim hero-anim-card-4 absolute -left-2 bottom-12 md:hidden"
-            label="Meta"
-            value="78%"
-            icon={<Target className="h-3 w-3" />}
-            compact
-          />
         </div>
       </div>
-
-      <HeroStyles />
     </section>
   );
 }
@@ -513,10 +513,45 @@ function HeroStyles() {
         color: hsl(var(--goal-gross));
       }
 
+      /* ---------- Tema global Líquido (verde) ↔ Bruto (azul) ---------- */
+      [data-hero-mode] { --accent-now: var(--primary); }
+      [data-hero-mode="bruto"] { --accent-now: var(--goal-gross); }
+
+      .accent-text {
+        color: hsl(var(--accent-now));
+        transition: color 700ms cubic-bezier(0.22,1,0.36,1);
+      }
+      .accent-underline {
+        background-image: linear-gradient(to right, transparent, hsl(var(--accent-now) / 0.85), transparent);
+        transition: background-image 700ms cubic-bezier(0.22,1,0.36,1);
+      }
+      .accent-cta {
+        background-color: hsl(var(--accent-now));
+        box-shadow: 0 10px 40px -8px hsl(var(--accent-now) / 0.55);
+        transition: background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1), filter 200ms;
+      }
+      .accent-badge {
+        border-color: hsl(var(--accent-now) / 0.35);
+        background-color: hsl(var(--accent-now) / 0.10);
+        color: hsl(var(--accent-now));
+        transition: color 700ms, background-color 700ms, border-color 700ms;
+      }
+      .accent-dot {
+        background-color: hsl(var(--accent-now));
+        transition: background-color 700ms;
+      }
+      .accent-dot-ping {
+        background-color: hsl(var(--accent-now) / 0.7);
+        transition: background-color 700ms;
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .hero-anim, .hero-anim-mockup { opacity: 1 !important; transform: none !important; animation: none !important; }
         .hero-float, .hero-breath, .hero-glow-soft, .hero-route { animation: none !important; }
-        .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg { transition: none !important; }
+        .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg,
+        .accent-text, .accent-underline, .accent-cta, .accent-badge, .accent-dot, .accent-dot-ping {
+          transition: none !important;
+        }
       }
     `}</style>
   );
@@ -530,7 +565,7 @@ function PainStrip() {
     <section className="border-y border-border/40 bg-card/30 px-4 py-10 md:py-14">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
-          Você sabe quanto <span className="text-primary">sobra de verdade</span> no fim do dia?
+          Você sabe quanto <span className="accent-text">sobra de verdade</span> no fim do dia?
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
           Faturar bem é fácil. Difícil é saber o lucro real depois da gasolina, manutenção, IPVA e
@@ -549,7 +584,7 @@ function FeatureKmInteligente() {
       id="km"
       tag="Diferencial #1"
       tagIcon={<Gauge className="h-3 w-3" />}
-      title={<>KM Inteligente: <span className="text-primary">nunca mais aceite corrida no prejuízo.</span></>}
+      title={<>KM Inteligente: <span className="accent-text">nunca mais aceite corrida no prejuízo.</span></>}
       description="Volant calcula em tempo real o R$/km mínimo que cada corrida precisa pagar pra você bater sua meta — considerando gasolina, custos do veículo e quantos dias você ainda vai rodar."
       bullets={[
         "Cálculo adaptativo: se você rodou mais hoje, o mínimo de amanhã cai.",
@@ -570,7 +605,7 @@ function FeatureMetas() {
       id="metas"
       tag="Diferencial #2"
       tagIcon={<Target className="h-3 w-3" />}
-      title={<>Metas que <span className="text-primary">se adaptam</span> a como você roda.</>}
+      title={<>Metas que <span className="accent-text">se adaptam</span> a como você roda.</>}
       description="Defina uma meta mensal e o Volant redistribui automaticamente o quanto falta a cada dia trabalhado — se você rodou bem na segunda, sua meta de terça relaxa. Se ficou pra trás, ela ajusta."
       bullets={[
         "Meta diária, semanal e mensal sempre atualizadas.",
@@ -591,7 +626,7 @@ function FeaturePersonalizacao() {
       id="personalizacao"
       tag="Diferencial #3"
       tagIcon={<LayoutGrid className="h-3 w-3" />}
-      title={<>Sua tela do seu jeito — <span className="text-primary">do seu jeito mesmo.</span></>}
+      title={<>Sua tela do seu jeito — <span className="accent-text">do seu jeito mesmo.</span></>}
       description="A maioria dos apps de motorista é engessada. No Volant, você reorganiza os cards da home, escolhe o cumprimento, ajusta categorias e deixa o app com a sua cara."
       bullets={[
         "Arraste e solte os cards da tela inicial.",
@@ -636,7 +671,7 @@ function SecondaryFeatures() {
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Sparkles className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
           <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-            Recursos que <span className="text-primary">trabalham por você</span>.
+            Recursos que <span className="accent-text">trabalham por você</span>.
           </h2>
         </div>
 
@@ -667,7 +702,7 @@ function FinalCta() {
       <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/15 via-card to-card p-8 text-center md:p-14">
         <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,hsl(var(--primary)/0.25),transparent_60%)]" />
         <h2 className="text-balance text-3xl font-extrabold tracking-tight md:text-4xl">
-          Comece a dirigir com clareza <span className="text-primary">hoje mesmo</span>.
+          Comece a dirigir com clareza <span className="accent-text">hoje mesmo</span>.
         </h2>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
           Teste o Volant por 7 dias sem pagar nada. Sem cartão. Sem amarração.
@@ -675,7 +710,7 @@ function FinalCta() {
         <div className="mt-6 flex justify-center">
           <Link
             to="/auth"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-fab)] transition hover:brightness-110"
+            className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
           >
             Criar minha conta grátis
             <ArrowRight className="h-4 w-4" />
@@ -711,7 +746,7 @@ function Footer() {
 
 function Eyebrow({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
+    <span className="accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider">
       {icon}
       {children}
     </span>
@@ -820,21 +855,59 @@ function MockTabs({ active = "Hoje" }: { active?: string }) {
 }
 
 function MockBottomNav({ active = "Início" }: { active?: string }) {
-  const items = ["Início", "Ganhos", "Despesas", "Mais"];
+  const items = [
+    { label: "Início", icon: HomeIcon },
+    { label: "Histórico", icon: HistoryIcon },
+    { label: "Relatórios", icon: BarChart3 },
+    { label: "Ajustes", icon: SettingsIcon },
+  ];
   return (
-    <div className="absolute inset-x-0 bottom-0 flex justify-around border-t border-border/40 bg-card/80 px-2 py-2 backdrop-blur">
-      {items.map((i) => (
-        <span
-          key={i}
-          className={cn(
-            "text-[10px] font-medium",
-            active === i ? "text-primary" : "text-muted-foreground",
-          )}
-        >
-          {i}
-        </span>
-      ))}
-    </div>
+    <>
+      <div className="absolute inset-x-0 bottom-0 z-10 border-t border-border/40 bg-card/90 backdrop-blur">
+        <div className="grid grid-cols-5 px-1 pt-1.5 pb-2">
+          {items.map((it, idx) => {
+            const Icon = it.icon;
+            const isActive = active === it.label;
+            return (
+              <div
+                key={it.label}
+                className={cn(
+                  "flex flex-col items-center gap-0.5",
+                  idx === 2 && "col-start-4",
+                  idx === 3 && "col-start-5",
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4",
+                    isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                  strokeWidth={isActive ? 2.4 : 2}
+                />
+                <span
+                  className={cn(
+                    "text-[9px] font-medium",
+                    isActive ? "text-primary" : "text-muted-foreground",
+                  )}
+                >
+                  {it.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {/* FAB central verde "+"  — replica o BottomNav do app */}
+      <div
+        className="absolute left-1/2 z-20 -translate-x-1/2"
+        style={{ bottom: "10px" }}
+        aria-hidden
+      >
+        <div className="grid h-10 w-10 place-items-center rounded-full text-primary-foreground bg-gradient-to-b from-success to-success/85 ring-1 ring-success/30 shadow-[0_6px_16px_-4px_hsl(var(--success)/0.55),0_2px_4px_hsl(var(--success)/0.25)]">
+          <Plus className="h-4 w-4" strokeWidth={2.6} />
+        </div>
+      </div>
+    </>
   );
 }
 
