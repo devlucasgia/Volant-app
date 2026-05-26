@@ -18,6 +18,27 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  const sendReset = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) {
+      toast.error("Digite seu e-mail para receber o link.");
+      return;
+    }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(trimmed, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Enviamos um link de recuperação para seu e-mail.");
+    } catch (err) {
+      toast.error(friendlyAuthError(err));
+    } finally {
+      setSendingReset(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && user) navigate("/app", { replace: true });
