@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
-import volantIcon from "/volant-app-icon-192.png";
+const volantIcon = "/volant-app-icon-192.png";
 
 interface Props {
   open: boolean;
