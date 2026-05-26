@@ -75,7 +75,7 @@ export default function Personalizacao() {
   return (
     <div className="min-h-screen">
       <ScreenHeader onBack={() => navigate("/ajustes")} />
-      <div className="space-y-2.5 px-4 py-6">
+      <div className="mx-auto w-full max-w-md space-y-2.5 px-4 py-4">
         <HubCard
           to="/ajustes/personalizacao/aparencia"
           icon={<Palette className="h-5 w-5" />}
@@ -97,6 +97,9 @@ export default function Personalizacao() {
           description="Escolha o que aparece e ajuste a ordem dos cards."
           delayMs={120}
         />
+        <p className="pt-2 text-center text-[10.5px] text-muted-foreground/60">
+          Toque em um item para abrir.
+        </p>
       </div>
     </div>
   );
