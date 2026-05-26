@@ -85,7 +85,7 @@ function Header() {
         </nav>
         <Link
           to="/auth"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-fab)] transition hover:brightness-110"
+          className="accent-cta inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
         >
           Testar grátis
           <ArrowRight className="h-3.5 w-3.5" />
