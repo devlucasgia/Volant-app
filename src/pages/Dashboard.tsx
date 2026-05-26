@@ -27,7 +27,7 @@ import { NotificationsSheet } from "@/components/NotificationsSheet";
 
 
 export default function Dashboard() {
-  const { entries, settings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, updateSettings, carInitialKm, activeCar, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isFull } = useAccess();
   const { user } = useAuth();
   const { openDrawer } = useUI();
@@ -46,7 +46,7 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
-  const unreadNotifs = 0; // base: nenhuma regra inteligente nesta sprint
+  const { unread: unreadNotifs } = useNotifications(user?.id, user?.created_at);
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
