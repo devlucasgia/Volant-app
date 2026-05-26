@@ -10,8 +10,7 @@ import { useEffect, useState, useCallback } from "react";
 export type ReportCardKey =
   | "net"
   | "perHour"
-  | "gross"
-  | "expenses"
+  | "grossExpenses" // Bruto + Gastos lado a lado (bloco combinado)
   | "daysGroup"   // Dias ativos + Média / dia
   | "kmGroup"     // KM total + Média / km
   | "tripsGroup"  // Corridas + R$ / corrida
@@ -20,13 +19,19 @@ export type ReportCardKey =
 export const DEFAULT_REPORT_ORDER: ReportCardKey[] = [
   "net",
   "perHour",
-  "gross",
-  "expenses",
+  "grossExpenses",
   "daysGroup",
   "kmGroup",
   "tripsGroup",
   "chart",
 ];
+
+// Legacy keys ("gross", "expenses") are stripped during migration so the
+// new combined block ("grossExpenses") is appended cleanly by read().
+const LEGACY_KEY_MAP: Record<string, ReportCardKey | null> = {
+  gross: "grossExpenses",
+  expenses: null,
+};
 
 const STORAGE_KEY = "volant.reportOrder.v2";
 
