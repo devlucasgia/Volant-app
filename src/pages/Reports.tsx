@@ -379,17 +379,47 @@ export default function Reports() {
       />
       <div className="relative">
       <div className="mx-auto w-full max-w-5xl space-y-5 px-4 pt-4 pb-6">
-        {/* Mode switch */}
-        <Segmented<RangeMode>
-          options={[
-            { key: "month", label: "Por mês" },
-            { key: "year", label: "Por ano" },
-            { key: "range", label: "Personalizado" },
-          ]}
-          value={mode}
-          onChange={setMode}
-          size="sm"
-        />
+        {/* Mode switch + Export */}
+        <div className="flex items-center gap-2">
+          <Segmented<RangeMode>
+            options={[
+              { key: "month", label: "Por mês" },
+              { key: "year", label: "Por ano" },
+              { key: "range", label: "Personalizado" },
+            ]}
+            value={mode}
+            onChange={setMode}
+            size="sm"
+            className="flex-1"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                aria-label="Exportar relatório"
+                className="h-9 w-9 shrink-0 rounded-xl"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={exportXLSX}>
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-success" /> Exportar Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportDOCX}>
+                <FileType2 className="mr-2 h-4 w-4 text-info" /> Exportar Word
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPDF}>
+                <FileText className="mr-2 h-4 w-4 text-destructive" /> Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportCSV}>
+                <FileDown className="mr-2 h-4 w-4 text-muted-foreground" /> Exportar CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
 
         {mode === "month" ? (
           <div className="flex items-center gap-2">
