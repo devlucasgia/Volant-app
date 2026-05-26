@@ -72,6 +72,24 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
     .eq("environment", env);
 }
 
+/**
+ * Quando um invoice falha (cartão recusado, fundos insuficientes etc.), o
+ * Stripe envia invoice.payment_failed antes mesmo de uma transição para
+ * past_due ou unpaid. Marcamos `past_due` aqui de forma idempotente para
+ * que o app reaja antes que o próximo customer.subscription.updated chegue.
+ * O hook `useSubscription` continua tratando `past_due` como ativo dentro
+ * do período corrente — sem alterar regras Premium.
+ */
+async function handleInvoicePaymentFailed(invoice: any, env: StripeEnv) {
+  const subId = invoice.subscription;
+  if (!subId) return;
+  await getSupabase()
+    .from("subscriptions")
+    .update({ status: "past_due", updated_at: new Date().toISOString() })
+    .eq("stripe_subscription_id", subId)
+    .eq("environment", env);
+}
+
 async function handleWebhook(req: Request, env: StripeEnv) {
   const event = await verifyWebhook(req, env);
   switch (event.type) {
@@ -83,6 +101,9 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object, env);
+      break;
+    case "invoice.payment_failed":
+      await handleInvoicePaymentFailed(event.data.object, env);
       break;
     default:
       console.log("Unhandled event:", event.type);
