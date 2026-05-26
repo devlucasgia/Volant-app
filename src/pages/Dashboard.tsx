@@ -114,6 +114,9 @@ export default function Dashboard() {
     [entries, period, customRange]
   );
   const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
+  // Animated hero value — count-up between Líquido/Bruto swaps.
+  const heroValueRaw = heroMetric === "gross" ? s.gross : s.net;
+  const animatedHeroValue = useCountUp(heroValueRaw, 380);
   const apps = useMemo(() => byApp(filtered), [filtered]);
   const expCats = useMemo(() => byExpenseCategory(filtered), [filtered]);
 
