@@ -194,12 +194,17 @@ function SubscriptionCard({
   managing: boolean;
 }) {
   const { user } = useAuth();
-  const { isActive, isGrandfathered, subscription } = useSubscription(user?.id);
+  const {
+    isPaidPremium,
+    isGrandfathered,
+    subscription,
+    internalTrialActive,
+    internalTrialExpired,
+    internalTrialEndsAt,
+  } = useSubscription(user?.id);
 
   const isYearly = subscription?.price_id === "volant_premium_yearly";
   const isMonthly = subscription?.price_id === "volant_premium_monthly";
-  const isTrialing = subscription?.status === "trialing";
-  const hasUsedTrial = !!subscription;
 
   const formatDate = (iso?: string | null) => {
     if (!iso) return null;
@@ -207,16 +212,20 @@ function SubscriptionCard({
       return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
     } catch { return null; }
   };
-  const trialEnd = isTrialing ? formatDate(subscription?.current_period_end) : null;
-  const nextBilling = subscription && !isTrialing ? formatDate(subscription.current_period_end) : null;
+  const nextBilling = subscription ? formatDate(subscription.current_period_end) : null;
+  const trialEndLabel = formatDate(internalTrialEndsAt);
 
   const goldBadge = "rounded-full border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300 shadow-[0_0_10px_-4px_rgba(245,158,11,0.55)]";
+  const grayBadge = "rounded-full border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground";
+  const expiredBadge = "rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-[10px] font-semibold text-destructive";
   const badge = isGrandfathered ? (
     <span className={goldBadge}>Premium Vitalício</span>
-  ) : isActive ? (
-    <span className={goldBadge}>
-      {isTrialing ? "Teste ativo" : "Premium"}
-    </span>
+  ) : isPaidPremium ? (
+    <span className={goldBadge}>Premium</span>
+  ) : internalTrialActive ? (
+    <span className={grayBadge}>Teste ativo</span>
+  ) : internalTrialExpired ? (
+    <span className={expiredBadge}>Expirado</span>
   ) : null;
 
   // Premium dark-green upgrade button (no neon).
@@ -238,22 +247,16 @@ function SubscriptionCard({
             Acesso completo ao Volant, permanente e sem cobranças.
           </p>
         </div>
-      ) : isActive ? (
+      ) : isPaidPremium ? (
         <div className="space-y-3">
           <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
             <div className="font-medium">
               {isYearly ? "Plano Anual" : "Plano Mensal"}
             </div>
             <div className="mt-0.5 text-xs text-muted-foreground">
-              {isTrialing ? "Teste de 7 dias ativo"
-                : subscription?.status === "active" ? "Assinatura ativa"
-                : subscription?.status === "past_due" ? "Pagamento pendente"
-                : subscription?.status}
+              {subscription?.status === "past_due" ? "Pagamento pendente" : "Assinatura ativa"}
               {subscription?.cancel_at_period_end ? " · cancelamento agendado" : ""}
             </div>
-            {trialEnd && (
-              <div className="mt-0.5 text-xs text-muted-foreground">Seu teste termina em {trialEnd}</div>
-            )}
             {nextBilling && (
               <div className="mt-0.5 text-xs text-muted-foreground">
                 {isYearly ? "Próxima renovação" : "Próxima cobrança"}: {nextBilling}
@@ -284,12 +287,33 @@ function SubscriptionCard({
             {managing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerenciar assinatura"}
           </Button>
         </div>
+      ) : internalTrialActive ? (
+        <div className="space-y-3">
+          <p className="text-sm text-foreground">
+            Acesso Premium por 7 dias
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Você está usando todos os recursos Premium do Volant, sem cartão e sem cobrança automática.
+            {trialEndLabel ? ` Seu acesso termina em ${trialEndLabel}.` : ""} Depois, você decide se quer continuar.
+          </p>
+          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
+            Assinar agora
+          </Button>
+        </div>
+      ) : internalTrialExpired ? (
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-foreground">Seu acesso Premium terminou</p>
+          <p className="text-sm text-muted-foreground">
+            Seus dados continuam salvos. Assine para voltar a usar os recursos Premium do Volant.
+          </p>
+          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
+            Ver planos
+          </Button>
+        </div>
       ) : (
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            {hasUsedTrial
-              ? "Reative seu acesso Premium para continuar usando o Volant."
-              : "Aproveite 7 dias grátis. Depois escolha entre acesso mensal ou anual."}
+            Assine e tenha acesso completo aos recursos Premium do Volant.
           </p>
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-border bg-muted/30 p-3">
@@ -305,13 +329,14 @@ function SubscriptionCard({
             </div>
           </div>
           <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
-            {hasUsedTrial ? "Ver planos" : "Começar teste de 7 dias"}
+            Ver planos
           </Button>
         </div>
       )}
     </SettingsCard>
   );
 }
+
 
 
 export default function SettingsPage() {
