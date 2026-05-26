@@ -675,7 +675,7 @@ function FinalCta() {
         <div className="mt-6 flex justify-center">
           <Link
             to="/auth"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-fab)] transition hover:brightness-110"
+            className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
           >
             Criar minha conta grátis
             <ArrowRight className="h-4 w-4" />
