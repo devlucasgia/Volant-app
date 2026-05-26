@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageSquare, Bold, Italic, Smile, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,8 @@ const EMOJI_SUGGESTIONS = ["👋", "🚀", "🙌", "💪", "🛣️", "🔥", "�
 
 export default function PersonalizacaoSaudacao() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as { from?: string } | null)?.from ?? "/ajustes/personalizacao";
   const { settings, updateSettings } = useData();
   const { user } = useAuth();
   const widgets = settings.dashboardWidgets;
@@ -145,7 +147,7 @@ export default function PersonalizacaoSaudacao() {
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={() => navigate("/ajustes/personalizacao")} />
+      <ScreenHeader onBack={() => navigate(backTo)} />
       <div className="space-y-3 px-4 py-5 animate-fade-in">
 
         {/* Preview at top — main hero of the screen */}
