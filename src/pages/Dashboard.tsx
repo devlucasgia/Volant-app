@@ -593,7 +593,7 @@ export default function Dashboard() {
           const heroTitle = showGross ? "Ganho bruto" : "Lucro líquido";
           const heroSubtitle = showGross ? "Antes dos gastos" : "Depois dos gastos";
           const heroValue = showGross ? s.gross : s.net;
-          const animatedHero = useCountUp(heroValue, 380);
+          const animatedHero = animatedHeroValue;
           // Theme follows the hero metric: green for líquido, premium blue for bruto.
           const heroAccentText = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
           const heroBorder = showGross ? "border-[hsl(var(--goal-gross))]/40" : "border-success/30";
