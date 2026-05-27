@@ -1450,46 +1450,6 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
 }
 
 
-function KmMockup() {
-  return (
-    <>
-      <MockHeader title="KM Inteligente" subtitle="Adaptativo · hoje" />
-      <div className="space-y-3 px-4 pb-20 pt-4">
-        <div className="rounded-xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-            R$/km mínimo agora
-          </div>
-          <div className="mt-1 text-4xl font-extrabold tabular-nums">R$ 2,34</div>
-          <div className="mt-1 text-[10px] text-muted-foreground">pra bater sua meta líquida do mês</div>
-        </div>
-
-        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Como o Volant calcula
-          </div>
-          <Row label="Meta líquida restante" value="R$ 3.480,00" />
-          <Row label="Custos do veículo (12 dias)" value="R$ 480,00" />
-          <Row label="KM que você ainda planeja rodar" value="1.690 km" />
-          <div className="mt-2 border-t border-border/40 pt-2">
-            <Row label="Mínimo por km" value="R$ 2,34" emphasize />
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="font-semibold">Base do mês</span>
-            <span className="text-muted-foreground">R$ 2,18 /km</span>
-          </div>
-          <div className="mt-1 text-[10px] text-muted-foreground">
-            Se você rodar menos hoje, o mínimo de amanhã sobe automaticamente.
-          </div>
-        </div>
-      </div>
-      <MockBottomNav active="Mais" />
-    </>
-  );
-}
-
 function Row({ label, value, emphasize }: { label: string; value: string; emphasize?: boolean }) {
   return (
     <div className="flex items-center justify-between py-1 text-[11px]">
