@@ -295,6 +295,19 @@ function NotificationDetail({
             {n.cta.url && <ExternalLink className="h-4 w-4" />}
           </Button>
         )}
+
+        {/* Rodapé discreto de suporte — apenas em notificações do Sistema (Volant). */}
+        {n.iconType === "volant" && (
+          <p className="pt-1 text-center text-[10.5px] leading-snug text-muted-foreground/70">
+            Dúvidas? Escreva para{" "}
+            <a
+              href="mailto:suporte@usevolant.com.br"
+              className="text-muted-foreground/90 underline-offset-2 hover:text-foreground hover:underline"
+            >
+              suporte@usevolant.com.br
+            </a>
+          </p>
+        )}
       </div>
     </>
   );

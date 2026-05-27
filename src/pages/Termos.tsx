@@ -76,7 +76,7 @@ export default function Termos() {
         </Section>
 
         <Section title="9. Contato">
-          Em caso de dúvidas, entre em contato pelo e-mail <a className="text-primary hover:underline" href="mailto:suporte.volant@gmail.com">suporte.volant@gmail.com</a>.
+          Em caso de dúvidas, entre em contato pelo e-mail <a className="text-primary hover:underline" href="mailto:contato@usevolant.com.br">contato@usevolant.com.br</a>.
         </Section>
 
         <p className="pt-4 text-[12px]">

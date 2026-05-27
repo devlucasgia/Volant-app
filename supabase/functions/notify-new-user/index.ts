@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SUPPORT_EMAIL = "suporte.volant@gmail.com";
+const SUPPORT_EMAIL = "contato@usevolant.com.br";
 const FROM_EMAIL = "Volant <onboarding@resend.dev>";
 
 function esc(s: string) {

@@ -58,7 +58,7 @@ export default function Privacidade() {
         <Section title="5. Seus direitos (LGPD)">
           Você pode, a qualquer momento: acessar seus dados, corrigi-los, exportá-los ou solicitar a exclusão
           definitiva da sua conta. Para exercer esses direitos, envie um e-mail para
-          <a className="text-primary hover:underline" href="mailto:suporte.volant@gmail.com"> suporte.volant@gmail.com</a>.
+          <a className="text-primary hover:underline" href="mailto:contato@usevolant.com.br"> contato@usevolant.com.br</a>.
         </Section>
 
         <Section title="6. Retenção de dados">
@@ -81,7 +81,7 @@ export default function Privacidade() {
 
         <Section title="10. Encarregado de dados (DPO) e contato">
           Para qualquer questão relacionada a dados pessoais, fale com a gente em
-          <a className="text-primary hover:underline" href="mailto:suporte.volant@gmail.com"> suporte.volant@gmail.com</a>.
+          <a className="text-primary hover:underline" href="mailto:contato@usevolant.com.br"> contato@usevolant.com.br</a>.
         </Section>
 
         <p className="pt-4 text-[12px]">
