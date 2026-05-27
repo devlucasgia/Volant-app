@@ -571,43 +571,444 @@ function HeroStyles() {
 
 
 /* ------------------------------ pain strip -------------------------------- */
+/* Seção 2 — "Faturamento não é lucro": 3 cards (bruto / custos / líquido)
+   com count-up dos valores ao entrar no viewport. */
+
+function useInViewOnce<T extends Element>(rootMargin = "-10% 0px") {
+  const ref = useRef<T | null>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || inView) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            setInView(true);
+            obs.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin, threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [inView, rootMargin]);
+  return { ref, inView };
+}
 
 function PainStrip() {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+  const gross = useCountUp(inView ? 280 : 0, 700);
+  const costs = useCountUp(inView ? 92 : 0, 800);
+  const net = useCountUp(inView ? 188 : 0, 950);
+
   return (
-    <section className="border-y border-border/40 bg-card/30 px-4 py-10 md:py-14">
-      <div className="mx-auto max-w-3xl text-center">
-        <h2 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">
-          Você sabe quanto <span className="accent-text">sobra de verdade</span> no fim do dia?
-        </h2>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
-          Faturar bem é fácil. Difícil é saber o lucro real depois da gasolina, manutenção, IPVA e
-          desgaste do carro. O Volant calcula isso por você — sem planilha, sem caderno, sem chute.
+    <section className="border-y border-border/40 bg-card/30 px-4 py-14 md:py-20">
+      <div ref={ref} className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="text-balance text-2xl font-bold leading-tight tracking-tight md:text-4xl">
+            Faturar bem não significa <span className="accent-text">lucrar bem.</span>
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            O ganho bruto da corrida não mostra sozinho o lucro real. Combustível, manutenção, pneus,
+            óleo, seguro, IPVA e desgaste do carro fazem parte da conta. O Volant organiza esses
+            números para mostrar quanto realmente sobra.
+          </p>
+        </div>
+
+        {/* Cards */}
+        <div className="mt-10 grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:gap-2">
+          <PainCard
+            tone="info"
+            icon={<Wallet className="h-3.5 w-3.5" />}
+            label="Ganho bruto"
+            value={brl(gross)}
+            subtext="Entrou no dia"
+            delay={0}
+            visible={inView}
+          />
+          <PainConnector visible={inView} delay={120} />
+          <PainCard
+            tone="danger"
+            icon={<TrendingDown className="h-3.5 w-3.5" />}
+            label="Custos do dia"
+            value={`− ${brl(costs)}`}
+            subtext="Combustível, veículo e gastos"
+            delay={140}
+            visible={inView}
+          />
+          <PainConnector visible={inView} delay={260} />
+          <PainCard
+            tone="success"
+            icon={<TrendingUp className="h-3.5 w-3.5" />}
+            label="Lucro líquido"
+            value={brl(net)}
+            subtext="Depois dos custos"
+            delay={280}
+            visible={inView}
+            emphasize
+          />
+        </div>
+
+        <p className="mx-auto mt-8 max-w-xl text-center text-xs leading-relaxed text-muted-foreground/90 md:text-sm">
+          O Volant transforma registros simples em clareza para decidir melhor.
         </p>
       </div>
     </section>
   );
 }
 
-/* ----------------------------- diferencial 1 ------------------------------ */
+function PainCard({
+  tone,
+  icon,
+  label,
+  value,
+  subtext,
+  delay,
+  visible,
+  emphasize,
+}: {
+  tone: "info" | "danger" | "success";
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  subtext: string;
+  delay: number;
+  visible: boolean;
+  emphasize?: boolean;
+}) {
+  const toneCfg = {
+    info: {
+      border: "border-sky-400/30",
+      bg: "from-sky-400/[0.08] to-card/70",
+      chip: "bg-sky-400/15 text-sky-300",
+      value: "text-sky-300",
+    },
+    danger: {
+      border: "border-destructive/35",
+      bg: "from-destructive/[0.08] to-card/70",
+      chip: "bg-destructive/15 text-destructive",
+      value: "text-destructive",
+    },
+    success: {
+      border: "border-primary/40",
+      bg: "from-primary/[0.12] to-card/70",
+      chip: "bg-primary/15 text-primary",
+      value: "text-primary",
+    },
+  }[tone];
 
-function FeatureKmInteligente() {
   return (
-    <FeatureSection
-      id="km"
-      tag="Diferencial #1"
-      tagIcon={<Gauge className="h-3 w-3" />}
-      title={<>KM Inteligente: <span className="accent-text">nunca mais aceite corrida no prejuízo.</span></>}
-      description="Volant calcula em tempo real o R$/km mínimo que cada corrida precisa pagar pra você bater sua meta — considerando gasolina, custos do veículo e quantos dias você ainda vai rodar."
-      bullets={[
-        "Cálculo adaptativo: se você rodou mais hoje, o mínimo de amanhã cai.",
-        "Considera custos reais do veículo (financiamento, IPVA, óleo, pneu).",
-        "Mostra o R$/km de cada corrida na hora de aceitar.",
-      ]}
-      mockup={<KmMockup />}
-      reverse={false}
-    />
+    <div
+      className={cn(
+        "rounded-2xl border bg-gradient-to-br p-4 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        toneCfg.border,
+        toneCfg.bg,
+        emphasize &&
+          "shadow-[0_0_0_1px_hsl(var(--primary)/0.35),0_0_30px_-6px_hsl(var(--primary)/0.45)]",
+        visible ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
+      )}
+      style={{ transitionDelay: visible ? `${delay}ms` : "0ms" }}
+    >
+      <div className="flex items-center gap-2">
+        <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded-md", toneCfg.chip)}>
+          {icon}
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+      </div>
+      <div className={cn("mt-2 text-2xl font-extrabold leading-none tabular-nums md:text-3xl", toneCfg.value)}>
+        {value}
+      </div>
+      <div className="mt-2 text-[11px] leading-tight text-muted-foreground">{subtext}</div>
+    </div>
   );
 }
+
+function PainConnector({ visible, delay }: { visible: boolean; delay: number }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-center transition-opacity duration-500",
+        visible ? "opacity-100" : "opacity-0",
+      )}
+      style={{ transitionDelay: visible ? `${delay}ms` : "0ms" }}
+      aria-hidden
+    >
+      {/* Mobile: traço vertical curto. Desktop: seta horizontal. */}
+      <div className="h-4 w-px bg-gradient-to-b from-transparent via-border to-transparent md:hidden" />
+      <ArrowRightIcon className="hidden h-4 w-4 text-muted-foreground/50 md:block" />
+    </div>
+  );
+}
+
+/* ----------------------------- diferencial 1 ------------------------------ */
+/* Seção 3 — KM Inteligente "Boom": mockup fiel + animação sequenciada
+   demonstrando o R$/km recalculando após lucro e gasto registrados. */
+
+function FeatureKmInteligente() {
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
+  // Fases: 0 inicial → 1 lucro entra → 2 recalcula 2,34→2,23 → 3 gasto entra
+  // → 4 recalcula 2,23→2,26 → 5 estado final estabilizado.
+  const [phase, setPhase] = useState(0);
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    if (!inView) return;
+    if (reduced) {
+      setPhase(5);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    timers.push(setTimeout(() => setPhase(1), 1200));
+    timers.push(setTimeout(() => setPhase(2), 2000));
+    timers.push(setTimeout(() => setPhase(3), 3500));
+    timers.push(setTimeout(() => setPhase(4), 4300));
+    timers.push(setTimeout(() => setPhase(5), 5500));
+    return () => timers.forEach(clearTimeout);
+  }, [inView, reduced]);
+
+  // R$/km e meta restante variam conforme a fase
+  const kmValue = phase >= 4 ? 2.26 : phase >= 2 ? 2.23 : 2.34;
+  const goalRemaining = phase >= 2 ? 3300 : 3480;
+  const costsValue = phase >= 4 ? 515 : 480;
+  const animatedKm = useCountUp(kmValue, 600);
+  const animatedGoal = useCountUp(goalRemaining, 500);
+  const animatedCosts = useCountUp(costsValue, 500);
+
+  const legend =
+    phase >= 4
+      ? "Custo considerado. Referência recalculada."
+      : phase >= 2
+        ? "Meta restante menor. R$/km ajustado."
+        : "Atualizado em tempo real conforme você registra.";
+
+  return (
+    <section id="km" className="px-4 py-16 md:py-24">
+      <div
+        ref={ref}
+        className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14"
+      >
+        {/* Texto + bullets + CTA */}
+        <div className="order-2 md:order-1">
+          <Eyebrow icon={<Gauge className="h-3 w-3" />}>Diferencial #1</Eyebrow>
+          <h2 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl">
+            KM Inteligente:{" "}
+            <span className="accent-text">escolha melhor antes de aceitar a corrida.</span>
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+            O Volant calcula uma referência de R$/km mínimo com base na sua meta, custos do veículo,
+            KM planejado e quanto ainda falta para fechar o mês.
+          </p>
+
+          <ul className="mt-6 space-y-3">
+            <KmBullet title="Considera sua meta do mês">
+              O cálculo parte do quanto ainda falta para você atingir seu objetivo.
+            </KmBullet>
+            <KmBullet title="Inclui custos reais do veículo">
+              Manutenção, óleo, pneus, IPVA, seguro e outros custos entram na conta.
+            </KmBullet>
+            <KmBullet title="Recalcula conforme sua rotina muda">
+              Registrou ganho, gasto ou rodou mais? A referência se ajusta.
+            </KmBullet>
+          </ul>
+
+          <div className="mt-7">
+            <Link
+              to="/auth"
+              className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+            >
+              Testar grátis por 7 dias
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              ✓ Sem cartão. Sem cobrança automática.
+            </p>
+          </div>
+        </div>
+
+        {/* Mockup + floaters */}
+        <div className="relative order-1 mx-auto w-full max-w-[340px] md:order-2">
+          <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl" />
+          <div className="relative">
+            <PhoneFrame>
+              <KmBoomMockup
+                kmValue={animatedKm}
+                goalRemaining={animatedGoal}
+                costsValue={animatedCosts}
+                pulse={phase === 2 || phase === 4 || phase === 5}
+              />
+            </PhoneFrame>
+
+            {/* Floater de lucro (fase 1+) */}
+            <FloatingEntry
+              tone="success"
+              icon={<Plus className="h-3 w-3" strokeWidth={3} />}
+              label="Lucro registrado"
+              value="+ R$ 180,00"
+              visible={phase >= 1 && phase < 5}
+              position="topRight"
+            />
+            {/* Floater de gasto (fase 3+) */}
+            <FloatingEntry
+              tone="danger"
+              icon={<Minus className="h-3 w-3" strokeWidth={3} />}
+              label="Custo registrado"
+              value="− R$ 35,00"
+              visible={phase >= 3 && phase < 5}
+              position="bottomLeft"
+            />
+          </div>
+
+          <p
+            className={cn(
+              "mx-auto mt-4 max-w-[280px] text-center text-[11px] leading-snug text-muted-foreground transition-opacity duration-500",
+              inView ? "opacity-100" : "opacity-0",
+            )}
+            aria-live="polite"
+          >
+            {phase >= 5 ? "O Volant ajusta a rota conforme sua rotina muda." : legend}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function KmBullet({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Check className="h-3.5 w-3.5" />
+      </span>
+      <div>
+        <div className="text-sm font-semibold text-foreground">{title}</div>
+        <p className="text-[12.5px] leading-relaxed text-muted-foreground">{children}</p>
+      </div>
+    </li>
+  );
+}
+
+function KmBoomMockup({
+  kmValue,
+  goalRemaining,
+  costsValue,
+  pulse,
+}: {
+  kmValue: number;
+  goalRemaining: number;
+  costsValue: number;
+  pulse: boolean;
+}) {
+  const fmtKm = `R$ ${kmValue.toFixed(2).replace(".", ",")}`;
+  return (
+    <>
+      <MockHeader title="KM Inteligente" subtitle="Adaptativo · hoje" />
+      <div className="space-y-3 px-4 pb-20 pt-4">
+        <div
+          className={cn(
+            "rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center transition-shadow",
+            pulse &&
+              "shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_0_36px_-2px_hsl(var(--primary)/0.55)]",
+          )}
+        >
+          <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+            R$/km mínimo agora
+          </div>
+          <div className="mt-1 text-4xl font-extrabold tabular-nums text-foreground">{fmtKm}</div>
+          <div className="mt-1 text-[10px] text-muted-foreground">
+            pra bater sua meta líquida do mês
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Como o Volant calcula
+          </div>
+          <Row label="Meta líquida restante" value={brl(goalRemaining)} />
+          <Row label="Custos do veículo" value={brl(costsValue)} />
+          <Row label="KM planejado restante" value="1.690 km" />
+          <div className="mt-2 border-t border-border/40 pt-2">
+            <Row label="Mínimo por km" value={fmtKm} emphasize />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/50 bg-card/60 p-3">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="font-semibold">Base do mês</span>
+            <span className="text-muted-foreground">R$ 2,18 /km</span>
+          </div>
+          <div className="mt-1 text-[10px] text-muted-foreground">
+            Se você rodar menos hoje, o mínimo de amanhã sobe automaticamente.
+          </div>
+        </div>
+      </div>
+      <MockBottomNav active="Mais" />
+    </>
+  );
+}
+
+function FloatingEntry({
+  tone,
+  icon,
+  label,
+  value,
+  visible,
+  position,
+}: {
+  tone: "success" | "danger";
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  visible: boolean;
+  position: "topRight" | "bottomLeft";
+}) {
+  const toneCls =
+    tone === "success"
+      ? "border-primary/40 bg-card/95 text-primary shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.55)]"
+      : "border-destructive/40 bg-card/95 text-destructive shadow-[0_8px_24px_-8px_hsl(var(--destructive)/0.5)]";
+  const posCls =
+    position === "topRight"
+      ? "top-6 -right-2 sm:-right-6 md:-right-10"
+      : "bottom-24 -left-2 sm:-left-6 md:-left-10";
+  return (
+    <div
+      className={cn(
+        "absolute z-30 flex items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+        toneCls,
+        posCls,
+        visible
+          ? "translate-y-0 opacity-100 scale-100"
+          : position === "topRight"
+            ? "-translate-y-2 opacity-0 scale-95"
+            : "translate-y-2 opacity-0 scale-95",
+      )}
+      aria-hidden={!visible}
+    >
+      <span
+        className={cn(
+          "inline-flex h-5 w-5 items-center justify-center rounded-full",
+          tone === "success" ? "bg-primary/15" : "bg-destructive/15",
+        )}
+      >
+        {icon}
+      </span>
+      <div className="text-left leading-tight">
+        <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </div>
+        <div className="text-[12px] font-extrabold tabular-nums">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+
 
 /* ----------------------------- diferencial 2 ------------------------------ */
 
