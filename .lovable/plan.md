@@ -1,105 +1,121 @@
-# Sprint — Central de Notificações 1.0
+## Sprint — Landing: Seção 2 "Faturamento não é lucro" + Seção 3 "KM Inteligente Boom"
 
-## 0. Hotfix — trial de 7 dias para conta de teste em sandbox
-
-Liberar manualmente para `lucasti.ludorecriare@gmail.com` no banco sandbox:
-
-```sql
-UPDATE public.profiles
-SET trial_started_at = now(),
-    trial_ends_at = now() + interval '7 days',
-    trial_access_granted = true
-WHERE id = (SELECT id FROM auth.users WHERE email = 'lucasti.ludorecriare@gmail.com');
-```
-
-Sem mudança de código. Lógica `env === "live"` em `useSubscription.ts` permanece.
+Escopo restrito a `src/pages/Landing.tsx` (componentes `PainStrip` e `FeatureKmInteligente`). Nada fora da landing pública é tocado.
 
 ---
 
-## 1. Reorganização lista → detalhe
+### 1. Seção 2 — "Faturamento não é lucro"
 
-`NotificationsSheet` vira máquina de estado interna de 2 níveis no mesmo `Drawer`:
+Refatorar `PainStrip` (atualmente só um título + parágrafo) para uma seção visual com 3 cards financeiros inspirados nos cards reais do app:
 
-- **view = "list"** → header "Notificações / Acompanhe avisos importantes do Volant" + lista de cards resumidos (categoria, ícone, título, summary, dot de não lida, chevron).
-- **view = "detail"** → header com `ChevronLeft` voltar + título + corpo completo (mensagem, tópicos, CTA).
+- **Título:** "Faturar bem não significa lucrar bem."
+- **Subtítulo curto:** texto enxuto sobre combustível, manutenção, pneus, óleo, seguro, IPVA.
+- **3 cards em sequência:**
+  1. **Ganho bruto** — R$ 280,00 (azul/info), subtexto "Entrou no dia"
+  2. **Custos do dia** — − R$ 92,00 (vermelho/destructive), subtexto "Combustível, veículo e gastos"
+  3. **Lucro líquido** — R$ 188,00 (verde Volant, com glow leve), subtexto "Depois dos custos"
+- **Conector visual** sutil entre os cards (linha/seta `→` no desktop, vertical no mobile).
+- **Microcopy de fecho:** "O Volant transforma registros simples em clareza para decidir melhor."
 
-Transição fade/slide curto. Fechar Drawer reseta para "list". Sem rota nova.
+**Animações (IntersectionObserver + CSS):**
+- Cards entram em cascata (fade-in-up, stagger ~150ms): bruto → custos → líquido.
+- Valores fazem **count-up** (R$ 0,00 → valor final) usando o hook existente `useCountUp` em `src/hooks/useCountUp.ts`.
+- Card de lucro líquido com leve `animate-premium-glow` ao concluir.
+- Respeita `prefers-reduced-motion` (snap direto ao valor final — já é o comportamento do `useCountUp`).
 
-## 2. Estado lida/não lida
+---
 
-- Remover o `useEffect` que marca tudo como lido ao abrir o sheet (linha 35 de `NotificationsSheet.tsx`).
-- Marcar individualmente como lida **somente** ao abrir o detalhe.
-- Adicionar em `src/lib/notifications.ts`: `markAsRead(userId, id)` que atualiza `readAt` do item e dispara `NOTIFICATIONS_EVENT`.
-- `useNotifications` expõe `markAsRead`.
+### 2. Seção 3 — KM Inteligente "Boom"
 
-## 3. Badge no sino (Dashboard)
+Refatorar `FeatureKmInteligente` (hoje usa o componente genérico `FeatureSection` + `KmMockup`) para um bloco dedicado, mais alto, com um mockup fiel à tela real `/app/ajustes/planejamento/km` e animação demonstrativa.
 
-`useNotifications` já retorna `unread`. Adicionar dot pequeno verde (`bg-success`, sem contador) absoluto sobre o ícone do sino quando `unread > 0`. Sem alterar layout do header.
+**Conteúdo textual:**
+- Título: "KM Inteligente: escolha melhor antes de aceitar a corrida."
+- Frase de apoio: "Escolha as melhores corridas. Escolha com inteligência."
+- Descrição curta sobre meta, custos, KM planejado e fim do mês.
 
-## 4. Anti-duplicidade
+**Mockup inspirado na tela real** (reconstruído em JSX/Tailwind, sem imagem):
+- Header "KM Inteligente" com ícone `Gauge`.
+- Card principal **R$/KM mínimo agora** com valor em destaque grande + glow verde controlado.
+- 4 linhas de cálculo: Meta líquida restante, Custos do veículo, KM planejado restante, Mínimo por km.
+- Card "Base do mês" abaixo.
+- Mesmo estilo dark premium (border `border-primary/25`, `bg-card`, tipografia consistente com o app).
 
-Manter persistência em `localStorage` por usuário (sem nova tabela). Cada notificação tem `id` único (dedupe key). Criar helper genérico `ensureNotification(userId, template, condition)`:
+**Animação principal (sequenciada, baseada em IntersectionObserver):**
 
-1. Lê lista do usuário.
-2. Se já existe item com mesmo `id`, ignora.
-3. Se `condition()` é `true`, insere como não lida.
+| Tempo | Evento | Mudança |
+|---|---|---|
+| 0s | Estado inicial | R$/km = R$ 2,34; Meta restante R$ 3.480; KM restante 1.690 |
+| ~1.2s | Mini-card flutuante verde entra: **"+ R$ 180,00 lucro registrado"** | Pulso suave, partícula/linha verde conecta ao mockup |
+| ~2.0s | Recálculo | R$/km transita 2,34 → 2,23 (count-up); legenda "Meta restante menor. R$/km ajustado." |
+| ~3.5s | Mini-card flutuante vermelho entra: **"− R$ 35,00 custo registrado"** | Pulso suave |
+| ~4.3s | Recálculo | R$/km transita 2,23 → 2,26; legenda "Custo considerado. Referência recalculada." |
+| ~5.5s | Estado final | Card principal com `animate-premium-glow`; frase: "O Volant ajusta a rota conforme sua rotina muda." |
 
-Substitui `ensureWelcomeNotification` por essa versão genérica.
+A animação roda **uma única vez** ao entrar no viewport (não loop). Em `prefers-reduced-motion`, mostra direto o estado final (R$ 2,26) sem floaters nem transições.
 
-## 5. Notificações desta sprint
+**Bullets explicativos** (3) abaixo do mockup: meta do mês / custos reais / recalcula com a rotina.
 
-| ID | Categoria | Ícone | Condição |
-|---|---|---|---|
-| `general_welcome_group_notification` | Sistema | Símbolo V do Volant | conta ≥ 30 min (já existe, adaptar) |
-| `premium_welcome_notification` | Premium | `Crown` | `isPaidPremium === true` (assinatura paga OU `beta_grandfathered`). **Não** dispara em `internalTrialActive`. |
-| `planning_incomplete_notification` | Planejamento | ícone real de Planejamento Inteligente | conta ≥ 30 min E (`user_settings.monthly_goal = 0` OU `km_planned_month` nulo/0 OU `working_days_per_month` nulo) |
-| `vehicle_costs_missing_notification` | Veículo | ícone real de Custos do veículo | conta ≥ 30 min E nenhum `cars` do usuário tem custos preenchidos (todos `rental_weekly`, `financing_monthly`, `insurance_monthly`, `ipva_yearly`, `oil_change_cost`, `tires_cost`, `other_monthly_costs` nulos/zero) |
+**CTA da seção:**
+- Botão "Testar grátis por 7 dias" (mesmo estilo `accent-cta` já usado em `FinalCta`, link para `/auth`).
+- Microtexto "✓ Sem cartão. Sem cobrança automática."
 
-Cada uma criada uma única vez por usuário. Se marcada como lida e depois a condição for resolvida, não recria.
+**Layout responsivo:**
+- **Mobile (default):** tudo empilhado vertical — título → mockup → floaters aparecem sobrepostos ao mockup (com `inset` controlado pra não sair da tela) → bullets → CTA.
+- **Desktop (`md:`):** grid 2 colunas — texto/bullets/CTA à esquerda, mockup + floaters ao redor à direita.
 
-## 6. Fora do escopo (sprints futuras)
+---
 
-Push, service worker, e-mail, WhatsApp, recorrentes, IA, cron backend, notificações diárias/semanais, alertas de desempenho, permissão do navegador. Categorias extras (KM Inteligente, Metas, Relatórios, Suporte, Novidades) ficam preparadas no tipo `category` mas sem notificação ainda.
+### 3. Implementação técnica
 
-## 7. Regra de ícones
+**Arquivo único alterado:** `src/pages/Landing.tsx`.
 
-- `iconType: "volant"` → componente local `<VolantSymbol />` (reusar `VolantLogo` em modo símbolo, sem fetch remoto — render imediato).
-- `iconType: "premium"` → `Crown` (lucide).
-- `iconType: "planning" | "vehicle-costs"` → mesmo ícone lucide já usado na tela correspondente (vou verificar em `PlanejamentoInteligente.tsx` e `CustosVeiculo.tsx` antes de codar e reusar o import idêntico).
-- Sem emojis, `Sparkles`, ou imagens remotas como ícone principal.
+**Novos componentes internos (no mesmo arquivo, padrão atual do Landing):**
+- `PainStrip` — reescrito.
+- `PainCard` — card individual da seção 2.
+- `FeatureKmInteligente` — reescrito (não usa mais `FeatureSection` genérico).
+- `KmBoomMockup` — mockup fiel à tela real.
+- `FloatingEntry` — mini-card do lucro/gasto entrando.
+- Hook local `useInViewOnce` (IntersectionObserver simples, ~15 linhas) — ou usar approach com `useEffect` + `IntersectionObserver`.
 
-## 8. Arquivos alterados
+**Reusos:**
+- `useCountUp` (já existe) para transição de valores.
+- Animações Tailwind já configuradas: `animate-fade-in-up`, `animate-premium-glow`, `animate-premium-breath`, `transitionTimingFunction.premium`.
+- Tokens semânticos existentes: `--primary` (verde), `--destructive` (vermelho), `--info` (azul) — sem cores hard-coded.
 
-**Editados:**
-- `src/lib/notifications.ts` — novo shape (`category`, `summary`, `content`, `iconType`, `dedupeKey`), `ensureNotification`, `markAsRead`, templates das 4 notificações.
-- `src/hooks/useNotifications.ts` — receber contexto extra (settings, cars, isPaidPremium) e disparar os `ensure*`; expor `markAsRead`.
-- `src/components/NotificationsSheet.tsx` — refatorar para máquina lista/detalhe; remover auto-mark; novo card de lista; tela de detalhe com botão voltar.
-- `src/pages/Dashboard.tsx` — passar `userSettings`, `cars`, `isPaidPremium` para o hook; adicionar badge no sino se ainda não tiver.
+**Sem novas dependências.** Sem Framer Motion (não está no projeto). Animação 100% CSS + RAF via `useCountUp`.
 
-**Sem** novas tabelas, migrations ou edge functions.
+---
 
-## 9. Não-regressão
+### 4. Mockups baseados no app real
 
-Não tocar: `create-checkout`, `payments-webhook`, `useSubscription` (só leitura de `isPaidPremium`), tabelas `subscriptions`/`profiles`/`user_settings`/`cars`, `AuthContext`, `AccessContext`, `RequirePremium`, `OnboardingFlow`, `Landing`, `Paywall`, `SubscriptionSheet`, PWA, Home (exceto badge), Relatórios, Histórico, lógica KM/Metas, acesso 7 dias.
+O `KmBoomMockup` é reconstruído visualmente a partir de `src/pages/KmInteligente.tsx` + `src/components/account/SmartKmSection.tsx` (não importados — só replicados em JSX estilizado pra landing, com dados ilustrativos coerentes com a fórmula real de `computeSmartKm`).
 
-## Detalhe técnico — novo shape
+Os valores escolhidos (R$ 3.480 meta restante, R$ 480 custos, 1.690 km, R$ 2,34/km) são plausíveis dentro da fórmula real para passar credibilidade.
 
-```ts
-export type NotificationCategory = "sistema" | "premium" | "planejamento" | "veiculo";
-export type NotificationIcon = "volant" | "premium" | "planning" | "vehicle-costs";
+---
 
-export interface AppNotification {
-  id: string;
-  category: NotificationCategory;
-  iconType: NotificationIcon;
-  title: string;
-  summary: string;       // lista
-  content: string;       // detalhe
-  topics?: { title: string; desc: string }[];
-  cta?: { label: string; url?: string; route?: string };
-  createdAt: number;
-  readAt: number | null;
-}
-```
+### 5. Performance mobile
 
-Item 0 já aprovado (opção a). Aguardando aprovação geral para executar.
+- Sem vídeos, GIFs ou imagens externas — tudo CSS/JSX.
+- IntersectionObserver dispara animação só quando visível, uma única vez.
+- `prefers-reduced-motion` respeitado (count-up snap + sem floaters animados).
+- Sem loops infinitos pesados — só os glows já existentes no Tailwind (4s ease).
+- Floaters absolutos contidos com `overflow-hidden` no wrapper do mockup para nunca vazar da viewport mobile.
+
+---
+
+### 6. O que NÃO é tocado
+
+`/app` e tudo dentro dele (Home, Histórico, Relatórios, KM Inteligente real, Metas, Central de Veículos), `SmartKmSection.tsx`, `computeSmartKm`, banco de dados, Stripe, checkout, trial, assinatura, autenticação, onboarding, edge functions, notificações, PWA, `index.css`, `tailwind.config.ts`, demais páginas da landing (Hero, FeatureMetas, FeaturePersonalizacao, SecondaryFeatures, FinalCta, Footer).
+
+---
+
+### 7. Critérios de aceite (resumo verificável)
+
+- Seção 2 com 3 cards animados (bruto/custos/líquido) e count-up.
+- Seção 3 com mockup do KM Inteligente, 2 floaters sequenciais (+R$ 180 lucro, −R$ 35 custo) e R$/km transitando 2,34 → 2,23 → 2,26.
+- Bullets explicativos + CTA "Testar grátis por 7 dias" com microtexto.
+- Mobile (viewport ~390px) sem overflow, sem texto espremido, floaters dentro da tela.
+- `prefers-reduced-motion` mostra estado final sem animação.
+- `/app` continua idêntico.
