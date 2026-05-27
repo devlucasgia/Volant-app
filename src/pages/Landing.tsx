@@ -739,7 +739,7 @@ function PainConnector({ visible, delay }: { visible: boolean; delay: number }) 
     >
       {/* Mobile: traço vertical curto. Desktop: seta horizontal. */}
       <div className="h-4 w-px bg-gradient-to-b from-transparent via-border to-transparent md:hidden" />
-      <ArrowRightIcon className="hidden h-4 w-4 text-muted-foreground/50 md:block" />
+      <ArrowRight className="hidden h-4 w-4 text-muted-foreground/50 md:block" />
     </div>
   );
 }
