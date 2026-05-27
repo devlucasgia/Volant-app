@@ -9,6 +9,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  TrendingDown,
   Wrench,
   Clock,
   ShieldCheck,
@@ -17,10 +18,15 @@ import {
   BarChart3,
   Settings as SettingsIcon,
   Plus,
+  Minus,
+  Wallet,
+  ArrowRight as ArrowRightIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import volantSymbol from "@/assets/volant-symbol-header.png";
+import { useCountUp } from "@/hooks/useCountUp";
+import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /* -------------------------------------------------------------------------- */
