@@ -20,7 +20,6 @@ import {
   Plus,
   Minus,
   Wallet,
-  ArrowRight as ArrowRightIcon,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
