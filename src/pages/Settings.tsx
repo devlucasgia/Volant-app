@@ -289,43 +289,44 @@ function SubscriptionCard({
           </Button>
         </div>
       ) : internalTrialActive ? (
-        <div className="space-y-4">
-          {/* Topo */}
-          <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.3)]">
-              <Crown className="h-4 w-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <span className="inline-flex items-center rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                Teste ativo
-              </span>
-              <p className="mt-1.5 text-sm font-semibold text-foreground">
-                Acesso Premium por 7 dias
-              </p>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                Você está usando todos os recursos Premium do Volant, sem cartão e sem cobrança automática.
-              </p>
-            </div>
-          </div>
+        <div className="space-y-3">
+          {/* Card Premium unificado */}
+          <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-card via-card to-primary/[0.04] p-5 shadow-[inset_0_1px_0_hsl(0_0%_100%/0.04),0_8px_28px_-12px_hsl(var(--primary)/0.35)]">
+            {/* Glow decorativo */}
+            <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
 
-          {/* Card informativo 1 */}
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold text-foreground">
-              Acesso Premium por 7 dias
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Todos os recursos estão liberados, sem cartão e sem cobrança automática.
-            </p>
-          </div>
+            <div className="relative">
+              <h3 className="text-base font-semibold tracking-tight text-foreground">
+                Acesso Premium liberado
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Você está usando todos os recursos Premium do Volant por 7 dias, sem cartão e sem cobrança automática.
+              </p>
 
-          {/* Card informativo 2 */}
-          <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-4">
-            <p className="text-sm font-semibold text-foreground">
-              {trialEndLabel ? <>Termina em {trialEndLabel}</> : "Período de acesso ativo"}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-              Depois disso, você decide se quer continuar.
-            </p>
+              {/* Linhas informativas */}
+              <div className="mt-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/12 text-primary">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">Teste ativo</p>
+                    <p className="text-xs text-muted-foreground">Todos os recursos Premium estão liberados.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-primary/12 text-primary">
+                    <Clock className="h-3.5 w-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground">
+                      {trialEndLabel ? <>Termina em {trialEndLabel}</> : "Período de acesso ativo"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Depois disso, você decide se quer continuar.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Bloco de conversão */}
@@ -334,11 +335,12 @@ function SubscriptionCard({
               Quer continuar usando sem interrupções?
             </p>
             <Button onClick={() => onOpenAcquisition("plans")} className="btn-premium-cta w-full h-11">
-              <Crown className="h-4 w-4" />
+              <Crown className="h-4 w-4 relative z-10" />
               <span className="relative z-10">Assinar agora</span>
             </Button>
           </div>
         </div>
+
       ) : internalTrialExpired ? (
         <div className="space-y-3">
           <p className="text-sm font-medium text-foreground">Seu acesso Premium terminou</p>
