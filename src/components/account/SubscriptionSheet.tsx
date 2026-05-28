@@ -290,10 +290,11 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
               </div>
               <Button
                 onClick={() => setShowPlans(true)}
-                className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+                className="btn-premium-cta w-full h-11"
               >
-                Ver planos
+                <span className="relative z-10">Ver planos</span>
               </Button>
+
             </div>
           ) : view === "lifetime" ? (
             <div className="mt-6 space-y-4">
