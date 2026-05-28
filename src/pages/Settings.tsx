@@ -188,11 +188,12 @@ function SubscriptionCard({
   onManage,
   managing,
 }: {
-  onOpenAcquisition: () => void;
+  onOpenAcquisition: (view?: "auto" | "plans") => void;
   onOpenUpgrade: () => void;
   onManage: () => void;
   managing: boolean;
 }) {
+
   const { user } = useAuth();
   const {
     isPaidPremium,
@@ -288,18 +289,55 @@ function SubscriptionCard({
           </Button>
         </div>
       ) : internalTrialActive ? (
-        <div className="space-y-3">
-          <p className="text-sm font-semibold text-foreground">
-            Acesso Premium por 7 dias
-          </p>
-          {trialEndLabel && (
-            <div className="border-t border-border/60 pt-3 text-xs text-muted-foreground">
-              Termina em <span className="font-semibold text-foreground">{trialEndLabel}</span>
+        <div className="space-y-4">
+          {/* Topo */}
+          <div className="flex items-start gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary shadow-[0_0_18px_hsl(var(--primary)/0.3)]">
+              <Crown className="h-4 w-4" />
             </div>
-          )}
-          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
-            Assinar agora
-          </Button>
+            <div className="min-w-0 flex-1">
+              <span className="inline-flex items-center rounded-full border border-primary/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                Teste ativo
+              </span>
+              <p className="mt-1.5 text-sm font-semibold text-foreground">
+                Acesso Premium por 7 dias
+              </p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                Você está usando todos os recursos Premium do Volant, sem cartão e sem cobrança automática.
+              </p>
+            </div>
+          </div>
+
+          {/* Card informativo 1 */}
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <p className="text-sm font-semibold text-foreground">
+              Acesso Premium por 7 dias
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Todos os recursos estão liberados, sem cartão e sem cobrança automática.
+            </p>
+          </div>
+
+          {/* Card informativo 2 */}
+          <div className="rounded-2xl border border-primary/25 bg-primary/[0.06] p-4">
+            <p className="text-sm font-semibold text-foreground">
+              {trialEndLabel ? <>Termina em {trialEndLabel}</> : "Período de acesso ativo"}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Depois disso, você decide se quer continuar.
+            </p>
+          </div>
+
+          {/* Bloco de conversão */}
+          <div className="space-y-2 pt-1">
+            <p className="text-xs text-muted-foreground">
+              Quer continuar usando sem interrupções?
+            </p>
+            <Button onClick={() => onOpenAcquisition("plans")} className="btn-premium-cta w-full h-11">
+              <Crown className="h-4 w-4" />
+              <span className="relative z-10">Assinar agora</span>
+            </Button>
+          </div>
         </div>
       ) : internalTrialExpired ? (
         <div className="space-y-3">
@@ -307,8 +345,8 @@ function SubscriptionCard({
           <p className="text-sm text-muted-foreground">
             Seus dados continuam salvos. Assine para voltar a usar os recursos Premium do Volant.
           </p>
-          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
-            Ver planos
+          <Button onClick={() => onOpenAcquisition("plans")} className="btn-premium-cta w-full h-11">
+            <span className="relative z-10">Ver planos</span>
           </Button>
         </div>
       ) : (
@@ -329,11 +367,12 @@ function SubscriptionCard({
               <div className="mt-0.5 text-sm font-semibold text-foreground">R$ 89,90<span className="text-[11px] font-normal text-muted-foreground">/ano</span></div>
             </div>
           </div>
-          <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
-            Ver planos
+          <Button onClick={() => onOpenAcquisition("plans")} className="btn-premium-cta w-full h-11">
+            <span className="relative z-10">Ver planos</span>
           </Button>
         </div>
       )}
+
     </SettingsCard>
   );
 }
@@ -693,7 +732,7 @@ export default function SettingsPage() {
         <SectionGroup title="Conta">
           <Accordion type="multiple" className="space-y-2.5">
             <SubscriptionCard
-              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenAcquisition={(view = "auto") => { setSubscriptionInitialView(view); setSubscriptionOpen(true); }}
               onOpenUpgrade={() => setUpgradeOpen(true)}
               onManage={openPortal}
               managing={portalLoading}
