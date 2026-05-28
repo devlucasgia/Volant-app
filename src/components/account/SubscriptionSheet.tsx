@@ -357,18 +357,19 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                   <Button
                     onClick={handleManage}
                     disabled={portalLoading}
-                    className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+                    className="btn-premium-cta w-full h-11"
                   >
-                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mudar para o anual"}
+                    {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="relative z-10">Mudar para o anual</span>}
                   </Button>
                 ) : (
                   <Button
                     onClick={handleStart}
-                    className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+                    className="btn-premium-cta w-full h-11"
                   >
-                    Assinar {selected === "yearly" ? "plano anual" : "plano mensal"}
+                    <span className="relative z-10">Assinar {selected === "yearly" ? "plano anual" : "plano mensal"}</span>
                   </Button>
                 )}
+
                 <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
                   {plansFlavor === "upgrade"
                     ? "A troca de plano é feita com segurança pelo portal de assinatura."
