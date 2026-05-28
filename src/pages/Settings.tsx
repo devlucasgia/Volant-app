@@ -732,7 +732,7 @@ export default function SettingsPage() {
         <SectionGroup title="Conta">
           <Accordion type="multiple" className="space-y-2.5">
             <SubscriptionCard
-              onOpenAcquisition={() => { setSubscriptionInitialView("auto"); setSubscriptionOpen(true); }}
+              onOpenAcquisition={(view = "auto") => { setSubscriptionInitialView(view); setSubscriptionOpen(true); }}
               onOpenUpgrade={() => setUpgradeOpen(true)}
               onManage={openPortal}
               managing={portalLoading}
