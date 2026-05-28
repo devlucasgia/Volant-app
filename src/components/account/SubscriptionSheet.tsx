@@ -272,12 +272,13 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                 </p>
                 <Button
                   onClick={() => setShowPlans(true)}
-                  className="w-full gradient-success text-primary-foreground shadow-[0_0_24px_hsl(var(--primary)/0.3)]"
+                  className="btn-premium-cta w-full h-11"
                 >
                   <Crown className="h-4 w-4" />
-                  Assinar agora
+                  <span className="relative z-10">Assinar agora</span>
                 </Button>
               </div>
+
             </div>
           ) : view === "expired" ? (
             <div className="mt-6 space-y-4">
