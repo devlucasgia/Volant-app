@@ -188,11 +188,12 @@ function SubscriptionCard({
   onManage,
   managing,
 }: {
-  onOpenAcquisition: () => void;
+  onOpenAcquisition: (view?: "auto" | "plans") => void;
   onOpenUpgrade: () => void;
   onManage: () => void;
   managing: boolean;
 }) {
+
   const { user } = useAuth();
   const {
     isPaidPremium,
