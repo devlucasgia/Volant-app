@@ -289,13 +289,14 @@ function SubscriptionCard({
         </div>
       ) : internalTrialActive ? (
         <div className="space-y-3">
-          <p className="text-sm text-foreground">
+          <p className="text-sm font-semibold text-foreground">
             Acesso Premium por 7 dias
           </p>
-          <p className="text-sm text-muted-foreground">
-            Você está usando todos os recursos Premium do Volant, sem cartão e sem cobrança automática.
-            {trialEndLabel ? ` Seu acesso termina em ${trialEndLabel}.` : ""} Depois, você decide se quer continuar.
-          </p>
+          {trialEndLabel && (
+            <div className="border-t border-border/60 pt-3 text-xs text-muted-foreground">
+              Termina em <span className="font-semibold text-foreground">{trialEndLabel}</span>
+            </div>
+          )}
           <Button onClick={onOpenAcquisition} className="w-full gradient-success text-primary-foreground">
             Assinar agora
           </Button>

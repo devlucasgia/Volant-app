@@ -1,121 +1,78 @@
-## Sprint — Landing: Seção 2 "Faturamento não é lucro" + Seção 3 "KM Inteligente Boom"
+## 1. Correção do card "Teste ativo" (Ajustes › Assinatura expandido)
 
-Escopo restrito a `src/pages/Landing.tsx` (componentes `PainStrip` e `FeatureKmInteligente`). Nada fora da landing pública é tocado.
+**Arquivo único:** `src/pages/Settings.tsx` (bloco `internalTrialActive`, linhas 290–302).
 
----
+**Hoje** aparecem duas frases longas + "Seu acesso termina em…" diluído no parágrafo — informação que se repete no modal "Assinar agora".
 
-### 1. Seção 2 — "Faturamento não é lucro"
+**Mudança (apenas esse bloco):**
 
-Refatorar `PainStrip` (atualmente só um título + parágrafo) para uma seção visual com 3 cards financeiros inspirados nos cards reais do app:
+- Manter o título em negrito: **"Acesso Premium por 7 dias"** (mudar `text-sm text-foreground` → `text-sm font-semibold text-foreground` para reforçar o negrito).
+- Remover totalmente o parágrafo "Você está usando todos os recursos Premium… Depois, você decide se quer continuar."
+- Adicionar, logo abaixo do título, um bloco compacto e sofisticado com a data de término, no mesmo estilo visual usado no `SubscriptionSheet` ("Termina em **{data}**"):
+  - Separador fino (`border-t border-border/60`) acima.
+  - Linha `text-xs text-muted-foreground` com `Termina em` + data em `font-semibold text-foreground`.
+- Manter o botão `Assinar agora` exatamente como está (mesmo estilo, mesmo handler, mesmo `gradient-success`).
 
-- **Título:** "Faturar bem não significa lucrar bem."
-- **Subtítulo curto:** texto enxuto sobre combustível, manutenção, pneus, óleo, seguro, IPVA.
-- **3 cards em sequência:**
-  1. **Ganho bruto** — R$ 280,00 (azul/info), subtexto "Entrou no dia"
-  2. **Custos do dia** — − R$ 92,00 (vermelho/destructive), subtexto "Combustível, veículo e gastos"
-  3. **Lucro líquido** — R$ 188,00 (verde Volant, com glow leve), subtexto "Depois dos custos"
-- **Conector visual** sutil entre os cards (linha/seta `→` no desktop, vertical no mobile).
-- **Microcopy de fecho:** "O Volant transforma registros simples em clareza para decidir melhor."
+**Nada mais é tocado:** `SubscriptionSheet`, modal de planos, checkout, hook `useSubscription`, copy de outros estados (lifetime / active / expired / plans), nem qualquer lógica de trial/Stripe.
 
-**Animações (IntersectionObserver + CSS):**
-- Cards entram em cascata (fade-in-up, stagger ~150ms): bruto → custos → líquido.
-- Valores fazem **count-up** (R$ 0,00 → valor final) usando o hook existente `useCountUp` em `src/hooks/useCountUp.ts`.
-- Card de lucro líquido com leve `animate-premium-glow` ao concluir.
-- Respeita `prefers-reduced-motion` (snap direto ao valor final — já é o comportamento do `useCountUp`).
+### Resultado visual esperado
 
----
-
-### 2. Seção 3 — KM Inteligente "Boom"
-
-Refatorar `FeatureKmInteligente` (hoje usa o componente genérico `FeatureSection` + `KmMockup`) para um bloco dedicado, mais alto, com um mockup fiel à tela real `/app/ajustes/planejamento/km` e animação demonstrativa.
-
-**Conteúdo textual:**
-- Título: "KM Inteligente: escolha melhor antes de aceitar a corrida."
-- Frase de apoio: "Escolha as melhores corridas. Escolha com inteligência."
-- Descrição curta sobre meta, custos, KM planejado e fim do mês.
-
-**Mockup inspirado na tela real** (reconstruído em JSX/Tailwind, sem imagem):
-- Header "KM Inteligente" com ícone `Gauge`.
-- Card principal **R$/KM mínimo agora** com valor em destaque grande + glow verde controlado.
-- 4 linhas de cálculo: Meta líquida restante, Custos do veículo, KM planejado restante, Mínimo por km.
-- Card "Base do mês" abaixo.
-- Mesmo estilo dark premium (border `border-primary/25`, `bg-card`, tipografia consistente com o app).
-
-**Animação principal (sequenciada, baseada em IntersectionObserver):**
-
-| Tempo | Evento | Mudança |
-|---|---|---|
-| 0s | Estado inicial | R$/km = R$ 2,34; Meta restante R$ 3.480; KM restante 1.690 |
-| ~1.2s | Mini-card flutuante verde entra: **"+ R$ 180,00 lucro registrado"** | Pulso suave, partícula/linha verde conecta ao mockup |
-| ~2.0s | Recálculo | R$/km transita 2,34 → 2,23 (count-up); legenda "Meta restante menor. R$/km ajustado." |
-| ~3.5s | Mini-card flutuante vermelho entra: **"− R$ 35,00 custo registrado"** | Pulso suave |
-| ~4.3s | Recálculo | R$/km transita 2,23 → 2,26; legenda "Custo considerado. Referência recalculada." |
-| ~5.5s | Estado final | Card principal com `animate-premium-glow`; frase: "O Volant ajusta a rota conforme sua rotina muda." |
-
-A animação roda **uma única vez** ao entrar no viewport (não loop). Em `prefers-reduced-motion`, mostra direto o estado final (R$ 2,26) sem floaters nem transições.
-
-**Bullets explicativos** (3) abaixo do mockup: meta do mês / custos reais / recalcula com a rotina.
-
-**CTA da seção:**
-- Botão "Testar grátis por 7 dias" (mesmo estilo `accent-cta` já usado em `FinalCta`, link para `/auth`).
-- Microtexto "✓ Sem cartão. Sem cobrança automática."
-
-**Layout responsivo:**
-- **Mobile (default):** tudo empilhado vertical — título → mockup → floaters aparecem sobrepostos ao mockup (com `inset` controlado pra não sair da tela) → bullets → CTA.
-- **Desktop (`md:`):** grid 2 colunas — texto/bullets/CTA à esquerda, mockup + floaters ao redor à direita.
+```text
+👑  Assinatura                          [Teste ativo]  ▾
+─────────────────────────────────────────────────────
+Acesso Premium por 7 dias
+─────────────────────────────────────────────────────
+Termina em 02 de junho de 2026
+[          Assinar agora          ]
+```
 
 ---
 
-### 3. Implementação técnica
+## 2. Resposta — Após validação Stripe, falta algo no app?
 
-**Arquivo único alterado:** `src/pages/Landing.tsx`.
+**Não, do lado do app está tudo pronto.** O fluxo de go-live tem 5 etapas e o que depende de você termina quando a Stripe aprova o cadastro:
 
-**Novos componentes internos (no mesmo arquivo, padrão atual do Landing):**
-- `PainStrip` — reescrito.
-- `PainCard` — card individual da seção 2.
-- `FeatureKmInteligente` — reescrito (não usa mais `FeatureSection` genérico).
-- `KmBoomMockup` — mockup fiel à tela real.
-- `FloatingEntry` — mini-card do lucro/gasto entrando.
-- Hook local `useInViewOnce` (IntersectionObserver simples, ~15 linhas) — ou usar approach com `useEffect` + `IntersectionObserver`.
+1. ✅ Reivindicar conta (feito).
+2. ⏳ Ativar conta para live (em análise pela Stripe — 2-3 dias).
+3. Instalar o app Volant na conta live (geralmente automático se você marcou "copiar" ao migrar; senão é 1 clique).
+4. **Provisionar chaves live (automático Lovable)** — assim que a etapa 3 fecha, o Lovable cria as chaves live, registra o webhook live e injeta os secrets nas edge functions. Você não faz nada.
+5. **Readiness check** — botão na aba Pagamentos que valida produtos, preços e webhooks em live. Rodar antes de divulgar.
 
-**Reusos:**
-- `useCountUp` (já existe) para transição de valores.
-- Animações Tailwind já configuradas: `animate-fade-in-up`, `animate-premium-glow`, `animate-premium-breath`, `transitionTimingFunction.premium`.
-- Tokens semânticos existentes: `--primary` (verde), `--destructive` (vermelho), `--info` (azul) — sem cores hard-coded.
+Resumo prático após a aprovação:
+- Aguardar etapas 3 e 4 ficarem verdes (acompanhar em Lovable › Pagamentos › aba Live).
+- Rodar o readiness check.
+- Fazer 1 compra real de teste (cartão próprio, mensal R$ 19,90) e cancelar pelo portal — confirma que webhook live grava em `subscriptions` com `environment='live'` e que o `useSubscription` libera acesso.
+- Publicar. O `.env.production` com `pk_live_...` já é injetado automaticamente no build de produção.
 
-**Sem novas dependências.** Sem Framer Motion (não está no projeto). Animação 100% CSS + RAF via `useCountUp`.
-
----
-
-### 4. Mockups baseados no app real
-
-O `KmBoomMockup` é reconstruído visualmente a partir de `src/pages/KmInteligente.tsx` + `src/components/account/SmartKmSection.tsx` (não importados — só replicados em JSX estilizado pra landing, com dados ilustrativos coerentes com a fórmula real de `computeSmartKm`).
-
-Os valores escolhidos (R$ 3.480 meta restante, R$ 480 custos, 1.690 km, R$ 2,34/km) são plausíveis dentro da fórmula real para passar credibilidade.
+Nenhuma alteração de código é necessária para o go-live em si.
 
 ---
 
-### 5. Performance mobile
+## 3. Resposta — PIX, Boleto e parcelamento sem juros
 
-- Sem vídeos, GIFs ou imagens externas — tudo CSS/JSX.
-- IntersectionObserver dispara animação só quando visível, uma única vez.
-- `prefers-reduced-motion` respeitado (count-up snap + sem floaters animados).
-- Sem loops infinitos pesados — só os glows já existentes no Tailwind (4s ease).
-- Floaters absolutos contidos com `overflow-hidden` no wrapper do mockup para nunca vazar da viewport mobile.
+**PIX e Boleto:** ✅ totalmente possível. A Stripe Brasil suporta os dois como métodos de pagamento. Como hoje usamos **Embedded Checkout**, basta ativar PIX e Boleto no painel da Stripe (Settings › Payment methods) — eles aparecem automaticamente no checkout sem mudança de código. Importante:
+- PIX e Boleto **não suportam assinatura recorrente** na Stripe. Só funcionam para pagamento único.
+- Para o plano **anual** podemos oferecer PIX/Boleto como "pagamento único de 12 meses" (mode: `payment` em vez de `subscription`) e tratar a renovação manualmente (lembrete por e-mail antes de expirar).
+- Para o **mensal** não dá — recorrência exige cartão.
+
+**Parcelamento sem juros no anual:** ✅ possível, mas com ressalva:
+- Stripe Brasil oferece parcelamento em até 12x. O **juros pode ser absorvido por você** (você recebe o valor cheio à vista, mas paga a taxa de parcelamento à Stripe ~2-3% por parcela adicional) ou **repassado ao cliente**.
+- Para "sem juros para o cliente E você recebe integral", a configuração é `installments: { enabled: true }` com `plan` no checkout — Stripe cobra a taxa de antecipação de você. **Não é gratuito**: cada parcela extra reduz sua margem em ~2,5%. Em 12x você recebe ~R$ 78 dos R$ 89,90 anuais.
+- Também só funciona em modo `payment` (compra única), não em `subscription`.
+
+### Implicação de arquitetura
+
+Para habilitar PIX/Boleto/parcelamento no anual, precisaríamos em uma sprint futura:
+1. Trocar o checkout do plano **anual** de `mode: subscription` para `mode: payment` com período de 1 ano controlado por nós (campo `access_expires_at` na tabela `profiles` ou `subscriptions`).
+2. Criar lembrete de renovação (edge function agendada ou via Resend antes de expirar).
+3. Ativar PIX/Boleto/installments no painel Stripe.
+4. Mensal continua como assinatura recorrente em cartão.
+
+**Não faz parte desta sprint** — é uma decisão de produto que precisa ser planejada separadamente. Posso detalhar o plano técnico quando você quiser priorizar.
 
 ---
 
-### 6. O que NÃO é tocado
+## Escopo desta sprint
 
-`/app` e tudo dentro dele (Home, Histórico, Relatórios, KM Inteligente real, Metas, Central de Veículos), `SmartKmSection.tsx`, `computeSmartKm`, banco de dados, Stripe, checkout, trial, assinatura, autenticação, onboarding, edge functions, notificações, PWA, `index.css`, `tailwind.config.ts`, demais páginas da landing (Hero, FeatureMetas, FeaturePersonalizacao, SecondaryFeatures, FinalCta, Footer).
-
----
-
-### 7. Critérios de aceite (resumo verificável)
-
-- Seção 2 com 3 cards animados (bruto/custos/líquido) e count-up.
-- Seção 3 com mockup do KM Inteligente, 2 floaters sequenciais (+R$ 180 lucro, −R$ 35 custo) e R$/km transitando 2,34 → 2,23 → 2,26.
-- Bullets explicativos + CTA "Testar grátis por 7 dias" com microtexto.
-- Mobile (viewport ~390px) sem overflow, sem texto espremido, floaters dentro da tela.
-- `prefers-reduced-motion` mostra estado final sem animação.
-- `/app` continua idêntico.
+✅ Apenas o item 1 (refator do card de teste ativo em `Settings.tsx`).
+❌ Nada mais é alterado.
