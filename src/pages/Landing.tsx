@@ -1525,7 +1525,87 @@ function Row({ label, value, emphasize }: { label: string; value: string; emphas
   );
 }
 
+/* 4 "estados de dia" que alternam em loop pra demonstrar dinamismo. */
+const METAS_STATES = [
+  {
+    pct: 58,
+    faltam: 3480,
+    hoje: { value: 290, hint: "+ 12% vs ontem" },
+    amanha: { value: 305, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 305, w: 75 },
+      { d: "Ter", v: 310, w: 78 },
+      { d: "Qua", v: 295, w: 70 },
+      { d: "Qui", v: 320, w: 82 },
+      { d: "Sex", v: 330, w: 88 },
+    ],
+  },
+  {
+    pct: 62,
+    faltam: 3160,
+    hoje: { value: 305, hint: "+ 5% vs ontem" },
+    amanha: { value: 295, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 295, w: 72 },
+      { d: "Ter", v: 305, w: 76 },
+      { d: "Qua", v: 285, w: 68 },
+      { d: "Qui", v: 315, w: 80 },
+      { d: "Sex", v: 325, w: 86 },
+    ],
+  },
+  {
+    pct: 67,
+    faltam: 2790,
+    hoje: { value: 280, hint: "− 8% vs ontem" },
+    amanha: { value: 320, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 320, w: 80 },
+      { d: "Ter", v: 315, w: 78 },
+      { d: "Qua", v: 305, w: 74 },
+      { d: "Qui", v: 330, w: 84 },
+      { d: "Sex", v: 340, w: 90 },
+    ],
+  },
+  {
+    pct: 71,
+    faltam: 2440,
+    hoje: { value: 315, hint: "+ 9% vs ontem" },
+    amanha: { value: 310, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 310, w: 76 },
+      { d: "Ter", v: 320, w: 80 },
+      { d: "Qua", v: 300, w: 72 },
+      { d: "Qui", v: 325, w: 82 },
+      { d: "Sex", v: 335, w: 88 },
+    ],
+  },
+] as const;
+
 function MetasMockup() {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setIdx((i) => (i + 1) % METAS_STATES.length);
+    }, 4500);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const s = METAS_STATES[idx];
+  const animPct = useCountUp(s.pct, 800);
+  const animFaltam = useCountUp(s.faltam, 800);
+  const animHoje = useCountUp(s.hoje.value, 800);
+  const animAmanha = useCountUp(s.amanha.value, 800);
+  const animNext = s.next.map((n) => ({
+    d: n.d,
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    v: useCountUp(n.v, 800),
+    w: n.w,
+  }));
+
   return (
     <>
       <MockHeader title="Metas Inteligentes" subtitle="Adaptativas · novembro" />
@@ -1536,35 +1616,44 @@ function MetasMockup() {
           </div>
           <div className="mt-1 flex items-end justify-between">
             <span className="text-2xl font-extrabold tabular-nums">R$ 8.400</span>
-            <span className="text-[10px] text-muted-foreground">faltam R$ 3.480</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              faltam R$ {Math.round(animFaltam).toLocaleString("pt-BR")}
+            </span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-[58%] rounded-full bg-primary" />
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ width: `${animPct}%` }}
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <DayCard day="Hoje" value="R$ 290" hint="+ 12% vs ontem" highlight />
-          <DayCard day="Amanhã" value="R$ 305" hint="ajustada" />
+          <DayCard
+            day="Hoje"
+            value={`R$ ${Math.round(animHoje)}`}
+            hint={s.hoje.hint}
+            highlight
+          />
+          <DayCard day="Amanhã" value={`R$ ${Math.round(animAmanha)}`} hint={s.amanha.hint} />
         </div>
 
         <div className="rounded-xl border border-border/50 bg-card/60 p-3">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Próximos 5 dias
           </div>
-          {[
-            { d: "Seg", v: "R$ 305", w: "75%" },
-            { d: "Ter", v: "R$ 310", w: "78%" },
-            { d: "Qua", v: "R$ 295", w: "70%" },
-            { d: "Qui", v: "R$ 320", w: "82%" },
-            { d: "Sex", v: "R$ 330", w: "88%" },
-          ].map((it) => (
+          {animNext.map((it) => (
             <div key={it.d} className="mb-1.5 flex items-center gap-2 text-[10px]">
               <span className="w-7 text-muted-foreground">{it.d}</span>
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary/70" style={{ width: it.w }} />
+                <div
+                  className="h-full rounded-full bg-primary/70 transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  style={{ width: `${it.w}%` }}
+                />
               </div>
-              <span className="w-12 text-right font-semibold tabular-nums">{it.v}</span>
+              <span className="w-14 text-right font-semibold tabular-nums">
+                R$ {Math.round(it.v)}
+              </span>
             </div>
           ))}
         </div>
@@ -1578,7 +1667,7 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
   return (
     <div
       className={cn(
-        "rounded-xl border p-3",
+        "rounded-xl border p-3 transition-colors",
         highlight ? "border-primary/40 bg-primary/10" : "border-border/50 bg-card/60",
       )}
     >
@@ -1588,6 +1677,7 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
     </div>
   );
 }
+
 
 function PersonalizacaoMockup() {
   const cards = [
