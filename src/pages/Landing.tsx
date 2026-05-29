@@ -1612,7 +1612,6 @@ function MetasMockup() {
     { d: s.next[3].d, v: animN3, w: s.next[3].w },
     { d: s.next[4].d, v: animN4, w: s.next[4].w },
   ];
-  }));
 
   return (
     <>
