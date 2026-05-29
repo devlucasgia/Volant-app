@@ -1,108 +1,118 @@
-# Sprint — Fluxo Premium mais direto + botões premium
 
-## Objetivo
-Encurtar o caminho até a escolha de planos: as informações do "Acesso Premium por 7 dias" passam a viver **dentro** do card expandido de Ajustes > Assinatura, e o botão "Assinar agora" abre **direto** o modal de planos (mensal/anual). Sem mexer em Stripe, webhooks, banco, lógica de trial ou de assinatura.
+# Refinos da página de vendas — Hero, KM Inteligente, Metas
+
+Tudo no `src/pages/Landing.tsx` (mais alguns `@keyframes` em `HeroStyles`). Nada de backend, nada fora de UI.
 
 ---
 
-## 1. Reformatar o bloco `internalTrialActive` em `Settings.tsx`
+## 1. Hero — pequenos ajustes + cards flutuantes redesenhados
 
-Arquivo: `src/pages/Settings.tsx` (lines 290–303)
+### 1.1 Saudação do mockup
+`HomeMockup` (linha 1344): trocar `title="Olá, Lucas ☕"` por `title="Olá, Motorista 👋"`.
 
-Substituir o conteúdo atual (título + "Termina em" + botão) pela estrutura completa que hoje aparece no modal intermediário:
+### 1.2 Microtexto abaixo do CTA
+Linha 248: trocar `7 dias grátis. Cancele quando quiser.` por `7 dias grátis. Sem cartão.` (mantém o ícone `Check` como está).
 
-- **Topo**: ícone coroa em círculo + badge "Teste ativo" + título **"Acesso Premium por 7 dias"** + descrição curta sobre acesso sem cartão.
-- **Card informativo 1** (`rounded-2xl border border-border bg-card p-4`): título "Acesso Premium por 7 dias" + "Todos os recursos estão liberados, sem cartão e sem cobrança automática."
-- **Card informativo 2** (`rounded-2xl border border-primary/25 bg-primary/[0.06] p-4`): ícone Clock + "Termina em **{trialEndLabel}**" + "Depois disso, você decide se quer continuar."
-- **Bloco de conversão**: texto "Quer continuar usando sem interrupções?" + botão **"Assinar agora"** (novo estilo premium, ver §3).
+### 1.3 Substituir os 3 cards flutuantes redundantes
+Hoje os 4 floaters (`Meta do mês`, `R$/KM`, `R$/hora`, `Lucro líquido hoje`) repetem dados já visíveis no mockup. Vamos:
 
-O botão `Assinar agora` continua chamando `onOpenAcquisition`, mas agora abrindo direto a view de **planos** — ver §2.
+- **Manter** o card `R$/KM Inteligente` (é o highlight do produto, único realmente diferenciado).
+- **Substituir os outros 3** por mini-mockups que mostram outras telas reais do app, criando um novo componente `FeatureFloatCard` (mais alto que o `FloatingCard` atual, com um corpinho de conteúdo abaixo do label).
 
-## 2. Pular o modal intermediário → abrir planos direto
+Os 3 novos floaters:
 
-Arquivo: `src/pages/Settings.tsx`
-- Linha 696: trocar `setSubscriptionInitialView("auto")` por `setSubscriptionInitialView("plans")` quando o gatilho vier do card de trial ativo.
-- Para preservar comportamento dos outros estados (lifetime, paga ativa, expirado), passar a decisão via parâmetro: `onOpenAcquisition: (view?: "plans" | "auto") => void`. O bloco `internalTrialActive` chama `onOpenAcquisition("plans")`; os demais continuam com `"auto"`.
+1. **Manutenção** — header com ícone `Wrench` + label `Manutenção` + linha "Troca de óleo em **480 km**" com mini-barra ~85% (cor warning/primary) e selo `Em dia`. Referência: tela `ManutencaoPreventiva` (notificação preventiva).
+2. **Custos do veículo** — header com ícone `Wallet` + label `Custos do veículo` + 2 mini-linhas: `Combustível R$ 320` e `Manutenção R$ 160`, com total `R$ 480 /mês` em destaque. Referência: `VehicleCostsCard` / página `CustosVeiculo`.
+3. **Personalização** — header com ícone `LayoutGrid` + label `Personalização` + um exemplo visual de "Tamanho do texto" com 3 chips `A` `A` `A` (pequeno/médio/grande), com o `A` médio destacado em primary. Referência: `FontSizeSheet` / `PersonalizacaoAparencia`.
 
-Arquivo: `src/components/account/SubscriptionSheet.tsx`
-- Nenhuma mudança de lógica. A view `"trial_internal"` continua existindo (fallback se alguém abrir com `initialView="auto"` em trial), mas no fluxo principal não será mais acionada vinda de Ajustes.
+### 1.4 Reposicionar os floaters para parecerem "ligados" ao mockup
+Reorganizar os `absolute` para que cada card flutuante fique próximo da seção correspondente dentro do telefone, com um sutil conector visual:
 
-## 3. Botões premium com shimmer em loop
+- **Manutenção** — no topo-esquerda, na altura do header/`Olá, Motorista` (insinua notificação que o app empurra ao motorista).
+- **R$/KM Inteligente** — direita, na altura do card `R$/KM` do mockup (já é o caso hoje; manter).
+- **Custos do veículo** — esquerda-baixo, na altura do bloco `Performance/Gastos` (parece "sair" dos gastos R$ 250,00).
+- **Personalização** — direita-baixo, na altura do bottom nav (insinua reorganização de cards/tema).
 
-Criar uma classe utilitária reutilizável em `src/index.css` (ou no `@layer components`):
+Adicionar a cada card flutuante uma fina linha conectora decorativa (`absolute` 1px com gradient pra `transparent`) apontando pro mockup. Mobile permanece como hoje (1 card compacto, `R$/KM`).
 
+### 1.5 Novo componente
+Criar `FeatureFloatCard({ className, label, icon, children, highlighted? })` ao lado de `FloatingCard`. Reaproveita visual (border, blur, sombra, glow opcional `hero-glow-soft`) e renderiza `children` em vez do `value` grande. Manter `FloatingCard` para o caso highlighted `R$/KM`.
+
+---
+
+## 2. Seção KM Inteligente — animações
+
+### 2.1 Animação de transações com efeito maior e cards permanentes
+No `FeatureKmInteligente` (linhas 751–880):
+
+- **Aumentar os valores** pra causar oscilação maior no `R$/km mínimo`:
+  - Lucro: `+ R$ 180,00` → `+ R$ 320,00`.
+  - Custo: `− R$ 35,00` → `− R$ 95,00`.
+  - Ajustar `kmValue` por fase: inicial `2.34` → após lucro `2.05` → após custo `2.18` (variação maior, fácil de perceber). Ajustar `goalRemaining`/`costsValue` proporcionalmente.
+- **Duração mais longa** para usuário desatento perceber:
+  - Lucro entra 1.2s → permanece, recalcula 2.0s → 2.6s (mais respiro).
+  - Custo entra 4.0s → recalcula 4.8s.
+  - Estabiliza em 6.0s (em vez de 5.5s) — totalizando ~6s.
+  - Aumentar `useCountUp` de 600/500ms para 900/800ms pra interpolação ficar mais visível.
+- **Não remover os cards após a animação:** trocar a condição `visible={phase >= 1 && phase < 5}` por `visible={phase >= 1}` (lucro) e `visible={phase >= 3}` (custo). Eles ficam ali estáticos até reload (que já é o comportamento desejado, pois `useInViewOnce` só dispara uma vez).
+
+### 2.2 Mockup flutuando em loop
+Envolver o `<PhoneFrame>` (linha 838) com `<div className="hero-float">` (já existe — `heroFloat 6.5s ease-in-out infinite`, mesma vibe da Hero). Sem CSS novo.
+
+### 2.3 Glow animado infinito no card principal
+No `KmBoomMockup`, o card `R$/km mínimo agora` hoje ganha `shadow-[...]` só quando `pulse=true`. Trocar por uma nova classe utilitária `km-glow-pulse` aplicada **sempre** (não condicional), com animação infinita pulsando o glow primary. Manter o `pulse` apenas como reforço breve (overlay rápido) ou aposentar — preferimos só a animação contínua.
+
+Adicionar em `HeroStyles`:
 ```css
-.btn-premium-cta {
-  @apply relative overflow-hidden rounded-xl text-primary-foreground font-semibold;
-  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%);
-  border: 1px solid hsl(var(--primary)/0.55);
-  box-shadow:
-    0 1px 0 hsl(0 0% 100% / 0.08) inset,
-    0 0 0 1px hsl(var(--primary)/0.15),
-    0 8px 24px -8px hsl(var(--primary)/0.45);
+.km-glow-pulse {
+  box-shadow: 0 0 0 1px hsl(var(--primary)/0.45), 0 0 28px -6px hsl(var(--primary)/0.45);
+  animation: kmGlowPulse 2.8s ease-in-out infinite;
 }
-.btn-premium-cta::after {
-  content: "";
-  @apply pointer-events-none absolute inset-0;
-  background: linear-gradient(110deg, transparent 35%, hsl(0 0% 100% / 0.18) 50%, transparent 65%);
-  transform: translateX(-100%);
-  animation: premium-shimmer 3.8s ease-in-out infinite;
-}
-@keyframes premium-shimmer {
-  0%   { transform: translateX(-100%); }
-  60%  { transform: translateX(100%); }
-  100% { transform: translateX(100%); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .btn-premium-cta::after { animation: none; }
+@keyframes kmGlowPulse {
+  0%,100% { box-shadow: 0 0 0 1px hsl(var(--primary)/0.35), 0 0 22px -8px hsl(var(--primary)/0.35); }
+  50%     { box-shadow: 0 0 0 1px hsl(var(--primary)/0.65), 0 0 44px -2px hsl(var(--primary)/0.70); }
 }
 ```
-
-Aplicar `className="btn-premium-cta"` (substituindo `gradient-success text-primary-foreground shadow-[...]`) em:
-- `Settings.tsx` — botão "Assinar agora" do card de trial.
-- `SubscriptionSheet.tsx` — botões "Assinar plano mensal/anual" (view `plans`) e "Ver planos" (view `expired`). Manter o "Mudar para o anual" também.
-
-Resultado: gradiente sutil + glow verde externo + borda com leve brilho + shimmer lento em loop (3.8s), com respeito a `prefers-reduced-motion`.
-
-## 4. Não tocar
-- `useSubscription`, `create-checkout`, `payments-webhook`, tabelas, preços, portal, `StripeEmbeddedCheckout`.
-- Lógica de `internalTrialActive/Expired`, `isPaidPremium`, `isGrandfathered`.
-- Demais views do `SubscriptionSheet` (`active`, `lifetime`, `checkout`).
-
-## 5. QA mobile (viewport 375)
-- Card de trial ativo: cards informativos não estouram, espaçamentos confortáveis, botão acessível.
-- Clique em "Assinar agora" → abre **direto** na tela com cards Mensal/Anual (sem etapa de trial).
-- Botões com shimmer: animação fluida, sem piscar, performance ok.
-- Dark mode mantém identidade Volant.
+E adicionar `.km-glow-pulse` ao `prefers-reduced-motion` (animation: none).
 
 ---
 
-## Respostas às dúvidas
+## 3. Seção Metas Inteligentes — dinamismo
 
-### 1. "Modo de teste" ainda aparece após Stripe live + app instalado
-É esperado nesta fase. O fluxo go-live tem 5 etapas e você está entre a 2 e a 4:
+### 3.1 Transição entre dias + count-up + flutuar + glow
+Refatorar `MetasMockup` (linhas 1461–1508) para ser dinâmico:
 
-1. ✅ Reivindicar conta — feito.
-2. ⏳ **Ativar conta live na Stripe** — em análise pela Stripe (normalmente 1–3 dias úteis). É isso que está travando "modo teste".
-3. ✅ Instalar app Lovable na conta live — você já fez via push.
-4. ⏳ **Provisionar chaves live** — Lovable faz automaticamente assim que a Stripe aprovar a conta. Você não faz nada.
-5. ⏳ Readiness check — desbloqueia quando 1–4 estiverem prontos.
+- Criar 4 "estados de dia" rotativos (Seg→Ter→Qua→Qui), cada um com:
+  - `metaAtingida` (varia ~58%, 62%, 67%, 71%) e `metaFaltante` correspondente.
+  - `hoje.value` (R$ 290, R$ 305, R$ 280, R$ 315) e `hoje.hint` ("+ 12% vs ontem", "ajustada", "−5% vs ontem", "+ 8% vs ontem").
+  - `amanha.value` recalculada (R$ 305, R$ 295, R$ 320, R$ 310).
+  - Larguras das 5 barras `Próximos 5 dias` ajustadas levemente.
+- `useEffect` com `setInterval` 4.5s alternando o índice (0→1→2→3→0...), com cleanup. Respeita `prefers-reduced-motion` (não roda).
+- Usar `AnimatedNumber` (já existe) para todos os valores numéricos (`R$ 8.400`, `faltam R$ 3.480`, `Hoje`, `Amanhã`, valores dos próximos 5 dias) — count-up suave entre estados.
+- Largura da barra principal e das 5 mini-barras transicionam com `transition: width 800ms cubic-bezier(0.22,1,0.36,1)`.
+- Pequeno "respiro" no card destacado (Hoje) ao trocar de estado: classe utilitária `metas-flash` que dá um `opacity: 0.6 → 1` curtinho ao mudar a key.
 
-**O que dá pra adiantar enquanto a Stripe verifica:**
-- Conferir e-mail de verificação da Stripe (caso ainda esteja pendente).
-- Garantir que dados de PJ/PF, conta bancária e 2FA estão completos no dashboard Stripe.
-- Não precisa mexer em código. Quando a Stripe liberar, o Lovable troca a chave `pk_test_...` por `pk_live_...` automaticamente e o "modo teste" some.
+- **Mockup flutuando:** envolver o `<PhoneFrame>` dentro do `FeatureSection` em um `<div className="hero-float">`. Como o `FeatureSection` é compartilhado, vamos passar o mockup já envolto em `hero-float` direto do `FeatureMetas`:
+  ```tsx
+  mockup={<div className="hero-float"><MetasMockup /></div>}
+  ```
+  (Mas o `FeatureSection` já envolve em `<PhoneFrame>`, então melhor passar o componente Mockup como hoje e adicionar `hero-float` ao wrapper `relative mx-auto w-full max-w-[320px]` em `FeatureSection` linha 1213 — isso afeta também Personalização: ok, todas as mockups vão flutuar como a Hero, mais coerente.)
 
-### 2. PIX / Boleto
-Resumo honesto:
+- **Glow animado por trás:** o `absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl` na linha 1214 ganha a classe `hero-breath` (já existe — `heroBreath 5s scale 1↔1.06`), igualando o "respirar" da Hero.
 
-- **Boleto** já aparece porque Stripe Brasil habilita por padrão em `mode: payment`.
-- **PIX** existe na Stripe Brasil, mas **só funciona em pagamento único** (`mode: payment`) — **não funciona em assinatura recorrente** (`mode: subscription`), que é o que o Volant usa hoje.
-- Para oferecer PIX/Boleto no Volant, o caminho é criar um **fluxo paralelo de "Pagar 1 ano à vista"** (pagamento único de R$ 89,90 via PIX/Boleto/cartão), e cuidar manualmente da renovação (notificação 7 dias antes do vencimento + novo link de pagamento). O plano mensal continua só em cartão.
-- Habilitar PIX no dashboard Stripe é simples (Settings → Payment methods → Pix → ativar), **mas** sem o código novo no checkout ele não aparece para o usuário final.
+### 3.2 Reduced motion
+Tudo respeitando `@media (prefers-reduced-motion: reduce)` já configurado nas linhas 559–561 (estender o seletor para incluir `.km-glow-pulse, .metas-flash`).
 
-**Prompt para sprint futura** (você me manda quando quiser):
+---
 
-> "Quero adicionar fluxo de pagamento à vista anual no Volant. Criar um segundo botão no modal de planos chamado 'Pagar 1 ano à vista (PIX/Boleto/Cartão)' que usa `mode: payment` em vez de `subscription`, com `payment_method_types: ['card', 'boleto', 'pix']`. Estender `create-checkout` para aceitar `mode` como parâmetro. Salvar o registro como assinatura anual com `current_period_end = hoje + 365 dias` e `cancel_at_period_end = true`. Criar job/notificação para avisar o usuário 7 dias antes do vencimento com link para renovar. Não mexer no fluxo mensal nem no anual recorrente atuais."
+## Não tocar
+- `useSubscription`, Stripe, Supabase, demais páginas, tema do app real.
+- Identidade visual (verde primary, dark mode).
+- Estrutura/SEO/`<Header>`/`<Footer>`/`FinalCta`.
 
-Posso configurar tudo isso sozinha quando você me autorizar — só não rola na mesma sprint que essa UX.
+## QA
+- Desktop 1280: 4 cards flutuantes lendo coerentes com o mockup, sem sobreposição.
+- Mobile 375: só o card compacto `R$/KM` continua visível.
+- KM Inteligente: rolar até a seção, ver lucro entrar, número descer, custo entrar, número subir, glow do card principal pulsando infinito; após reload, animação repete; cards `Lucro/Custo registrado` ficam visíveis ao final.
+- Metas: rolar até a seção, ver números trocando suavemente entre 4 estados em loop, mockup flutuando, glow respirando.
+- `prefers-reduced-motion`: nada anima além de transições funcionais.
