@@ -245,7 +245,7 @@ function Hero({ mode }: { mode: HeroMode }) {
           </div>
 
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Cancele quando quiser.
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
         </div>
 
