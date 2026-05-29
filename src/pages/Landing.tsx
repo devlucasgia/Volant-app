@@ -1464,6 +1464,7 @@ function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
           <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
           <a href="#km" className="transition hover:text-foreground">Recursos</a>
+          <a href="#planos" className="transition hover:text-foreground">Planos</a>
           <a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">
             Dúvidas? contato@usevolant.com.br
           </a>
