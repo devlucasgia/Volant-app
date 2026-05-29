@@ -1733,18 +1733,50 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
 
 
 function PersonalizacaoMockup() {
-  const cards = [
-    { name: "Faturamento", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { name: "Meta do dia", icon: <Target className="h-3.5 w-3.5" /> },
-    { name: "KM Inteligente", icon: <Gauge className="h-3.5 w-3.5" /> },
-    { name: "Performance", icon: <Sparkles className="h-3.5 w-3.5" /> },
-    { name: "Manutenção", icon: <Wrench className="h-3.5 w-3.5" /> },
+  const baseCards = [
+    { id: "fat", name: "Faturamento", icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    { id: "meta", name: "Meta do dia", icon: <Target className="h-3.5 w-3.5" /> },
+    { id: "km", name: "KM Inteligente", icon: <Gauge className="h-3.5 w-3.5" /> },
+    { id: "perf", name: "Performance", icon: <Sparkles className="h-3.5 w-3.5" /> },
+    { id: "man", name: "Manutenção", icon: <Wrench className="h-3.5 w-3.5" /> },
   ];
+
+  // 3 cenas em loop:
+  //  0 = estado base
+  //  1 = "KM Inteligente" sobe (swap com "Meta do dia")
+  //  2 = "Manutenção" desativada (oculto) + toast "Removido da Home"
+  const [scene, setScene] = useState(0);
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    const id = window.setInterval(() => {
+      setScene((s) => (s + 1) % 3);
+    }, 2200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Define ordem visível e card destacado por cena.
+  const order =
+    scene === 1
+      ? ["fat", "km", "meta", "perf", "man"]
+      : ["fat", "meta", "km", "perf", "man"];
+  const highlightId = scene === 1 ? "km" : "km";
+  const hiddenId = scene === 2 ? "man" : null;
+
+  const rowHeight = 56; // altura aproximada de cada card (p-3 + gap)
+  const positions: Record<string, number> = {};
+  order.forEach((id, idx) => {
+    positions[id] = idx;
+  });
+
   return (
     <>
       <MockHeader title="Organizar cards" subtitle="Arraste para reordenar" />
-      <div className="space-y-2.5 px-4 pb-20 pt-4">
-        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-[11px]">
+      <div className="relative px-4 pb-20 pt-4">
+        <div className="mb-2.5 rounded-xl border border-primary/30 bg-primary/10 p-3 text-[11px]">
           <div className="flex items-center gap-2 font-semibold text-primary">
             <LayoutGrid className="h-3.5 w-3.5" /> Sua tela, do seu jeito
           </div>
@@ -1753,25 +1785,67 @@ function PersonalizacaoMockup() {
           </div>
         </div>
 
-        {cards.map((c, i) => (
-          <div
-            key={c.name}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border bg-card/60 p-3",
-              i === 2 ? "border-primary/40 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]" : "border-border/50",
-            )}
-          >
-            <span className="text-muted-foreground">⋮⋮</span>
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              {c.icon}
-            </span>
-            <span className="flex-1 text-[12px] font-semibold">{c.name}</span>
-            <span className="text-[10px] text-muted-foreground">visível</span>
-          </div>
-        ))}
+        <div
+          className="relative"
+          style={{ height: rowHeight * baseCards.length }}
+        >
+          {baseCards.map((c) => {
+            const pos = positions[c.id];
+            const isHighlighted = c.id === highlightId;
+            const isHidden = c.id === hiddenId;
+            return (
+              <div
+                key={c.id}
+                className={cn(
+                  "absolute left-0 right-0 flex items-center gap-3 rounded-xl border bg-card/60 p-3",
+                  isHighlighted
+                    ? "border-primary/40 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]"
+                    : "border-border/50",
+                )}
+                style={{
+                  transform: `translateY(${pos * rowHeight}px)`,
+                  transition:
+                    "transform 600ms cubic-bezier(0.22,1,0.36,1), opacity 400ms ease",
+                  opacity: isHidden ? 0.35 : 1,
+                }}
+              >
+                <span className="text-muted-foreground">⋮⋮</span>
+                <span
+                  className={cn(
+                    "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                    isHidden
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary/15 text-primary",
+                  )}
+                >
+                  {c.icon}
+                </span>
+                <span className="flex-1 text-[12px] font-semibold">{c.name}</span>
+                <span
+                  className={cn(
+                    "text-[10px]",
+                    isHidden ? "text-warning" : "text-muted-foreground",
+                  )}
+                >
+                  {isHidden ? "oculto" : "visível"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
-        <div className="rounded-xl border border-dashed border-border/60 p-3 text-center text-[10px] text-muted-foreground">
-          + adicionar card personalizado
+        {/* Toast simulando "removido da home" quando o card de Manutenção é desativado */}
+        <div
+          className={cn(
+            "pointer-events-none absolute left-1/2 bottom-24 -translate-x-1/2 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-[10px] font-semibold text-foreground shadow-[0_12px_30px_-12px_hsl(0_0%_0%/0.6)]",
+            "transition-opacity duration-500",
+          )}
+          style={{ opacity: scene === 2 ? 1 : 0 }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Check className="h-3 w-3 text-warning" />
+            Removido da Home
+          </span>
         </div>
       </div>
       <MockBottomNav active="Mais" />
