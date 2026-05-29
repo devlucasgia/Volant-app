@@ -1250,19 +1250,23 @@ function FinalCta() {
 function Footer() {
   return (
     <footer className="border-t border-border/40 bg-card/40 px-4 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 text-sm text-muted-foreground md:flex-row md:items-center">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:text-left">
         <div className="flex items-center gap-2">
           <img src={volantSymbol} alt="Volant" className="h-6 w-6 rounded-full" />
           <span className="font-semibold text-foreground">Volant</span>
-          <span className="hidden md:inline">— feito por motoristas, para motoristas.</span>
+          <span className="hidden md:inline">— De motorista, para motoristas.</span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
           <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
           <a href="#km" className="transition hover:text-foreground">Recursos</a>
+          <a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">
+            Dúvidas? contato@usevolant.com.br
+          </a>
           <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
         </div>
       </div>
     </footer>
+
   );
 }
 
