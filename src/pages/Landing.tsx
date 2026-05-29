@@ -20,6 +20,8 @@ import {
   Plus,
   Minus,
   Wallet,
+  Hourglass,
+  Brain,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -280,64 +282,96 @@ function Hero({ mode }: { mode: HeroMode }) {
               e fica posicionado próximo ao bloco correspondente do mockup. */}
 
           {/* Manutenção — encostado na esquerda, na altura do header do mockup */}
-          <FeatureFloatCard
-            className="hero-anim hero-anim-card-1 absolute -left-16 top-20 hidden md:block w-[150px] lg:-left-20"
-            label="Manutenção"
-            icon={<Wrench className="h-3.5 w-3.5" />}
+          <div
+            className="hero-float absolute left-2 top-20 hidden md:block w-[150px] lg:left-4"
+            style={{ animationDelay: "0s" }}
           >
-            <div className="text-[11px] font-semibold text-foreground">Troca de óleo</div>
-            <div className="mt-0.5 text-[10px] text-muted-foreground">em 480 km</div>
-            <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
-              <div className="h-full w-[85%] rounded-full bg-primary" />
-            </div>
-            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-[1px] text-[8.5px] font-semibold text-primary">
-              <Check className="h-2.5 w-2.5" /> Em dia
-            </div>
-          </FeatureFloatCard>
+            <FeatureFloatCard
+              className="hero-anim hero-anim-card-1"
+              label="Manutenção"
+              icon={<Wrench className="h-3.5 w-3.5 accent-text" />}
+            >
+              <div className="text-[11px] font-semibold text-foreground">Troca de óleo</div>
+              <div className="mt-0.5 text-[10px] text-muted-foreground">em 480 km</div>
+              <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-[85%] rounded-full bg-warning" />
+              </div>
+              <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-warning/15 px-1.5 py-[1px] text-[8.5px] font-semibold text-warning">
+                <Hourglass className="h-2.5 w-2.5" /> Próximo
+              </div>
+            </FeatureFloatCard>
+          </div>
 
           {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
-          <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute z-20 right-0 top-44 hidden md:block hero-glow-soft lg:-right-8"
-            label="R$/KM Inteligente"
-            value="R$ 2,42"
-            icon={<Gauge className="h-3.5 w-3.5" />}
-            highlighted
-          />
-          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
-          <FeatureFloatCard
-            className="hero-anim hero-anim-card-3 absolute -left-20 bottom-20 hidden md:block w-[160px] lg:-left-24"
-            label="Custos do veículo"
-            icon={<Wallet className="h-3.5 w-3.5" />}
+          <div
+            className="hero-float absolute z-20 right-2 top-44 hidden md:block lg:right-4"
+            style={{ animationDelay: "0.8s" }}
           >
-            <div className="space-y-1 text-[10px]">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Combustível</span>
-                <span className="font-semibold tabular-nums text-foreground">R$ 320</span>
+            <FloatingCard
+              className="hero-anim hero-anim-card-2 hero-glow-soft"
+              label="R$/KM Inteligente"
+              value="R$ 2,42"
+              icon={<Gauge className="h-3.5 w-3.5" />}
+              highlighted
+              accent
+            />
+          </div>
+          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
+          <div
+            className="hero-float absolute left-2 bottom-24 hidden md:block w-[160px] lg:left-4"
+            style={{ animationDelay: "1.6s" }}
+          >
+            <FeatureFloatCard
+              className="hero-anim hero-anim-card-3"
+              label="Custos do veículo"
+              icon={<Wallet className="h-3.5 w-3.5 accent-text" />}
+            >
+              <div className="space-y-1 text-[10px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">IPVA (mês)</span>
+                  <span className="font-semibold tabular-nums text-foreground">R$ 140</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Manutenção</span>
+                  <span className="font-semibold tabular-nums text-foreground">R$ 160</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Manutenção</span>
-                <span className="font-semibold tabular-nums text-foreground">R$ 160</span>
+              <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Total /mês</span>
+                <span className="text-[12px] font-extrabold tabular-nums text-destructive">R$ 300</span>
               </div>
-            </div>
-            <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5">
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Total /mês</span>
-              <span className="text-[12px] font-extrabold tabular-nums text-primary">R$ 480</span>
-            </div>
-          </FeatureFloatCard>
+            </FeatureFloatCard>
+          </div>
 
           {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
-          <FeatureFloatCard
-            className="hero-anim hero-anim-card-4 absolute right-0 bottom-4 hidden md:block w-[150px] lg:-right-8"
-            label="Personalização"
-            icon={<LayoutGrid className="h-3.5 w-3.5" />}
+          <div
+            className="hero-float absolute right-2 bottom-4 hidden md:block w-[150px] lg:right-4"
+            style={{ animationDelay: "2.4s" }}
           >
-            <div className="text-[10px] text-muted-foreground">Tamanho do texto</div>
-            <div className="mt-2 flex items-center gap-1.5">
-              <span className="grid h-6 w-6 place-items-center rounded-lg border border-border/60 bg-card/60 text-[10px] font-bold text-muted-foreground">A</span>
-              <span className="grid h-7 w-7 place-items-center rounded-lg border border-primary/50 bg-primary/15 text-[12px] font-bold text-primary ring-1 ring-primary/30">A</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-card/60 text-[14px] font-bold text-muted-foreground">A</span>
-            </div>
-          </FeatureFloatCard>
+            <FeatureFloatCard
+              className="hero-anim hero-anim-card-4"
+              label="Personalização"
+              icon={<LayoutGrid className="h-3.5 w-3.5 accent-text" />}
+            >
+              <div className="text-[10px] text-muted-foreground">Tamanho do texto</div>
+              <div className="mt-2 flex items-center gap-1.5">
+                <span className="grid h-6 w-6 place-items-center rounded-lg border border-border/60 bg-card/60 text-[10px] font-bold text-muted-foreground">A</span>
+                <span
+                  className="grid h-7 w-7 place-items-center rounded-lg text-[12px] font-bold accent-text"
+                  style={{
+                    borderWidth: 1,
+                    borderStyle: "solid",
+                    borderColor: "hsl(var(--accent-now) / 0.5)",
+                    backgroundColor: "hsl(var(--accent-now) / 0.15)",
+                    boxShadow: "0 0 0 1px hsl(var(--accent-now) / 0.3)",
+                  }}
+                >
+                  A
+                </span>
+                <span className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-card/60 text-[14px] font-bold text-muted-foreground">A</span>
+              </div>
+            </FeatureFloatCard>
+          </div>
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
@@ -347,6 +381,7 @@ function Hero({ mode }: { mode: HeroMode }) {
             icon={<Gauge className="h-3 w-3" />}
             highlighted
             compact
+            accent
           />
         </div>
       </div>
@@ -411,6 +446,7 @@ function FloatingCard({
   icon,
   highlighted = false,
   compact = false,
+  accent = false,
 }: {
   className?: string;
   label: string;
@@ -418,6 +454,7 @@ function FloatingCard({
   icon: React.ReactNode;
   highlighted?: boolean;
   compact?: boolean;
+  accent?: boolean;
 }) {
   return (
     <div
@@ -429,14 +466,14 @@ function FloatingCard({
       )}
     >
       <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className="text-primary">{icon}</span>
+        <span className={accent ? "accent-text" : "text-primary"}>{icon}</span>
         {label}
       </div>
       <div
         className={cn(
           "mt-0.5 font-extrabold tabular-nums",
           compact ? "text-[13px]" : "text-base",
-          highlighted ? "text-primary" : "text-foreground",
+          highlighted ? (accent ? "accent-text" : "text-primary") : "text-foreground",
         )}
       >
         {value}
@@ -875,7 +912,7 @@ function FeatureKmInteligente() {
         className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14"
       >
         {/* Texto + bullets + CTA */}
-        <div className="order-2 md:order-1">
+        <div className="order-1 md:order-1">
           <Eyebrow icon={<Gauge className="h-3 w-3" />}>Diferencial #1</Eyebrow>
           <h2 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl">
             KM Inteligente:{" "}
@@ -913,7 +950,7 @@ function FeatureKmInteligente() {
         </div>
 
         {/* Mockup + floaters */}
-        <div className="relative order-1 mx-auto w-full max-w-[340px] md:order-2">
+        <div className="relative order-2 mx-auto w-full max-w-[340px] md:order-2">
           <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl hero-breath" />
           <div className="relative hero-float">
             <PhoneFrame>
@@ -1132,7 +1169,7 @@ function SecondaryFeatures() {
     {
       icon: <Clock className="h-5 w-5" />,
       title: "Jornada automática",
-      desc: "Inicie a jornada e o Volant cronometra suas horas trabalhadas sozinho — pra calcular R$/h sem você anotar nada.",
+      desc: "Inicie sua jornada de trabalho escolhendo a meta do dia, controle suas pausas e finalize registrando ganhos e gastos com as horas já preenchidas.",
     },
     {
       icon: <Wrench className="h-5 w-5" />,
@@ -1142,7 +1179,7 @@ function SecondaryFeatures() {
     {
       icon: <TrendingUp className="h-5 w-5" />,
       title: "Relatórios claros",
-      desc: "Bruto, líquido, R$/h, R$/km e médias por período em um lugar. Sem jargão financeiro.",
+      desc: "Bruto, líquido, R$/h, R$/km e médias por período em um lugar. Sem jargão financeiro. Exporte tudo em PDF, Word ou Excel quando quiser.",
     },
     {
       icon: <ShieldCheck className="h-5 w-5" />,
@@ -1155,7 +1192,7 @@ function SecondaryFeatures() {
     <section id="mais" className="px-4 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow icon={<Sparkles className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
+          <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
           <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
             Recursos que <span className="accent-text">trabalham por você</span>.
           </h2>
@@ -1696,18 +1733,50 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
 
 
 function PersonalizacaoMockup() {
-  const cards = [
-    { name: "Faturamento", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-    { name: "Meta do dia", icon: <Target className="h-3.5 w-3.5" /> },
-    { name: "KM Inteligente", icon: <Gauge className="h-3.5 w-3.5" /> },
-    { name: "Performance", icon: <Sparkles className="h-3.5 w-3.5" /> },
-    { name: "Manutenção", icon: <Wrench className="h-3.5 w-3.5" /> },
+  const baseCards = [
+    { id: "fat", name: "Faturamento", icon: <TrendingUp className="h-3.5 w-3.5" /> },
+    { id: "meta", name: "Meta do dia", icon: <Target className="h-3.5 w-3.5" /> },
+    { id: "km", name: "KM Inteligente", icon: <Gauge className="h-3.5 w-3.5" /> },
+    { id: "perf", name: "Performance", icon: <Sparkles className="h-3.5 w-3.5" /> },
+    { id: "man", name: "Manutenção", icon: <Wrench className="h-3.5 w-3.5" /> },
   ];
+
+  // 3 cenas em loop:
+  //  0 = estado base
+  //  1 = "KM Inteligente" sobe (swap com "Meta do dia")
+  //  2 = "Manutenção" desativada (oculto) + toast "Removido da Home"
+  const [scene, setScene] = useState(0);
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    const id = window.setInterval(() => {
+      setScene((s) => (s + 1) % 3);
+    }, 2200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Define ordem visível e card destacado por cena.
+  const order =
+    scene === 1
+      ? ["fat", "km", "meta", "perf", "man"]
+      : ["fat", "meta", "km", "perf", "man"];
+  const highlightId = scene === 1 ? "km" : "km";
+  const hiddenId = scene === 2 ? "man" : null;
+
+  const rowHeight = 56; // altura aproximada de cada card (p-3 + gap)
+  const positions: Record<string, number> = {};
+  order.forEach((id, idx) => {
+    positions[id] = idx;
+  });
+
   return (
     <>
       <MockHeader title="Organizar cards" subtitle="Arraste para reordenar" />
-      <div className="space-y-2.5 px-4 pb-20 pt-4">
-        <div className="rounded-xl border border-primary/30 bg-primary/10 p-3 text-[11px]">
+      <div className="relative px-4 pb-20 pt-4">
+        <div className="mb-2.5 rounded-xl border border-primary/30 bg-primary/10 p-3 text-[11px]">
           <div className="flex items-center gap-2 font-semibold text-primary">
             <LayoutGrid className="h-3.5 w-3.5" /> Sua tela, do seu jeito
           </div>
@@ -1716,25 +1785,67 @@ function PersonalizacaoMockup() {
           </div>
         </div>
 
-        {cards.map((c, i) => (
-          <div
-            key={c.name}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border bg-card/60 p-3",
-              i === 2 ? "border-primary/40 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]" : "border-border/50",
-            )}
-          >
-            <span className="text-muted-foreground">⋮⋮</span>
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              {c.icon}
-            </span>
-            <span className="flex-1 text-[12px] font-semibold">{c.name}</span>
-            <span className="text-[10px] text-muted-foreground">visível</span>
-          </div>
-        ))}
+        <div
+          className="relative"
+          style={{ height: rowHeight * baseCards.length }}
+        >
+          {baseCards.map((c) => {
+            const pos = positions[c.id];
+            const isHighlighted = c.id === highlightId;
+            const isHidden = c.id === hiddenId;
+            return (
+              <div
+                key={c.id}
+                className={cn(
+                  "absolute left-0 right-0 flex items-center gap-3 rounded-xl border bg-card/60 p-3",
+                  isHighlighted
+                    ? "border-primary/40 shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.4)]"
+                    : "border-border/50",
+                )}
+                style={{
+                  transform: `translateY(${pos * rowHeight}px)`,
+                  transition:
+                    "transform 600ms cubic-bezier(0.22,1,0.36,1), opacity 400ms ease",
+                  opacity: isHidden ? 0.35 : 1,
+                }}
+              >
+                <span className="text-muted-foreground">⋮⋮</span>
+                <span
+                  className={cn(
+                    "inline-flex h-7 w-7 items-center justify-center rounded-lg",
+                    isHidden
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary/15 text-primary",
+                  )}
+                >
+                  {c.icon}
+                </span>
+                <span className="flex-1 text-[12px] font-semibold">{c.name}</span>
+                <span
+                  className={cn(
+                    "text-[10px]",
+                    isHidden ? "text-warning" : "text-muted-foreground",
+                  )}
+                >
+                  {isHidden ? "oculto" : "visível"}
+                </span>
+              </div>
+            );
+          })}
+        </div>
 
-        <div className="rounded-xl border border-dashed border-border/60 p-3 text-center text-[10px] text-muted-foreground">
-          + adicionar card personalizado
+        {/* Toast simulando "removido da home" quando o card de Manutenção é desativado */}
+        <div
+          className={cn(
+            "pointer-events-none absolute left-1/2 bottom-24 -translate-x-1/2 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-[10px] font-semibold text-foreground shadow-[0_12px_30px_-12px_hsl(0_0%_0%/0.6)]",
+            "transition-opacity duration-500",
+          )}
+          style={{ opacity: scene === 2 ? 1 : 0 }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Check className="h-3 w-3 text-warning" />
+            Removido da Home
+          </span>
         </div>
       </div>
       <MockBottomNav active="Mais" />
