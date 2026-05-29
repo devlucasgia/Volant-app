@@ -276,32 +276,69 @@ function Hero({ mode }: { mode: HeroMode }) {
             </PhoneFrame>
           </div>
 
-          {/* Cards flutuantes — neutros (verde), não trocam com o modo */}
+          {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
+              e fica posicionado próximo ao bloco correspondente do mockup. */}
+
+          {/* Manutenção — topo-esquerda, perto do header (lembra notificação) */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-1 absolute -left-6 top-14 hidden md:block w-[185px]"
+            label="Manutenção"
+            icon={<Wrench className="h-3.5 w-3.5" />}
+          >
+            <div className="text-[11px] font-semibold text-foreground">Troca de óleo</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">em 480 km</div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-full w-[85%] rounded-full bg-primary" />
+            </div>
+            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-[1px] text-[8.5px] font-semibold text-primary">
+              <Check className="h-2.5 w-2.5" /> Em dia
+            </div>
+          </FeatureFloatCard>
+
+          {/* R$/KM Inteligente — direita, na altura do card de R$/KM do mockup */}
           <FloatingCard
-            className="hero-anim hero-anim-card-1 absolute -left-3 top-10 hidden md:block"
-            label="Meta do mês"
-            value="78%"
-            icon={<Target className="h-3.5 w-3.5" />}
-          />
-          <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute -right-4 top-28 hidden md:block hero-glow-soft"
+            className="hero-anim hero-anim-card-2 absolute -right-4 top-[290px] hidden md:block hero-glow-soft"
             label="R$/KM Inteligente"
             value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
             highlighted
           />
-          <FloatingCard
-            className="hero-anim hero-anim-card-3 absolute -left-2 bottom-16 hidden md:block"
-            label="R$/hora"
-            value="R$ 75,00"
-            icon={<Clock className="h-3.5 w-3.5" />}
-          />
-          <FloatingCard
-            className="hero-anim hero-anim-card-4 absolute -right-2 bottom-8 hidden md:block"
-            label="Lucro líquido hoje"
-            value="R$ 464,00"
-            icon={<TrendingUp className="h-3.5 w-3.5" />}
-          />
+
+          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-3 absolute -left-8 bottom-24 hidden md:block w-[185px]"
+            label="Custos do veículo"
+            icon={<Wallet className="h-3.5 w-3.5" />}
+          >
+            <div className="space-y-1 text-[10px]">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Combustível</span>
+                <span className="font-semibold tabular-nums text-foreground">R$ 320</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Manutenção</span>
+                <span className="font-semibold tabular-nums text-foreground">R$ 160</span>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Total /mês</span>
+              <span className="text-[12px] font-extrabold tabular-nums text-primary">R$ 480</span>
+            </div>
+          </FeatureFloatCard>
+
+          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar) */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-4 absolute -right-6 bottom-10 hidden md:block w-[185px]"
+            label="Personalização"
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
+          >
+            <div className="text-[10px] text-muted-foreground">Tamanho do texto</div>
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="grid h-7 w-7 place-items-center rounded-lg border border-border/60 bg-card/60 text-[11px] font-bold text-muted-foreground">A</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-primary/50 bg-primary/15 text-[13px] font-bold text-primary ring-1 ring-primary/30">A</span>
+              <span className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-[15px] font-bold text-muted-foreground">A</span>
+            </div>
+          </FeatureFloatCard>
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
