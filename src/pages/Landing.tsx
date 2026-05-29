@@ -446,6 +446,7 @@ function FloatingCard({
   icon,
   highlighted = false,
   compact = false,
+  accent = false,
 }: {
   className?: string;
   label: string;
@@ -453,6 +454,7 @@ function FloatingCard({
   icon: React.ReactNode;
   highlighted?: boolean;
   compact?: boolean;
+  accent?: boolean;
 }) {
   return (
     <div
@@ -464,14 +466,14 @@ function FloatingCard({
       )}
     >
       <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className="text-primary">{icon}</span>
+        <span className={accent ? "accent-text" : "text-primary"}>{icon}</span>
         {label}
       </div>
       <div
         className={cn(
           "mt-0.5 font-extrabold tabular-nums",
           compact ? "text-[13px]" : "text-base",
-          highlighted ? "text-primary" : "text-foreground",
+          highlighted ? (accent ? "accent-text" : "text-primary") : "text-foreground",
         )}
       >
         {value}
