@@ -1,88 +1,85 @@
-Tudo em `src/pages/Landing.tsx` (mais alguns keyframes em `HeroStyles`). Sem backend, sem mudar lógica.
+Tudo em `src/pages/Landing.tsx` (sem mudança em backend/Stripe). A última parte é resposta, não código.
 
 ---
 
-## 1. Hero
+## 1. Hero — cards encostando no mockup, sem sobrepor
 
-### 1.1 Aproximar os cards do mockup
-Cards flutuantes (linhas ~283–340) estão muito afastados no desktop (≥ lg) e o de Custos sobrepõe o texto à esquerda em telas grandes.
+Problema atual: cards usam `left-2 / right-2` e em `≥md` (tablet) eles invadem o mockup; no desktop ficam descolados das bordas.
 
-- **Manutenção:** trocar `-left-16 ... lg:-left-20` por `left-2 lg:left-4` (encostado no mockup, sem invadir a coluna de texto).
-- **R$/KM Inteligente:** trocar `right-0 ... lg:-right-8` por `right-2 lg:right-4` (espelho do card de manutenção).
-- **Custos do veículo:** trocar `-left-20 ... lg:-left-24` por `left-2 lg:left-4`, descer um pouco (`bottom-24`) para não encostar no card de Manutenção nem sobrepor o texto/CTA do hero.
-- **Personalização:** trocar `right-0 ... lg:-right-8` por `right-2 lg:right-4`.
-- Garantir que a coluna esquerda do hero tenha `relative z-10` se necessário, mas o objetivo principal é trazer os 4 cards para a faixa do mockup. Mobile (`md:hidden`) continua igual.
+**Estratégia:** posicionar cards relativos à coluna do mockup, ancorados nas bordas do `PhoneFrame` (max-width ~320px), encostando um pouco para fora no desktop e recolhendo no tablet (`md`).
 
-### 1.2 Cards respondem ao modo Liquido/Bruto + flutuam
-- Envolver os 4 cards flutuantes (e o `FloatingCard` `R$/KM Inteligente`) em wrappers com `hero-float` (já existe), aplicando `animation-delay` diferentes (0s, 0.8s, 1.6s, 2.4s) para que não flutuem em uníssono.
-- Ícone + valor destacado de cada card passa a usar a variável `--accent-now` (já definida em `[data-hero-mode]` linhas 607–608):
-  - Card Manutenção: ícone `Wrench` em `text-[hsl(var(--accent-now))]`, transition de cor 700ms.
-  - Card R$/KM Inteligente (`FloatingCard` highlighted): valor `R$ 2,42` e ícone `Gauge` em `--accent-now`. Ajustar `FloatingCard` para aceitar opcional `accent` que troque a cor do ícone/valor quando `highlighted`.
-  - Card Custos do veículo: ícone `Wallet` em `--accent-now`.
-  - Card Personalização: ícone `LayoutGrid` + chip “A” central em `--accent-now`.
-- Demais textos/valores permanecem nas cores atuais — só ícone principal + número/elemento de destaque acompanham a cor.
+Mudanças:
 
-### 1.3 Ajustes finos nos cards
-**Card Manutenção (atualmente 480 km com barra primary + selo verde "Em dia"):**
-- Trocar a barra de progresso para amarelo: `bg-warning` (token semântico já existente). Manter largura `w-[85%]`.
-- Trocar selo "Em dia" por "Próximo" com ícone `Hourglass` (lucide). Cor warning: `bg-warning/15 text-warning` no chip. Importar `Hourglass` no topo.
+**Manutenção** (linhas 285–303):
+- Classes: `hero-float absolute hidden md:block w-[130px] lg:w-[150px] top-16 md:-left-2 lg:-left-10`
+  - Tablet (`md`): largura menor (130px), encostado bem na borda (`-left-2`).
+  - Desktop (`lg`): mantém 150px, sai 10px para fora (`-left-10`) — sobrepõe levemente a borda do mockup, sem invadir o título.
 
-**Card Custos do veículo:**
-- Trocar linha "Combustível R$ 320" por "IPVA (mês) R$ 140" (valor representativo do IPVA diluído por mês — ~R$ 1.680/ano).
-- Manter linha "Manutenção R$ 160".
-- Atualizar "Total /mês" para `R$ 300` (soma 140 + 160).
-- Cor do total: trocar `text-primary` por `text-destructive` (é custo, deve ser vermelho).
+**R$/KM Inteligente** (linhas 306–318):
+- Classes: `hero-float absolute z-20 hidden md:block top-40 md:-right-2 lg:-right-10`
+
+**Custos do veículo** (linhas 320–344):
+- Classes: `hero-float absolute hidden md:block w-[140px] lg:w-[160px] bottom-28 md:-left-2 lg:-left-10`
+
+**Personalização** (linhas 347–374):
+- Classes: `hero-float absolute hidden lg:block w-[150px] bottom-4 lg:-right-10`
+- **Esconder no tablet** (`hidden lg:block`): no tablet o bottom já fica apertado com o card de R$/KM e a borda do mockup; removendo só esse no `md` os 3 cards restantes acomodam sem sobrepor texto/mockup. No desktop reaparece encostado à direita.
+
+Coluna do texto do hero recebe `relative z-10` para garantir que o card de Custos (que fica à esquerda-baixo) nunca cubra o CTA mesmo em larguras intermediárias.
+
+QA: no viewport do user (973px, tablet) os 3 cards visíveis encostam nas bordas do mockup sem cobrir texto; em ≥1280 os 4 cards aparecem alinhados às bordas com leve transbordo.
 
 ---
 
-## 2. KM Inteligente — ordem no mobile
+## 2. Personalização — animação mais lenta e perceptível
 
-Em `FeatureKmInteligente` (linhas ~872–945), o mobile hoje mostra o mockup primeiro porque a coluna do texto usa `order-2 md:order-1` e a do mockup `order-1 md:order-2`.
-
-- Inverter: coluna texto vira `order-1 md:order-1` (sem `order`), mockup vira `order-2 md:order-2` — fica igual ao comportamento de Metas/Personalização (texto antes, mockup depois no mobile). Manter posições no desktop intactas.
-
----
-
-## 3. Personalização — animar mockup em loop
-
-Refatorar `PersonalizacaoMockup` (linhas 1698–1743) para um loop sutil mostrando reorganização/ativação:
-
-- Estado `tick` incrementando a cada ~2.2s via `setInterval` (com cleanup e respeito a `prefers-reduced-motion`).
-- A cada tick, alternar entre 3 cenas:
-  1. **Reordenando:** o card "KM Inteligente" sobe uma posição (troca com "Meta do dia"), com `transition: transform 600ms cubic-bezier(0.22,1,0.36,1)` aplicado via `translateY` ou simplesmente reordenando o array e usando `transition-all` no container — preferir reordenar array + animar via `framer-motion`-less abordagem: cada card recebe `style={{ transform: translateY(...) }}` calculado pela posição alvo.
-  2. **Desativando:** card "Manutenção" recebe estado `hidden=true` → muda label de "visível" para "oculto", reduz opacidade para `opacity-40`, ícone fica cinza.
-  3. **Voltando ao normal** (estado base) antes de reiniciar.
-- Para o "exemplo na home sendo desativado": adicionar mini-preview Home no topo do mockup substituindo o cabeçalho atual quando a cena 2 ativa? Solução mais simples e clara: manter o mockup atual (tela "Organizar cards") e, quando o card "Manutenção" é desativado, mostrar um pequeno toast/badge flutuante dentro do mockup ("Removido da Home ✓") com fade in/out de 1s. É a forma mais limpa sem reescrever o mockup; o usuário pediu se fosse possível e essa é a melhor aproximação.
-- Adicionar também `hero-float` no wrapper externo já está coberto pelo `FeatureSection` (linha 1289). Manter.
-- Reduced motion: não roda o interval, mantém estado base.
+`PersonalizacaoMockup` (linhas 1748–1759):
+- Trocar `setInterval(..., 2200)` por `setInterval(..., 4200)` — cada cena fica visível ~4.2s.
+- Aumentar `transition: transform 600ms` para `transform 900ms cubic-bezier(0.22,1,0.36,1)` e `opacity 400ms` para `opacity 700ms` (linha 1807–1808), para que a desativação fique mais fluida.
+- Toast (linha 1841): `transition-opacity duration-500` → `duration-700`.
 
 ---
 
-## 4. Seção "Recursos que trabalham por você"
+## 3. Rodapé (linhas 1249–1266)
 
-### 4.1 Ícone do eyebrow "Mais inteligência no seu dia" (linha 1158)
-Trocar `<Sparkles className="h-3 w-3" />` por `<Brain className="h-3 w-3" />` (lucide). Importar `Brain` no topo.
-
-### 4.2 Textos dos cards (linhas 1131–1152)
-- **Jornada automática** (`desc`): trocar por
-  > "Inicie sua jornada de trabalho escolhendo a meta do dia, controle suas pausas e finalize registrando ganhos e gastos com as horas já preenchidas."
-- **Relatórios claros** (`desc`): manter a frase atual e acrescentar:
-  > "Bruto, líquido, R$/h, R$/km e médias por período em um lugar. Sem jargão financeiro. Exporte tudo em PDF, Word ou Excel quando quiser."
+- **3.1** Linha 1256: trocar `"— feito por motoristas, para motoristas."` por `"— De motorista, para motoristas."` (mantém `hidden md:inline`, atinge tablet+desktop).
+- **3.2** Wrapper (linha 1252): trocar `flex-col items-start ... md:flex-row md:items-center` por `flex-col items-center text-center ... md:flex-row md:items-center md:text-left`. No mobile tudo centralizado; no desktop volta ao layout horizontal atual.
+- **3.3** Adicionar nova linha de contato logo abaixo dos links (dentro do bloco de links da linha 1258, ou como terceira coluna):
+  - Acrescentar `<a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">Dúvidas? contato@usevolant.com.br</a>` antes do `©` para que apareça em todos os tamanhos.
 
 ---
 
 ## Não tocar
-- Lógica de `useSubscription`, Stripe, Supabase.
-- Estrutura/SEO/`<Header>`/`<Footer>`/`FinalCta`.
-- Animações já implementadas em KM Inteligente (transações) e Metas (loop de estados).
-- Tema/cores globais.
+Stripe, Supabase, lógica do app, demais seções da landing, cores/tema globais, animações já existentes fora de Personalização.
 
-## QA
-- Desktop ≥ 1280px: 4 cards flutuantes encostam no mockup, sem cobrir o texto do hero, todos flutuando com defasagem; ícones/valor de destaque mudam entre verde (líquido) e azul (bruto) suavemente.
-- Mockup do hero alterna líquido/bruto e os cards acompanham.
-- Card Manutenção: barra amarela + selo "Próximo" com ampulheta.
-- Card Custos do veículo: "IPVA (mês) R$ 140", "Manutenção R$ 160", total `R$ 300` em vermelho.
-- Mobile 375: na seção KM Inteligente o título/bullets aparecem antes do mockup.
-- Personalização: cards trocam de ordem suavemente em loop e card "Manutenção" alterna ativo/inativo com mini toast "Removido da Home".
-- Seção "Recursos": ícone do eyebrow é cérebro; textos de Jornada e Relatórios atualizados.
-- `prefers-reduced-motion`: tudo respeitando.
+---
+
+## Resposta sobre Stripe (não envolve código)
+
+**1. Já posso testar um pagamento real com meu cartão no ambiente de testes?**
+
+Não da forma que você está pensando. Resumo:
+
+- O **preview do Lovable** (onde estamos trabalhando) está fixo no **ambiente sandbox** da Stripe — ele lê o token `pk_test_...` do `.env.development`. Qualquer pagamento feito aqui é simulado: você só consegue usar cartões de teste (ex.: `4242 4242 4242 4242`, validade futura, CVC 000). Cartão real é recusado.
+- Pagamentos reais só rodam em **produção**, na URL publicada (`usevolant.lovable.app` / `usevolant.app`), depois que o "Live" estiver verde no painel de Pagamentos. Aí sim, qualquer cartão real (inclusive o seu) passa de verdade — Stripe cobra do cartão, dinheiro entra na sua conta Stripe e segue para sua conta bancária no payout normal.
+- Para "testar com cartão real" sem perder dinheiro de verdade na prática, a recomendação é:
+  1. Publicar.
+  2. Criar uma assinatura com seu cartão real no plano de menor valor.
+  3. **Logo em seguida**, cancelar e estornar pelo painel da Stripe — antes do payout (D+2 geralmente). Você fica só com a taxa da Stripe (~R$ 0,39 + 3,99%).
+  
+  É o que a maioria faz como "smoke test" antes de divulgar.
+
+**2. Com 5 créditos dá para aceitar o plano anual via boleto?**
+
+Sim, cabe tranquilamente. O que precisa ser feito:
+
+- Habilitar `boleto` como `payment_method_type` no `create-checkout` (edge function) **só para o `priceId` anual**.
+- Ajustar a UI do plano anual para avisar: "Pagamento via cartão ou boleto. No boleto, a liberação acontece em até 3 dias úteis após a confirmação."
+- Tratar o webhook `checkout.session.async_payment_succeeded` / `async_payment_failed` para ativar/manter a assinatura só depois que o boleto for pago (boleto é assíncrono — a sessão fica `processing` por dias).
+- Garantir que mensal continue só com cartão (boleto recorrente mensal vira pesadelo de inadimplência).
+
+Estimativa real: 2–4 créditos. 5 cobre com folga, sem precisar de novo round.
+
+Pix realmente fica para depois — Stripe libera Pix só após histórico mínimo da conta (você confirmou os 60 dias). Quando liberar, é uma mudança pequena (basicamente adicionar `"pix"` no array de métodos).
+
+Quando você confirmar, eu já implemento o boleto na mesma rodada das mudanças visuais acima — ou em uma rodada separada, se preferir manter este sprint só visual.

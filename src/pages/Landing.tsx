@@ -281,9 +281,9 @@ function Hero({ mode }: { mode: HeroMode }) {
           {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
               e fica posicionado próximo ao bloco correspondente do mockup. */}
 
-          {/* Manutenção — encostado na esquerda, na altura do header do mockup */}
+          {/* Manutenção — encostado na borda esquerda do mockup */}
           <div
-            className="hero-float absolute left-2 top-20 hidden md:block w-[150px] lg:left-4"
+            className="hero-float absolute top-16 hidden md:block w-[130px] lg:w-[150px] md:-left-2 lg:-left-10"
             style={{ animationDelay: "0s" }}
           >
             <FeatureFloatCard
@@ -302,9 +302,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </FeatureFloatCard>
           </div>
 
-          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
+          {/* R$/KM Inteligente — borda direita, altura do card R$/KM */}
           <div
-            className="hero-float absolute z-20 right-2 top-44 hidden md:block lg:right-4"
+            className="hero-float absolute z-20 top-40 hidden md:block md:-right-2 lg:-right-10"
             style={{ animationDelay: "0.8s" }}
           >
             <FloatingCard
@@ -316,9 +316,9 @@ function Hero({ mode }: { mode: HeroMode }) {
               accent
             />
           </div>
-          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
+          {/* Custos do veículo — esquerda-baixo, alinhado ao bloco de gastos */}
           <div
-            className="hero-float absolute left-2 bottom-24 hidden md:block w-[160px] lg:left-4"
+            className="hero-float absolute bottom-28 hidden md:block w-[140px] lg:w-[160px] md:-left-2 lg:-left-10"
             style={{ animationDelay: "1.6s" }}
           >
             <FeatureFloatCard
@@ -343,9 +343,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </FeatureFloatCard>
           </div>
 
-          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
+          {/* Personalização — direita-baixo, só desktop (no tablet evita sobreposição) */}
           <div
-            className="hero-float absolute right-2 bottom-4 hidden md:block w-[150px] lg:right-4"
+            className="hero-float absolute bottom-4 hidden lg:block w-[150px] lg:-right-10"
             style={{ animationDelay: "2.4s" }}
           >
             <FeatureFloatCard
@@ -372,6 +372,7 @@ function Hero({ mode }: { mode: HeroMode }) {
               </div>
             </FeatureFloatCard>
           </div>
+
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
@@ -1249,19 +1250,23 @@ function FinalCta() {
 function Footer() {
   return (
     <footer className="border-t border-border/40 bg-card/40 px-4 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-6 text-sm text-muted-foreground md:flex-row md:items-center">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:text-left">
         <div className="flex items-center gap-2">
           <img src={volantSymbol} alt="Volant" className="h-6 w-6 rounded-full" />
           <span className="font-semibold text-foreground">Volant</span>
-          <span className="hidden md:inline">— feito por motoristas, para motoristas.</span>
+          <span className="hidden md:inline">— De motorista, para motoristas.</span>
         </div>
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
           <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
           <a href="#km" className="transition hover:text-foreground">Recursos</a>
+          <a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">
+            Dúvidas? contato@usevolant.com.br
+          </a>
           <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
         </div>
       </div>
     </footer>
+
   );
 }
 
@@ -1754,7 +1759,8 @@ function PersonalizacaoMockup() {
     if (reduced) return;
     const id = window.setInterval(() => {
       setScene((s) => (s + 1) % 3);
-    }, 2200);
+    }, 4200);
+
     return () => window.clearInterval(id);
   }, []);
 
@@ -1805,7 +1811,8 @@ function PersonalizacaoMockup() {
                 style={{
                   transform: `translateY(${pos * rowHeight}px)`,
                   transition:
-                    "transform 600ms cubic-bezier(0.22,1,0.36,1), opacity 400ms ease",
+                    "transform 900ms cubic-bezier(0.22,1,0.36,1), opacity 700ms ease",
+
                   opacity: isHidden ? 0.35 : 1,
                 }}
               >
@@ -1838,7 +1845,7 @@ function PersonalizacaoMockup() {
         <div
           className={cn(
             "pointer-events-none absolute left-1/2 bottom-24 -translate-x-1/2 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-[10px] font-semibold text-foreground shadow-[0_12px_30px_-12px_hsl(0_0%_0%/0.6)]",
-            "transition-opacity duration-500",
+            "transition-opacity duration-700",
           )}
           style={{ opacity: scene === 2 ? 1 : 0 }}
         >
