@@ -281,9 +281,9 @@ function Hero({ mode }: { mode: HeroMode }) {
           {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
               e fica posicionado próximo ao bloco correspondente do mockup. */}
 
-          {/* Manutenção — encostado na esquerda, na altura do header do mockup */}
+          {/* Manutenção — encostado na borda esquerda do mockup */}
           <div
-            className="hero-float absolute left-2 top-20 hidden md:block w-[150px] lg:left-4"
+            className="hero-float absolute top-16 hidden md:block w-[130px] lg:w-[150px] md:-left-2 lg:-left-10"
             style={{ animationDelay: "0s" }}
           >
             <FeatureFloatCard
@@ -302,9 +302,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </FeatureFloatCard>
           </div>
 
-          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
+          {/* R$/KM Inteligente — borda direita, altura do card R$/KM */}
           <div
-            className="hero-float absolute z-20 right-2 top-44 hidden md:block lg:right-4"
+            className="hero-float absolute z-20 top-40 hidden md:block md:-right-2 lg:-right-10"
             style={{ animationDelay: "0.8s" }}
           >
             <FloatingCard
@@ -316,9 +316,9 @@ function Hero({ mode }: { mode: HeroMode }) {
               accent
             />
           </div>
-          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
+          {/* Custos do veículo — esquerda-baixo, alinhado ao bloco de gastos */}
           <div
-            className="hero-float absolute left-2 bottom-24 hidden md:block w-[160px] lg:left-4"
+            className="hero-float absolute bottom-28 hidden md:block w-[140px] lg:w-[160px] md:-left-2 lg:-left-10"
             style={{ animationDelay: "1.6s" }}
           >
             <FeatureFloatCard
@@ -343,9 +343,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </FeatureFloatCard>
           </div>
 
-          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
+          {/* Personalização — direita-baixo, só desktop (no tablet evita sobreposição) */}
           <div
-            className="hero-float absolute right-2 bottom-4 hidden md:block w-[150px] lg:right-4"
+            className="hero-float absolute bottom-4 hidden lg:block w-[150px] lg:-right-10"
             style={{ animationDelay: "2.4s" }}
           >
             <FeatureFloatCard
@@ -372,6 +372,7 @@ function Hero({ mode }: { mode: HeroMode }) {
               </div>
             </FeatureFloatCard>
           </div>
+
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
