@@ -297,13 +297,14 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
           <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute -right-12 top-[290px] hidden md:block hero-glow-soft lg:-right-16"
+          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
+          <FloatingCard
+            className="hero-anim hero-anim-card-2 absolute -right-4 top-[280px] hidden md:block hero-glow-soft lg:-right-12"
             label="R$/KM Inteligente"
             value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
             highlighted
           />
-
           {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
           <FeatureFloatCard
             className="hero-anim hero-anim-card-3 absolute -left-20 bottom-20 hidden md:block w-[160px] lg:-left-24"
