@@ -1192,7 +1192,7 @@ function SecondaryFeatures() {
     <section id="mais" className="px-4 py-16 md:py-24">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow icon={<Sparkles className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
+          <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
           <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
             Recursos que <span className="accent-text">trabalham por você</span>.
           </h2>
