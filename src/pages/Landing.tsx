@@ -446,6 +446,39 @@ function FloatingCard({
   );
 }
 
+/** Card flutuante "expandido" — replica visual do FloatingCard mas com corpo
+    customizável (children) abaixo do label. Usado para mini-mockups que
+    remetem a telas reais do app (Manutenção, Custos, Personalização). */
+function FeatureFloatCard({
+  className,
+  label,
+  icon,
+  highlighted = false,
+  children,
+}: {
+  className?: string;
+  label: string;
+  icon: React.ReactNode;
+  highlighted?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border bg-card/85 px-3 py-2.5 backdrop-blur-md shadow-[0_18px_40px_-18px_hsl(0_0%_0%/0.7)]",
+        highlighted ? "border-primary/50 ring-1 ring-primary/30" : "border-border/60",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        {label}
+      </div>
+      <div className="mt-1.5">{children}</div>
+    </div>
+  );
+}
+
 /* ----- Estilos locais da Hero (keyframes + reduced motion) ----- */
 function HeroStyles() {
   return (
