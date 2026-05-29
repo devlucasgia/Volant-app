@@ -20,6 +20,8 @@ import {
   Plus,
   Minus,
   Wallet,
+  Hourglass,
+  Brain,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
