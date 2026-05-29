@@ -327,7 +327,7 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-4 absolute -right-8 bottom-6 hidden md:block w-[150px] lg:-right-14"
+            className="hero-anim hero-anim-card-4 absolute -right-2 bottom-6 hidden md:block w-[150px] lg:-right-12"
             label="Personalização"
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
           >
