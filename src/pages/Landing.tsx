@@ -950,7 +950,7 @@ function FeatureKmInteligente() {
         </div>
 
         {/* Mockup + floaters */}
-        <div className="relative order-1 mx-auto w-full max-w-[340px] md:order-2">
+        <div className="relative order-2 mx-auto w-full max-w-[340px] md:order-2">
           <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl hero-breath" />
           <div className="relative hero-float">
             <PhoneFrame>
