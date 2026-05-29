@@ -1276,8 +1276,10 @@ function FeatureSection({
         </div>
 
         <div className="relative mx-auto w-full max-w-[320px]">
-          <div className="absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl" />
-          <PhoneFrame>{mockup}</PhoneFrame>
+          <div className="absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl hero-breath" />
+          <div className="hero-float">
+            <PhoneFrame>{mockup}</PhoneFrame>
+          </div>
         </div>
       </div>
     </section>
