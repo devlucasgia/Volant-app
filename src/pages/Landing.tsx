@@ -245,7 +245,7 @@ function Hero({ mode }: { mode: HeroMode }) {
           </div>
 
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Cancele quando quiser.
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
         </div>
 
@@ -276,32 +276,68 @@ function Hero({ mode }: { mode: HeroMode }) {
             </PhoneFrame>
           </div>
 
-          {/* Cards flutuantes — neutros (verde), não trocam com o modo */}
+          {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
+              e fica posicionado próximo ao bloco correspondente do mockup. */}
+
+          {/* Manutenção — encostado na esquerda, na altura do header do mockup */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-1 absolute -left-16 top-20 hidden md:block w-[150px] lg:-left-20"
+            label="Manutenção"
+            icon={<Wrench className="h-3.5 w-3.5" />}
+          >
+            <div className="text-[11px] font-semibold text-foreground">Troca de óleo</div>
+            <div className="mt-0.5 text-[10px] text-muted-foreground">em 480 km</div>
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted">
+              <div className="h-full w-[85%] rounded-full bg-primary" />
+            </div>
+            <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/15 px-1.5 py-[1px] text-[8.5px] font-semibold text-primary">
+              <Check className="h-2.5 w-2.5" /> Em dia
+            </div>
+          </FeatureFloatCard>
+
+          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
           <FloatingCard
-            className="hero-anim hero-anim-card-1 absolute -left-3 top-10 hidden md:block"
-            label="Meta do mês"
-            value="78%"
-            icon={<Target className="h-3.5 w-3.5" />}
-          />
-          <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute -right-4 top-28 hidden md:block hero-glow-soft"
+            className="hero-anim hero-anim-card-2 absolute z-20 right-0 top-44 hidden md:block hero-glow-soft lg:-right-8"
             label="R$/KM Inteligente"
             value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
             highlighted
           />
-          <FloatingCard
-            className="hero-anim hero-anim-card-3 absolute -left-2 bottom-16 hidden md:block"
-            label="R$/hora"
-            value="R$ 75,00"
-            icon={<Clock className="h-3.5 w-3.5" />}
-          />
-          <FloatingCard
-            className="hero-anim hero-anim-card-4 absolute -right-2 bottom-8 hidden md:block"
-            label="Lucro líquido hoje"
-            value="R$ 464,00"
-            icon={<TrendingUp className="h-3.5 w-3.5" />}
-          />
+          {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-3 absolute -left-20 bottom-20 hidden md:block w-[160px] lg:-left-24"
+            label="Custos do veículo"
+            icon={<Wallet className="h-3.5 w-3.5" />}
+          >
+            <div className="space-y-1 text-[10px]">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Combustível</span>
+                <span className="font-semibold tabular-nums text-foreground">R$ 320</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Manutenção</span>
+                <span className="font-semibold tabular-nums text-foreground">R$ 160</span>
+              </div>
+            </div>
+            <div className="mt-2 flex items-center justify-between border-t border-border/40 pt-1.5">
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Total /mês</span>
+              <span className="text-[12px] font-extrabold tabular-nums text-primary">R$ 480</span>
+            </div>
+          </FeatureFloatCard>
+
+          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
+          <FeatureFloatCard
+            className="hero-anim hero-anim-card-4 absolute right-0 bottom-4 hidden md:block w-[150px] lg:-right-8"
+            label="Personalização"
+            icon={<LayoutGrid className="h-3.5 w-3.5" />}
+          >
+            <div className="text-[10px] text-muted-foreground">Tamanho do texto</div>
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="grid h-6 w-6 place-items-center rounded-lg border border-border/60 bg-card/60 text-[10px] font-bold text-muted-foreground">A</span>
+              <span className="grid h-7 w-7 place-items-center rounded-lg border border-primary/50 bg-primary/15 text-[12px] font-bold text-primary ring-1 ring-primary/30">A</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-card/60 text-[14px] font-bold text-muted-foreground">A</span>
+            </div>
+          </FeatureFloatCard>
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
@@ -409,6 +445,39 @@ function FloatingCard({
   );
 }
 
+/** Card flutuante "expandido" — replica visual do FloatingCard mas com corpo
+    customizável (children) abaixo do label. Usado para mini-mockups que
+    remetem a telas reais do app (Manutenção, Custos, Personalização). */
+function FeatureFloatCard({
+  className,
+  label,
+  icon,
+  highlighted = false,
+  children,
+}: {
+  className?: string;
+  label: string;
+  icon: React.ReactNode;
+  highlighted?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl border bg-card/85 px-3 py-2.5 backdrop-blur-md shadow-[0_18px_40px_-18px_hsl(0_0%_0%/0.7)]",
+        highlighted ? "border-primary/50 ring-1 ring-primary/30" : "border-border/60",
+        className,
+      )}
+    >
+      <div className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        {label}
+      </div>
+      <div className="mt-1.5">{children}</div>
+    </div>
+  );
+}
+
 /* ----- Estilos locais da Hero (keyframes + reduced motion) ----- */
 function HeroStyles() {
   return (
@@ -438,6 +507,16 @@ function HeroStyles() {
       @keyframes heroGlowSoft {
         0%,100% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.30), 0 0 24px -8px hsl(var(--primary) / 0.35); }
         50% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.55), 0 0 38px -4px hsl(var(--primary) / 0.6); }
+      }
+
+      /* Glow contínuo do card "R$/km mínimo agora" da seção KM Inteligente */
+      .km-glow-pulse {
+        box-shadow: 0 0 0 1px hsl(var(--primary) / 0.45), 0 0 28px -6px hsl(var(--primary) / 0.45);
+        animation: kmGlowPulse 2.8s ease-in-out infinite;
+      }
+      @keyframes kmGlowPulse {
+        0%,100% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35), 0 0 22px -8px hsl(var(--primary) / 0.35); }
+        50%     { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.65), 0 0 44px -2px hsl(var(--primary) / 0.70); }
       }
 
       .hero-route { stroke-dasharray: 8 14; animation: heroRoute 8s linear infinite; }
@@ -558,7 +637,7 @@ function HeroStyles() {
 
       @media (prefers-reduced-motion: reduce) {
         .hero-anim, .hero-anim-mockup { opacity: 1 !important; transform: none !important; animation: none !important; }
-        .hero-float, .hero-breath, .hero-glow-soft, .hero-route { animation: none !important; }
+        .hero-float, .hero-breath, .hero-glow-soft, .hero-route, .km-glow-pulse { animation: none !important; }
         .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg,
         .accent-text, .accent-underline, .accent-cta, .accent-badge, .accent-dot, .accent-dot-ping {
           transition: none !important;
@@ -764,21 +843,23 @@ function FeatureKmInteligente() {
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => setPhase(1), 1200));
-    timers.push(setTimeout(() => setPhase(2), 2000));
-    timers.push(setTimeout(() => setPhase(3), 3500));
-    timers.push(setTimeout(() => setPhase(4), 4300));
-    timers.push(setTimeout(() => setPhase(5), 5500));
+    timers.push(setTimeout(() => setPhase(1), 1400));
+    timers.push(setTimeout(() => setPhase(2), 2600));
+    timers.push(setTimeout(() => setPhase(3), 4400));
+    timers.push(setTimeout(() => setPhase(4), 5600));
+    timers.push(setTimeout(() => setPhase(5), 7200));
     return () => timers.forEach(clearTimeout);
   }, [inView, reduced]);
 
-  // R$/km e meta restante variam conforme a fase
-  const kmValue = phase >= 4 ? 2.26 : phase >= 2 ? 2.23 : 2.34;
-  const goalRemaining = phase >= 2 ? 3300 : 3480;
-  const costsValue = phase >= 4 ? 515 : 480;
-  const animatedKm = useCountUp(kmValue, 600);
-  const animatedGoal = useCountUp(goalRemaining, 500);
-  const animatedCosts = useCountUp(costsValue, 500);
+  // R$/km e meta restante variam conforme a fase. Valores escolhidos pra
+  // oscilação ser claramente perceptível (lucro alto → cai bastante; custo
+  // razoável → sobe de novo, sem voltar pro patamar inicial).
+  const kmValue = phase >= 4 ? 2.18 : phase >= 2 ? 2.05 : 2.34;
+  const goalRemaining = phase >= 2 ? 3160 : 3480;
+  const costsValue = phase >= 4 ? 575 : 480;
+  const animatedKm = useCountUp(kmValue, 900);
+  const animatedGoal = useCountUp(goalRemaining, 800);
+  const animatedCosts = useCountUp(costsValue, 800);
 
   const legend =
     phase >= 4
@@ -833,33 +914,32 @@ function FeatureKmInteligente() {
 
         {/* Mockup + floaters */}
         <div className="relative order-1 mx-auto w-full max-w-[340px] md:order-2">
-          <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl" />
-          <div className="relative">
+          <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl hero-breath" />
+          <div className="relative hero-float">
             <PhoneFrame>
               <KmBoomMockup
                 kmValue={animatedKm}
                 goalRemaining={animatedGoal}
                 costsValue={animatedCosts}
-                pulse={phase === 2 || phase === 4 || phase === 5}
               />
             </PhoneFrame>
 
-            {/* Floater de lucro (fase 1+) */}
+            {/* Floater de lucro — entra na fase 1 e permanece visível */}
             <FloatingEntry
               tone="success"
               icon={<Plus className="h-3 w-3" strokeWidth={3} />}
               label="Lucro registrado"
-              value="+ R$ 180,00"
-              visible={phase >= 1 && phase < 5}
+              value="+ R$ 320,00"
+              visible={phase >= 1}
               position="topRight"
             />
-            {/* Floater de gasto (fase 3+) */}
+            {/* Floater de gasto — entra na fase 3 e permanece visível */}
             <FloatingEntry
               tone="danger"
               icon={<Minus className="h-3 w-3" strokeWidth={3} />}
               label="Custo registrado"
-              value="− R$ 35,00"
-              visible={phase >= 3 && phase < 5}
+              value="− R$ 95,00"
+              visible={phase >= 3}
               position="bottomLeft"
             />
           </div>
@@ -897,12 +977,10 @@ function KmBoomMockup({
   kmValue,
   goalRemaining,
   costsValue,
-  pulse,
 }: {
   kmValue: number;
   goalRemaining: number;
   costsValue: number;
-  pulse: boolean;
 }) {
   const fmtKm = `R$ ${kmValue.toFixed(2).replace(".", ",")}`;
   return (
@@ -910,11 +988,7 @@ function KmBoomMockup({
       <MockHeader title="KM Inteligente" subtitle="Adaptativo · hoje" />
       <div className="space-y-3 px-4 pb-20 pt-4">
         <div
-          className={cn(
-            "rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center transition-shadow",
-            pulse &&
-              "shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_0_36px_-2px_hsl(var(--primary)/0.55)]",
-          )}
+          className="km-glow-pulse rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center"
         >
           <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
             R$/km mínimo agora
@@ -1211,8 +1285,10 @@ function FeatureSection({
         </div>
 
         <div className="relative mx-auto w-full max-w-[320px]">
-          <div className="absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl" />
-          <PhoneFrame>{mockup}</PhoneFrame>
+          <div className="absolute -inset-8 -z-10 rounded-full bg-primary/15 blur-3xl hero-breath" />
+          <div className="hero-float">
+            <PhoneFrame>{mockup}</PhoneFrame>
+          </div>
         </div>
       </div>
     </section>
@@ -1341,7 +1417,7 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
 
   return (
     <div data-mode={mode} className="contents">
-      <MockHeader title="Olá, Lucas ☕" subtitle="Foco, disciplina e constância!" />
+      <MockHeader title="Olá, Motorista 👋" subtitle="Foco, disciplina e constância!" />
 
       {/* Toggle Líquido / Bruto (decorativo, alterna sozinho) */}
       <div className="px-4 pt-3">
@@ -1458,7 +1534,94 @@ function Row({ label, value, emphasize }: { label: string; value: string; emphas
   );
 }
 
+/* 4 "estados de dia" que alternam em loop pra demonstrar dinamismo. */
+const METAS_STATES = [
+  {
+    pct: 58,
+    faltam: 3480,
+    hoje: { value: 290, hint: "+ 12% vs ontem" },
+    amanha: { value: 305, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 305, w: 75 },
+      { d: "Ter", v: 310, w: 78 },
+      { d: "Qua", v: 295, w: 70 },
+      { d: "Qui", v: 320, w: 82 },
+      { d: "Sex", v: 330, w: 88 },
+    ],
+  },
+  {
+    pct: 62,
+    faltam: 3160,
+    hoje: { value: 305, hint: "+ 5% vs ontem" },
+    amanha: { value: 295, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 295, w: 72 },
+      { d: "Ter", v: 305, w: 76 },
+      { d: "Qua", v: 285, w: 68 },
+      { d: "Qui", v: 315, w: 80 },
+      { d: "Sex", v: 325, w: 86 },
+    ],
+  },
+  {
+    pct: 67,
+    faltam: 2790,
+    hoje: { value: 280, hint: "− 8% vs ontem" },
+    amanha: { value: 320, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 320, w: 80 },
+      { d: "Ter", v: 315, w: 78 },
+      { d: "Qua", v: 305, w: 74 },
+      { d: "Qui", v: 330, w: 84 },
+      { d: "Sex", v: 340, w: 90 },
+    ],
+  },
+  {
+    pct: 71,
+    faltam: 2440,
+    hoje: { value: 315, hint: "+ 9% vs ontem" },
+    amanha: { value: 310, hint: "ajustada" },
+    next: [
+      { d: "Seg", v: 310, w: 76 },
+      { d: "Ter", v: 320, w: 80 },
+      { d: "Qua", v: 300, w: 72 },
+      { d: "Qui", v: 325, w: 82 },
+      { d: "Sex", v: 335, w: 88 },
+    ],
+  },
+] as const;
+
 function MetasMockup() {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      setIdx((i) => (i + 1) % METAS_STATES.length);
+    }, 4500);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const s = METAS_STATES[idx];
+  const animPct = useCountUp(s.pct, 800);
+  const animFaltam = useCountUp(s.faltam, 800);
+  const animHoje = useCountUp(s.hoje.value, 800);
+  const animAmanha = useCountUp(s.amanha.value, 800);
+  // 5 hooks fixos (a quantidade de dias é constante)
+  const animN0 = useCountUp(s.next[0].v, 800);
+  const animN1 = useCountUp(s.next[1].v, 800);
+  const animN2 = useCountUp(s.next[2].v, 800);
+  const animN3 = useCountUp(s.next[3].v, 800);
+  const animN4 = useCountUp(s.next[4].v, 800);
+  const animNext = [
+    { d: s.next[0].d, v: animN0, w: s.next[0].w },
+    { d: s.next[1].d, v: animN1, w: s.next[1].w },
+    { d: s.next[2].d, v: animN2, w: s.next[2].w },
+    { d: s.next[3].d, v: animN3, w: s.next[3].w },
+    { d: s.next[4].d, v: animN4, w: s.next[4].w },
+  ];
+
   return (
     <>
       <MockHeader title="Metas Inteligentes" subtitle="Adaptativas · novembro" />
@@ -1469,35 +1632,44 @@ function MetasMockup() {
           </div>
           <div className="mt-1 flex items-end justify-between">
             <span className="text-2xl font-extrabold tabular-nums">R$ 8.400</span>
-            <span className="text-[10px] text-muted-foreground">faltam R$ 3.480</span>
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              faltam R$ {Math.round(animFaltam).toLocaleString("pt-BR")}
+            </span>
           </div>
           <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full w-[58%] rounded-full bg-primary" />
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ width: `${animPct}%` }}
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <DayCard day="Hoje" value="R$ 290" hint="+ 12% vs ontem" highlight />
-          <DayCard day="Amanhã" value="R$ 305" hint="ajustada" />
+          <DayCard
+            day="Hoje"
+            value={`R$ ${Math.round(animHoje)}`}
+            hint={s.hoje.hint}
+            highlight
+          />
+          <DayCard day="Amanhã" value={`R$ ${Math.round(animAmanha)}`} hint={s.amanha.hint} />
         </div>
 
         <div className="rounded-xl border border-border/50 bg-card/60 p-3">
           <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Próximos 5 dias
           </div>
-          {[
-            { d: "Seg", v: "R$ 305", w: "75%" },
-            { d: "Ter", v: "R$ 310", w: "78%" },
-            { d: "Qua", v: "R$ 295", w: "70%" },
-            { d: "Qui", v: "R$ 320", w: "82%" },
-            { d: "Sex", v: "R$ 330", w: "88%" },
-          ].map((it) => (
+          {animNext.map((it) => (
             <div key={it.d} className="mb-1.5 flex items-center gap-2 text-[10px]">
               <span className="w-7 text-muted-foreground">{it.d}</span>
               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                <div className="h-full rounded-full bg-primary/70" style={{ width: it.w }} />
+                <div
+                  className="h-full rounded-full bg-primary/70 transition-[width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  style={{ width: `${it.w}%` }}
+                />
               </div>
-              <span className="w-12 text-right font-semibold tabular-nums">{it.v}</span>
+              <span className="w-14 text-right font-semibold tabular-nums">
+                R$ {Math.round(it.v)}
+              </span>
             </div>
           ))}
         </div>
@@ -1511,7 +1683,7 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
   return (
     <div
       className={cn(
-        "rounded-xl border p-3",
+        "rounded-xl border p-3 transition-colors",
         highlight ? "border-primary/40 bg-primary/10" : "border-border/50 bg-card/60",
       )}
     >
@@ -1521,6 +1693,7 @@ function DayCard({ day, value, hint, highlight }: { day: string; value: string; 
     </div>
   );
 }
+
 
 function PersonalizacaoMockup() {
   const cards = [
