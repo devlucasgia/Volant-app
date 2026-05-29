@@ -44,9 +44,12 @@ export default function Landing() {
   useEffect(() => {
     const root = document.documentElement;
     const had = root.classList.contains("dark");
+    const prevScroll = root.style.scrollBehavior;
     root.classList.add("dark");
+    root.style.scrollBehavior = "smooth";
     return () => {
       if (!had) root.classList.remove("dark");
+      root.style.scrollBehavior = prevScroll;
     };
   }, []);
 
