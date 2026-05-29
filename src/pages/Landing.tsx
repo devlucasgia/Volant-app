@@ -1841,7 +1841,7 @@ function PersonalizacaoMockup() {
         <div
           className={cn(
             "pointer-events-none absolute left-1/2 bottom-24 -translate-x-1/2 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-[10px] font-semibold text-foreground shadow-[0_12px_30px_-12px_hsl(0_0%_0%/0.6)]",
-            "transition-opacity duration-500",
+            "transition-opacity duration-700",
           )}
           style={{ opacity: scene === 2 ? 1 : 0 }}
         >
