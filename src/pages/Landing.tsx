@@ -834,21 +834,23 @@ function FeatureKmInteligente() {
       return;
     }
     const timers: ReturnType<typeof setTimeout>[] = [];
-    timers.push(setTimeout(() => setPhase(1), 1200));
-    timers.push(setTimeout(() => setPhase(2), 2000));
-    timers.push(setTimeout(() => setPhase(3), 3500));
-    timers.push(setTimeout(() => setPhase(4), 4300));
-    timers.push(setTimeout(() => setPhase(5), 5500));
+    timers.push(setTimeout(() => setPhase(1), 1400));
+    timers.push(setTimeout(() => setPhase(2), 2600));
+    timers.push(setTimeout(() => setPhase(3), 4400));
+    timers.push(setTimeout(() => setPhase(4), 5600));
+    timers.push(setTimeout(() => setPhase(5), 7200));
     return () => timers.forEach(clearTimeout);
   }, [inView, reduced]);
 
-  // R$/km e meta restante variam conforme a fase
-  const kmValue = phase >= 4 ? 2.26 : phase >= 2 ? 2.23 : 2.34;
-  const goalRemaining = phase >= 2 ? 3300 : 3480;
-  const costsValue = phase >= 4 ? 515 : 480;
-  const animatedKm = useCountUp(kmValue, 600);
-  const animatedGoal = useCountUp(goalRemaining, 500);
-  const animatedCosts = useCountUp(costsValue, 500);
+  // R$/km e meta restante variam conforme a fase. Valores escolhidos pra
+  // oscilação ser claramente perceptível (lucro alto → cai bastante; custo
+  // razoável → sobe de novo, sem voltar pro patamar inicial).
+  const kmValue = phase >= 4 ? 2.18 : phase >= 2 ? 2.05 : 2.34;
+  const goalRemaining = phase >= 2 ? 3160 : 3480;
+  const costsValue = phase >= 4 ? 575 : 480;
+  const animatedKm = useCountUp(kmValue, 900);
+  const animatedGoal = useCountUp(goalRemaining, 800);
+  const animatedCosts = useCountUp(costsValue, 800);
 
   const legend =
     phase >= 4
