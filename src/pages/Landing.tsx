@@ -1755,7 +1755,8 @@ function PersonalizacaoMockup() {
     if (reduced) return;
     const id = window.setInterval(() => {
       setScene((s) => (s + 1) % 3);
-    }, 2200);
+    }, 4200);
+
     return () => window.clearInterval(id);
   }, []);
 
