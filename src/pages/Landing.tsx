@@ -932,8 +932,6 @@ function FeatureKmInteligente() {
               position="bottomLeft"
             />
           </div>
-            />
-          </div>
 
           <p
             className={cn(
