@@ -279,9 +279,10 @@ function Hero({ mode }: { mode: HeroMode }) {
           {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
               e fica posicionado próximo ao bloco correspondente do mockup. */}
 
-          {/* Manutenção — topo-esquerda, à esquerda do mockup (insinua notificação) */}
+          {/* Manutenção — fica encostado no topo-esquerdo do phone, lembrando
+              uma notificação preventiva que o app dispara. */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-1 absolute -left-28 top-20 hidden md:block w-[170px] lg:-left-32"
+            className="hero-anim hero-anim-card-1 absolute -left-20 top-24 hidden md:block w-[160px] lg:-left-24"
             label="Manutenção"
             icon={<Wrench className="h-3.5 w-3.5" />}
           >
@@ -295,9 +296,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </div>
           </FeatureFloatCard>
 
-          {/* R$/KM Inteligente — direita, na altura do card R$/KM do mockup */}
+          {/* R$/KM Inteligente — encostado à direita do bloco R$/KM do mockup */}
           <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute -right-10 top-[300px] hidden md:block hero-glow-soft lg:-right-14"
+            className="hero-anim hero-anim-card-2 absolute -right-14 top-[300px] hidden md:block hero-glow-soft lg:-right-16"
             label="R$/KM Inteligente"
             value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
@@ -306,7 +307,7 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-3 absolute -left-32 bottom-20 hidden md:block w-[180px] lg:-left-36"
+            className="hero-anim hero-anim-card-3 absolute -left-24 bottom-24 hidden md:block w-[170px] lg:-left-28"
             label="Custos do veículo"
             icon={<Wallet className="h-3.5 w-3.5" />}
           >
@@ -326,9 +327,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </div>
           </FeatureFloatCard>
 
-          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar) */}
+          {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-4 absolute -right-24 bottom-6 hidden md:block w-[170px] lg:-right-28"
+            className="hero-anim hero-anim-card-4 absolute -right-16 bottom-10 hidden md:block w-[160px] lg:-right-20"
             label="Personalização"
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
           >
