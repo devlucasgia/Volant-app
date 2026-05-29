@@ -1222,6 +1222,176 @@ function SecondaryFeatures() {
   );
 }
 
+/* --------------------------------- pricing -------------------------------- */
+
+function Pricing() {
+  const monthlyBenefits = [
+    "Todos os recursos Premium",
+    "Controle de ganhos e gastos",
+    "Metas Inteligentes",
+    "KM Inteligente",
+    "Relatórios e histórico",
+  ];
+  const annualBenefits = [
+    "Todos os recursos Premium",
+    "Menor custo mensal equivalente",
+    "Metas Inteligentes",
+    "KM Inteligente",
+    "Relatórios completos",
+    "Melhor custo-benefício",
+  ];
+
+  return (
+    <section id="planos" className="relative overflow-hidden px-4 py-20 md:py-28 scroll-mt-16">
+      {/* Glow ambiental sutil — alterna devagar entre verde e azul */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="pricing-amb-green absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
+        <div className="pricing-amb-blue absolute left-1/2 bottom-0 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-[hsl(214,90%,55%)]/12 blur-3xl" />
+      </div>
+
+      <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full accent-dot-ping opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full accent-dot" />
+            </span>
+            Teste grátis por 7 dias
+          </span>
+          <h2 className="mt-4 text-balance text-3xl font-bold tracking-tight md:text-4xl">
+            Comece grátis. <span className="accent-text">Continue se fizer sentido</span> para sua rotina.
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            Teste todos os recursos Premium por 7 dias, sem cartão e sem cobrança automática.
+            Depois, escolha o plano que combina melhor com você.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
+          {/* -------- Card Mensal -------- */}
+          <article className="pricing-card pricing-card-monthly group relative rounded-3xl border border-border/60 bg-card/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[hsl(214,90%,60%)]/50 md:p-8">
+            <header>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold tracking-tight">Mensal</h3>
+                <span className="rounded-full border border-[hsl(214,90%,60%)]/40 bg-[hsl(214,90%,55%)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(214,90%,75%)]">
+                  Flexível
+                </span>
+              </div>
+              <div className="mt-5 flex items-baseline gap-1.5">
+                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">R$ 19,90</span>
+                <span className="text-sm text-muted-foreground">por mês</span>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">Flexível para começar no seu ritmo.</p>
+            </header>
+
+            <ul className="mt-6 space-y-2.5 text-sm">
+              {monthlyBenefits.map((b) => (
+                <li key={b} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(214,90%,70%)]" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-7">
+              <Link
+                to="/auth"
+                className="group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-border/60 bg-card/80 px-6 text-sm font-semibold text-foreground transition hover:border-[hsl(214,90%,60%)]/60 hover:bg-card"
+              >
+                Começar teste grátis
+                <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
+              </Link>
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Check className="h-3.5 w-3.5 text-[hsl(214,90%,70%)]" /> 7 dias grátis. Sem cartão.
+              </p>
+            </div>
+          </article>
+
+          {/* -------- Card Anual -------- */}
+          <article className="pricing-card pricing-card-annual group relative rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/10 via-card/80 to-card p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/70 md:p-8">
+            {/* Borda animada em loop lento */}
+            <span aria-hidden className="pricing-glow-ring pointer-events-none absolute inset-0 rounded-3xl" />
+
+            <div className="absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
+              <span className="accent-cta rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground shadow-lg">
+                Mais vantajoso
+              </span>
+            </div>
+
+            <header className="relative">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold tracking-tight">Anual</h3>
+                <span className="rounded-full border border-primary/50 bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider accent-text">
+                  Economize 62%
+                </span>
+              </div>
+              <div className="mt-5 flex items-baseline gap-1.5">
+                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">R$ 89,90</span>
+                <span className="text-sm text-muted-foreground">por ano</span>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                O melhor custo-benefício para usar o Volant o ano todo.
+              </p>
+            </header>
+
+            <ul className="relative mt-6 space-y-2.5 text-sm">
+              {annualBenefits.map((b) => (
+                <li key={b} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 accent-text" />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="relative mt-7">
+              <Link
+                to="/auth"
+                className="accent-cta group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-6 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+              >
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover/btn:translate-x-full"
+                />
+                <span className="pricing-shimmer pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+                Começar teste grátis
+                <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
+              </Link>
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Check className="h-3.5 w-3.5 accent-text" /> Depois, continue no anual se quiser.
+              </p>
+            </div>
+          </article>
+        </div>
+
+        {/* -------- CTA principal da seção -------- */}
+        <div className="relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card/80 to-card p-7 text-center md:p-9">
+          <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.22),transparent_65%)]" />
+          <h3 className="text-balance text-xl font-bold tracking-tight md:text-2xl">
+            Sem cartão para testar. <span className="accent-text">Sem cobrança automática.</span>
+          </h3>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+            Você entra, testa o Volant na prática e decide depois.
+          </p>
+          <div className="mt-5 flex justify-center">
+            <Link
+              to="/auth"
+              className="accent-cta group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+              />
+              <span className="pricing-shimmer pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+              Testar grátis por 7 dias
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ------------------------------- final cta -------------------------------- */
 
 function FinalCta() {
