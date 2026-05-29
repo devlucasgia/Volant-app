@@ -1169,7 +1169,7 @@ function SecondaryFeatures() {
     {
       icon: <Clock className="h-5 w-5" />,
       title: "Jornada automática",
-      desc: "Inicie a jornada e o Volant cronometra suas horas trabalhadas sozinho — pra calcular R$/h sem você anotar nada.",
+      desc: "Inicie sua jornada de trabalho escolhendo a meta do dia, controle suas pausas e finalize registrando ganhos e gastos com as horas já preenchidas.",
     },
     {
       icon: <Wrench className="h-5 w-5" />,
@@ -1179,7 +1179,7 @@ function SecondaryFeatures() {
     {
       icon: <TrendingUp className="h-5 w-5" />,
       title: "Relatórios claros",
-      desc: "Bruto, líquido, R$/h, R$/km e médias por período em um lugar. Sem jargão financeiro.",
+      desc: "Bruto, líquido, R$/h, R$/km e médias por período em um lugar. Sem jargão financeiro. Exporte tudo em PDF, Word ou Excel quando quiser.",
     },
     {
       icon: <ShieldCheck className="h-5 w-5" />,
