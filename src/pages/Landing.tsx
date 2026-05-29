@@ -912,7 +912,7 @@ function FeatureKmInteligente() {
         className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14"
       >
         {/* Texto + bullets + CTA */}
-        <div className="order-2 md:order-1">
+        <div className="order-1 md:order-1">
           <Eyebrow icon={<Gauge className="h-3 w-3" />}>Diferencial #1</Eyebrow>
           <h2 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl">
             KM Inteligente:{" "}
