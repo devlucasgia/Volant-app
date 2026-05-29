@@ -638,7 +638,7 @@ function HeroStyles() {
 
       @media (prefers-reduced-motion: reduce) {
         .hero-anim, .hero-anim-mockup { opacity: 1 !important; transform: none !important; animation: none !important; }
-        .hero-float, .hero-breath, .hero-glow-soft, .hero-route { animation: none !important; }
+        .hero-float, .hero-breath, .hero-glow-soft, .hero-route, .km-glow-pulse { animation: none !important; }
         .mode-toggle__pill, .mode-card, .mode-text, .mode-bar, .mode-icon-bg,
         .accent-text, .accent-underline, .accent-cta, .accent-badge, .accent-dot, .accent-dot-ping {
           transition: none !important;
