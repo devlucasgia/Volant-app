@@ -510,6 +510,16 @@ function HeroStyles() {
         50% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.55), 0 0 38px -4px hsl(var(--primary) / 0.6); }
       }
 
+      /* Glow contínuo do card "R$/km mínimo agora" da seção KM Inteligente */
+      .km-glow-pulse {
+        box-shadow: 0 0 0 1px hsl(var(--primary) / 0.45), 0 0 28px -6px hsl(var(--primary) / 0.45);
+        animation: kmGlowPulse 2.8s ease-in-out infinite;
+      }
+      @keyframes kmGlowPulse {
+        0%,100% { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.35), 0 0 22px -8px hsl(var(--primary) / 0.35); }
+        50%     { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.65), 0 0 44px -2px hsl(var(--primary) / 0.70); }
+      }
+
       .hero-route { stroke-dasharray: 8 14; animation: heroRoute 8s linear infinite; }
       .hero-route-2 { animation-duration: 11s; animation-direction: reverse; }
       .hero-route-3 { animation-duration: 14s; }
