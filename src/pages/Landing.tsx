@@ -75,6 +75,7 @@ export default function Landing() {
         <FeatureMetas />
         <FeaturePersonalizacao />
         <SecondaryFeatures />
+        <Pricing />
         <FinalCta />
       </main>
       <Footer />
