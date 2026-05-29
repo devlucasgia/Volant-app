@@ -339,7 +339,6 @@ function Hero({ mode }: { mode: HeroMode }) {
               <span className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-card/60 text-[14px] font-bold text-muted-foreground">A</span>
             </div>
           </FeatureFloatCard>
-          </FeatureFloatCard>
 
           {/* Mobile: 2 cards compactos */}
           <FloatingCard
