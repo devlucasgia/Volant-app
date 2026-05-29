@@ -279,10 +279,9 @@ function Hero({ mode }: { mode: HeroMode }) {
           {/* Cards flutuantes — desktop. Cada um remete a uma seção real do app
               e fica posicionado próximo ao bloco correspondente do mockup. */}
 
-          {/* Manutenção — fica encostado no topo-esquerdo do phone, lembrando
-              uma notificação preventiva que o app dispara. */}
+          {/* Manutenção — encostado na esquerda, na altura do header do mockup */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-1 absolute -left-20 top-24 hidden md:block w-[160px] lg:-left-24"
+            className="hero-anim hero-anim-card-1 absolute -left-16 top-20 hidden md:block w-[150px] lg:-left-20"
             label="Manutenção"
             icon={<Wrench className="h-3.5 w-3.5" />}
           >
@@ -296,9 +295,9 @@ function Hero({ mode }: { mode: HeroMode }) {
             </div>
           </FeatureFloatCard>
 
-          {/* R$/KM Inteligente — encostado à direita do bloco R$/KM do mockup */}
+          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
           <FloatingCard
-            className="hero-anim hero-anim-card-2 absolute -right-14 top-[300px] hidden md:block hero-glow-soft lg:-right-16"
+            className="hero-anim hero-anim-card-2 absolute -right-12 top-[290px] hidden md:block hero-glow-soft lg:-right-16"
             label="R$/KM Inteligente"
             value="R$ 2,42"
             icon={<Gauge className="h-3.5 w-3.5" />}
@@ -307,7 +306,7 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* Custos do veículo — esquerda-baixo, "saindo" do bloco de gastos */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-3 absolute -left-24 bottom-24 hidden md:block w-[170px] lg:-left-28"
+            className="hero-anim hero-anim-card-3 absolute -left-20 bottom-20 hidden md:block w-[160px] lg:-left-24"
             label="Custos do veículo"
             icon={<Wallet className="h-3.5 w-3.5" />}
           >
@@ -329,16 +328,17 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* Personalização — direita-baixo, perto do bottom nav (reorganizar/personalizar) */}
           <FeatureFloatCard
-            className="hero-anim hero-anim-card-4 absolute -right-16 bottom-10 hidden md:block w-[160px] lg:-right-20"
+            className="hero-anim hero-anim-card-4 absolute -right-8 bottom-6 hidden md:block w-[150px] lg:-right-14"
             label="Personalização"
             icon={<LayoutGrid className="h-3.5 w-3.5" />}
           >
             <div className="text-[10px] text-muted-foreground">Tamanho do texto</div>
             <div className="mt-2 flex items-center gap-1.5">
-              <span className="grid h-7 w-7 place-items-center rounded-lg border border-border/60 bg-card/60 text-[11px] font-bold text-muted-foreground">A</span>
-              <span className="grid h-8 w-8 place-items-center rounded-lg border border-primary/50 bg-primary/15 text-[13px] font-bold text-primary ring-1 ring-primary/30">A</span>
-              <span className="grid h-9 w-9 place-items-center rounded-lg border border-border/60 bg-card/60 text-[15px] font-bold text-muted-foreground">A</span>
+              <span className="grid h-6 w-6 place-items-center rounded-lg border border-border/60 bg-card/60 text-[10px] font-bold text-muted-foreground">A</span>
+              <span className="grid h-7 w-7 place-items-center rounded-lg border border-primary/50 bg-primary/15 text-[12px] font-bold text-primary ring-1 ring-primary/30">A</span>
+              <span className="grid h-8 w-8 place-items-center rounded-lg border border-border/60 bg-card/60 text-[14px] font-bold text-muted-foreground">A</span>
             </div>
+          </FeatureFloatCard>
           </FeatureFloatCard>
 
           {/* Mobile: 2 cards compactos */}
