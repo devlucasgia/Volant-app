@@ -904,35 +904,34 @@ function FeatureKmInteligente() {
         </div>
 
         {/* Mockup + floaters */}
-        <div className="relative order-1 mx-auto w-full max-w-[340px] md:order-2">
-          <div className="absolute -inset-10 -z-10 rounded-full bg-primary/15 blur-3xl" />
-          <div className="relative">
+          <div className="relative hero-float">
             <PhoneFrame>
               <KmBoomMockup
                 kmValue={animatedKm}
                 goalRemaining={animatedGoal}
                 costsValue={animatedCosts}
-                pulse={phase === 2 || phase === 4 || phase === 5}
               />
             </PhoneFrame>
 
-            {/* Floater de lucro (fase 1+) */}
+            {/* Floater de lucro — entra na fase 1 e permanece visível */}
             <FloatingEntry
               tone="success"
               icon={<Plus className="h-3 w-3" strokeWidth={3} />}
               label="Lucro registrado"
-              value="+ R$ 180,00"
-              visible={phase >= 1 && phase < 5}
+              value="+ R$ 320,00"
+              visible={phase >= 1}
               position="topRight"
             />
-            {/* Floater de gasto (fase 3+) */}
+            {/* Floater de gasto — entra na fase 3 e permanece visível */}
             <FloatingEntry
               tone="danger"
               icon={<Minus className="h-3 w-3" strokeWidth={3} />}
               label="Custo registrado"
-              value="− R$ 35,00"
-              visible={phase >= 3 && phase < 5}
+              value="− R$ 95,00"
+              visible={phase >= 3}
               position="bottomLeft"
+            />
+          </div>
             />
           </div>
 
