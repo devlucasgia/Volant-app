@@ -99,6 +99,7 @@ function Header() {
           <a href="#metas" className="transition hover:text-foreground">Metas</a>
           <a href="#personalizacao" className="transition hover:text-foreground">Personalização</a>
           <a href="#mais" className="transition hover:text-foreground">Mais recursos</a>
+          <a href="#planos" className="transition hover:text-foreground">Planos</a>
         </nav>
         <Link
           to="/auth"
