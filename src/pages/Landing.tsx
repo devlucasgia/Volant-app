@@ -1599,11 +1599,19 @@ function MetasMockup() {
   const animFaltam = useCountUp(s.faltam, 800);
   const animHoje = useCountUp(s.hoje.value, 800);
   const animAmanha = useCountUp(s.amanha.value, 800);
-  const animNext = s.next.map((n) => ({
-    d: n.d,
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    v: useCountUp(n.v, 800),
-    w: n.w,
+  // 5 hooks fixos (a quantidade de dias é constante)
+  const animN0 = useCountUp(s.next[0].v, 800);
+  const animN1 = useCountUp(s.next[1].v, 800);
+  const animN2 = useCountUp(s.next[2].v, 800);
+  const animN3 = useCountUp(s.next[3].v, 800);
+  const animN4 = useCountUp(s.next[4].v, 800);
+  const animNext = [
+    { d: s.next[0].d, v: animN0, w: s.next[0].w },
+    { d: s.next[1].d, v: animN1, w: s.next[1].w },
+    { d: s.next[2].d, v: animN2, w: s.next[2].w },
+    { d: s.next[3].d, v: animN3, w: s.next[3].w },
+    { d: s.next[4].d, v: animN4, w: s.next[4].w },
+  ];
   }));
 
   return (
