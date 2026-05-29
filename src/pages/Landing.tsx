@@ -1807,7 +1807,8 @@ function PersonalizacaoMockup() {
                 style={{
                   transform: `translateY(${pos * rowHeight}px)`,
                   transition:
-                    "transform 600ms cubic-bezier(0.22,1,0.36,1), opacity 400ms ease",
+                    "transform 900ms cubic-bezier(0.22,1,0.36,1), opacity 700ms ease",
+
                   opacity: isHidden ? 0.35 : 1,
                 }}
               >
