@@ -1341,7 +1341,7 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
 
   return (
     <div data-mode={mode} className="contents">
-      <MockHeader title="Olá, Lucas ☕" subtitle="Foco, disciplina e constância!" />
+      <MockHeader title="Olá, Motorista 👋" subtitle="Foco, disciplina e constância!" />
 
       {/* Toggle Líquido / Bruto (decorativo, alterna sozinho) */}
       <div className="px-4 pt-3">
