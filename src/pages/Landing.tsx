@@ -297,8 +297,6 @@ function Hero({ mode }: { mode: HeroMode }) {
 
           {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
           <FloatingCard
-          {/* R$/KM Inteligente — encostado à direita, na altura do card R$/KM */}
-          <FloatingCard
             className="hero-anim hero-anim-card-2 absolute -right-4 top-[280px] hidden md:block hero-glow-soft lg:-right-12"
             label="R$/KM Inteligente"
             value="R$ 2,42"
