@@ -524,6 +524,36 @@ function FeatureFloatCard({
 function HeroStyles() {
   return (
     <style>{`
+      /* ----- Pricing section ----- */
+      @keyframes pricingRing {
+        0%, 100% { box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.35), 0 0 24px -4px hsl(var(--primary) / 0.35); }
+        50%      { box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.65), 0 0 40px -2px hsl(var(--primary) / 0.55); }
+      }
+      .pricing-glow-ring { border-radius: inherit; animation: pricingRing 4.5s ease-in-out infinite; }
+      @keyframes pricingShimmer {
+        0%   { transform: translateX(-120%); }
+        60%  { transform: translateX(120%); }
+        100% { transform: translateX(120%); }
+      }
+      .pricing-shimmer { transform: translateX(-120%); animation: pricingShimmer 4s ease-in-out infinite; mix-blend-mode: overlay; }
+      @keyframes pricingAmbGreen {
+        0%, 100% { opacity: 0.55; transform: translate(-50%, 0) scale(1); }
+        50%      { opacity: 0.85; transform: translate(-50%, -10px) scale(1.05); }
+      }
+      @keyframes pricingAmbBlue {
+        0%, 100% { opacity: 0.35; transform: translate(-50%, 0) scale(1); }
+        50%      { opacity: 0.7;  transform: translate(-50%, 10px) scale(1.05); }
+      }
+      .pricing-amb-green { animation: pricingAmbGreen 9s ease-in-out infinite; }
+      .pricing-amb-blue  { animation: pricingAmbBlue 11s ease-in-out infinite; }
+      .pricing-card { transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+      .pricing-card-annual:hover { box-shadow: 0 18px 60px -20px hsl(var(--primary) / 0.55); }
+      .pricing-card-monthly:hover { box-shadow: 0 18px 60px -25px hsl(214 90% 55% / 0.4); }
+      @media (prefers-reduced-motion: reduce) {
+        .pricing-glow-ring, .pricing-shimmer, .pricing-amb-green, .pricing-amb-blue { animation: none; }
+      }
+
+
       .hero-anim { opacity: 0; transform: translateY(14px); animation: heroFadeUp 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
       .hero-anim-1 { animation-delay: 0.05s; }
       .hero-anim-2 { animation-delay: 0.18s; }
