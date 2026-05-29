@@ -968,12 +968,10 @@ function KmBoomMockup({
   kmValue,
   goalRemaining,
   costsValue,
-  pulse,
 }: {
   kmValue: number;
   goalRemaining: number;
   costsValue: number;
-  pulse: boolean;
 }) {
   const fmtKm = `R$ ${kmValue.toFixed(2).replace(".", ",")}`;
   return (
@@ -981,11 +979,7 @@ function KmBoomMockup({
       <MockHeader title="KM Inteligente" subtitle="Adaptativo · hoje" />
       <div className="space-y-3 px-4 pb-20 pt-4">
         <div
-          className={cn(
-            "rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center transition-shadow",
-            pulse &&
-              "shadow-[0_0_0_1px_hsl(var(--primary)/0.55),0_0_36px_-2px_hsl(var(--primary)/0.55)]",
-          )}
+          className="km-glow-pulse rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/20 to-card p-4 text-center"
         >
           <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
             R$/km mínimo agora
