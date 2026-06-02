@@ -219,9 +219,10 @@ function Hero({ mode }: { mode: HeroMode }) {
       {/* Atmosfera: glow verde/azul + linhas de rota animadas (decorativas) */}
       <HeroAtmosphere mode={mode} />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
-        {/* ------------------ Coluna de texto ------------------ */}
-        <div className="relative text-center md:text-left">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-[1.05fr_1fr] md:items-center md:gap-14">
+        {/* ------------------ Intro (texto principal) ------------------ */}
+        <div className="order-1 relative text-center md:col-start-1 md:row-start-1 md:text-left">
+
           <div className="hero-anim hero-anim-1 accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
