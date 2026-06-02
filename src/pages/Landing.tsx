@@ -336,7 +336,7 @@ function Hero({ mode }: { mode: HeroMode }) {
   return (
     <section
       id="top"
-      className="hero-section relative overflow-hidden px-4 pt-8 pb-20 md:pt-16 md:pb-28"
+      className="hero-section relative overflow-hidden px-4 pt-8 pb-20 md:pt-16 md:pb-28 scroll-mt-16"
       data-mode={mode}
     >
       {/* Atmosfera: glow verde/azul + linhas de rota animadas (decorativas) */}
