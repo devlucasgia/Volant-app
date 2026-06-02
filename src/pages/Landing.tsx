@@ -1478,6 +1478,9 @@ function SecondaryFeatures() {
               Ativar esses recursos agora
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
+            <p className="inline-flex items-center gap-1.5 text-[12px] text-muted-foreground">
+              <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
+            </p>
             <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Lock className="h-3 w-3 accent-text" /> Dados criptografados
             </p>
