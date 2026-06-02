@@ -1440,7 +1440,7 @@ function SecondaryFeatures() {
   ];
 
   return (
-    <section id="mais" className="px-4 py-16 md:py-24 scroll-mt-16">
+    <section id="mais" className="cv-auto px-4 py-16 md:py-24 scroll-mt-16">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
@@ -1488,7 +1488,7 @@ function Pricing() {
   ];
 
   return (
-    <section id="planos" className="relative overflow-hidden px-4 pt-8 pb-16 md:pt-12 md:pb-20 scroll-mt-16">
+    <section id="planos" className="cv-auto relative overflow-hidden px-4 pt-8 pb-16 md:pt-12 md:pb-20 scroll-mt-16">
       {/* Glow ambiental sutil — alterna devagar entre verde e azul */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="pricing-amb-green absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
@@ -2592,7 +2592,7 @@ function Faq() {
   }, []);
 
   return (
-    <section id="faq" className="px-4 py-16 md:py-24 scroll-mt-16">
+    <section id="faq" className="cv-auto px-4 py-16 md:py-24 scroll-mt-16">
       <div ref={ref} className="reveal mx-auto max-w-3xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<HelpCircle className="h-3 w-3" />}>Tire suas dúvidas</Eyebrow>
