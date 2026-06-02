@@ -566,8 +566,56 @@ function HeroStyles() {
       .pricing-card { transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
       .pricing-card-annual:hover { box-shadow: 0 18px 60px -20px hsl(var(--primary) / 0.55); }
       .pricing-card-monthly:hover { box-shadow: 0 18px 60px -25px hsl(214 90% 55% / 0.4); }
+
+      /* ----- Reveal on scroll (intersection observer toggles .is-visible) ----- */
+      .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); will-change: opacity, transform; }
+      .reveal.is-visible { opacity: 1; transform: translateY(0); }
+      .reveal-delay-1.is-visible { transition-delay: 0.08s; }
+      .reveal-delay-2.is-visible { transition-delay: 0.16s; }
+      .reveal-delay-3.is-visible { transition-delay: 0.24s; }
+
+      /* ----- CTA pulse (final CTA glow loop) ----- */
+      @keyframes ctaPulse {
+        0%, 100% { box-shadow: 0 10px 40px -8px hsl(var(--accent-now) / 0.55); }
+        50%      { box-shadow: 0 14px 60px -4px hsl(var(--accent-now) / 0.85); }
+      }
+      .cta-pulse { animation: ctaPulse 4.5s ease-in-out infinite; }
+
+      /* ----- Trust pill (sem cartão badge) ----- */
+      .trust-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px; border-radius: 9999px;
+        font-size: 11px; font-weight: 700;
+        background: hsl(var(--primary) / 0.12);
+        border: 1px solid hsl(var(--primary) / 0.35);
+        color: hsl(var(--primary));
+        box-shadow: 0 0 0 1px hsl(var(--primary) / 0.05), 0 4px 16px -8px hsl(var(--primary) / 0.4);
+      }
+      .trust-pill-blue {
+        background: hsl(214 90% 55% / 0.12);
+        border-color: hsl(214 90% 60% / 0.4);
+        color: hsl(214 90% 75%);
+        box-shadow: 0 0 0 1px hsl(214 90% 55% / 0.05), 0 4px 16px -8px hsl(214 90% 55% / 0.4);
+      }
+
+      /* ----- Testimonials & Comparison ----- */
+      .testimonial-card { transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+      .testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -20px hsl(var(--primary) / 0.35); }
+
+      /* ----- Feature card lift ----- */
+      .feature-card { transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+      .feature-card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px -16px hsl(var(--primary) / 0.4); }
+
+      /* ----- Social proof marquee fade (mobile) ----- */
+      .social-fade-mask {
+        mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        .pricing-glow-ring, .pricing-shimmer, .pricing-amb-green, .pricing-amb-blue { animation: none; }
+        .pricing-glow-ring, .pricing-shimmer, .pricing-amb-green, .pricing-amb-blue,
+        .cta-pulse, .testimonial-card, .feature-card { animation: none !important; transition: none !important; }
+        .reveal { opacity: 1 !important; transform: none !important; }
       }
 
 
