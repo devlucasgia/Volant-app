@@ -1465,6 +1465,62 @@ function SecondaryFeatures() {
             </div>
           ))}
         </div>
+
+        <div className="mx-auto mt-12 max-w-xl text-center md:mt-16">
+          <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+            Tudo isso trabalhando em segundo plano enquanto você dirige.
+          </p>
+          <div className="mt-5 flex flex-col items-center gap-3">
+            <Link
+              to="/auth"
+              className="accent-cta group inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 hover:scale-[1.02]"
+            >
+              Ativar esses recursos agora
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------- community banner --------------------------- */
+
+function CommunityBanner() {
+  return (
+    <section className="px-4 pb-12 md:pb-16">
+      <div className="mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-3xl border border-[#25D366]/30 bg-gradient-to-br from-[#25D366]/10 via-card to-card p-6 md:p-8">
+          <div className="flex flex-col items-center gap-5 text-center md:flex-row md:items-center md:gap-6 md:text-left">
+            <div
+              aria-hidden
+              className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/15 text-[#25D366]"
+            >
+              <MessageCircle className="h-7 w-7" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-balance text-lg font-bold tracking-tight md:text-xl">
+                Receba novidades e benefícios em primeira mão
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Entre no grupo oficial do Volant no WhatsApp e fique por dentro de atualizações, novos recursos, dicas e benefícios exclusivos para motoristas.
+              </p>
+            </div>
+            <a
+              href="https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[#25D366] px-5 text-sm font-semibold text-white transition hover:brightness-110 hover:scale-[1.02]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Entrar no grupo
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
