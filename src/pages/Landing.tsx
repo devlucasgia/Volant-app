@@ -1021,13 +1021,28 @@ function FeatureKmInteligente() {
         ? "Meta restante menor. R$/km ajustado."
         : "Atualizado em tempo real conforme você registra.";
 
+  const ctaBlock = (
+    <div className="mt-7">
+      <Link
+        to="/auth"
+        className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+      >
+        Testar grátis por 7 dias
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        ✓ Sem cartão. Sem cobrança automática.
+      </p>
+    </div>
+  );
+
   return (
     <section id="km" className="px-4 py-16 md:py-24">
       <div
         ref={ref}
-        className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14"
+        className="mx-auto flex max-w-6xl flex-col items-center gap-10 md:grid md:grid-cols-2 md:gap-14"
       >
-        {/* Texto + bullets + CTA */}
+        {/* Texto + bullets (CTA aparece aqui só no desktop) */}
         <div className="order-1 md:order-1">
           <Eyebrow icon={<Gauge className="h-3 w-3" />}>Diferencial #1</Eyebrow>
           <h2 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl">
@@ -1051,18 +1066,8 @@ function FeatureKmInteligente() {
             </KmBullet>
           </ul>
 
-          <div className="mt-7">
-            <Link
-              to="/auth"
-              className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
-            >
-              Testar grátis por 7 dias
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              ✓ Sem cartão. Sem cobrança automática.
-            </p>
-          </div>
+          {/* CTA no desktop */}
+          <div className="hidden md:block">{ctaBlock}</div>
         </div>
 
         {/* Mockup + floaters */}
@@ -1107,10 +1112,14 @@ function FeatureKmInteligente() {
             {phase >= 5 ? "O Volant ajusta a rota conforme sua rotina muda." : legend}
           </p>
         </div>
+
+        {/* CTA no mobile — sempre por último */}
+        <div className="order-3 w-full text-center md:hidden">{ctaBlock}</div>
       </div>
     </section>
   );
 }
+
 
 function KmBullet({ title, children }: { title: string; children: React.ReactNode }) {
   return (
