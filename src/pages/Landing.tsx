@@ -2554,7 +2554,7 @@ function Faq() {
               value={`item-${i}`}
               className={cn("border-border/40", i === FAQ_ITEMS.length - 1 && "border-b-0")}
             >
-              <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:no-underline md:text-base">
+              <AccordionTrigger className="py-5 text-left text-sm font-semibold text-foreground hover:no-underline md:text-base [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-primary">
                 {item.q}
               </AccordionTrigger>
               <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
