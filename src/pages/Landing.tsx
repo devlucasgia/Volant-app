@@ -62,6 +62,12 @@ export default function Landing() {
     const prevScroll = root.style.scrollBehavior;
     root.classList.add("dark");
     root.style.scrollBehavior = "smooth";
+    // Limpeza one-shot: remove chave do contador de motoristas removido.
+    try {
+      window.localStorage.removeItem("volant_driver_count");
+    } catch {
+      /* ignore */
+    }
     return () => {
       if (!had) root.classList.remove("dark");
       root.style.scrollBehavior = prevScroll;
