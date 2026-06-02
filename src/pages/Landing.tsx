@@ -1788,19 +1788,18 @@ function Footer() {
               </h4>
               <ul className="flex flex-col items-start gap-1.5 text-[13px] md:gap-2 md:text-sm">
                 <li>
-                  <a href="mailto:suporte@usevolant.com.br" className="block py-0.5 transition hover:text-foreground">
-                    Fale com a gente
-                  </a>
-                </li>
-                <li>
                   <a
                     href="https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 py-0.5 transition hover:text-foreground"
+                    className="block py-0.5 transition hover:text-foreground"
                   >
-                    <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
                     Grupo no WhatsApp
+                  </a>
+                </li>
+                <li>
+                  <a href="mailto:suporte@usevolant.com.br" className="block py-0.5 transition hover:text-foreground">
+                    Fale com a gente
                   </a>
                 </li>
                 <li><Link to="/privacidade" className="block py-0.5 transition hover:text-foreground">Privacidade</Link></li>
