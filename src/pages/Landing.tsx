@@ -30,6 +30,7 @@ import {
   ChevronRight,
   Menu,
   ArrowUp,
+  MessageCircle,
 } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
@@ -103,6 +104,7 @@ export default function Landing() {
         <Comparison />
         <Pricing />
         <Faq />
+        <CommunityBanner />
         <FinalCta />
       </main>
       <Footer />
@@ -1463,6 +1465,62 @@ function SecondaryFeatures() {
             </div>
           ))}
         </div>
+
+        <div className="mx-auto mt-12 max-w-xl text-center md:mt-16">
+          <p className="text-sm leading-relaxed text-muted-foreground md:text-base">
+            Tudo isso trabalhando em segundo plano enquanto você dirige.
+          </p>
+          <div className="mt-5 flex flex-col items-center gap-3">
+            <Link
+              to="/auth"
+              className="accent-cta group inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 hover:scale-[1.02]"
+            >
+              Ativar esses recursos agora
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------- community banner --------------------------- */
+
+function CommunityBanner() {
+  return (
+    <section className="px-4 pb-12 md:pb-16">
+      <div className="mx-auto max-w-5xl">
+        <div className="relative overflow-hidden rounded-3xl border border-[#25D366]/30 bg-gradient-to-br from-[#25D366]/10 via-card to-card p-6 md:p-8">
+          <div className="flex flex-col items-center gap-5 text-center md:flex-row md:items-center md:gap-6 md:text-left">
+            <div
+              aria-hidden
+              className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/15 text-[#25D366]"
+            >
+              <MessageCircle className="h-7 w-7" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-balance text-lg font-bold tracking-tight md:text-xl">
+                Receba novidades e benefícios em primeira mão
+              </h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                Entre no grupo oficial do Volant no WhatsApp e fique por dentro de atualizações, novos recursos, dicas e benefícios exclusivos para motoristas.
+              </p>
+            </div>
+            <a
+              href="https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[#25D366] px-5 text-sm font-semibold text-white transition hover:brightness-110 hover:scale-[1.02]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Entrar no grupo
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1657,11 +1715,12 @@ function FinalCta() {
 function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-border/40 bg-card/40 px-4 pt-12 pb-8">
+    <footer className="border-t border-border/40 bg-card/40 px-4 pt-10 pb-7 md:pt-12 md:pb-8">
       <div className="mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 gap-10 text-sm text-muted-foreground sm:grid-cols-3 sm:gap-8 text-center sm:text-left">
+        {/* Desktop: 3 colunas — Mobile: brand em cima + Produto/Suporte em 2 colunas */}
+        <div className="grid grid-cols-1 gap-8 text-sm text-muted-foreground md:grid-cols-3 md:gap-8 md:text-left">
           {/* Coluna 1 — marca */}
-          <div className="flex flex-col items-center sm:items-start gap-3">
+          <div className="flex flex-col items-center gap-2 md:items-start md:gap-3">
             <div className="flex items-center gap-2">
               <img
                 src={volantSymbol}
@@ -1672,48 +1731,62 @@ function Footer() {
                 decoding="async"
                 className="h-7 w-7 rounded-full"
               />
-              <span className="text-base font-semibold text-foreground">Volant</span>
+              <span className="text-sm font-semibold text-foreground md:text-base">Volant</span>
             </div>
-            <p className="max-w-[220px] text-xs leading-relaxed">
-              De motorista, para motoristas. Controle financeiro descomplicado.
+            <p className="text-xs leading-relaxed md:max-w-[220px]">
+              De motorista, para motoristas.
             </p>
             <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/90">
               <Lock className="h-3 w-3 accent-text" /> Dados criptografados
             </p>
           </div>
 
-          {/* Coluna 2 — Produto */}
-          <div className="flex flex-col items-center sm:items-start gap-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Produto
-            </h4>
-            <ul className="flex flex-col items-center sm:items-start gap-2">
-              <li><a href="#km" className="transition hover:text-foreground">Recursos</a></li>
-              <li><a href="#planos" className="transition hover:text-foreground">Planos</a></li>
-              <li><a href="#faq" className="transition hover:text-foreground">Perguntas frequentes</a></li>
-              <li><Link to="/auth" className="transition hover:text-foreground">Entrar</Link></li>
-              <li><Link to="/auth" className="transition hover:text-foreground">Criar conta grátis</Link></li>
-            </ul>
-          </div>
+          {/* Mobile: Produto + Suporte lado a lado. Desktop: cada um na sua coluna */}
+          <div className="col-span-1 grid grid-cols-2 gap-6 md:contents">
+            {/* Coluna 2 — Produto */}
+            <div className="flex flex-col items-start gap-2.5 md:gap-3">
+              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 md:text-[11px]">
+                Produto
+              </h4>
+              <ul className="flex flex-col items-start gap-1.5 text-[13px] md:gap-2 md:text-sm">
+                <li><a href="#km" className="block py-0.5 transition hover:text-foreground">Recursos</a></li>
+                <li><a href="#planos" className="block py-0.5 transition hover:text-foreground">Planos</a></li>
+                <li><a href="#faq" className="block py-0.5 transition hover:text-foreground">Perguntas frequentes</a></li>
+                <li><Link to="/auth" className="block py-0.5 transition hover:text-foreground">Entrar</Link></li>
+                <li><Link to="/auth" className="block py-0.5 transition hover:text-foreground">Criar conta grátis</Link></li>
+              </ul>
+            </div>
 
-          {/* Coluna 3 — Suporte / Legal */}
-          <div className="flex flex-col items-center sm:items-start gap-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              Suporte
-            </h4>
-            <ul className="flex flex-col items-center sm:items-start gap-2">
-              <li>
-                <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
-                  Fale com a gente
-                </a>
-              </li>
-              <li><Link to="/privacidade" className="transition hover:text-foreground">Privacidade</Link></li>
-              <li><Link to="/termos" className="transition hover:text-foreground">Termos de uso</Link></li>
-            </ul>
+            {/* Coluna 3 — Suporte / Legal */}
+            <div className="flex flex-col items-start gap-2.5 md:gap-3">
+              <h4 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 md:text-[11px]">
+                Suporte
+              </h4>
+              <ul className="flex flex-col items-start gap-1.5 text-[13px] md:gap-2 md:text-sm">
+                <li>
+                  <a href="mailto:suporte@usevolant.com.br" className="block py-0.5 transition hover:text-foreground">
+                    Fale com a gente
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 py-0.5 transition hover:text-foreground"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
+                    Grupo no WhatsApp
+                  </a>
+                </li>
+                <li><Link to="/privacidade" className="block py-0.5 transition hover:text-foreground">Privacidade</Link></li>
+                <li><Link to="/termos" className="block py-0.5 transition hover:text-foreground">Termos de uso</Link></li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/40 pt-6 text-[11px] text-muted-foreground/70 sm:flex-row">
+        <div className="mt-8 flex flex-col items-center justify-between gap-2 border-t border-border/30 pt-5 text-[11px] text-muted-foreground/70 md:mt-10 md:flex-row md:gap-3 md:pt-6">
           <span>© {year} Volant. Feito no Brasil.</span>
           <button
             type="button"

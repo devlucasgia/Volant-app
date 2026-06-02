@@ -1,81 +1,74 @@
-## Sessão 2 — Melhorias da Landing
 
----
+## Leva 4 — Footer mobile, CTA da seção de recursos e botão WhatsApp
 
-### 1. Remover totalmente o `LiveDriverCounter`
+### 1. Footer — tagline encurtada (todas as visualizações)
 
-- Apagar a chamada `<LiveDriverCounter />` no Hero (linha 419).
-- Apagar a definição do componente `LiveDriverCounter` (linhas ~2434-2499).
-- **Não colocar nada no lugar** — nenhum texto, pill ou prova social substituta.
-- Ajustar o espaçamento do bloco de CTA do Hero para não deixar vão grande: revisar o `gap`/`mt-*` do container que segurava o counter para que o microcopy "7 dias grátis. Sem cartão." encerre naturalmente o bloco.
-- Limpeza opcional: remover a chave `volant_driver_count` do `localStorage` no mount (one-shot) para não deixar lixo em quem já visitou.
+Trocar o texto da coluna 1 (Brand) de:
+> "De motorista, para motoristas. Controle financeiro descomplicado."
 
----
+para apenas:
+> "De motorista, para motoristas."
 
-### 2. Corrigir ordem mobile do `FeatureKmInteligente`
+Nada mais muda no desktop — mesma estrutura de 3 colunas, mesmo selo "🔒 Dados criptografados", mesmo bottom bar.
 
-Bug: CTA aparece antes do mockup no mobile.
+### 2. Footer — tratamento dedicado para mobile
 
-Refator (linhas 1022-1097):
-- Container vira `flex flex-col md:grid md:grid-cols-2`.
-- Texto + bullets: `order-1 md:order-1`.
-- Mockup + floaters + legenda: `order-2 md:order-2`.
-- CTA + microcopy: separado em `<div>` próprio, `order-3 md:order-1` (no desktop renderiza dentro do bloco de texto como hoje; no mobile vira o último item).
+Hoje no mobile o footer só empilha as 3 colunas centralizadas, com fontes grandes → fica desproporcional (print confirma).
 
-Resultado mobile: Título → Descrição → Bullets → Mockup → CTA → microcopy.
-Desktop: inalterado.
+Redesenho mobile (`<md`), mantendo o conteúdo idêntico:
 
----
+- **Bloco Brand** centralizado e compacto:
+  - logo 28px + "Volant" `text-sm font-semibold` na mesma linha
+  - tagline `text-xs text-muted-foreground` em 1 linha
+  - selo "Dados criptografados" `text-[11px]` com ícone 12px
+- **Produto + Suporte** lado a lado em **2 colunas** (`grid-cols-2`) ao invés de empilhados:
+  - títulos `text-[10px] uppercase tracking-wider`
+  - links `text-[13px]` com `py-1`
+  - alinhamento à esquerda dentro de cada coluna, `gap-x-4`
+- **Bottom bar**: copyright + "Voltar ao topo" `text-[11px]`, divisor mais sutil
 
-### 3. Auditoria de hierarquia texto/CTA no mobile
+Desktop (`md:`) permanece como está — só a tagline muda.
 
-Capturo screenshot do mobile (406px) de cada seção e valido:
+### 3. CTA na seção "Recursos que trabalham por você" (`SecondaryFeatures`)
 
-| Seção | Verificar |
-|---|---|
-| Hero | ✅ já corrigido + sem o counter agora |
-| SocialProof | respiro |
-| FeatureKmInteligente | pós-correção do item 2 |
-| FeatureMetas / FeaturePersonalizacao | sem CTA — só conferir |
-| SecondaryFeatures | grid de cards |
-| Comparison | tabela em 406px |
-| Testimonials | ✅ carrossel novo |
-| Pricing | ordem e CTAs visíveis |
-| FAQ | área clicável |
-| FinalCta | só texto + CTA |
-| Footer | conferir |
+Adicionar bloco abaixo dos cards, centralizado:
+- **Subtítulo** acima do CTA:
+  > "Tudo isso trabalhando em segundo plano enquanto você dirige."
+- **Botão CTA primário** (mesmo estilo verde do Hero):
+  > "Ativar esses recursos agora →" — link `/auth`
+- **Selo "🔒 Dados criptografados"** abaixo do botão (mesmo componente do Hero/KM).
 
-Ajustes pontuais possíveis: reduzir `text-3xl` no mobile, padronizar alinhamento de eyebrows, garantir largura de descrição confortável. Entrega: prints antes/depois.
+Margens `mt-12 md:mt-16`, container `max-w-xl`, dentro do `useReveal` da seção.
 
----
+### 4. Botão WhatsApp — Grupo Oficial do Volant
 
-### 4. Demais melhorias aprovadas
+Link: `https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1`  
+`target="_blank"` + `rel="noopener noreferrer"`.
 
-**Quick wins:** scroll-offset do header sticky, badge "Mais escolhido" no Pricing, hover unificado nos cards, chevron maior animado no FAQ, selo de confiança no Hero (🔒 dados criptografados · ✓ cancele quando quiser · 💳 sem cartão).
+**Onde colocar (recomendação):**
 
-**Navegação mobile:** menu hambúrguer com âncoras, botão "voltar ao topo", barra fina de progresso de scroll.
+- **Header** — ❌ não recomendo: já tem logo + 4 âncoras + Login + "Testar grátis". Adicionar WhatsApp polui e compete com o CTA principal.
+- **Footer (coluna Suporte)** — ✅ link discreto com ícone WhatsApp pequeno verde, junto de "Fale com a gente". Sempre acessível, sem disputa com conversão.
+- **Bloco "Comunidade" dedicado antes do `FinalCta`** — ✅ destaque principal, dá visibilidade real ao grupo.
 
-**Conversão:** sticky CTA mobile que aparece após 50% de scroll e some no `FinalCta`. *(Mini-FAQ removido.)*
+**Bloco Comunidade (copy ajustado — grupo é só de avisos dos admins, não conversa entre membros):**
+- Eyebrow/ícone WhatsApp verde
+- Título: **"Receba novidades e benefícios em primeira mão"**
+- Subtítulo: *"Entre no grupo oficial do Volant no WhatsApp e fique por dentro de atualizações, novos recursos, dicas e benefícios exclusivos para motoristas."*
+- Botão verde-WhatsApp (`#25D366`): **"Entrar no grupo do WhatsApp →"**
+- Card com borda sutil, ícone à esquerda em desktop, empilhado em mobile.
 
-**Design maior:** Comparison em duas colunas com ícones ✗/✓; Footer expandido em 3 colunas.
+**Footer (coluna Suporte) — link adicional:**
+- "💬 Grupo no WhatsApp" como terceiro item, antes de Privacidade/Termos.
 
-**Animações refinadas:** stagger padronizado do `useReveal`, parallax leve no halo do Hero.
+**Não adicionar no Header.**
 
-**Performance:** medir CLS/LCP no mobile, preload da fonte do título.
+### Arquivos afetados
 
----
+- `src/pages/Landing.tsx`: `Footer` (tagline + layout mobile + link WhatsApp), `SecondaryFeatures` (CTA novo), novo `CommunityBanner` antes do `FinalCta`.
 
-### Ordem de execução proposta
+### Ordem de execução
 
-**Leva 1 — Bugs + remoção do counter (alta prioridade):**
-- Item 1 (remover counter sem substituir, ajustar espaçamento)
-- Item 2 (fix CTA KM Inteligente)
-- Item 3 (auditoria mobile + ajustes pontuais)
-
-**Leva 2 — Quick wins + navegação mobile.**
-**Leva 3 — Conversão + design (Comparison + Footer).**
-**Leva 4 — Polimento (animações + performance).**
-
----
-
-**Ao aprovar, executo a Leva 1** e volto pra confirmação antes da Leva 2.
+1. Footer: tagline + redesenho mobile + link WhatsApp na coluna Suporte
+2. CTA na seção SecondaryFeatures
+3. Bloco Comunidade (WhatsApp) antes do FinalCta
