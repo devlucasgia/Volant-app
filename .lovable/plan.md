@@ -1,53 +1,68 @@
+## Ajustes na Landing
 
-## 1. DNS / e-mail — esclarecimentos (sem ação no código)
+### 1. Ordem mobile: conteúdo primeiro, CTA por último
 
-**Boa notícia:** o domínio `notify.usevolant.com.br` **já está verificado e funcionando**. Os e-mails de novo usuário já vão para `suporte@usevolant.com.br` assim que houver novos cadastros.
+**Regra:** em telas `< md`, qualquer seção que tenha mockup/visual + CTAs deve seguir esta ordem visual:
+título → subtítulo → mockup → botões → microcopy ("7 dias grátis…") → LiveDriverCounter.
 
-**Sobre os nomes dos NS (ns3/ns4 × ns5/ns6):** a documentação genérica fala em `ns3` e `ns4`, mas a Lovable atribui o par real por projeto. No seu caso os corretos são **`ns5.lovable.cloud` e `ns6.lovable.cloud`** — e era exatamente isso que você precisava cadastrar. Pode ignorar a menção a ns3/ns4.
+No desktop a ordem atual (texto/CTA à esquerda, mockup à direita) é mantida.
 
-**Sobre o "ns6 barrado pela Locaweb":** a verificação só precisa de **pelo menos um NS válido respondendo**, e o `ns5` já está propagado. Por isso o status saiu como verificado mesmo sem o ns6. **Não há problema imediato e nada que precise ser corrigido agora.** Recomendação: assim que sair da janela de aprovação de 48h da Locaweb, adicionar uma segunda entrada NS para `notify` apontando para `ns6.lovable.cloud` (no mesmo registro de subdomínio `notify`, não criar outro). Isso dá redundância e protege a entrega caso o ns5 fique indisponível.
+**Implementação:** usar `flex flex-col` + `order-*` no mobile e voltar ao grid no `md`. Seções afetadas:
+- `Hero` — mover bloco de CTAs (linhas ~250-276) para depois do `PhoneFrame` no mobile.
+- `FeatureKmInteligente`, `FeatureMetas`, `FeaturePersonalizacao` — mesma regra onde houver CTA abaixo de texto + mockup. Verifico cada uma antes de aplicar.
+- `FinalCta` — se houver visual, mockup primeiro; texto e CTA depois.
 
-**Para que servem esses NS:** eles delegam o subdomínio `notify` para os servidores DNS da Lovable, que gerenciam SPF, DKIM e MX automaticamente — é assim que provedores como Gmail confirmam que os e-mails saem legitimamente do seu domínio (deliverability).
+### 2. Pílula "+ outras" com `+` duplicado
 
-## 2. Ajustes na landing (`src/pages/Landing.tsx`)
+Em `SocialProof` (linha ~2180) a pílula renderiza o ícone `<Plus />` **e** o texto `"+ outras"`. Solução: manter só o ícone `<Plus />` + texto `"outras"` (sem o `+` no texto).
 
-### 2.1 Hero — countdown de motoristas
-Adicionar, abaixo do parágrafo principal e antes dos CTAs, uma micro-prova social com contador animado e realista:
-- Componente `LiveDriverCounter` com valor base (ex.: começa em ~1.240) e incremento pseudo-aleatório lento (1 motorista a cada 8–15s), congelado se `prefers-reduced-motion`.
-- Visual: pílula com dot pulsante verde + "**1.247 motoristas** já dirigindo com clareza" (número usa `AnimatedNumber` já existente).
-- Persistir o valor base por dia no `localStorage` para parecer crescimento contínuo entre visitas, sem nunca diminuir.
-- Largura e altura fixas para não causar layout shift na hero (testado em mobile 320–414 e desktop).
+### 3. Novo carrossel de depoimentos
 
-### 2.2 SocialProof — texto da pílula extra
-- Trocar "**adicione outras plataformas**" por algo neutro tipo "**+ outras**" (pílula só visual, não clicável).
-- Adicionar logo abaixo da fileira de plataformas uma linha curta e centralizada:
-  > "Funciona com qualquer fonte de ganho — você pode adicionar plataformas extras direto no app."
+**Conteúdo:** adicionar 2 depoimentos novos (ambos de São Paulo, SP), totalizando 5.
 
-### 2.3 Depoimentos — corrigir invisibilidade + animação
-- **Bug:** cada card tem `className="testimonial-card reveal"` mas só o container pai tem `useReveal`. Os filhos nunca recebem `.is-visible` → ficam em `opacity: 0`. Por isso aparece a seção mas não os cards.
-- **Fix:** transformar cada card em um item observado individualmente (hook `useReveal` por card via um wrapper `<RevealItem delay={i}>`) — assim entram em cascata conforme aparecem na viewport.
-- **Animação recomendada:** fade-in + slide-up suave (já existe via `.reveal`) com stagger de 120ms entre cards + leve `hover:-translate-y-1` e brilho na borda no hover (consistente com pricing-card). Sem efeitos chamativos demais — o tom da página é premium e sóbrio.
+**Comportamento (todas as plataformas):**
+- Card central em destaque (100% opacidade, escala 1).
+- Cards adjacentes (esquerda/direita) menores (~75% escala), opacidade reduzida e `blur-sm`.
+- Auto-advance a cada ~6s; pausa em hover e quando o usuário interage.
+- Setas de navegação (◀ ▶) em desktop; swipe/drag no mobile.
+- Dots indicadores abaixo (clicáveis) — comunicam quantidade e posição.
+- Loop infinito; respeita `prefers-reduced-motion` (desliga auto-advance).
+- Acessível: `aria-roledescription="carousel"`, foco visível, navegação por teclado (← →).
 
-### 2.4 Planos — remover parcelamento
-- Trocar `12x R$ 7,49` por `R$ 89,90` em destaque (mesma tipografia grande).
-- Manter a linha abaixo como **"Equivalente a R$ 7,49/mês"** (remover o "ou R$ 89,90 à vista no cartão · ").
-- Manter o badge "4,5 meses grátis".
+**Mobile:** layout lateralizado (mesmo padrão), card central ocupa ~80% da largura, vizinhos espiam nas bordas. Sem stack vertical. Altura fixa para evitar layout shift.
 
-### 2.5 FAQ — começar todos fechados
-- Remover `defaultValue="item-0"` do `Accordion`.
+**Implementação:** usar o `embla-carousel-react` já instalado (`src/components/ui/carousel.tsx`) com plugin de autoplay leve próprio (setInterval + `api.scrollNext()`). Estilos dos vizinhos via observação do `selectedScrollSnap` aplicando classes no `CarouselItem`.
 
-### 2.6 Espaçamento entre seção dos cards (Pricing) e... 
-Interpretando como "entre Comparison/Testimonials e Pricing" (sessão dos cards de comparação acima dos preços):
-- Reduzir `py-16 md:py-24` da seção `Pricing` para `pt-8 pb-16 md:pt-12 md:pb-20` (apenas o topo encolhe), aproximando visualmente da seção anterior sem perder respiro do FAQ.
+### 4. Próximas melhorias sugeridas (para sessão futura — só listar, não executar agora)
 
-### O que NÃO será alterado
-- Nada fora de `src/pages/Landing.tsx`.
-- Sem mudanças em rotas, dados, autenticação, app `/app`, edge functions ou DB.
-- Demais seções (Hero principal, PainStrip, Features, Comparison, FinalCta, Footer) intactas.
+**Navegação / UX**
+- Header mobile: hoje só tem CTA, sem menu. Adicionar menu hambúrguer com âncoras (#km, #metas, #planos, #faq).
+- Botão "voltar ao topo" flutuante que aparece após 600px de scroll.
+- Indicador de progresso de scroll no topo (barra fina verde).
+- Smooth-scroll com offset do header sticky (hoje a âncora cola embaixo do header).
 
-## Verificação pós-implementação
-- Hero não quebra em 320px, 375px, 414px e desktop (countdown sem layout shift).
-- Cards de depoimento aparecem ao rolar com animação em cascata.
-- FAQ inicia totalmente fechado.
-- Card "Anual" mostra R$ 89,90 + "Equivalente a R$ 7,49/mês".
-- Espaçamento Pricing visivelmente menor no topo, mantendo respiro inferior.
+**Animações**
+- Reveal escalonado dentro de seções (features, FAQ) com stagger consistente (já existe `useReveal`, padronizar delays).
+- Parallax leve no halo do hero ao rolar.
+- Hover nos cards de features: lift + glow accent (hoje só alguns têm).
+- Transição entre modos `liquido ↔ bruto` do hero: hoje é cross-fade do glow; adicionar morph suave nos números do mockup.
+
+**Design**
+- FAQ: aumentar área clicável e adicionar ícone de chevron animado mais visível.
+- Pricing: badge "Mais escolhido" ou "Recomendado" no card anual para reduzir fricção de decisão.
+- Comparison: hoje é tabela; testar layout de duas colunas com ícones ✗/✓ coloridos e divider central animado.
+- Footer: hoje é minimalista; adicionar links de Privacidade, Termos, Suporte e contato visíveis.
+
+**Conversão**
+- Adicionar selo de confiança próximo ao CTA do hero ("Sem cartão · Cancele quando quiser · Dados criptografados").
+- Sticky bottom-bar no mobile com CTA "Testar grátis" após o usuário rolar 50% da página.
+- Mini-FAQ inline acima do botão de pricing ("E se eu não gostar?" → resposta curta).
+
+**Performance / técnico**
+- Hero tem muitas animações simultâneas; medir CLS e LCP no mobile real.
+- Lazy-load das seções abaixo do fold com `IntersectionObserver` para o mockup pesado.
+- Pré-carregar a fonte do título para evitar FOUT no hero.
+
+---
+
+**Escopo desta execução:** apenas itens 1, 2 e 3. Item 4 fica documentado para aprovação separada.
