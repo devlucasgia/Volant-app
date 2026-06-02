@@ -26,7 +26,11 @@ import {
   Quote,
   X as XIcon,
   HelpCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import volantSymbol from "@/assets/volant-symbol-header.png";
@@ -219,9 +223,10 @@ function Hero({ mode }: { mode: HeroMode }) {
       {/* Atmosfera: glow verde/azul + linhas de rota animadas (decorativas) */}
       <HeroAtmosphere mode={mode} />
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1.05fr_1fr] md:gap-14">
-        {/* ------------------ Coluna de texto ------------------ */}
-        <div className="relative text-center md:text-left">
+      <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-[1.05fr_1fr] md:items-center md:gap-14">
+        {/* ------------------ Intro (texto principal) ------------------ */}
+        <div className="order-1 relative text-center md:col-start-1 md:row-start-1 md:text-left">
+
           <div className="hero-anim hero-anim-1 accent-badge inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur">
             <span className="relative flex h-1.5 w-1.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
@@ -247,38 +252,11 @@ function Hero({ mode }: { mode: HeroMode }) {
             feita para a realidade de quem dirige todos os dias.
           </p>
 
-          <div className="hero-anim hero-anim-4 mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
-            <Link
-              to="/auth"
-              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
-            >
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-              />
-              Testar grátis
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="#km"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-border/60 bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-card sm:w-auto"
-            >
-              Ver como funciona
-            </a>
-          </div>
-
-          <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
-          </p>
-
-          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
-            <LiveDriverCounter />
-          </div>
         </div>
 
-
         {/* ------------------ Coluna do mockup ------------------ */}
-        <div className="hero-anim hero-anim-mockup relative mx-auto w-full max-w-[290px] md:max-w-none">
+        <div className="hero-anim hero-anim-mockup relative order-2 mx-auto w-full max-w-[290px] md:col-start-2 md:row-span-2 md:row-start-1 md:max-w-none">
+
           {/* halo dinâmico (verde + azul cross-fade) */}
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2">
             <div
@@ -410,7 +388,39 @@ function Hero({ mode }: { mode: HeroMode }) {
             accent
           />
         </div>
+
+        {/* ------------------ CTAs (no mobile, depois do mockup) ------------------ */}
+        <div className="order-3 text-center md:col-start-1 md:row-start-2 md:text-left">
+          <div className="hero-anim hero-anim-4 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
+            <Link
+              to="/auth"
+              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+              />
+              Testar grátis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#km"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-border/60 bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-card sm:w-auto"
+            >
+              Ver como funciona
+            </a>
+          </div>
+
+          <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
+          </p>
+
+          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
+            <LiveDriverCounter />
+          </div>
+        </div>
       </div>
+
     </section>
   );
 }
@@ -2179,8 +2189,9 @@ function SocialProof() {
           ))}
           <div className="flex items-center gap-2 rounded-full border border-dashed border-border/60 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur">
             <Plus className="h-3.5 w-3.5" />
-            + outras
+            outras
           </div>
+
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground md:text-sm">
           Funciona com qualquer fonte de ganho — você pode adicionar plataformas extras direto no app.
@@ -2192,9 +2203,17 @@ function SocialProof() {
 
 /* ------------------------------ testimonials ------------------------------ */
 
+type Testimonial = {
+  quote: string;
+  name: string;
+  meta: string;
+  initials: string;
+  color: string;
+};
+
 function Testimonials() {
   const ref = useReveal<HTMLDivElement>();
-  const items = [
+  const items: Testimonial[] = [
     {
       quote:
         "Antes eu achava que tava ganhando bem. Depois que comecei a anotar gasto certinho, vi que o líquido era bem menor. Hoje sei exatamente quanto vale ligar o app.",
@@ -2219,6 +2238,22 @@ function Testimonials() {
       initials: "C",
       color: "#f59e0b",
     },
+    {
+      quote:
+        "Comecei a separar combustível, manutenção e IPVA. Em duas semanas já entendi quais dias compensam rodar e quais não.",
+      name: "Marcos",
+      meta: "Uber · São Paulo, SP",
+      initials: "M",
+      color: "#a855f7",
+    },
+    {
+      quote:
+        "As metas mudaram minha rotina. Bato meta de líquido sem ficar 14h no carro. Hoje eu sei a hora de parar.",
+      name: "Lucas",
+      meta: "99 + inDrive · São Paulo, SP",
+      initials: "L",
+      color: "#ef4444",
+    },
   ];
   return (
     <section className="px-4 py-16 md:py-24">
@@ -2230,13 +2265,10 @@ function Testimonials() {
           </h2>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((t, i) => (
-            <TestimonialCard key={t.name} t={t} index={i} />
-          ))}
-        </div>
+        <TestimonialsCarousel items={items} />
       </div>
     </section>
+
   );
 }
 
@@ -2466,22 +2498,146 @@ function LiveDriverCounter() {
   );
 }
 
+/* ----------------------------- testimonials carousel -------------------- */
+
+function TestimonialsCarousel({ items }: { items: Testimonial[] }) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "center",
+    containScroll: false,
+    skipSnaps: false,
+    dragFree: false,
+  });
+  const [selected, setSelected] = useState(0);
+  const [isHover, setIsHover] = useState(false);
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (!emblaApi || reducedMotion || isHover) return;
+    const id = window.setInterval(() => emblaApi.scrollNext(), 6000);
+    return () => window.clearInterval(id);
+  }, [emblaApi, isHover, reducedMotion]);
+
+  // Keyboard nav
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") emblaApi.scrollPrev();
+      else if (e.key === "ArrowRight") emblaApi.scrollNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [emblaApi]);
+
+  return (
+    <div
+      className="relative mt-10"
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
+      aria-roledescription="carousel"
+      aria-label="Depoimentos de motoristas"
+    >
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex touch-pan-y">
+          {items.map((t, i) => {
+            const isActive = i === selected;
+            return (
+              <div
+                key={t.name}
+                className="relative min-w-0 shrink-0 grow-0 basis-[85%] px-2 sm:basis-[60%] md:basis-[42%] lg:basis-[36%]"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} de ${items.length}`}
+              >
+                <div
+                  className={cn(
+                    "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    isActive
+                      ? "scale-100 opacity-100"
+                      : "scale-[0.82] opacity-40 blur-[2px]",
+                  )}
+                >
+                  <TestimonialCard t={t} dimmed={!isActive} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Arrows — desktop */}
+      <button
+        type="button"
+        onClick={() => emblaApi?.scrollPrev()}
+        aria-label="Depoimento anterior"
+        className="absolute left-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => emblaApi?.scrollNext()}
+        aria-label="Próximo depoimento"
+        className="absolute right-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Dots */}
+      <div className="mt-6 flex items-center justify-center gap-2">
+        {items.map((t, i) => (
+          <button
+            key={t.name}
+            type="button"
+            onClick={() => emblaApi?.scrollTo(i)}
+            aria-label={`Ir para depoimento ${i + 1}`}
+            aria-current={i === selected}
+            className={cn(
+              "h-2 rounded-full transition-all duration-300",
+              i === selected
+                ? "w-6 bg-primary"
+                : "w-2 bg-border hover:bg-muted-foreground/50",
+            )}
+          />
+        ))}
+      </div>
+
+      {/* Mobile hint */}
+      <p className="mt-3 text-center text-[11px] text-muted-foreground md:hidden">
+        Arraste para ver mais depoimentos
+      </p>
+    </div>
+  );
+}
+
 /* ----------------------------- testimonial card -------------------------- */
 
 function TestimonialCard({
   t,
-  index,
+  dimmed = false,
 }: {
-  t: { quote: string; name: string; meta: string; initials: string; color: string };
-  index: number;
+  t: Testimonial;
+  dimmed?: boolean;
 }) {
-  const ref = useReveal<HTMLElement>();
   return (
     <article
-      ref={ref}
       className={cn(
-        "testimonial-card reveal group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
-        index === 1 ? "reveal-delay-1" : index === 2 ? "reveal-delay-2" : "",
+        "testimonial-card group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-colors duration-300",
+        !dimmed && "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
       )}
     >
       <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20 transition-colors group-hover:text-primary/40" aria-hidden />
@@ -2508,4 +2664,5 @@ function TestimonialCard({
     </article>
   );
 }
+
 
