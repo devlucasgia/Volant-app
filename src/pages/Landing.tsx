@@ -2427,72 +2427,8 @@ function Faq() {
   );
 }
 
-/* --------------------------- live driver counter ------------------------- */
 
-function LiveDriverCounter() {
-  // Base que cresce ~lentamente entre dias para parecer crescimento orgânico
-  // sem nunca regredir. Persistido em localStorage para continuidade entre visitas.
-  const computeBase = () => {
-    const SEED_DATE = new Date("2026-01-01T00:00:00Z").getTime();
-    const SEED_VALUE = 1180;
-    const days = Math.max(0, Math.floor((Date.now() - SEED_DATE) / 86400000));
-    // ~6 motoristas/dia em média
-    return SEED_VALUE + days * 6;
-  };
 
-  const [count, setCount] = useState<number>(() => {
-    if (typeof window === "undefined") return computeBase();
-    try {
-      const stored = Number(window.localStorage.getItem("volant_driver_count") || "0");
-      const base = computeBase();
-      return stored > base ? stored : base;
-    } catch {
-      return computeBase();
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-    let timeoutId: number;
-    const tick = () => {
-      setCount((c) => {
-        const next = c + 1;
-        try {
-          window.localStorage.setItem("volant_driver_count", String(next));
-        } catch {
-          /* ignore */
-        }
-        return next;
-      });
-      // 8s a 15s entre incrementos
-      const nextDelay = 8000 + Math.random() * 7000;
-      timeoutId = window.setTimeout(tick, nextDelay);
-    };
-    const initialDelay = 5000 + Math.random() * 6000;
-    timeoutId = window.setTimeout(tick, initialDelay);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-      </span>
-      <span>
-        <AnimatedNumber
-          value={count}
-          format={(n) => Math.round(n).toLocaleString("pt-BR")}
-          durationMs={800}
-          className="font-bold text-foreground"
-        />{" "}
-        motoristas já dirigindo com clareza
-      </span>
-    </div>
-  );
-}
 
 /* ----------------------------- testimonials carousel -------------------- */
 
