@@ -137,7 +137,7 @@ function Header() {
             onClick={() => setOpen((v) => !v)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/60 text-foreground backdrop-blur transition hover:bg-card md:hidden"
           >
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {open ? <XIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
           <a href="#top" className="flex items-center gap-2">
             <img src={volantSymbol} alt="Volant" className="h-7 w-7 rounded-full" />
