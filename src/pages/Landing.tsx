@@ -2185,8 +2185,9 @@ function SocialProof() {
           ))}
           <div className="flex items-center gap-2 rounded-full border border-dashed border-border/60 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur">
             <Plus className="h-3.5 w-3.5" />
-            + outras
+            outras
           </div>
+
         </div>
         <p className="mt-4 text-center text-xs text-muted-foreground md:text-sm">
           Funciona com qualquer fonte de ganho — você pode adicionar plataformas extras direto no app.
