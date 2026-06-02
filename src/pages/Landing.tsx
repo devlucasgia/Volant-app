@@ -28,6 +28,8 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  ArrowUp,
 } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
@@ -104,6 +106,7 @@ export default function Landing() {
         <FinalCta />
       </main>
       <Footer />
+      <BackToTop />
       <HeroStyles />
     </div>
   );
@@ -112,20 +115,42 @@ export default function Landing() {
 /* ------------------------------- chrome ----------------------------------- */
 
 function Header() {
+  const [open, setOpen] = useState(false);
+  const navItems = [
+    { href: "#km", label: "KM inteligente" },
+    { href: "#metas", label: "Metas" },
+    { href: "#personalizacao", label: "Personalização" },
+    { href: "#mais", label: "Mais recursos" },
+    { href: "#planos", label: "Planos" },
+    { href: "#faq", label: "FAQ" },
+  ];
+
   return (
     <header className="sticky top-0 z-30 border-b border-border/40 bg-background/70 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <a href="#top" className="flex items-center gap-2">
-          <img src={volantSymbol} alt="Volant" className="h-7 w-7 rounded-full" />
-          <span className="text-base font-bold tracking-tight">Volant</span>
-        </a>
+      <ScrollProgressBar />
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
+        <div className="flex items-center gap-2">
+          {/* Hambúrguer — só mobile */}
+          <button
+            type="button"
+            aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-card/60 text-foreground backdrop-blur transition hover:bg-card md:hidden"
+          >
+            {open ? <XIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </button>
+          <a href="#top" className="flex items-center gap-2">
+            <img src={volantSymbol} alt="Volant" className="h-7 w-7 rounded-full" />
+            <span className="text-base font-bold tracking-tight">Volant</span>
+          </a>
+        </div>
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
-          <a href="#km" className="transition hover:text-foreground">KM inteligente</a>
-          <a href="#metas" className="transition hover:text-foreground">Metas</a>
-          <a href="#personalizacao" className="transition hover:text-foreground">Personalização</a>
-          <a href="#mais" className="transition hover:text-foreground">Mais recursos</a>
-          <a href="#planos" className="transition hover:text-foreground">Planos</a>
-          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
+          {navItems.map((n) => (
+            <a key={n.href} href={n.href} className="transition hover:text-foreground">
+              {n.label}
+            </a>
+          ))}
         </nav>
         <Link
           to="/auth"
@@ -135,7 +160,95 @@ function Header() {
           <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
+
+      {/* Painel mobile */}
+      <div
+        className={cn(
+          "overflow-hidden border-t border-border/40 bg-background/95 backdrop-blur-xl transition-[max-height,opacity] duration-300 ease-out md:hidden",
+          open ? "max-h-96 opacity-100" : "max-h-0 opacity-0",
+        )}
+      >
+        <nav className="flex flex-col gap-1 px-4 py-3">
+          {navItems.map((n) => (
+            <a
+              key={n.href}
+              href={n.href}
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:bg-card hover:text-foreground"
+            >
+              {n.label}
+            </a>
+          ))}
+        </nav>
+      </div>
     </header>
+  );
+}
+
+/* Barra fina de progresso de scroll no topo do header */
+function ScrollProgressBar() {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? (h.scrollTop / max) * 100 : 0;
+      setPct(p);
+      raf = 0;
+    };
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-transparent">
+      <div
+        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-[width] duration-150 ease-out"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
+/* Botão flutuante "voltar ao topo" — aparece após scroll */
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      setVisible(window.scrollY > 600);
+      raf = 0;
+    };
+    const onScroll = () => {
+      if (!raf) raf = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <button
+      type="button"
+      aria-label="Voltar ao topo"
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      className={cn(
+        "fixed bottom-6 right-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-border/60 bg-card/85 text-foreground shadow-elevated backdrop-blur-xl transition-all duration-300",
+        "safe-bottom hover:bg-card hover:-translate-y-0.5",
+        visible ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-2 pointer-events-none",
+      )}
+    >
+      <ArrowUp className="h-4 w-4" />
+    </button>
   );
 }
 
@@ -223,7 +336,7 @@ function Hero({ mode }: { mode: HeroMode }) {
   return (
     <section
       id="top"
-      className="hero-section relative overflow-hidden px-4 pt-8 pb-20 md:pt-16 md:pb-28"
+      className="hero-section relative overflow-hidden px-4 pt-8 pb-20 md:pt-16 md:pb-28 scroll-mt-16"
       data-mode={mode}
     >
       {/* Atmosfera: glow verde/azul + linhas de rota animadas (decorativas) */}
@@ -420,6 +533,19 @@ function Hero({ mode }: { mode: HeroMode }) {
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
             <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
+
+          {/* Selo de confiança */}
+          <ul className="hero-anim hero-anim-5 mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground md:justify-start">
+            <li className="inline-flex items-center gap-1.5">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <Check className="h-3 w-3 accent-text" /> Cancele quando quiser
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 accent-text" /> Sem cartão
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -1037,7 +1163,7 @@ function FeatureKmInteligente() {
   );
 
   return (
-    <section id="km" className="px-4 py-16 md:py-24">
+    <section id="km" className="px-4 py-16 md:py-24 scroll-mt-16">
       <div
         ref={ref}
         className="mx-auto flex max-w-6xl flex-col items-center gap-10 md:grid md:grid-cols-2 md:gap-14"
@@ -1314,7 +1440,7 @@ function SecondaryFeatures() {
   ];
 
   return (
-    <section id="mais" className="px-4 py-16 md:py-24">
+    <section id="mais" className="px-4 py-16 md:py-24 scroll-mt-16">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
@@ -1327,7 +1453,7 @@ function SecondaryFeatures() {
           {items.map((it) => (
             <div
               key={it.title}
-              className="group rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur transition hover:border-primary/40 hover:bg-card"
+              className="group rounded-2xl border border-border/60 bg-card/60 p-5 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/10"
             >
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 {it.icon}
@@ -1584,7 +1710,7 @@ function FeatureSection({
   reverse?: boolean;
 }) {
   return (
-    <section id={id} className="px-4 py-16 md:py-24">
+    <section id={id} className="px-4 py-16 md:py-24 scroll-mt-16">
       <div
         className={cn(
           "mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2",
@@ -2428,7 +2554,7 @@ function Faq() {
               value={`item-${i}`}
               className={cn("border-border/40", i === FAQ_ITEMS.length - 1 && "border-b-0")}
             >
-              <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:no-underline md:text-base">
+              <AccordionTrigger className="py-5 text-left text-sm font-semibold text-foreground hover:no-underline md:text-base [&>svg]:h-5 [&>svg]:w-5 [&>svg]:text-primary">
                 {item.q}
               </AccordionTrigger>
               <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
