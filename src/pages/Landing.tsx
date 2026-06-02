@@ -28,6 +28,8 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
+  Menu,
+  ArrowUp,
 } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
