@@ -1396,9 +1396,11 @@ function Pricing() {
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-[hsl(214,90%,70%)]" /> 7 dias grátis. Sem cartão.
-              </p>
+              <div className="mt-3 flex justify-center">
+                <span className="trust-pill trust-pill-blue">
+                  <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
+                </span>
+              </div>
             </div>
           </article>
 
@@ -1453,9 +1455,11 @@ function Pricing() {
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="h-3.5 w-3.5 accent-text" /> Depois, continue no anual se quiser.
-              </p>
+              <div className="mt-3 flex justify-center">
+                <span className="trust-pill">
+                  <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
+                </span>
+              </div>
             </div>
           </article>
         </div>
@@ -1481,10 +1485,14 @@ function FinalCta() {
         <div className="mt-6 flex justify-center">
           <Link
             to="/auth"
-            className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+            className="accent-cta cta-pulse group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110 hover:scale-[1.02]"
           >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+            />
             Criar minha conta grátis
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>
