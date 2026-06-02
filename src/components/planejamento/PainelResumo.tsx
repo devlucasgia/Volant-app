@@ -115,7 +115,11 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             </div>
             <button
               type="button"
-              onClick={() => navigate("/ajustes/veiculos/custos")}
+              onClick={() =>
+                navigate("/ajustes/veiculos/custos", {
+                  state: { returnTo: "/ajustes/planejamento" },
+                })
+              }
               className="text-[11px] font-medium text-primary hover:underline"
             >
               Editar

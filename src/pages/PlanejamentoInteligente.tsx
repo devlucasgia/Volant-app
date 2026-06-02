@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Brain, Target, Gauge, ChevronRight, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,7 @@ import { useData } from "@/context/DataContext";
 import { EmptyState } from "@/components/planejamento/EmptyState";
 import { GuidedFlow } from "@/components/planejamento/GuidedFlow";
 import { PainelResumo } from "@/components/planejamento/PainelResumo";
+import { AjustarSheet, type AjustarOpcao } from "@/components/planejamento/AjustarSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +19,30 @@ import {
 } from "@/components/ui/alert-dialog";
 
 type Mode = "panel" | "flow";
-type FlowVariant = "fresh" | "prefill";
+type FlowVariant = "fresh" | "prefill" | "edit";
+
+interface FlowConfig {
+  variant: FlowVariant;
+  initialStep?: number;
+  initialDraft?: Partial<{
+    goalType: "bruto" | "liquido";
+    monthlyGoal: number;
+    selectedDates: string[];
+    rpkBase: number;
+  }>;
+  editSteps?: number[];
+}
+
+interface PlanningResumeState {
+  variant: "fresh" | "prefill";
+  step: number;
+  draft: {
+    goalType: "bruto" | "liquido";
+    monthlyGoal: number;
+    selectedDates: string[];
+    rpkBase: number;
+  };
+}
 
 function PlanHeader({ onBack }: { onBack: () => void }) {
   return (
@@ -89,11 +113,32 @@ export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+  const planningResume = (location.state as { planningResume?: PlanningResumeState } | null)
+    ?.planningResume;
 
   const { settings, loading } = useData();
   const [mode, setMode] = useState<Mode>("panel");
-  const [flowVariant, setFlowVariant] = useState<FlowVariant>("fresh");
+  const [flowConfig, setFlowConfig] = useState<FlowConfig>({ variant: "fresh" });
   const [confirmRedo, setConfirmRedo] = useState(false);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+
+  // Restaurar contexto vindo da Central de Veículos
+  const resumeKey = useMemo(
+    () => (planningResume ? JSON.stringify(planningResume) : null),
+    [planningResume],
+  );
+  useEffect(() => {
+    if (!planningResume) return;
+    setFlowConfig({
+      variant: planningResume.variant,
+      initialStep: planningResume.step,
+      initialDraft: planningResume.draft,
+    });
+    setMode("flow");
+    // Limpa o state para não restaurar de novo em refresh
+    navigate(location.pathname, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeKey]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -101,10 +146,37 @@ export default function PlanejamentoInteligente() {
 
   const isConfigured = settings.planningStatus === "configured";
 
+  const handleAdjustSelect = (opcao: AjustarOpcao) => {
+    setAdjustOpen(false);
+    if (opcao === "custos") {
+      navigate("/ajustes/veiculos/custos", {
+        state: { returnTo: "/ajustes/planejamento" },
+      });
+      return;
+    }
+    const editSteps: Record<Exclude<AjustarOpcao, "custos">, number[]> = {
+      meta: [1, 2],
+      dias: [3],
+      rpk: [4],
+    };
+    setFlowConfig({
+      variant: "edit",
+      editSteps: editSteps[opcao],
+    });
+    setMode("flow");
+  };
+
   if (mode === "flow") {
     return (
       <GuidedFlow
-        prefill={flowVariant === "prefill"}
+        prefill={flowConfig.variant === "prefill"}
+        initialStep={flowConfig.initialStep}
+        initialDraft={flowConfig.initialDraft}
+        editMode={
+          flowConfig.variant === "edit" && flowConfig.editSteps
+            ? { steps: flowConfig.editSteps }
+            : undefined
+        }
         onCancel={() => setMode("panel")}
         onDone={() => setMode("panel")}
       />
@@ -122,17 +194,14 @@ export default function PlanejamentoInteligente() {
       ) : !isConfigured ? (
         <EmptyState
           onStart={() => {
-            setFlowVariant("fresh");
+            setFlowConfig({ variant: "fresh" });
             setMode("flow");
           }}
         />
       ) : (
         <>
           <PainelResumo
-            onAdjust={() => {
-              setFlowVariant("prefill");
-              setMode("flow");
-            }}
+            onAdjust={() => setAdjustOpen(true)}
             onRedo={() => setConfirmRedo(true)}
           />
 
@@ -165,6 +234,12 @@ export default function PlanejamentoInteligente() {
         </>
       )}
 
+      <AjustarSheet
+        open={adjustOpen}
+        onOpenChange={setAdjustOpen}
+        onSelect={handleAdjustSelect}
+      />
+
       <AlertDialog open={confirmRedo} onOpenChange={setConfirmRedo}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -179,7 +254,7 @@ export default function PlanejamentoInteligente() {
             <AlertDialogAction
               onClick={() => {
                 setConfirmRedo(false);
-                setFlowVariant("fresh");
+                setFlowConfig({ variant: "fresh" });
                 setMode("flow");
               }}
             >

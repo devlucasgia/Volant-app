@@ -1,4 +1,4 @@
-import { Brain, Sparkles, Target, Gauge, Car as CarIcon } from "lucide-react";
+import { Brain, Target, Gauge, Car as CarIcon } from "lucide-react";
 
 interface Props {
   onStart: () => void;
@@ -19,8 +19,9 @@ export function EmptyState({ onStart }: Props) {
           Vamos planejar seu mês
         </h2>
         <p className="text-[13px] leading-snug text-muted-foreground">
-          Em poucos passos, o Volant calcula sua meta diária, o R$/km ideal e o
-          quanto você precisa rodar para fechar o mês no azul.
+          Em poucos passos, o Volant calcula sua meta diária, o R$/km de
+          referência e o quanto você precisa rodar para fechar o mês com mais
+          clareza.
         </p>
       </div>
 
@@ -47,7 +48,7 @@ export function EmptyState({ onStart }: Props) {
         onClick={onStart}
         className="group inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-primary/85 px-6 py-3.5 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-12px_hsl(var(--primary)/0.7)] transition-all active:scale-[0.98]"
       >
-        <Sparkles className="h-4 w-4 transition-transform group-hover:rotate-12" />
+        <Target className="h-4 w-4 transition-transform group-hover:scale-110" />
         Começar planejamento
       </button>
 
