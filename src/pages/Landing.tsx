@@ -106,6 +106,7 @@ export default function Landing() {
         <FinalCta />
       </main>
       <Footer />
+      <BackToTop />
       <HeroStyles />
     </div>
   );
