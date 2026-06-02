@@ -414,10 +414,6 @@ function Hero({ mode }: { mode: HeroMode }) {
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
             <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
-
-          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
-            <LiveDriverCounter />
-          </div>
         </div>
       </div>
 
