@@ -22,6 +22,10 @@ import {
   Wallet,
   Hourglass,
   Brain,
+  Star,
+  Quote,
+  X as XIcon,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -29,6 +33,13 @@ import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useCountUp } from "@/hooks/useCountUp";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PlatformLogo } from "@/components/PlatformLogo";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 /* -------------------------------------------------------------------------- */
 /*  Landing page (pública). Sprint 1 — hero + 3 diferenciais + footer base.   */
@@ -70,12 +81,16 @@ export default function Landing() {
       <Header />
       <main className="relative">
         <Hero mode={mode} />
+        <SocialProof />
         <PainStrip />
         <FeatureKmInteligente />
         <FeatureMetas />
         <FeaturePersonalizacao />
         <SecondaryFeatures />
+        <Testimonials />
+        <Comparison />
         <Pricing />
+        <Faq />
         <FinalCta />
       </main>
       <Footer />
@@ -100,6 +115,7 @@ function Header() {
           <a href="#personalizacao" className="transition hover:text-foreground">Personalização</a>
           <a href="#mais" className="transition hover:text-foreground">Mais recursos</a>
           <a href="#planos" className="transition hover:text-foreground">Planos</a>
+          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
         </nav>
         <Link
           to="/auth"
@@ -550,8 +566,56 @@ function HeroStyles() {
       .pricing-card { transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
       .pricing-card-annual:hover { box-shadow: 0 18px 60px -20px hsl(var(--primary) / 0.55); }
       .pricing-card-monthly:hover { box-shadow: 0 18px 60px -25px hsl(214 90% 55% / 0.4); }
+
+      /* ----- Reveal on scroll (intersection observer toggles .is-visible) ----- */
+      .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); will-change: opacity, transform; }
+      .reveal.is-visible { opacity: 1; transform: translateY(0); }
+      .reveal-delay-1.is-visible { transition-delay: 0.08s; }
+      .reveal-delay-2.is-visible { transition-delay: 0.16s; }
+      .reveal-delay-3.is-visible { transition-delay: 0.24s; }
+
+      /* ----- CTA pulse (final CTA glow loop) ----- */
+      @keyframes ctaPulse {
+        0%, 100% { box-shadow: 0 10px 40px -8px hsl(var(--accent-now) / 0.55); }
+        50%      { box-shadow: 0 14px 60px -4px hsl(var(--accent-now) / 0.85); }
+      }
+      .cta-pulse { animation: ctaPulse 4.5s ease-in-out infinite; }
+
+      /* ----- Trust pill (sem cartão badge) ----- */
+      .trust-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 10px; border-radius: 9999px;
+        font-size: 11px; font-weight: 700;
+        background: hsl(var(--primary) / 0.12);
+        border: 1px solid hsl(var(--primary) / 0.35);
+        color: hsl(var(--primary));
+        box-shadow: 0 0 0 1px hsl(var(--primary) / 0.05), 0 4px 16px -8px hsl(var(--primary) / 0.4);
+      }
+      .trust-pill-blue {
+        background: hsl(214 90% 55% / 0.12);
+        border-color: hsl(214 90% 60% / 0.4);
+        color: hsl(214 90% 75%);
+        box-shadow: 0 0 0 1px hsl(214 90% 55% / 0.05), 0 4px 16px -8px hsl(214 90% 55% / 0.4);
+      }
+
+      /* ----- Testimonials & Comparison ----- */
+      .testimonial-card { transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease; }
+      .testimonial-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px -20px hsl(var(--primary) / 0.35); }
+
+      /* ----- Feature card lift ----- */
+      .feature-card { transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease; }
+      .feature-card:hover { transform: translateY(-2px); box-shadow: 0 14px 32px -16px hsl(var(--primary) / 0.4); }
+
+      /* ----- Social proof marquee fade (mobile) ----- */
+      .social-fade-mask {
+        mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        .pricing-glow-ring, .pricing-shimmer, .pricing-amb-green, .pricing-amb-blue { animation: none; }
+        .pricing-glow-ring, .pricing-shimmer, .pricing-amb-green, .pricing-amb-blue,
+        .cta-pulse, .testimonial-card, .feature-card { animation: none !important; transition: none !important; }
+        .reveal { opacity: 1 !important; transform: none !important; }
       }
 
 
@@ -1332,9 +1396,11 @@ function Pricing() {
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="h-3.5 w-3.5 text-[hsl(214,90%,70%)]" /> 7 dias grátis. Sem cartão.
-              </p>
+              <div className="mt-3 flex justify-center">
+                <span className="trust-pill trust-pill-blue">
+                  <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
+                </span>
+              </div>
             </div>
           </article>
 
@@ -1353,14 +1419,16 @@ function Pricing() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">Anual</h3>
                 <span className="rounded-full border border-primary/50 bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider accent-text">
-                  Economize 62%
+                  4,5 meses grátis
                 </span>
               </div>
               <div className="mt-5 flex items-baseline gap-1.5">
-                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">R$ 89,90</span>
-                <span className="text-sm text-muted-foreground">por ano</span>
+                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">12x R$ 7,49</span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
+                ou R$ 89,90 à vista no cartão · equivalente a R$ 7,49/mês
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
                 O melhor custo-benefício para usar o Volant o ano todo.
               </p>
             </header>
@@ -1387,37 +1455,15 @@ function Pricing() {
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
-              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-                <Check className="h-3.5 w-3.5 accent-text" /> Depois, continue no anual se quiser.
-              </p>
+              <div className="mt-3 flex justify-center">
+                <span className="trust-pill">
+                  <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
+                </span>
+              </div>
             </div>
           </article>
         </div>
 
-        {/* -------- CTA principal da seção -------- */}
-        <div className="relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card/80 to-card p-7 text-center md:p-9">
-          <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.22),transparent_65%)]" />
-          <h3 className="text-balance text-xl font-bold tracking-tight md:text-2xl">
-            Sem cartão para testar. <span className="accent-text">Sem cobrança automática.</span>
-          </h3>
-          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Você entra, testa o Volant na prática e decide depois.
-          </p>
-          <div className="mt-5 flex justify-center">
-            <Link
-              to="/auth"
-              className="accent-cta group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
-            >
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-              />
-              <span className="pricing-shimmer pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              Testar grátis por 7 dias
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -1439,10 +1485,14 @@ function FinalCta() {
         <div className="mt-6 flex justify-center">
           <Link
             to="/auth"
-            className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+            className="accent-cta cta-pulse group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-8 text-sm font-semibold text-primary-foreground transition hover:brightness-110 hover:scale-[1.02]"
           >
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+            />
             Criar minha conta grátis
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
       </div>
@@ -1465,8 +1515,9 @@ function Footer() {
           <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
           <a href="#km" className="transition hover:text-foreground">Recursos</a>
           <a href="#planos" className="transition hover:text-foreground">Planos</a>
-          <a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">
-            Dúvidas? contato@usevolant.com.br
+          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
+          <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
+            Dúvidas? suporte@usevolant.com.br
           </a>
           <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
         </div>
@@ -2063,5 +2114,310 @@ function PersonalizacaoMockup() {
       </div>
       <MockBottomNav active="Mais" />
     </>
+  );
+}
+
+/* ======================= new landing sections ============================ */
+
+/** Reveal-on-scroll: adds .is-visible when element enters viewport. */
+function useReveal<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.classList.add("is-visible");
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            el.classList.add("is-visible");
+            io.unobserve(el);
+          }
+        });
+      },
+      { rootMargin: "-10% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return ref;
+}
+
+/* ---------------------------- social proof -------------------------------- */
+
+function SocialProof() {
+  const ref = useReveal<HTMLDivElement>();
+  const platforms: Array<{ key: string; label: string; hex: string }> = [
+    { key: "uber", label: "Uber", hex: "#000000" },
+    { key: "99", label: "99", hex: "#FFCC00" },
+    { key: "indriver", label: "inDrive", hex: "#A4E333" },
+    { key: "particular", label: "Particular", hex: "#3B82F6" },
+  ];
+  return (
+    <section className="px-4 pt-2 pb-10 md:pt-4 md:pb-14">
+      <div ref={ref} className="reveal mx-auto max-w-5xl">
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
+          Funciona com as plataformas que você já usa
+        </p>
+        <div className="social-fade-mask mt-4 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+          {platforms.map((p) => (
+            <div
+              key={p.key}
+              className="flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 backdrop-blur transition hover:border-primary/40"
+            >
+              <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} size="sm" />
+              <span className="text-xs font-semibold text-foreground">{p.label}</span>
+            </div>
+          ))}
+          <div className="flex items-center gap-2 rounded-full border border-dashed border-border/60 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur">
+            <Plus className="h-3.5 w-3.5" />
+            adicione outras plataformas
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------ testimonials ------------------------------ */
+
+function Testimonials() {
+  const ref = useReveal<HTMLDivElement>();
+  const items = [
+    {
+      quote:
+        "Antes eu achava que tava ganhando bem. Depois que comecei a anotar gasto certinho, vi que o líquido era bem menor. Hoje sei exatamente quanto vale ligar o app.",
+      name: "Rafael",
+      meta: "Uber + 99 · São Paulo, SP",
+      initials: "R",
+      color: "#10b981",
+    },
+    {
+      quote:
+        "O que mais me ajudou foi o R$/km. Eu rejeitava corrida no olho, agora rejeito com número. Mudou meu mês.",
+      name: "Daniel",
+      meta: "Uber · Belo Horizonte, MG",
+      initials: "D",
+      color: "#3b82f6",
+    },
+    {
+      quote:
+        "Uso pra Uber, 99 e particular. Finalmente um app que entende que a gente roda em mais de uma plataforma.",
+      name: "Carlos",
+      meta: "Multi-app · Curitiba, PR",
+      initials: "C",
+      color: "#f59e0b",
+    },
+  ];
+  return (
+    <section className="px-4 py-16 md:py-24">
+      <div ref={ref} className="reveal mx-auto max-w-6xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <Eyebrow icon={<Quote className="h-3 w-3" />}>Depoimentos</Eyebrow>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Motoristas que já estão dirigindo com <span className="accent-text">clareza</span>.
+          </h2>
+        </div>
+
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((t, i) => (
+            <article
+              key={t.name}
+              className={cn(
+                "testimonial-card reveal",
+                i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : "",
+                "relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur",
+              )}
+              
+            >
+              <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20" aria-hidden />
+              <div className="flex items-center gap-1 text-primary">
+                {[0, 1, 2, 3, 4].map((s) => (
+                  <Star key={s} className="h-3.5 w-3.5 fill-current" />
+                ))}
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-foreground/90">
+                “{t.quote}”
+              </p>
+              <div className="mt-5 flex items-center gap-3 border-t border-border/40 pt-4">
+                <div
+                  className="grid h-10 w-10 place-items-center rounded-full text-sm font-bold text-white"
+                  style={{ backgroundColor: t.color }}
+                >
+                  {t.initials}
+                </div>
+                <div className="text-left">
+                  <div className="text-sm font-semibold text-foreground">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{t.meta}</div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------- comparison ------------------------------ */
+
+function Comparison() {
+  const ref = useReveal<HTMLDivElement>();
+  const rows = [
+    {
+      without: "Recebe um valor no fim do dia e acha que ganhou",
+      with: "Vê o líquido real, descontando todos os custos",
+    },
+    {
+      without: "Combustível, manutenção e IPVA somem na conta",
+      with: "Cada gasto categorizado e refletido no R$/km",
+    },
+    {
+      without: "Aceita ou rejeita corrida no achismo",
+      with: "Sabe seu R$/km mínimo e decide com número",
+    },
+    {
+      without: "Fim do mês sem saber se valeu a pena",
+      with: "Relatório claro de bruto, gastos e líquido",
+    },
+  ];
+  return (
+    <section className="px-4 py-16 md:py-24">
+      <div ref={ref} className="reveal mx-auto max-w-5xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <Eyebrow icon={<TrendingUp className="h-3 w-3" />}>Antes e depois</Eyebrow>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
+            A diferença de dirigir <span className="accent-text">com o Volant</span>.
+          </h2>
+        </div>
+
+        <div className="mt-10 overflow-hidden rounded-3xl border border-border/60 bg-card/60 backdrop-blur">
+          <div className="grid grid-cols-2">
+            <div className="border-r border-border/60 bg-destructive/5 px-5 py-4 text-center">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-destructive/30 bg-destructive/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-destructive">
+                <XIcon className="h-3 w-3" /> Sem Volant
+              </div>
+            </div>
+            <div className="bg-primary/5 px-5 py-4 text-center">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider accent-text">
+                <Check className="h-3 w-3" /> Com Volant
+              </div>
+            </div>
+          </div>
+          {rows.map((r, i) => (
+            <div
+              key={i}
+              className={cn(
+                "grid grid-cols-2 border-t border-border/40",
+              )}
+            >
+              <div className="flex items-start gap-2.5 border-r border-border/40 px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+                <XIcon className="mt-0.5 h-4 w-4 shrink-0 text-destructive/70" />
+                <span>{r.without}</span>
+              </div>
+              <div className="flex items-start gap-2.5 px-5 py-4 text-sm leading-relaxed text-foreground">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 accent-text" />
+                <span>{r.with}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ----------------------------------- FAQ ---------------------------------- */
+
+const FAQ_ITEMS = [
+  {
+    q: "Preciso colocar cartão para testar?",
+    a: "Não. Você pode testar o Volant grátis por 7 dias sem cadastrar cartão e sem cobrança automática.",
+  },
+  {
+    q: "O teste grátis cobra automaticamente?",
+    a: "Não. Depois dos 7 dias, você decide se quer continuar usando os recursos Premium.",
+  },
+  {
+    q: "Para quem o Volant foi feito?",
+    a: "O Volant foi criado para motoristas de aplicativo que querem entender melhor ganhos, gastos, lucro real, metas e desempenho da rotina.",
+  },
+  {
+    q: "O Volant funciona para Uber, 99 e outros apps?",
+    a: "Sim. O Volant pode ser usado por motoristas que trabalham com Uber, 99, inDrive, corridas particulares e outras fontes de ganho.",
+  },
+  {
+    q: "O Volant calcula lucro líquido?",
+    a: "Sim. O app ajuda você a registrar ganhos e gastos para entender melhor quanto realmente sobra, não apenas quanto entrou.",
+  },
+  {
+    q: "O que é o KM Inteligente?",
+    a: "O KM Inteligente ajuda você a entender quanto cada quilômetro precisa render com base nos seus custos, metas e rotina de trabalho.",
+  },
+  {
+    q: "Posso cancelar quando quiser?",
+    a: "Sim. Se você assinar, poderá cancelar quando quiser pelo fluxo de assinatura disponível no app.",
+  },
+];
+
+function Faq() {
+  const ref = useReveal<HTMLDivElement>();
+
+  // SEO: JSON-LD FAQPage
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ_ITEMS.map((it) => ({
+        "@type": "Question",
+        name: it.q,
+        acceptedAnswer: { "@type": "Answer", text: it.a },
+      })),
+    });
+    script.dataset.faqJsonld = "1";
+    document.head.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, []);
+
+  return (
+    <section id="faq" className="px-4 py-16 md:py-24 scroll-mt-16">
+      <div ref={ref} className="reveal mx-auto max-w-3xl">
+        <div className="mx-auto max-w-2xl text-center">
+          <Eyebrow icon={<HelpCircle className="h-3 w-3" />}>Tire suas dúvidas</Eyebrow>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
+            Dúvidas <span className="accent-text">frequentes</span>.
+          </h2>
+        </div>
+
+        <Accordion
+          type="single"
+          collapsible
+          defaultValue="item-0"
+          className="mt-10 rounded-2xl border border-border/60 bg-card/60 px-5 backdrop-blur md:px-6"
+        >
+          {FAQ_ITEMS.map((item, i) => (
+            <AccordionItem
+              key={item.q}
+              value={`item-${i}`}
+              className={cn("border-border/40", i === FAQ_ITEMS.length - 1 && "border-b-0")}
+            >
+              <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:no-underline md:text-base">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-sm leading-relaxed text-muted-foreground">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+    </section>
   );
 }
