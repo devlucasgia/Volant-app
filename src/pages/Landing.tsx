@@ -2451,7 +2451,8 @@ function Testimonials() {
     },
   ];
   return (
-    <section className="px-4 py-16 md:py-24">
+    <section className="cv-auto px-4 py-16 md:py-24">
+
       <div ref={ref} className="reveal mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Quote className="h-3 w-3" />}>Depoimentos</Eyebrow>
