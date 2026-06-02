@@ -2223,7 +2223,7 @@ function Testimonials() {
                 i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : "",
                 "relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur",
               )}
-              ref={useReveal<HTMLDivElement>()}
+              
             >
               <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20" aria-hidden />
               <div className="flex items-center gap-1 text-primary">
