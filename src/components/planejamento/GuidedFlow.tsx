@@ -1,0 +1,703 @@
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Check,
+  ChevronRight,
+  Sparkles,
+  Flag,
+  Target,
+  CalendarDays,
+  Gauge,
+  Car as CarIcon,
+  TrendingUp,
+  Route,
+  AlertTriangle,
+  Loader2,
+  Pencil,
+} from "lucide-react";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { useData } from "@/context/DataContext";
+import { NumberField } from "@/components/NumberField";
+import { Button } from "@/components/ui/button";
+import {
+  applyShortcut,
+  computeFixedMonthlyCosts,
+  computePlan,
+  DEFAULT_RPK_BASE,
+  ShortcutKey,
+} from "@/lib/planejamento";
+import type { GoalType } from "@/types";
+import { CalendarGrid } from "./CalendarGrid";
+
+interface Props {
+  onDone: () => void;
+  onCancel: () => void;
+  /** Quando true, pré-popula o draft com os valores atuais (ação "Ajustar"). */
+  prefill?: boolean;
+}
+
+interface Draft {
+  goalType: GoalType;
+  monthlyGoal: number;
+  selectedDates: string[];
+  rpkBase: number;
+}
+
+const TOTAL_STEPS = 6;
+
+const fmtBRL = (v: number) =>
+  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const fmtRpk = (v: number) =>
+  `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export function GuidedFlow({ onDone, onCancel, prefill = false }: Props) {
+  const navigate = useNavigate();
+  const { settings, cars, updateSettings } = useData();
+  const activeCar = useMemo(
+    () => cars.find((c) => c.is_active) || cars[0] || null,
+    [cars],
+  );
+  const costs = useMemo(() => computeFixedMonthlyCosts(activeCar), [activeCar]);
+
+  const [step, setStep] = useState(1);
+  const [draft, setDraft] = useState<Draft>(() => ({
+    goalType: prefill ? settings.goalType : "bruto",
+    monthlyGoal: prefill ? settings.monthlyGoal : 0,
+    selectedDates: prefill && settings.planningSelectedDates ? settings.planningSelectedDates : [],
+    rpkBase: prefill && settings.rpkBase ? settings.rpkBase : DEFAULT_RPK_BASE,
+  }));
+  const [saving, setSaving] = useState(false);
+
+  const plan = useMemo(
+    () =>
+      computePlan({
+        monthlyGoal: draft.monthlyGoal,
+        goalType: draft.goalType,
+        diasSelecionados: draft.selectedDates.length,
+        custosFixos: costs.total,
+        rpkBase: draft.rpkBase,
+      }),
+    [draft, costs.total],
+  );
+
+  const canNext = (() => {
+    if (step === 1) return true;
+    if (step === 2) return draft.monthlyGoal > 0;
+    if (step === 3) return draft.selectedDates.length > 0;
+    if (step === 4) return draft.rpkBase > 0;
+    if (step === 5) return true;
+    return true;
+  })();
+
+  const back = () => {
+    if (step === 1) onCancel();
+    else setStep((s) => s - 1);
+  };
+
+  const finish = async () => {
+    setSaving(true);
+    try {
+      const patch: Parameters<typeof updateSettings>[0] = {
+        planningStatus: "configured",
+        planningSelectedDates: draft.selectedDates,
+        rpkBase: draft.rpkBase,
+        monthlyGoal: draft.monthlyGoal,
+        goalType: draft.goalType,
+        workingDaysPerMonth: draft.selectedDates.length,
+      };
+      // Só grava km_planned_month se ainda não houver valor — não sobrescreve
+      // ajuste manual existente em KM Inteligente.
+      if (
+        (settings.kmPlannedMonth == null || settings.kmPlannedMonth === 0) &&
+        plan.kmNecessario != null &&
+        plan.kmNecessario > 0
+      ) {
+        patch.kmPlannedMonth = Math.round(plan.kmNecessario);
+      }
+      await updateSettings(patch);
+      toast.success("Planejamento concluído");
+      onDone();
+    } catch {
+      toast.error("Não foi possível salvar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col">
+      {/* Header sticky com voltar + step indicator */}
+      <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
+        <div className="flex items-center gap-3 px-3 py-3">
+          <button
+            type="button"
+            onClick={back}
+            aria-label="Voltar"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted/50 active:scale-[0.96]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+                <span
+                  key={i}
+                  className={cn(
+                    "h-1 flex-1 rounded-full transition-all duration-300",
+                    i + 1 < step
+                      ? "bg-primary"
+                      : i + 1 === step
+                        ? "bg-primary/90 shadow-[0_0_8px_-2px_hsl(var(--primary)/0.7)]"
+                        : "bg-border/60",
+                  )}
+                />
+              ))}
+            </div>
+            <p className="mt-1 text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground/80">
+              Passo {step} de {TOTAL_STEPS}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-5 pb-32 animate-fade-in" key={step}>
+        {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
+        {step === 2 && <Step2 draft={draft} setDraft={setDraft} />}
+        {step === 3 && <Step3 draft={draft} setDraft={setDraft} />}
+        {step === 4 && <Step4 draft={draft} setDraft={setDraft} plan={plan} />}
+        {step === 5 && (
+          <Step5
+            car={activeCar}
+            costsTotal={costs.total}
+            costsItems={costs.items}
+            onAddCar={() => navigate("/ajustes/veiculos/carros")}
+            onEditCosts={() => navigate("/ajustes/veiculos/custos")}
+          />
+        )}
+        {step === 6 && (
+          <Step6
+            draft={draft}
+            plan={plan}
+            costsItems={costs.items}
+            kmAlreadySet={settings.kmPlannedMonth != null && settings.kmPlannedMonth > 0}
+            existingKm={settings.kmPlannedMonth}
+          />
+        )}
+      </div>
+
+      {/* Footer sticky */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-lg">
+        <div className="mx-auto w-full max-w-md px-4 py-3">
+          {step < TOTAL_STEPS ? (
+            <Button
+              size="lg"
+              disabled={!canNext}
+              onClick={() => setStep((s) => s + 1)}
+              className="w-full"
+            >
+              Continuar <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button size="lg" disabled={saving} onClick={finish} className="w-full">
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...
+                </>
+              ) : (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Concluir planejamento
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────────────── Steps ───────────────── */
+
+function StepHeader({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="mb-5 space-y-2">
+      <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/20">
+        <Icon className="h-5 w-5" />
+      </span>
+      <h2 className="text-[20px] font-bold leading-tight tracking-tight text-foreground">
+        {title}
+      </h2>
+      <p className="text-[13px] leading-snug text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+function Step1({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+  return (
+    <div>
+      <StepHeader
+        icon={Flag}
+        title="Qual sua meta principal?"
+        subtitle="Você pode alterar a visualização da Home entre bruto e líquido sempre que quiser."
+      />
+      <div className="space-y-2.5">
+        {([
+          {
+            key: "bruto" as const,
+            title: "Ganho bruto",
+            desc: "Quanto quero faturar no total, antes dos gastos.",
+          },
+          {
+            key: "liquido" as const,
+            title: "Lucro líquido",
+            desc: "Quanto quero que sobre depois dos gastos.",
+          },
+        ]).map((opt) => {
+          const active = draft.goalType === opt.key;
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, goalType: opt.key }))}
+              className={cn(
+                "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.985]",
+                active
+                  ? "border-primary/55 bg-primary/[0.08] shadow-[0_0_0_1px_hsl(var(--primary)/0.14),0_8px_22px_-14px_hsl(var(--primary)/0.55)]"
+                  : "border-border/60 bg-card/60 hover:bg-muted/30",
+              )}
+            >
+              <span
+                className={cn(
+                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                  active ? "border-primary bg-primary" : "border-border",
+                )}
+              >
+                {active && <Check className="h-3 w-3 text-primary-foreground" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[15px] font-semibold leading-tight">{opt.title}</div>
+                <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{opt.desc}</p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+  return (
+    <div>
+      <StepHeader
+        icon={Target}
+        title={draft.goalType === "liquido" ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
+        subtitle={
+          draft.goalType === "liquido"
+            ? "O valor que você quer ter sobrando depois dos gastos."
+            : "Seu objetivo total de faturamento no mês."
+        }
+      />
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+        <NumberField
+          currency
+          value={draft.monthlyGoal || null}
+          onChange={(v) => setDraft((d) => ({ ...d, monthlyGoal: v ?? 0 }))}
+          autoFocus
+          inputMode="decimal"
+        />
+        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+          Exemplo: 6.000 para R$ 6.000,00 no mês.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+  const shortcuts: { key: ShortcutKey; label: string }[] = [
+    { key: "all", label: "Todos os dias" },
+    { key: "weekdays", label: "Seg a sex" },
+    { key: "weekdaysWithSat", label: "Seg a sáb" },
+    { key: "clear", label: "Limpar" },
+  ];
+
+  const toggle = (iso: string) => {
+    setDraft((d) => {
+      const has = d.selectedDates.includes(iso);
+      return {
+        ...d,
+        selectedDates: has ? d.selectedDates.filter((x) => x !== iso) : [...d.selectedDates, iso].sort(),
+      };
+    });
+  };
+
+  return (
+    <div>
+      <StepHeader
+        icon={CalendarDays}
+        title="Em quais dias você vai trabalhar?"
+        subtitle="Toque nos dias para selecionar. Dias passados ficam indisponíveis."
+      />
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+        <CalendarGrid
+          selected={draft.selectedDates}
+          onToggle={toggle}
+        />
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {shortcuts.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              onClick={() => setDraft((d) => ({ ...d, selectedDates: applyShortcut(s.key) }))}
+              className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-muted/50"
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-3 text-[12px]">
+          <span className="text-muted-foreground">Dias selecionados</span>
+          <span className="font-semibold tabular-nums text-foreground">
+            {draft.selectedDates.length}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Step4({
+  draft,
+  setDraft,
+  plan,
+}: {
+  draft: Draft;
+  setDraft: (u: (d: Draft) => Draft) => void;
+  plan: ReturnType<typeof computePlan>;
+}) {
+  const usingDefault = draft.rpkBase === DEFAULT_RPK_BASE;
+  return (
+    <div>
+      <StepHeader
+        icon={Gauge}
+        title="Qual seu R$/km de referência?"
+        subtitle="O R$/km ajuda o Volant a estimar quantos km você precisa rodar para atingir sua meta."
+      />
+      <div className="space-y-2.5">
+        <button
+          type="button"
+          onClick={() => setDraft((d) => ({ ...d, rpkBase: DEFAULT_RPK_BASE }))}
+          className={cn(
+            "flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all active:scale-[0.985]",
+            usingDefault
+              ? "border-primary/55 bg-primary/[0.08]"
+              : "border-border/60 bg-card/60 hover:bg-muted/30",
+          )}
+        >
+          <span
+            className={cn(
+              "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+              usingDefault ? "border-primary bg-primary" : "border-border",
+            )}
+          >
+            {usingDefault && <Check className="h-3 w-3 text-primary-foreground" />}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-semibold leading-tight">Usar referência inicial</div>
+            <p className="mt-0.5 text-[12px] leading-snug text-muted-foreground">
+              {fmtRpk(DEFAULT_RPK_BASE)} por km — média de mercado para começar.
+            </p>
+          </div>
+        </button>
+
+        <div
+          className={cn(
+            "rounded-2xl border p-4 transition-all",
+            !usingDefault
+              ? "border-primary/55 bg-primary/[0.08]"
+              : "border-border/60 bg-card/60",
+          )}
+        >
+          <div className="mb-2 flex items-center gap-2 text-[13px] font-semibold">
+            <Pencil className="h-3.5 w-3.5 text-muted-foreground" /> Informar meu próprio valor
+          </div>
+          <NumberField
+            value={draft.rpkBase || null}
+            onChange={(v) => setDraft((d) => ({ ...d, rpkBase: v ?? 0 }))}
+            inputMode="decimal"
+            placeholder="Ex: 2,20"
+          />
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-muted/15 p-3.5">
+          <p className="text-[11.5px] leading-snug text-muted-foreground">
+            <span className="font-semibold text-foreground/90">Como funciona:</span> se sua base for{" "}
+            {fmtRpk(draft.rpkBase || DEFAULT_RPK_BASE)} por km, cada km rodado precisa gerar em média{" "}
+            {fmtRpk(draft.rpkBase || DEFAULT_RPK_BASE)} de faturamento.
+          </p>
+          {plan.kmNecessario != null && draft.monthlyGoal > 0 && (
+            <p className="mt-2 text-[12.5px] leading-snug text-foreground/90">
+              <Route className="mr-1 inline h-3.5 w-3.5 text-primary" />
+              Com essa base, você precisaria rodar aproximadamente{" "}
+              <span className="font-bold tabular-nums text-primary">
+                {plan.kmNecessario.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km
+              </span>{" "}
+              no período.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Step5({
+  car,
+  costsTotal,
+  costsItems,
+  onAddCar,
+  onEditCosts,
+}: {
+  car: ReturnType<typeof useData>["cars"][number] | null;
+  costsTotal: number;
+  costsItems: { label: string; value: number }[];
+  onAddCar: () => void;
+  onEditCosts: () => void;
+}) {
+  if (!car) {
+    return (
+      <div>
+        <StepHeader
+          icon={CarIcon}
+          title="Você tem um veículo cadastrado?"
+          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos."
+        />
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div className="space-y-2">
+              <p className="text-[13px] leading-snug text-foreground/90">
+                Sem veículo cadastrado, calculamos seu planejamento sem custos fixos. Os números ficam
+                menos precisos.
+              </p>
+              <button
+                type="button"
+                onClick={onAddCar}
+                className="text-[12.5px] font-semibold text-primary hover:underline"
+              >
+                Cadastrar veículo na Central de Veículos →
+              </button>
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-[11.5px] text-muted-foreground">
+          Você pode continuar sem veículo. Toque em "Continuar" abaixo.
+        </p>
+      </div>
+    );
+  }
+
+  if (costsItems.length === 0) {
+    return (
+      <div>
+        <StepHeader
+          icon={CarIcon}
+          title="Seu veículo está sem custos cadastrados"
+          subtitle="Sem custos, calculamos seu planejamento como se você não tivesse gastos fixos."
+        />
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <div className="space-y-2">
+              <p className="text-[13px] leading-snug text-foreground/90">
+                Cadastrar financiamento, aluguel, IPVA, seguro e outros custos torna o cálculo bem mais
+                preciso.
+              </p>
+              <button
+                type="button"
+                onClick={onEditCosts}
+                className="text-[12.5px] font-semibold text-primary hover:underline"
+              >
+                Cadastrar custos do veículo →
+              </button>
+            </div>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-[11.5px] text-muted-foreground">
+          Você pode continuar sem custos cadastrados.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <StepHeader
+        icon={CarIcon}
+        title="Custos considerados"
+        subtitle={`${car.brand ?? "Veículo"} ${car.model ?? ""}`.trim()}
+      />
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+        <ul className="space-y-2">
+          {costsItems.map((it, i) => (
+            <li key={i} className="flex items-center justify-between text-[13px]">
+              <span className="text-muted-foreground">{it.label}</span>
+              <span className="font-semibold tabular-nums text-foreground">{fmtBRL(it.value)}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-3">
+          <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
+            Total mensal
+          </span>
+          <span className="text-[16px] font-bold tabular-nums text-foreground">
+            {fmtBRL(costsTotal)}
+          </span>
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={onEditCosts}
+        className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary hover:underline"
+      >
+        <Pencil className="h-3.5 w-3.5" /> Editar na Central de Veículos
+      </button>
+    </div>
+  );
+}
+
+function Step6({
+  draft,
+  plan,
+  costsItems,
+  kmAlreadySet,
+  existingKm,
+}: {
+  draft: Draft;
+  plan: ReturnType<typeof computePlan>;
+  costsItems: { label: string; value: number }[];
+  kmAlreadySet: boolean;
+  existingKm: number | null;
+}) {
+  return (
+    <div>
+      <StepHeader
+        icon={Sparkles}
+        title="Tudo pronto. Aqui está seu plano."
+        subtitle="Confira o resumo antes de concluir."
+      />
+
+      {/* Hero */}
+      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.1] via-primary/[0.04] to-transparent p-4">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/90">
+          Sua meta de {draft.goalType === "liquido" ? "lucro líquido" : "ganho bruto"}
+        </div>
+        <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+          {fmtBRL(draft.monthlyGoal)}
+        </div>
+        {plan.metaDiaria != null && (
+          <div className="mt-1 text-[12px] text-muted-foreground">
+            Meta diária:{" "}
+            <span className="font-semibold tabular-nums text-foreground/90">
+              {fmtBRL(plan.metaDiaria)}
+            </span>{" "}
+            em {draft.selectedDates.length} dias
+          </div>
+        )}
+      </div>
+
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+        <Stat icon={Route} label="KM necessário" value={plan.kmNecessario != null ? `${plan.kmNecessario.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"} />
+        <Stat icon={Gauge} label="R$/km base" value={fmtRpk(draft.rpkBase)} />
+        <Stat
+          icon={CarIcon}
+          label="Custos do veículo"
+          value={plan.custosFixos > 0 ? `${fmtBRL(plan.custosFixos)}/mês` : "—"}
+        />
+        <Stat
+          icon={TrendingUp}
+          label={draft.goalType === "liquido" ? "Faturamento bruto" : "Lucro estimado"}
+          value={
+            draft.goalType === "liquido"
+              ? fmtBRL(plan.faturamentoNecessario ?? 0)
+              : plan.lucroEstimado != null
+                ? fmtBRL(plan.lucroEstimado)
+                : "—"
+          }
+        />
+      </div>
+
+      {kmAlreadySet && plan.kmNecessario != null && (
+        <div className="mt-3 rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-3.5">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+            <p className="text-[12px] leading-snug text-foreground/90">
+              KM necessário estimado:{" "}
+              <span className="font-bold">
+                {plan.kmNecessario.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km
+              </span>
+              . Você já tem{" "}
+              <span className="font-bold">
+                {(existingKm ?? 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km
+              </span>{" "}
+              configurado em KM Inteligente — vamos preservar seu ajuste.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {costsItems.length > 0 && (
+        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4">
+          <div className="mb-2 text-[12px] font-semibold text-foreground/90">
+            Custos considerados
+          </div>
+          <ul className="space-y-1.5">
+            {costsItems.map((it, i) => (
+              <li
+                key={i}
+                className="flex items-center justify-between text-[12px] text-muted-foreground"
+              >
+                <span>{it.label}</span>
+                <span className="font-medium tabular-nums text-foreground/85">
+                  {fmtBRL(it.value)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Stat({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-3.5">
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <Icon className="h-3 w-3" /> {label}
+      </div>
+      <div className="mt-1.5 text-[15px] font-bold tabular-nums leading-tight text-foreground">
+        {value}
+      </div>
+    </div>
+  );
+}
