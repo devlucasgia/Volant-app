@@ -186,31 +186,51 @@ function Header() {
 }
 
 /* Barra fina de progresso de scroll no topo do header */
+/* ---------------- shared scroll subscription (perf) ---------------------- */
+/* Um único listener de scroll + rAF alimenta progress bar, back-to-top
+   e qualquer consumidor futuro (sticky CTA). Reduz listeners duplicados. */
+
+type ScrollListener = (y: number, pct: number) => void;
+const scrollListeners = new Set<ScrollListener>();
+let scrollRaf = 0;
+let scrollInit = false;
+
+function ensureScrollSubscription() {
+  if (scrollInit || typeof window === "undefined") return;
+  scrollInit = true;
+  const tick = () => {
+    scrollRaf = 0;
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const y = h.scrollTop;
+    const pct = max > 0 ? (y / max) * 100 : 0;
+    scrollListeners.forEach((fn) => fn(y, pct));
+  };
+  const onScroll = () => {
+    if (!scrollRaf) scrollRaf = window.requestAnimationFrame(tick);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  tick();
+}
+
+function useScroll(cb: ScrollListener) {
+  useEffect(() => {
+    ensureScrollSubscription();
+    scrollListeners.add(cb);
+    return () => {
+      scrollListeners.delete(cb);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
 function ScrollProgressBar() {
   const [pct, setPct] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      const p = max > 0 ? (h.scrollTop / max) * 100 : 0;
-      setPct(p);
-      raf = 0;
-    };
-    const onScroll = () => {
-      if (!raf) raf = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
-    };
-  }, []);
+  useScroll((_, p) => setPct(p));
   return (
     <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-transparent">
       <div
-        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-[width] duration-150 ease-out"
+        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 will-change-[width]"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -220,22 +240,7 @@ function ScrollProgressBar() {
 /* Botão flutuante "voltar ao topo" — aparece após scroll */
 function BackToTop() {
   const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      setVisible(window.scrollY > 600);
-      raf = 0;
-    };
-    const onScroll = () => {
-      if (!raf) raf = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
-    };
-  }, []);
+  useScroll((y) => setVisible(y > 600));
   return (
     <button
       type="button"
@@ -535,17 +540,9 @@ function Hero({ mode }: { mode: HeroMode }) {
           </p>
 
           {/* Selo de confiança */}
-          <ul className="hero-anim hero-anim-5 mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground md:justify-start">
-            <li className="inline-flex items-center gap-1.5">
-              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
-            </li>
-            <li className="inline-flex items-center gap-1.5">
-              <Check className="h-3 w-3 accent-text" /> Cancele quando quiser
-            </li>
-            <li className="inline-flex items-center gap-1.5">
-              <ShieldCheck className="h-3 w-3 accent-text" /> Sem cartão
-            </li>
-          </ul>
+          <p className="hero-anim hero-anim-5 mt-2 inline-flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground md:justify-start w-full md:w-auto">
+            <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+          </p>
         </div>
       </div>
 
@@ -1159,6 +1156,9 @@ function FeatureKmInteligente() {
       <p className="mt-2 text-[11px] text-muted-foreground">
         ✓ Sem cartão. Sem cobrança automática.
       </p>
+      <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+      </p>
     </div>
   );
 
@@ -1440,7 +1440,7 @@ function SecondaryFeatures() {
   ];
 
   return (
-    <section id="mais" className="px-4 py-16 md:py-24 scroll-mt-16">
+    <section id="mais" className="cv-auto px-4 py-16 md:py-24 scroll-mt-16">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
@@ -1488,7 +1488,7 @@ function Pricing() {
   ];
 
   return (
-    <section id="planos" className="relative overflow-hidden px-4 pt-8 pb-16 md:pt-12 md:pb-20 scroll-mt-16">
+    <section id="planos" className="cv-auto relative overflow-hidden px-4 pt-8 pb-16 md:pt-12 md:pb-20 scroll-mt-16">
       {/* Glow ambiental sutil — alterna devagar entre verde e azul */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="pricing-amb-green absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
@@ -1655,27 +1655,76 @@ function FinalCta() {
 /* --------------------------------- footer --------------------------------- */
 
 function Footer() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-border/40 bg-card/40 px-4 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:text-left">
-        <div className="flex items-center gap-2">
-          <img src={volantSymbol} alt="Volant" className="h-6 w-6 rounded-full" />
-          <span className="font-semibold text-foreground">Volant</span>
-          <span className="hidden md:inline">— De motorista, para motoristas.</span>
+    <footer className="border-t border-border/40 bg-card/40 px-4 pt-12 pb-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 gap-10 text-sm text-muted-foreground sm:grid-cols-3 sm:gap-8 text-center sm:text-left">
+          {/* Coluna 1 — marca */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <div className="flex items-center gap-2">
+              <img
+                src={volantSymbol}
+                alt="Volant"
+                width={28}
+                height={28}
+                loading="lazy"
+                decoding="async"
+                className="h-7 w-7 rounded-full"
+              />
+              <span className="text-base font-semibold text-foreground">Volant</span>
+            </div>
+            <p className="max-w-[220px] text-xs leading-relaxed">
+              De motorista, para motoristas. Controle financeiro descomplicado.
+            </p>
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/90">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </p>
+          </div>
+
+          {/* Coluna 2 — Produto */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Produto
+            </h4>
+            <ul className="flex flex-col items-center sm:items-start gap-2">
+              <li><a href="#km" className="transition hover:text-foreground">Recursos</a></li>
+              <li><a href="#planos" className="transition hover:text-foreground">Planos</a></li>
+              <li><a href="#faq" className="transition hover:text-foreground">Perguntas frequentes</a></li>
+              <li><Link to="/auth" className="transition hover:text-foreground">Entrar</Link></li>
+              <li><Link to="/auth" className="transition hover:text-foreground">Criar conta grátis</Link></li>
+            </ul>
+          </div>
+
+          {/* Coluna 3 — Suporte / Legal */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Suporte
+            </h4>
+            <ul className="flex flex-col items-center sm:items-start gap-2">
+              <li>
+                <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
+                  Fale com a gente
+                </a>
+              </li>
+              <li><Link to="/privacidade" className="transition hover:text-foreground">Privacidade</Link></li>
+              <li><Link to="/termos" className="transition hover:text-foreground">Termos de uso</Link></li>
+            </ul>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
-          <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
-          <a href="#km" className="transition hover:text-foreground">Recursos</a>
-          <a href="#planos" className="transition hover:text-foreground">Planos</a>
-          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
-          <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
-            Dúvidas? suporte@usevolant.com.br
-          </a>
-          <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/40 pt-6 text-[11px] text-muted-foreground/70 sm:flex-row">
+          <span>© {year} Volant. Feito no Brasil.</span>
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="inline-flex items-center gap-1.5 transition hover:text-foreground"
+          >
+            Voltar ao topo <ArrowUp className="h-3 w-3" />
+          </button>
         </div>
       </div>
     </footer>
-
   );
 }
 
@@ -2272,6 +2321,25 @@ function PersonalizacaoMockup() {
 /* ======================= new landing sections ============================ */
 
 /** Reveal-on-scroll: adds .is-visible when element enters viewport. */
+/* IntersectionObserver compartilhado para todos os blocos com reveal.
+   Evita criar 1 observer por seção. */
+let sharedRevealIO: IntersectionObserver | null = null;
+function getRevealIO() {
+  if (sharedRevealIO || typeof window === "undefined") return sharedRevealIO;
+  sharedRevealIO = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-visible");
+          sharedRevealIO?.unobserve(e.target);
+        }
+      });
+    },
+    { rootMargin: "-10% 0px" },
+  );
+  return sharedRevealIO;
+}
+
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   useEffect(() => {
@@ -2281,19 +2349,9 @@ function useReveal<T extends HTMLElement>() {
       el.classList.add("is-visible");
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            el.classList.add("is-visible");
-            io.unobserve(el);
-          }
-        });
-      },
-      { rootMargin: "-10% 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const io = getRevealIO();
+    io?.observe(el);
+    return () => io?.unobserve(el);
   }, []);
   return ref;
 }
@@ -2393,7 +2451,8 @@ function Testimonials() {
     },
   ];
   return (
-    <section className="px-4 py-16 md:py-24">
+    <section className="cv-auto px-4 py-16 md:py-24">
+
       <div ref={ref} className="reveal mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Quote className="h-3 w-3" />}>Depoimentos</Eyebrow>
@@ -2432,7 +2491,7 @@ function Comparison() {
     },
   ];
   return (
-    <section className="px-4 py-16 md:py-24">
+    <section className="cv-auto px-4 py-16 md:py-24">
       <div ref={ref} className="reveal mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<TrendingUp className="h-3 w-3" />}>Antes e depois</Eyebrow>
@@ -2534,7 +2593,7 @@ function Faq() {
   }, []);
 
   return (
-    <section id="faq" className="px-4 py-16 md:py-24 scroll-mt-16">
+    <section id="faq" className="cv-auto px-4 py-16 md:py-24 scroll-mt-16">
       <div ref={ref} className="reveal mx-auto max-w-3xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<HelpCircle className="h-3 w-3" />}>Tire suas dúvidas</Eyebrow>

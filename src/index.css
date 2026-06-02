@@ -168,6 +168,12 @@
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }
+  /* Perf: pula pintura/layout de seções fora da viewport.
+     Usado em blocos pesados da Landing abaixo da dobra. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 800px;
+  }
 }
 
 @layer base {
