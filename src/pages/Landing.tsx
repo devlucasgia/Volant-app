@@ -2203,9 +2203,17 @@ function SocialProof() {
 
 /* ------------------------------ testimonials ------------------------------ */
 
+type Testimonial = {
+  quote: string;
+  name: string;
+  meta: string;
+  initials: string;
+  color: string;
+};
+
 function Testimonials() {
   const ref = useReveal<HTMLDivElement>();
-  const items = [
+  const items: Testimonial[] = [
     {
       quote:
         "Antes eu achava que tava ganhando bem. Depois que comecei a anotar gasto certinho, vi que o líquido era bem menor. Hoje sei exatamente quanto vale ligar o app.",
@@ -2230,6 +2238,22 @@ function Testimonials() {
       initials: "C",
       color: "#f59e0b",
     },
+    {
+      quote:
+        "Comecei a separar combustível, manutenção e IPVA. Em duas semanas já entendi quais dias compensam rodar e quais não.",
+      name: "Marcos",
+      meta: "Uber · São Paulo, SP",
+      initials: "M",
+      color: "#a855f7",
+    },
+    {
+      quote:
+        "As metas mudaram minha rotina. Bato meta de líquido sem ficar 14h no carro. Hoje eu sei a hora de parar.",
+      name: "Lucas",
+      meta: "99 + inDrive · São Paulo, SP",
+      initials: "L",
+      color: "#ef4444",
+    },
   ];
   return (
     <section className="px-4 py-16 md:py-24">
@@ -2241,13 +2265,10 @@ function Testimonials() {
           </h2>
         </div>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((t, i) => (
-            <TestimonialCard key={t.name} t={t} index={i} />
-          ))}
-        </div>
+        <TestimonialsCarousel items={items} />
       </div>
     </section>
+
   );
 }
 
