@@ -62,6 +62,12 @@ export default function Landing() {
     const prevScroll = root.style.scrollBehavior;
     root.classList.add("dark");
     root.style.scrollBehavior = "smooth";
+    // Limpeza one-shot: remove chave do contador de motoristas removido.
+    try {
+      window.localStorage.removeItem("volant_driver_count");
+    } catch {
+      /* ignore */
+    }
     return () => {
       if (!had) root.classList.remove("dark");
       root.style.scrollBehavior = prevScroll;
@@ -414,10 +420,6 @@ function Hero({ mode }: { mode: HeroMode }) {
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
             <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
-
-          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
-            <LiveDriverCounter />
-          </div>
         </div>
       </div>
 
@@ -1019,13 +1021,28 @@ function FeatureKmInteligente() {
         ? "Meta restante menor. R$/km ajustado."
         : "Atualizado em tempo real conforme você registra.";
 
+  const ctaBlock = (
+    <div className="mt-7">
+      <Link
+        to="/auth"
+        className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
+      >
+        Testar grátis por 7 dias
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        ✓ Sem cartão. Sem cobrança automática.
+      </p>
+    </div>
+  );
+
   return (
     <section id="km" className="px-4 py-16 md:py-24">
       <div
         ref={ref}
-        className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-14"
+        className="mx-auto flex max-w-6xl flex-col items-center gap-10 md:grid md:grid-cols-2 md:gap-14"
       >
-        {/* Texto + bullets + CTA */}
+        {/* Texto + bullets (CTA aparece aqui só no desktop) */}
         <div className="order-1 md:order-1">
           <Eyebrow icon={<Gauge className="h-3 w-3" />}>Diferencial #1</Eyebrow>
           <h2 className="mt-4 text-balance text-3xl font-bold leading-tight tracking-tight md:text-4xl">
@@ -1049,18 +1066,8 @@ function FeatureKmInteligente() {
             </KmBullet>
           </ul>
 
-          <div className="mt-7">
-            <Link
-              to="/auth"
-              className="accent-cta inline-flex h-12 items-center gap-2 rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
-            >
-              Testar grátis por 7 dias
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <p className="mt-2 text-[11px] text-muted-foreground">
-              ✓ Sem cartão. Sem cobrança automática.
-            </p>
-          </div>
+          {/* CTA no desktop */}
+          <div className="hidden md:block">{ctaBlock}</div>
         </div>
 
         {/* Mockup + floaters */}
@@ -1105,10 +1112,14 @@ function FeatureKmInteligente() {
             {phase >= 5 ? "O Volant ajusta a rota conforme sua rotina muda." : legend}
           </p>
         </div>
+
+        {/* CTA no mobile — sempre por último */}
+        <div className="order-3 w-full text-center md:hidden">{ctaBlock}</div>
       </div>
     </section>
   );
 }
+
 
 function KmBullet({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -2431,72 +2442,8 @@ function Faq() {
   );
 }
 
-/* --------------------------- live driver counter ------------------------- */
 
-function LiveDriverCounter() {
-  // Base que cresce ~lentamente entre dias para parecer crescimento orgânico
-  // sem nunca regredir. Persistido em localStorage para continuidade entre visitas.
-  const computeBase = () => {
-    const SEED_DATE = new Date("2026-01-01T00:00:00Z").getTime();
-    const SEED_VALUE = 1180;
-    const days = Math.max(0, Math.floor((Date.now() - SEED_DATE) / 86400000));
-    // ~6 motoristas/dia em média
-    return SEED_VALUE + days * 6;
-  };
 
-  const [count, setCount] = useState<number>(() => {
-    if (typeof window === "undefined") return computeBase();
-    try {
-      const stored = Number(window.localStorage.getItem("volant_driver_count") || "0");
-      const base = computeBase();
-      return stored > base ? stored : base;
-    } catch {
-      return computeBase();
-    }
-  });
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-    let timeoutId: number;
-    const tick = () => {
-      setCount((c) => {
-        const next = c + 1;
-        try {
-          window.localStorage.setItem("volant_driver_count", String(next));
-        } catch {
-          /* ignore */
-        }
-        return next;
-      });
-      // 8s a 15s entre incrementos
-      const nextDelay = 8000 + Math.random() * 7000;
-      timeoutId = window.setTimeout(tick, nextDelay);
-    };
-    const initialDelay = 5000 + Math.random() * 6000;
-    timeoutId = window.setTimeout(tick, initialDelay);
-    return () => window.clearTimeout(timeoutId);
-  }, []);
-
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-      </span>
-      <span>
-        <AnimatedNumber
-          value={count}
-          format={(n) => Math.round(n).toLocaleString("pt-BR")}
-          durationMs={800}
-          className="font-bold text-foreground"
-        />{" "}
-        motoristas já dirigindo com clareza
-      </span>
-    </div>
-  );
-}
 
 /* ----------------------------- testimonials carousel -------------------- */
 
