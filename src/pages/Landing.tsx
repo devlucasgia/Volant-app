@@ -1151,6 +1151,9 @@ function FeatureKmInteligente() {
       <p className="mt-2 text-[11px] text-muted-foreground">
         ✓ Sem cartão. Sem cobrança automática.
       </p>
+      <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+        <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+      </p>
     </div>
   );
 
