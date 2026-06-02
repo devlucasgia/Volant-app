@@ -1493,17 +1493,38 @@ function SecondaryFeatures() {
 
 /* ----------------------------- community banner --------------------------- */
 
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      fill="currentColor"
+      aria-hidden="true"
+      className={className}
+    >
+      <path d="M16.001 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.6 4.46 1.73 6.4L3.2 28.8l6.56-1.71A12.78 12.78 0 0 0 16 28.8C23.07 28.8 28.8 23.07 28.8 16S23.07 3.2 16.001 3.2Zm0 23.04a10.23 10.23 0 0 1-5.21-1.43l-.37-.22-3.89 1.02 1.04-3.79-.24-.39A10.24 10.24 0 1 1 16 26.24Zm5.62-7.66c-.31-.16-1.82-.9-2.1-1s-.49-.16-.69.16-.79 1-.97 1.2-.36.24-.67.08a8.4 8.4 0 0 1-2.47-1.52 9.27 9.27 0 0 1-1.71-2.12c-.18-.31 0-.48.14-.64.14-.14.31-.36.47-.55a2 2 0 0 0 .31-.52.58.58 0 0 0 0-.55c-.08-.16-.69-1.66-.95-2.27s-.5-.52-.69-.53h-.59a1.14 1.14 0 0 0-.82.39 3.46 3.46 0 0 0-1.08 2.58c0 1.52 1.11 3 1.27 3.21s2.19 3.34 5.31 4.69a17.9 17.9 0 0 0 1.77.65 4.27 4.27 0 0 0 1.95.12 3.18 3.18 0 0 0 2.08-1.47 2.58 2.58 0 0 0 .18-1.47c-.08-.13-.28-.21-.59-.37Z" />
+    </svg>
+  );
+}
+
 function CommunityBanner() {
   return (
     <section className="px-4 pb-12 md:pb-16">
       <div className="mx-auto max-w-5xl">
-        <div className="relative overflow-hidden rounded-3xl border border-[#25D366]/30 bg-gradient-to-br from-[#25D366]/10 via-card to-card p-6 md:p-8">
+        <div
+          className="relative overflow-hidden rounded-3xl border bg-gradient-to-br via-card to-card p-6 md:p-8"
+          style={{
+            borderColor: "hsl(var(--accent-now) / 0.30)",
+            backgroundImage:
+              "linear-gradient(135deg, hsl(var(--accent-now) / 0.10), hsl(var(--card)) 60%, hsl(var(--card)))",
+            transition: "border-color 700ms cubic-bezier(0.22,1,0.36,1), background-image 700ms cubic-bezier(0.22,1,0.36,1)",
+          }}
+        >
           <div className="flex flex-col items-center gap-5 text-center md:flex-row md:items-center md:gap-6 md:text-left">
             <div
               aria-hidden
-              className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/15 text-[#25D366]"
+              className="accent-badge inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border"
             >
-              <MessageCircle className="h-7 w-7" />
+              <WhatsAppIcon className="h-7 w-7" />
             </div>
             <div className="flex-1">
               <h3 className="text-balance text-lg font-bold tracking-tight md:text-xl">
@@ -1517,9 +1538,9 @@ function CommunityBanner() {
               href="https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[#25D366] px-5 text-sm font-semibold text-white transition hover:brightness-110 hover:scale-[1.02]"
+              className="accent-cta inline-flex h-11 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 hover:scale-[1.02]"
             >
-              <MessageCircle className="h-4 w-4" />
+              <WhatsAppIcon className="h-4 w-4" />
               Entrar no grupo
             </a>
           </div>
