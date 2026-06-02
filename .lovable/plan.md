@@ -1,74 +1,57 @@
+# Leva 5 — Ajustes finos WhatsApp/CTA + Revisão pré-lançamento
 
-## Leva 4 — Footer mobile, CTA da seção de recursos e botão WhatsApp
+## 1. Footer — Grupo do WhatsApp em 1º lugar e sem ícone (todas as visualizações)
 
-### 1. Footer — tagline encurtada (todas as visualizações)
+Em `src/pages/Landing.tsx`, coluna "Suporte" (linhas ~1760-1785):
 
-Trocar o texto da coluna 1 (Brand) de:
-> "De motorista, para motoristas. Controle financeiro descomplicado."
+- Mover "Grupo no WhatsApp" para a **primeira posição** da lista.
+- Remover o ícone `MessageCircle` e a cor `#25D366` — deixar idêntico aos outros links (`block py-0.5 transition hover:text-foreground`), preservando `target="_blank"` + `rel="noopener noreferrer"`.
+- Ordem final: **Grupo no WhatsApp → Fale com a gente → Privacidade → Termos de uso**.
 
-para apenas:
-> "De motorista, para motoristas."
+## 2. CommunityBanner — logo oficial do WhatsApp + alternância de cor
 
-Nada mais muda no desktop — mesma estrutura de 3 colunas, mesmo selo "🔒 Dados criptografados", mesmo bottom bar.
+**Logo oficial:** está dentro das Brand Guidelines do WhatsApp usar o ícone/logo oficial em um botão que abre uma conversa/grupo, desde que não seja modificado e não sugira parceria oficial. Sem problema.
 
-### 2. Footer — tratamento dedicado para mobile
+- Criar um pequeno componente inline `WhatsAppIcon` no próprio `Landing.tsx` (SVG oficial do "balão com fone"), aceitando `className` para tamanho e cor.
+- Usar no badge superior do card (~28px) e no botão (~16-18px).
 
-Hoje no mobile o footer só empilha as 3 colunas centralizadas, com fontes grandes → fica desproporcional (print confirma).
+**Alternância verde/azul (correção):** hoje o banner usa `#25D366` fixo e não acompanha o tema Líquido (verde) ↔ Bruto (azul). Em `CommunityBanner` (linhas 1493-1527), trocar todas as referências `#25D366` pelos tokens:
 
-Redesenho mobile (`<md`), mantendo o conteúdo idêntico:
+- Container: borda/fundo do gradiente passam a usar `hsl(var(--accent-now)/...)` (mesma família do `accent-badge`).
+- Badge do ícone: `accent-badge` no lugar de `bg-[#25D366]/15 text-[#25D366]`.
+- Botão "Entrar no grupo": `accent-cta text-primary-foreground` (mesma classe do CTA do Hero — herda a transição de 700ms).
+- O `WhatsAppIcon` herda a cor do container, então acompanha automaticamente.
 
-- **Bloco Brand** centralizado e compacto:
-  - logo 28px + "Volant" `text-sm font-semibold` na mesma linha
-  - tagline `text-xs text-muted-foreground` em 1 linha
-  - selo "Dados criptografados" `text-[11px]` com ícone 12px
-- **Produto + Suporte** lado a lado em **2 colunas** (`grid-cols-2`) ao invés de empilhados:
-  - títulos `text-[10px] uppercase tracking-wider`
-  - links `text-[13px]` com `py-1`
-  - alinhamento à esquerda dentro de cada coluna, `gap-x-4`
-- **Bottom bar**: copyright + "Voltar ao topo" `text-[11px]`, divisor mais sutil
+## 3. CTA "Recursos que trabalham por você" — subtítulo faltante
 
-Desktop (`md:`) permanece como está — só a tagline muda.
+Em `src/pages/Landing.tsx` (linhas 1481-1483), adicionar o selo **"7 dias grátis. Sem cartão."** entre o botão e o selo "Dados criptografados", igual ao Hero (linhas 540-546). Ordem final:
 
-### 3. CTA na seção "Recursos que trabalham por você" (`SecondaryFeatures`)
+1. Botão "Ativar esses recursos agora"
+2. `✓ 7 dias grátis. Sem cartão.` (`Check` + `accent-text`)
+3. `🔒 Dados criptografados` (`Lock` + `accent-text`)
 
-Adicionar bloco abaixo dos cards, centralizado:
-- **Subtítulo** acima do CTA:
-  > "Tudo isso trabalhando em segundo plano enquanto você dirige."
-- **Botão CTA primário** (mesmo estilo verde do Hero):
-  > "Ativar esses recursos agora →" — link `/auth`
-- **Selo "🔒 Dados criptografados"** abaixo do botão (mesmo componente do Hero/KM).
+## 4. Revisão geral pré-lançamento (`/` e `/app`)
 
-Margens `mt-12 md:mt-16`, container `max-w-xl`, dentro do `useReveal` da seção.
+Para não estourar esta leva, executo a revisão como **Leva 6** logo após aprovar e aplicar os itens 1-3. É um **checklist de QA** que entrego como **relatório** (sem alterar código de cara), classificando cada item em **OK / Atenção / Bloqueador** antes de subir a versão paga.
 
-### 4. Botão WhatsApp — Grupo Oficial do Volant
+**Landing (`/`):**
+- Hero, SecondaryFeatures, Pricing, FAQ, CommunityBanner, FinalCta, Footer — consistência de spacing, tokens semânticos, sem cores hardcoded fora do design system.
+- Performance: scroll listeners, animações, lazy/conditional renders, `content-visibility`.
+- SEO: title, meta description, H1 único, alt em imagens, JSON-LD, canonical.
+- Links: `/auth`, `/privacidade`, `/termos`, âncoras internas, WhatsApp.
 
-Link: `https://chat.whatsapp.com/LkXphgSVRg53rOVQmBEcP7?s=cl&p=a&mlu=1`  
-`target="_blank"` + `rel="noopener noreferrer"`.
+**App (`/app` e rotas protegidas):**
+- Home/Dashboard: cards, filtros de período, performance (R$/h, R$/km, médias).
+- Histórico: agrupamento por data correta, ícones de apps/categorias.
+- Relatórios: ordem dos cards, charts proporcionais, empty states.
+- Ajustes: planejamento, veículos, personalização, categorias.
+- Auth/Paywall/Premium: `RequireAuth`, `RequirePremium`, trial interno 7 dias, Stripe checkout, `CheckoutReturn`.
+- Mobile: BottomNav, FAB, EntryDrawer, safe-area, scroll de formulários.
+- Cálculos: divisores zerados, NaN/Infinity, formatação `R$ 0,00` e `DD/MM/YYYY`.
+- Edge functions e config: `supabase/config.toml`, secrets, webhooks.
 
-**Onde colocar (recomendação):**
+Saída da Leva 6: relatório estruturado + sugestão de Leva 7 só com ajustes necessários antes de upar.
 
-- **Header** — ❌ não recomendo: já tem logo + 4 âncoras + Login + "Testar grátis". Adicionar WhatsApp polui e compete com o CTA principal.
-- **Footer (coluna Suporte)** — ✅ link discreto com ícone WhatsApp pequeno verde, junto de "Fale com a gente". Sempre acessível, sem disputa com conversão.
-- **Bloco "Comunidade" dedicado antes do `FinalCta`** — ✅ destaque principal, dá visibilidade real ao grupo.
+## Arquivos afetados nesta leva (itens 1-3)
 
-**Bloco Comunidade (copy ajustado — grupo é só de avisos dos admins, não conversa entre membros):**
-- Eyebrow/ícone WhatsApp verde
-- Título: **"Receba novidades e benefícios em primeira mão"**
-- Subtítulo: *"Entre no grupo oficial do Volant no WhatsApp e fique por dentro de atualizações, novos recursos, dicas e benefícios exclusivos para motoristas."*
-- Botão verde-WhatsApp (`#25D366`): **"Entrar no grupo do WhatsApp →"**
-- Card com borda sutil, ícone à esquerda em desktop, empilhado em mobile.
-
-**Footer (coluna Suporte) — link adicional:**
-- "💬 Grupo no WhatsApp" como terceiro item, antes de Privacidade/Termos.
-
-**Não adicionar no Header.**
-
-### Arquivos afetados
-
-- `src/pages/Landing.tsx`: `Footer` (tagline + layout mobile + link WhatsApp), `SecondaryFeatures` (CTA novo), novo `CommunityBanner` antes do `FinalCta`.
-
-### Ordem de execução
-
-1. Footer: tagline + redesenho mobile + link WhatsApp na coluna Suporte
-2. CTA na seção SecondaryFeatures
-3. Bloco Comunidade (WhatsApp) antes do FinalCta
+- `src/pages/Landing.tsx` (Footer, CommunityBanner, `WhatsAppIcon` inline, bloco CTA do SecondaryFeatures)
