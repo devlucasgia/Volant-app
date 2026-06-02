@@ -1150,7 +1150,7 @@ function FeatureKmInteligente() {
   );
 
   return (
-    <section id="km" className="px-4 py-16 md:py-24">
+    <section id="km" className="px-4 py-16 md:py-24 scroll-mt-16">
       <div
         ref={ref}
         className="mx-auto flex max-w-6xl flex-col items-center gap-10 md:grid md:grid-cols-2 md:gap-14"
