@@ -5,25 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SUPPORT_EMAIL = "contato@usevolant.com.br";
-const FROM_EMAIL = "Volant <onboarding@resend.dev>";
-
-function esc(s: string) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    if (!RESEND_API_KEY) throw new Error("missing RESEND_API_KEY");
 
     const body = await req.json().catch(() => ({}));
     const userId = String(body?.user_id || "").trim();
@@ -56,17 +43,14 @@ Deno.serve(async (req) => {
       .from("signup_notifications")
       .insert({ user_id: userId });
     if (insertErr) {
-      // Unique violation -> already sent
       if ((insertErr as { code?: string }).code === "23505") {
         return new Response(JSON.stringify({ ok: true, duplicate: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       console.warn("[notify-new-user] insert failed", insertErr);
-      // Fall through: still try to send the email
     }
 
-    // Fetch the user (validates that user_id exists)
     const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(userId);
     if (userErr || !userRes?.user) {
       console.warn("[notify-new-user] user not found", userId, userErr);
@@ -80,7 +64,9 @@ Deno.serve(async (req) => {
     const meta = (u.user_metadata || {}) as Record<string, unknown>;
     const appMeta = (u.app_metadata || {}) as Record<string, unknown>;
     const provider =
-      (appMeta.provider as string) || (Array.isArray(appMeta.providers) ? (appMeta.providers as string[])[0] : "") || "email";
+      (appMeta.provider as string) ||
+      (Array.isArray(appMeta.providers) ? (appMeta.providers as string[])[0] : "") ||
+      "email";
     const methodLabel = provider === "google" ? "Google" : provider === "email" ? "Email/Senha" : provider;
     const name =
       (meta.display_name as string) ||
@@ -89,50 +75,22 @@ Deno.serve(async (req) => {
       "—";
     const createdAt = u.created_at || new Date().toISOString();
 
-    const subject = `[Volant] Novo cadastro: ${u.email || name}`;
-    const text = [
-      `Novo usuário cadastrado no Volant.`,
-      ``,
-      `Nome: ${name}`,
-      `E-mail: ${u.email || "—"}`,
-      `Método de cadastro: ${methodLabel}`,
-      `Data/hora: ${createdAt}`,
-      `User ID: ${u.id}`,
-    ].join("\n");
-    const html = `
-      <div style="font-family:ui-sans-serif,system-ui,Arial;background:#f8fafc;padding:24px;color:#0f172a">
-        <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:24px;border:1px solid #e2e8f0">
-          <h2 style="margin:0 0 12px;font-size:18px">Novo cadastro no Volant</h2>
-          <p style="margin:0 0 16px;color:#475569;font-size:14px">Um novo usuário acabou de criar uma conta.</p>
-          <table style="width:100%;border-collapse:collapse;font-size:14px">
-            <tr><td style="padding:6px 0;color:#64748b">Nome</td><td style="padding:6px 0;text-align:right"><strong>${esc(name)}</strong></td></tr>
-            <tr><td style="padding:6px 0;color:#64748b">E-mail</td><td style="padding:6px 0;text-align:right"><strong>${esc(u.email || "—")}</strong></td></tr>
-            <tr><td style="padding:6px 0;color:#64748b">Método</td><td style="padding:6px 0;text-align:right"><strong>${esc(methodLabel)}</strong></td></tr>
-            <tr><td style="padding:6px 0;color:#64748b">Data/hora</td><td style="padding:6px 0;text-align:right">${esc(createdAt)}</td></tr>
-            <tr><td style="padding:6px 0;color:#64748b">User ID</td><td style="padding:6px 0;text-align:right;font-family:ui-monospace,Menlo,monospace;font-size:12px">${esc(u.id)}</td></tr>
-          </table>
-        </div>
-      </div>
-    `;
-
-    const emailRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
+    const { error: invokeErr } = await admin.functions.invoke("send-transactional-email", {
+      body: {
+        templateName: "new-user-signup",
+        idempotencyKey: `new-user-signup-${u.id}`,
+        templateData: {
+          name,
+          email: u.email || "—",
+          method: methodLabel,
+          createdAt,
+          userId: u.id,
+        },
       },
-      body: JSON.stringify({
-        from: FROM_EMAIL,
-        to: [SUPPORT_EMAIL],
-        subject,
-        text,
-        html,
-      }),
     });
 
-    if (!emailRes.ok) {
-      const errText = await emailRes.text();
-      console.error("[notify-new-user] resend error", emailRes.status, errText);
+    if (invokeErr) {
+      console.error("[notify-new-user] invoke failed", invokeErr);
       return new Response(JSON.stringify({ error: "email_failed" }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

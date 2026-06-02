@@ -36,6 +36,7 @@ import Categorias from "./pages/Categorias";
 import CategoriasGanhos from "./pages/CategoriasGanhos";
 import CategoriasGastos from "./pages/CategoriasGastos";
 import CheckoutReturn from "./pages/CheckoutReturn";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/termos" element={<Termos />} />
                   <Route path="/privacidade" element={<Privacidade />} />
+                  <Route path="/unsubscribe" element={<Unsubscribe />} />
                   {/* Checkout return must bypass the paywall so the webhook can confirm */}
                   <Route
                     path="/checkout/return"
