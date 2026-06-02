@@ -104,6 +104,7 @@ export default function Landing() {
         <Comparison />
         <Pricing />
         <Faq />
+        <CommunityBanner />
         <FinalCta />
       </main>
       <Footer />
