@@ -1369,14 +1369,16 @@ function Pricing() {
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">Anual</h3>
                 <span className="rounded-full border border-primary/50 bg-primary/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider accent-text">
-                  Economize 62%
+                  4,5 meses grátis
                 </span>
               </div>
               <div className="mt-5 flex items-baseline gap-1.5">
-                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">R$ 89,90</span>
-                <span className="text-sm text-muted-foreground">por ano</span>
+                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">12x R$ 7,49</span>
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-muted-foreground">
+                ou R$ 89,90 à vista no cartão · equivalente a R$ 7,49/mês
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
                 O melhor custo-benefício para usar o Volant o ano todo.
               </p>
             </header>
@@ -1410,30 +1412,6 @@ function Pricing() {
           </article>
         </div>
 
-        {/* -------- CTA principal da seção -------- */}
-        <div className="relative mx-auto mt-12 max-w-3xl overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-primary/12 via-card/80 to-card p-7 text-center md:p-9">
-          <div aria-hidden className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,hsl(var(--primary)/0.22),transparent_65%)]" />
-          <h3 className="text-balance text-xl font-bold tracking-tight md:text-2xl">
-            Sem cartão para testar. <span className="accent-text">Sem cobrança automática.</span>
-          </h3>
-          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Você entra, testa o Volant na prática e decide depois.
-          </p>
-          <div className="mt-5 flex justify-center">
-            <Link
-              to="/auth"
-              className="accent-cta group relative inline-flex h-12 items-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
-            >
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-              />
-              <span className="pricing-shimmer pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-              Testar grátis por 7 dias
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </div>
       </div>
     </section>
   );
