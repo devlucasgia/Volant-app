@@ -1,9 +1,25 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Target, Gauge, ChevronRight, Route, Brain } from "lucide-react";
+import { ArrowLeft, Brain, Target, Gauge, ChevronRight, Route } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useData } from "@/context/DataContext";
+import { EmptyState } from "@/components/planejamento/EmptyState";
+import { GuidedFlow } from "@/components/planejamento/GuidedFlow";
+import { PainelResumo } from "@/components/planejamento/PainelResumo";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-/** Sticky page header with a back button — premium Volant identity. */
+type Mode = "panel" | "flow";
+type FlowVariant = "fresh" | "prefill";
+
 function PlanHeader({ onBack }: { onBack: () => void }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
@@ -38,50 +54,33 @@ interface HubCardProps {
   title: string;
   description: string;
   tone: "primary" | "teal";
-  delayMs?: number;
 }
 
-function HubCard({ to, icon, title, description, tone, delayMs = 0 }: HubCardProps) {
+function HubCard({ to, icon, title, description, tone }: HubCardProps) {
   const navigate = useNavigate();
   const toneClasses =
     tone === "primary"
-      ? "border-primary/30 bg-gradient-to-br from-primary/[0.09] via-primary/[0.04] to-transparent shadow-[0_0_0_1px_hsl(var(--primary)/0.10),0_14px_36px_-22px_hsl(var(--primary)/0.55)] hover:border-primary/45"
-      : "border-teal-500/25 bg-gradient-to-br from-teal-500/[0.09] via-teal-500/[0.04] to-transparent shadow-[0_0_0_1px_hsl(180_70%_45%/0.10),0_14px_36px_-22px_hsl(180_70%_45%/0.45)] hover:border-teal-500/40";
+      ? "border-primary/30 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent hover:border-primary/45"
+      : "border-teal-500/25 bg-gradient-to-br from-teal-500/[0.07] via-teal-500/[0.03] to-transparent hover:border-teal-500/40";
   const iconWrap =
-    tone === "primary"
-      ? "bg-primary/12 text-primary"
-      : "bg-teal-500/15 text-teal-300";
-
+    tone === "primary" ? "bg-primary/12 text-primary" : "bg-teal-500/15 text-teal-300";
   return (
     <button
       type="button"
       onClick={() => navigate(to)}
-      style={{ animationDelay: `${delayMs}ms` }}
       className={cn(
-        "group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border p-4 text-left",
-        "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        "animate-fade-in active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2",
-        tone === "primary" ? "focus-visible:ring-primary/40" : "focus-visible:ring-teal-400/40",
+        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-all duration-200 active:scale-[0.985]",
         toneClasses,
       )}
     >
-      <span
-        className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
-          iconWrap,
-        )}
-      >
+      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", iconWrap)}>
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[15px] font-semibold leading-tight text-foreground">
-          {title}
-        </div>
-        <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
-          {description}
-        </p>
+        <div className="text-[14px] font-semibold leading-tight text-foreground">{title}</div>
+        <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{description}</p>
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
     </button>
   );
 }
@@ -90,44 +89,105 @@ export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
   const location = useLocation();
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+
+  const { settings, loading } = useData();
+  const [mode, setMode] = useState<Mode>("panel");
+  const [flowVariant, setFlowVariant] = useState<FlowVariant>("fresh");
+  const [confirmRedo, setConfirmRedo] = useState(false);
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, []);
+  }, [mode]);
+
+  const isConfigured = settings.planningStatus === "configured";
+
+  if (mode === "flow") {
+    return (
+      <GuidedFlow
+        prefill={flowVariant === "prefill"}
+        onCancel={() => setMode("panel")}
+        onDone={() => setMode("panel")}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <PlanHeader onBack={() => navigate(returnTo ?? "/ajustes")} />
 
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-4 px-4 py-6 pb-28">
-        <div className="space-y-2.5">
-          <HubCard
-            to="/ajustes/planejamento/metas"
-            icon={<Target className="h-5 w-5" />}
-            title="Metas Inteligentes"
-            description="Defina sua meta mensal e seus dias de trabalho."
-            tone="primary"
-            delayMs={0}
-          />
-          <HubCard
-            to="/ajustes/planejamento/km"
-            icon={<Gauge className="h-5 w-5" />}
-            title="KM Inteligente"
-            description="Descubra o R$/km mínimo aceitável para suas corridas."
-            tone="teal"
-            delayMs={80}
-          />
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+          Carregando...
         </div>
+      ) : !isConfigured ? (
+        <EmptyState
+          onStart={() => {
+            setFlowVariant("fresh");
+            setMode("flow");
+          }}
+        />
+      ) : (
+        <>
+          <PainelResumo
+            onAdjust={() => {
+              setFlowVariant("prefill");
+              setMode("flow");
+            }}
+            onRedo={() => setConfirmRedo(true)}
+          />
 
-        {/* Connection line */}
-        <div className="flex items-center gap-2 px-3 pt-2">
-          <span className="h-px flex-1 bg-border/60" />
-          <span className="inline-flex items-center gap-1.5 text-[11px] leading-snug text-muted-foreground/90">
-            <Route className="h-3.5 w-3.5 text-muted-foreground/80" />
-            Sua meta define o caminho. O KM Inteligente ajusta a rota.
-          </span>
-          <span className="h-px flex-1 bg-border/60" />
-        </div>
-      </div>
+          {/* Atalhos discretos para as telas existentes — sem refatorar nada */}
+          <div className="mx-auto w-full max-w-md px-4 pb-28">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-px flex-1 bg-border/50" />
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+                <Route className="h-3 w-3" /> Mais ajustes
+              </span>
+              <span className="h-px flex-1 bg-border/50" />
+            </div>
+            <div className="space-y-2">
+              <HubCard
+                to="/ajustes/planejamento/metas"
+                icon={<Target className="h-5 w-5" />}
+                title="Metas Inteligentes"
+                description="Ajustes finos da meta e dos dias trabalhados."
+                tone="primary"
+              />
+              <HubCard
+                to="/ajustes/planejamento/km"
+                icon={<Gauge className="h-5 w-5" />}
+                title="KM Inteligente"
+                description="R$/km adaptativo conforme seu progresso."
+                tone="teal"
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      <AlertDialog open={confirmRedo} onOpenChange={setConfirmRedo}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Refazer planejamento?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso não apaga seus registros, veículo ou custos. Apenas refaz seu planejamento.
+              Seu planejamento atual continua valendo até você concluir o novo fluxo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setConfirmRedo(false);
+                setFlowVariant("fresh");
+                setMode("flow");
+              }}
+            >
+              Refazer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
