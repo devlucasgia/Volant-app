@@ -384,7 +384,39 @@ function Hero({ mode }: { mode: HeroMode }) {
             accent
           />
         </div>
+
+        {/* ------------------ CTAs (no mobile, depois do mockup) ------------------ */}
+        <div className="order-3 text-center md:col-start-1 md:row-start-2 md:text-left">
+          <div className="hero-anim hero-anim-4 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
+            <Link
+              to="/auth"
+              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+              />
+              Testar grátis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#km"
+              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-border/60 bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-card sm:w-auto"
+            >
+              Ver como funciona
+            </a>
+          </div>
+
+          <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
+            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
+          </p>
+
+          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
+            <LiveDriverCounter />
+          </div>
+        </div>
       </div>
+
     </section>
   );
 }
