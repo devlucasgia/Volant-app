@@ -67,7 +67,7 @@ export function computePlan(params: {
   };
 }
 
-export const DEFAULT_RPK_BASE = 2.2;
+export const DEFAULT_RPK_BASE = 2.0;
 
 /** yyyy-MM-dd em fuso local (não UTC). */
 export function toIsoDate(d: Date): string {
