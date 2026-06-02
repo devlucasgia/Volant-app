@@ -22,6 +22,10 @@ import {
   Wallet,
   Hourglass,
   Brain,
+  Star,
+  Quote,
+  X as XIcon,
+  HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -29,6 +33,13 @@ import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useCountUp } from "@/hooks/useCountUp";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { PlatformLogo } from "@/components/PlatformLogo";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 /* -------------------------------------------------------------------------- */
 /*  Landing page (pública). Sprint 1 — hero + 3 diferenciais + footer base.   */
@@ -70,12 +81,16 @@ export default function Landing() {
       <Header />
       <main className="relative">
         <Hero mode={mode} />
+        <SocialProof />
         <PainStrip />
         <FeatureKmInteligente />
         <FeatureMetas />
         <FeaturePersonalizacao />
         <SecondaryFeatures />
+        <Testimonials />
+        <Comparison />
         <Pricing />
+        <Faq />
         <FinalCta />
       </main>
       <Footer />
@@ -100,6 +115,7 @@ function Header() {
           <a href="#personalizacao" className="transition hover:text-foreground">Personalização</a>
           <a href="#mais" className="transition hover:text-foreground">Mais recursos</a>
           <a href="#planos" className="transition hover:text-foreground">Planos</a>
+          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
         </nav>
         <Link
           to="/auth"
@@ -1465,8 +1481,9 @@ function Footer() {
           <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
           <a href="#km" className="transition hover:text-foreground">Recursos</a>
           <a href="#planos" className="transition hover:text-foreground">Planos</a>
-          <a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">
-            Dúvidas? contato@usevolant.com.br
+          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
+          <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
+            Dúvidas? suporte@usevolant.com.br
           </a>
           <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
         </div>
