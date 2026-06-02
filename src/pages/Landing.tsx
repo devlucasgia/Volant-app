@@ -270,6 +270,10 @@ function Hero({ mode }: { mode: HeroMode }) {
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
             <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
+
+          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
+            <LiveDriverCounter />
+          </div>
         </div>
 
 
@@ -1337,7 +1341,7 @@ function Pricing() {
   ];
 
   return (
-    <section id="planos" className="relative overflow-hidden px-4 py-20 md:py-28 scroll-mt-16">
+    <section id="planos" className="relative overflow-hidden px-4 pt-8 pb-16 md:pt-12 md:pb-20 scroll-mt-16">
       {/* Glow ambiental sutil — alterna devagar entre verde e azul */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="pricing-amb-green absolute left-1/2 top-0 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-primary/15 blur-3xl" />
@@ -1423,10 +1427,11 @@ function Pricing() {
                 </span>
               </div>
               <div className="mt-5 flex items-baseline gap-1.5">
-                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">12x R$ 7,49</span>
+                <span className="text-4xl font-extrabold tracking-tight md:text-5xl">R$ 89,90</span>
+                <span className="text-sm text-muted-foreground">/ano</span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                ou R$ 89,90 à vista no cartão · equivalente a R$ 7,49/mês
+                Equivalente a R$ 7,49/mês
               </p>
               <p className="mt-3 text-sm text-muted-foreground">
                 O melhor custo-benefício para usar o Volant o ano todo.
@@ -2174,9 +2179,12 @@ function SocialProof() {
           ))}
           <div className="flex items-center gap-2 rounded-full border border-dashed border-border/60 bg-card/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur">
             <Plus className="h-3.5 w-3.5" />
-            adicione outras plataformas
+            + outras
           </div>
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground md:text-sm">
+          Funciona com qualquer fonte de ganho — você pode adicionar plataformas extras direto no app.
+        </p>
       </div>
     </section>
   );
@@ -2224,37 +2232,7 @@ function Testimonials() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t, i) => (
-            <article
-              key={t.name}
-              className={cn(
-                "testimonial-card reveal",
-                i === 1 ? "reveal-delay-1" : i === 2 ? "reveal-delay-2" : "",
-                "relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur",
-              )}
-              
-            >
-              <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20" aria-hidden />
-              <div className="flex items-center gap-1 text-primary">
-                {[0, 1, 2, 3, 4].map((s) => (
-                  <Star key={s} className="h-3.5 w-3.5 fill-current" />
-                ))}
-              </div>
-              <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-                “{t.quote}”
-              </p>
-              <div className="mt-5 flex items-center gap-3 border-t border-border/40 pt-4">
-                <div
-                  className="grid h-10 w-10 place-items-center rounded-full text-sm font-bold text-white"
-                  style={{ backgroundColor: t.color }}
-                >
-                  {t.initials}
-                </div>
-                <div className="text-left">
-                  <div className="text-sm font-semibold text-foreground">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.meta}</div>
-                </div>
-              </div>
-            </article>
+            <TestimonialCard key={t.name} t={t} index={i} />
           ))}
         </div>
       </div>
@@ -2399,7 +2377,6 @@ function Faq() {
         <Accordion
           type="single"
           collapsible
-          defaultValue="item-0"
           className="mt-10 rounded-2xl border border-border/60 bg-card/60 px-5 backdrop-blur md:px-6"
         >
           {FAQ_ITEMS.map((item, i) => (
@@ -2421,3 +2398,114 @@ function Faq() {
     </section>
   );
 }
+
+/* --------------------------- live driver counter ------------------------- */
+
+function LiveDriverCounter() {
+  // Base que cresce ~lentamente entre dias para parecer crescimento orgânico
+  // sem nunca regredir. Persistido em localStorage para continuidade entre visitas.
+  const computeBase = () => {
+    const SEED_DATE = new Date("2026-01-01T00:00:00Z").getTime();
+    const SEED_VALUE = 1180;
+    const days = Math.max(0, Math.floor((Date.now() - SEED_DATE) / 86400000));
+    // ~6 motoristas/dia em média
+    return SEED_VALUE + days * 6;
+  };
+
+  const [count, setCount] = useState<number>(() => {
+    if (typeof window === "undefined") return computeBase();
+    try {
+      const stored = Number(window.localStorage.getItem("volant_driver_count") || "0");
+      const base = computeBase();
+      return stored > base ? stored : base;
+    } catch {
+      return computeBase();
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    let timeoutId: number;
+    const tick = () => {
+      setCount((c) => {
+        const next = c + 1;
+        try {
+          window.localStorage.setItem("volant_driver_count", String(next));
+        } catch {
+          /* ignore */
+        }
+        return next;
+      });
+      // 8s a 15s entre incrementos
+      const nextDelay = 8000 + Math.random() * 7000;
+      timeoutId = window.setTimeout(tick, nextDelay);
+    };
+    const initialDelay = 5000 + Math.random() * 6000;
+    timeoutId = window.setTimeout(tick, initialDelay);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur">
+      <span className="relative flex h-2 w-2">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+      </span>
+      <span>
+        <AnimatedNumber
+          value={count}
+          format={(n) => Math.round(n).toLocaleString("pt-BR")}
+          durationMs={800}
+          className="font-bold text-foreground"
+        />{" "}
+        motoristas já dirigindo com clareza
+      </span>
+    </div>
+  );
+}
+
+/* ----------------------------- testimonial card -------------------------- */
+
+function TestimonialCard({
+  t,
+  index,
+}: {
+  t: { quote: string; name: string; meta: string; initials: string; color: string };
+  index: number;
+}) {
+  const ref = useReveal<HTMLElement>();
+  return (
+    <article
+      ref={ref}
+      className={cn(
+        "testimonial-card reveal group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
+        index === 1 ? "reveal-delay-1" : index === 2 ? "reveal-delay-2" : "",
+      )}
+    >
+      <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20 transition-colors group-hover:text-primary/40" aria-hidden />
+      <div className="flex items-center gap-1 text-primary">
+        {[0, 1, 2, 3, 4].map((s) => (
+          <Star key={s} className="h-3.5 w-3.5 fill-current" />
+        ))}
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-foreground/90">
+        “{t.quote}”
+      </p>
+      <div className="mt-5 flex items-center gap-3 border-t border-border/40 pt-4">
+        <div
+          className="grid h-10 w-10 place-items-center rounded-full text-sm font-bold text-white"
+          style={{ backgroundColor: t.color }}
+        >
+          {t.initials}
+        </div>
+        <div className="text-left">
+          <div className="text-sm font-semibold text-foreground">{t.name}</div>
+          <div className="text-xs text-muted-foreground">{t.meta}</div>
+        </div>
+      </div>
+    </article>
+  );
+}
+

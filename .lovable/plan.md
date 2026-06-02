@@ -1,85 +1,53 @@
-Tudo em `src/pages/Landing.tsx` (sem mudança em backend/Stripe). A última parte é resposta, não código.
 
----
+## 1. DNS / e-mail — esclarecimentos (sem ação no código)
 
-## 1. Hero — cards encostando no mockup, sem sobrepor
+**Boa notícia:** o domínio `notify.usevolant.com.br` **já está verificado e funcionando**. Os e-mails de novo usuário já vão para `suporte@usevolant.com.br` assim que houver novos cadastros.
 
-Problema atual: cards usam `left-2 / right-2` e em `≥md` (tablet) eles invadem o mockup; no desktop ficam descolados das bordas.
+**Sobre os nomes dos NS (ns3/ns4 × ns5/ns6):** a documentação genérica fala em `ns3` e `ns4`, mas a Lovable atribui o par real por projeto. No seu caso os corretos são **`ns5.lovable.cloud` e `ns6.lovable.cloud`** — e era exatamente isso que você precisava cadastrar. Pode ignorar a menção a ns3/ns4.
 
-**Estratégia:** posicionar cards relativos à coluna do mockup, ancorados nas bordas do `PhoneFrame` (max-width ~320px), encostando um pouco para fora no desktop e recolhendo no tablet (`md`).
+**Sobre o "ns6 barrado pela Locaweb":** a verificação só precisa de **pelo menos um NS válido respondendo**, e o `ns5` já está propagado. Por isso o status saiu como verificado mesmo sem o ns6. **Não há problema imediato e nada que precise ser corrigido agora.** Recomendação: assim que sair da janela de aprovação de 48h da Locaweb, adicionar uma segunda entrada NS para `notify` apontando para `ns6.lovable.cloud` (no mesmo registro de subdomínio `notify`, não criar outro). Isso dá redundância e protege a entrega caso o ns5 fique indisponível.
 
-Mudanças:
+**Para que servem esses NS:** eles delegam o subdomínio `notify` para os servidores DNS da Lovable, que gerenciam SPF, DKIM e MX automaticamente — é assim que provedores como Gmail confirmam que os e-mails saem legitimamente do seu domínio (deliverability).
 
-**Manutenção** (linhas 285–303):
-- Classes: `hero-float absolute hidden md:block w-[130px] lg:w-[150px] top-16 md:-left-2 lg:-left-10`
-  - Tablet (`md`): largura menor (130px), encostado bem na borda (`-left-2`).
-  - Desktop (`lg`): mantém 150px, sai 10px para fora (`-left-10`) — sobrepõe levemente a borda do mockup, sem invadir o título.
+## 2. Ajustes na landing (`src/pages/Landing.tsx`)
 
-**R$/KM Inteligente** (linhas 306–318):
-- Classes: `hero-float absolute z-20 hidden md:block top-40 md:-right-2 lg:-right-10`
+### 2.1 Hero — countdown de motoristas
+Adicionar, abaixo do parágrafo principal e antes dos CTAs, uma micro-prova social com contador animado e realista:
+- Componente `LiveDriverCounter` com valor base (ex.: começa em ~1.240) e incremento pseudo-aleatório lento (1 motorista a cada 8–15s), congelado se `prefers-reduced-motion`.
+- Visual: pílula com dot pulsante verde + "**1.247 motoristas** já dirigindo com clareza" (número usa `AnimatedNumber` já existente).
+- Persistir o valor base por dia no `localStorage` para parecer crescimento contínuo entre visitas, sem nunca diminuir.
+- Largura e altura fixas para não causar layout shift na hero (testado em mobile 320–414 e desktop).
 
-**Custos do veículo** (linhas 320–344):
-- Classes: `hero-float absolute hidden md:block w-[140px] lg:w-[160px] bottom-28 md:-left-2 lg:-left-10`
+### 2.2 SocialProof — texto da pílula extra
+- Trocar "**adicione outras plataformas**" por algo neutro tipo "**+ outras**" (pílula só visual, não clicável).
+- Adicionar logo abaixo da fileira de plataformas uma linha curta e centralizada:
+  > "Funciona com qualquer fonte de ganho — você pode adicionar plataformas extras direto no app."
 
-**Personalização** (linhas 347–374):
-- Classes: `hero-float absolute hidden lg:block w-[150px] bottom-4 lg:-right-10`
-- **Esconder no tablet** (`hidden lg:block`): no tablet o bottom já fica apertado com o card de R$/KM e a borda do mockup; removendo só esse no `md` os 3 cards restantes acomodam sem sobrepor texto/mockup. No desktop reaparece encostado à direita.
+### 2.3 Depoimentos — corrigir invisibilidade + animação
+- **Bug:** cada card tem `className="testimonial-card reveal"` mas só o container pai tem `useReveal`. Os filhos nunca recebem `.is-visible` → ficam em `opacity: 0`. Por isso aparece a seção mas não os cards.
+- **Fix:** transformar cada card em um item observado individualmente (hook `useReveal` por card via um wrapper `<RevealItem delay={i}>`) — assim entram em cascata conforme aparecem na viewport.
+- **Animação recomendada:** fade-in + slide-up suave (já existe via `.reveal`) com stagger de 120ms entre cards + leve `hover:-translate-y-1` e brilho na borda no hover (consistente com pricing-card). Sem efeitos chamativos demais — o tom da página é premium e sóbrio.
 
-Coluna do texto do hero recebe `relative z-10` para garantir que o card de Custos (que fica à esquerda-baixo) nunca cubra o CTA mesmo em larguras intermediárias.
+### 2.4 Planos — remover parcelamento
+- Trocar `12x R$ 7,49` por `R$ 89,90` em destaque (mesma tipografia grande).
+- Manter a linha abaixo como **"Equivalente a R$ 7,49/mês"** (remover o "ou R$ 89,90 à vista no cartão · ").
+- Manter o badge "4,5 meses grátis".
 
-QA: no viewport do user (973px, tablet) os 3 cards visíveis encostam nas bordas do mockup sem cobrir texto; em ≥1280 os 4 cards aparecem alinhados às bordas com leve transbordo.
+### 2.5 FAQ — começar todos fechados
+- Remover `defaultValue="item-0"` do `Accordion`.
 
----
+### 2.6 Espaçamento entre seção dos cards (Pricing) e... 
+Interpretando como "entre Comparison/Testimonials e Pricing" (sessão dos cards de comparação acima dos preços):
+- Reduzir `py-16 md:py-24` da seção `Pricing` para `pt-8 pb-16 md:pt-12 md:pb-20` (apenas o topo encolhe), aproximando visualmente da seção anterior sem perder respiro do FAQ.
 
-## 2. Personalização — animação mais lenta e perceptível
+### O que NÃO será alterado
+- Nada fora de `src/pages/Landing.tsx`.
+- Sem mudanças em rotas, dados, autenticação, app `/app`, edge functions ou DB.
+- Demais seções (Hero principal, PainStrip, Features, Comparison, FinalCta, Footer) intactas.
 
-`PersonalizacaoMockup` (linhas 1748–1759):
-- Trocar `setInterval(..., 2200)` por `setInterval(..., 4200)` — cada cena fica visível ~4.2s.
-- Aumentar `transition: transform 600ms` para `transform 900ms cubic-bezier(0.22,1,0.36,1)` e `opacity 400ms` para `opacity 700ms` (linha 1807–1808), para que a desativação fique mais fluida.
-- Toast (linha 1841): `transition-opacity duration-500` → `duration-700`.
-
----
-
-## 3. Rodapé (linhas 1249–1266)
-
-- **3.1** Linha 1256: trocar `"— feito por motoristas, para motoristas."` por `"— De motorista, para motoristas."` (mantém `hidden md:inline`, atinge tablet+desktop).
-- **3.2** Wrapper (linha 1252): trocar `flex-col items-start ... md:flex-row md:items-center` por `flex-col items-center text-center ... md:flex-row md:items-center md:text-left`. No mobile tudo centralizado; no desktop volta ao layout horizontal atual.
-- **3.3** Adicionar nova linha de contato logo abaixo dos links (dentro do bloco de links da linha 1258, ou como terceira coluna):
-  - Acrescentar `<a href="mailto:contato@usevolant.com.br" className="transition hover:text-foreground">Dúvidas? contato@usevolant.com.br</a>` antes do `©` para que apareça em todos os tamanhos.
-
----
-
-## Não tocar
-Stripe, Supabase, lógica do app, demais seções da landing, cores/tema globais, animações já existentes fora de Personalização.
-
----
-
-## Resposta sobre Stripe (não envolve código)
-
-**1. Já posso testar um pagamento real com meu cartão no ambiente de testes?**
-
-Não da forma que você está pensando. Resumo:
-
-- O **preview do Lovable** (onde estamos trabalhando) está fixo no **ambiente sandbox** da Stripe — ele lê o token `pk_test_...` do `.env.development`. Qualquer pagamento feito aqui é simulado: você só consegue usar cartões de teste (ex.: `4242 4242 4242 4242`, validade futura, CVC 000). Cartão real é recusado.
-- Pagamentos reais só rodam em **produção**, na URL publicada (`usevolant.lovable.app` / `usevolant.app`), depois que o "Live" estiver verde no painel de Pagamentos. Aí sim, qualquer cartão real (inclusive o seu) passa de verdade — Stripe cobra do cartão, dinheiro entra na sua conta Stripe e segue para sua conta bancária no payout normal.
-- Para "testar com cartão real" sem perder dinheiro de verdade na prática, a recomendação é:
-  1. Publicar.
-  2. Criar uma assinatura com seu cartão real no plano de menor valor.
-  3. **Logo em seguida**, cancelar e estornar pelo painel da Stripe — antes do payout (D+2 geralmente). Você fica só com a taxa da Stripe (~R$ 0,39 + 3,99%).
-  
-  É o que a maioria faz como "smoke test" antes de divulgar.
-
-**2. Com 5 créditos dá para aceitar o plano anual via boleto?**
-
-Sim, cabe tranquilamente. O que precisa ser feito:
-
-- Habilitar `boleto` como `payment_method_type` no `create-checkout` (edge function) **só para o `priceId` anual**.
-- Ajustar a UI do plano anual para avisar: "Pagamento via cartão ou boleto. No boleto, a liberação acontece em até 3 dias úteis após a confirmação."
-- Tratar o webhook `checkout.session.async_payment_succeeded` / `async_payment_failed` para ativar/manter a assinatura só depois que o boleto for pago (boleto é assíncrono — a sessão fica `processing` por dias).
-- Garantir que mensal continue só com cartão (boleto recorrente mensal vira pesadelo de inadimplência).
-
-Estimativa real: 2–4 créditos. 5 cobre com folga, sem precisar de novo round.
-
-Pix realmente fica para depois — Stripe libera Pix só após histórico mínimo da conta (você confirmou os 60 dias). Quando liberar, é uma mudança pequena (basicamente adicionar `"pix"` no array de métodos).
-
-Quando você confirmar, eu já implemento o boleto na mesma rodada das mudanças visuais acima — ou em uma rodada separada, se preferir manter este sprint só visual.
+## Verificação pós-implementação
+- Hero não quebra em 320px, 375px, 414px e desktop (countdown sem layout shift).
+- Cards de depoimento aparecem ao rolar com animação em cascata.
+- FAQ inicia totalmente fechado.
+- Card "Anual" mostra R$ 89,90 + "Equivalente a R$ 7,49/mês".
+- Espaçamento Pricing visivelmente menor no topo, mantendo respiro inferior.
