@@ -248,38 +248,11 @@ function Hero({ mode }: { mode: HeroMode }) {
             feita para a realidade de quem dirige todos os dias.
           </p>
 
-          <div className="hero-anim hero-anim-4 mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start md:justify-start">
-            <Link
-              to="/auth"
-              className="accent-cta group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full px-7 text-sm font-semibold text-primary-foreground transition hover:brightness-110 sm:w-auto"
-            >
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-              />
-              Testar grátis
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="#km"
-              className="inline-flex h-12 w-full items-center justify-center rounded-full border border-border/60 bg-card/60 px-7 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-card sm:w-auto"
-            >
-              Ver como funciona
-            </a>
-          </div>
-
-          <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
-            <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
-          </p>
-
-          <div className="hero-anim hero-anim-5 mt-5 flex justify-center md:justify-start">
-            <LiveDriverCounter />
-          </div>
         </div>
 
-
         {/* ------------------ Coluna do mockup ------------------ */}
-        <div className="hero-anim hero-anim-mockup relative mx-auto w-full max-w-[290px] md:max-w-none">
+        <div className="hero-anim hero-anim-mockup relative order-2 mx-auto w-full max-w-[290px] md:col-start-2 md:row-span-2 md:row-start-1 md:max-w-none">
+
           {/* halo dinâmico (verde + azul cross-fade) */}
           <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2">
             <div
