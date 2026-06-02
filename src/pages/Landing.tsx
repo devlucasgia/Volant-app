@@ -30,7 +30,7 @@ import {
   ChevronRight,
   Menu,
   ArrowUp,
-  MessageCircle,
+  
 } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
