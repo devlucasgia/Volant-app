@@ -216,7 +216,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   <Calendar
                     mode="single"
                     selected={date}
-                    onSelect={(d) => d && setDate(d)}
+                    onSelect={(d) => {
+                      if (!d) return;
+                      // Preserve original time-of-day so editing the date never zeroes the clock.
+                      const merged = new Date(d);
+                      merged.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+                      setDate(merged);
+                    }}
                     disabled={(d) => d > new Date()}
                     initialFocus
                     locale={ptBR}
