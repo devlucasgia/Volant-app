@@ -1697,7 +1697,7 @@ function FeatureSection({
   reverse?: boolean;
 }) {
   return (
-    <section id={id} className="px-4 py-16 md:py-24">
+    <section id={id} className="px-4 py-16 md:py-24 scroll-mt-16">
       <div
         className={cn(
           "mx-auto grid max-w-6xl items-center gap-12 md:grid-cols-2",
