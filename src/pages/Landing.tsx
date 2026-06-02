@@ -533,6 +533,19 @@ function Hero({ mode }: { mode: HeroMode }) {
           <p className="hero-anim hero-anim-5 mt-4 flex items-center justify-center gap-1.5 text-xs text-muted-foreground md:justify-start">
             <Check className="h-3.5 w-3.5 accent-text" /> 7 dias grátis. Sem cartão.
           </p>
+
+          {/* Selo de confiança */}
+          <ul className="hero-anim hero-anim-5 mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground md:justify-start">
+            <li className="inline-flex items-center gap-1.5">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <Check className="h-3 w-3 accent-text" /> Cancele quando quiser
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <ShieldCheck className="h-3 w-3 accent-text" /> Sem cartão
+            </li>
+          </ul>
         </div>
       </div>
 
