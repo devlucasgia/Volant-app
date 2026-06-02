@@ -56,6 +56,9 @@ const DEFAULT_SETTINGS: Settings = {
   remainingWorkingDays: null,
   kmPlannedMonth: null,
   kmRemainingOverride: null,
+  planningStatus: "not_configured",
+  planningSelectedDates: null,
+  rpkBase: null,
 };
 
 function rowToEntry(r: any): Entry {
@@ -172,6 +175,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const rwd = (sRow as any).remaining_working_days;
         const km = (sRow as any).km_planned_month;
         const kmOv = (sRow as any).km_remaining_override;
+        const ps = ((sRow as any).planning_status as "not_configured" | "configured" | undefined) || "not_configured";
+        const psd = (sRow as any).planning_selected_dates;
+        const rpk = (sRow as any).rpk_base;
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
           monthlyGoal: Number((sRow as any).monthly_goal) || 0,
@@ -184,6 +190,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
           remainingWorkingDays: rwd == null ? null : Number(rwd),
           kmPlannedMonth: km == null ? null : Number(km),
           kmRemainingOverride: kmOv == null ? null : Number(kmOv),
+          planningStatus: ps,
+          planningSelectedDates: Array.isArray(psd) ? (psd as string[]) : null,
+          rpkBase: rpk == null ? null : Number(rpk),
         });
       }
       setLoading(false);
@@ -235,6 +244,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       remaining_working_days: next.remainingWorkingDays,
       km_planned_month: next.kmPlannedMonth,
       km_remaining_override: next.kmRemainingOverride,
+      planning_status: next.planningStatus,
+      planning_selected_dates: next.planningSelectedDates as any,
+      rpk_base: next.rpkBase,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.

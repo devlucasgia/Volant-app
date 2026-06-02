@@ -115,6 +115,8 @@ export interface DashboardWidgets {
   smartKm: boolean;
 }
 
+export type PlanningStatus = "not_configured" | "configured";
+
 export interface Settings {
   dailyGoal: number;
   monthlyGoal: number;
@@ -130,6 +132,12 @@ export interface Settings {
   kmPlannedMonth: number | null;
   /** Ajuste manual do KM restante até o fim do mês. Quando preenchido, sobrescreve o cálculo automático. */
   kmRemainingOverride: number | null;
+  /** Estado do novo Planejamento Inteligente. Todos os usuários começam como "not_configured". */
+  planningStatus: PlanningStatus;
+  /** Datas exatas (ISO yyyy-MM-dd) selecionadas no calendário do Planejamento Inteligente. */
+  planningSelectedDates: string[] | null;
+  /** Base de R$/km escolhida no fluxo guiado. */
+  rpkBase: number | null;
 }
 
 export interface CustomCategory {
