@@ -2498,22 +2498,146 @@ function LiveDriverCounter() {
   );
 }
 
+/* ----------------------------- testimonials carousel -------------------- */
+
+function TestimonialsCarousel({ items }: { items: Testimonial[] }) {
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "center",
+    containScroll: false,
+    skipSnaps: false,
+    dragFree: false,
+  });
+  const [selected, setSelected] = useState(0);
+  const [isHover, setIsHover] = useState(false);
+  const reducedMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
+    emblaApi.on("select", onSelect);
+    emblaApi.on("reInit", onSelect);
+    onSelect();
+    return () => {
+      emblaApi.off("select", onSelect);
+      emblaApi.off("reInit", onSelect);
+    };
+  }, [emblaApi]);
+
+  // Auto-advance
+  useEffect(() => {
+    if (!emblaApi || reducedMotion || isHover) return;
+    const id = window.setInterval(() => emblaApi.scrollNext(), 6000);
+    return () => window.clearInterval(id);
+  }, [emblaApi, isHover, reducedMotion]);
+
+  // Keyboard nav
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") emblaApi.scrollPrev();
+      else if (e.key === "ArrowRight") emblaApi.scrollNext();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [emblaApi]);
+
+  return (
+    <div
+      className="relative mt-10"
+      onMouseEnter={() => setIsHover(true)}
+      onMouseLeave={() => setIsHover(false)}
+      aria-roledescription="carousel"
+      aria-label="Depoimentos de motoristas"
+    >
+      <div ref={emblaRef} className="overflow-hidden">
+        <div className="flex touch-pan-y">
+          {items.map((t, i) => {
+            const isActive = i === selected;
+            return (
+              <div
+                key={t.name}
+                className="relative min-w-0 shrink-0 grow-0 basis-[85%] px-2 sm:basis-[60%] md:basis-[42%] lg:basis-[36%]"
+                aria-roledescription="slide"
+                aria-label={`${i + 1} de ${items.length}`}
+              >
+                <div
+                  className={cn(
+                    "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    isActive
+                      ? "scale-100 opacity-100"
+                      : "scale-[0.82] opacity-40 blur-[2px]",
+                  )}
+                >
+                  <TestimonialCard t={t} dimmed={!isActive} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Arrows — desktop */}
+      <button
+        type="button"
+        onClick={() => emblaApi?.scrollPrev()}
+        aria-label="Depoimento anterior"
+        className="absolute left-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
+      >
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => emblaApi?.scrollNext()}
+        aria-label="Próximo depoimento"
+        className="absolute right-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
+      >
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Dots */}
+      <div className="mt-6 flex items-center justify-center gap-2">
+        {items.map((t, i) => (
+          <button
+            key={t.name}
+            type="button"
+            onClick={() => emblaApi?.scrollTo(i)}
+            aria-label={`Ir para depoimento ${i + 1}`}
+            aria-current={i === selected}
+            className={cn(
+              "h-2 rounded-full transition-all duration-300",
+              i === selected
+                ? "w-6 bg-primary"
+                : "w-2 bg-border hover:bg-muted-foreground/50",
+            )}
+          />
+        ))}
+      </div>
+
+      {/* Mobile hint */}
+      <p className="mt-3 text-center text-[11px] text-muted-foreground md:hidden">
+        Arraste para ver mais depoimentos
+      </p>
+    </div>
+  );
+}
+
 /* ----------------------------- testimonial card -------------------------- */
 
 function TestimonialCard({
   t,
-  index,
+  dimmed = false,
 }: {
-  t: { quote: string; name: string; meta: string; initials: string; color: string };
-  index: number;
+  t: Testimonial;
+  dimmed?: boolean;
 }) {
-  const ref = useReveal<HTMLElement>();
   return (
     <article
-      ref={ref}
       className={cn(
-        "testimonial-card reveal group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
-        index === 1 ? "reveal-delay-1" : index === 2 ? "reveal-delay-2" : "",
+        "testimonial-card group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-colors duration-300",
+        !dimmed && "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
       )}
     >
       <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20 transition-colors group-hover:text-primary/40" aria-hidden />
@@ -2540,4 +2664,5 @@ function TestimonialCard({
     </article>
   );
 }
+
 
