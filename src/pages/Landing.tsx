@@ -186,31 +186,51 @@ function Header() {
 }
 
 /* Barra fina de progresso de scroll no topo do header */
+/* ---------------- shared scroll subscription (perf) ---------------------- */
+/* Um único listener de scroll + rAF alimenta progress bar, back-to-top
+   e qualquer consumidor futuro (sticky CTA). Reduz listeners duplicados. */
+
+type ScrollListener = (y: number, pct: number) => void;
+const scrollListeners = new Set<ScrollListener>();
+let scrollRaf = 0;
+let scrollInit = false;
+
+function ensureScrollSubscription() {
+  if (scrollInit || typeof window === "undefined") return;
+  scrollInit = true;
+  const tick = () => {
+    scrollRaf = 0;
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    const y = h.scrollTop;
+    const pct = max > 0 ? (y / max) * 100 : 0;
+    scrollListeners.forEach((fn) => fn(y, pct));
+  };
+  const onScroll = () => {
+    if (!scrollRaf) scrollRaf = window.requestAnimationFrame(tick);
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  tick();
+}
+
+function useScroll(cb: ScrollListener) {
+  useEffect(() => {
+    ensureScrollSubscription();
+    scrollListeners.add(cb);
+    return () => {
+      scrollListeners.delete(cb);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+}
+
 function ScrollProgressBar() {
   const [pct, setPct] = useState(0);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      const h = document.documentElement;
-      const max = h.scrollHeight - h.clientHeight;
-      const p = max > 0 ? (h.scrollTop / max) * 100 : 0;
-      setPct(p);
-      raf = 0;
-    };
-    const onScroll = () => {
-      if (!raf) raf = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
-    };
-  }, []);
+  useScroll((_, p) => setPct(p));
   return (
     <div aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-transparent">
       <div
-        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 transition-[width] duration-150 ease-out"
+        className="h-full bg-gradient-to-r from-primary via-primary to-primary/70 will-change-[width]"
         style={{ width: `${pct}%` }}
       />
     </div>
@@ -220,22 +240,7 @@ function ScrollProgressBar() {
 /* Botão flutuante "voltar ao topo" — aparece após scroll */
 function BackToTop() {
   const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      setVisible(window.scrollY > 600);
-      raf = 0;
-    };
-    const onScroll = () => {
-      if (!raf) raf = window.requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (raf) window.cancelAnimationFrame(raf);
-    };
-  }, []);
+  useScroll((y) => setVisible(y > 600));
   return (
     <button
       type="button"
