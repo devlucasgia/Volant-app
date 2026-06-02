@@ -2321,6 +2321,25 @@ function PersonalizacaoMockup() {
 /* ======================= new landing sections ============================ */
 
 /** Reveal-on-scroll: adds .is-visible when element enters viewport. */
+/* IntersectionObserver compartilhado para todos os blocos com reveal.
+   Evita criar 1 observer por seção. */
+let sharedRevealIO: IntersectionObserver | null = null;
+function getRevealIO() {
+  if (sharedRevealIO || typeof window === "undefined") return sharedRevealIO;
+  sharedRevealIO = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-visible");
+          sharedRevealIO?.unobserve(e.target);
+        }
+      });
+    },
+    { rootMargin: "-10% 0px" },
+  );
+  return sharedRevealIO;
+}
+
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
   useEffect(() => {
@@ -2330,19 +2349,9 @@ function useReveal<T extends HTMLElement>() {
       el.classList.add("is-visible");
       return;
     }
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            el.classList.add("is-visible");
-            io.unobserve(el);
-          }
-        });
-      },
-      { rootMargin: "-10% 0px" },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const io = getRevealIO();
+    io?.observe(el);
+    return () => io?.unobserve(el);
   }, []);
   return ref;
 }
