@@ -26,7 +26,11 @@ import {
   Quote,
   X as XIcon,
   HelpCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import useEmblaCarousel from "embla-carousel-react";
+
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import volantSymbol from "@/assets/volant-symbol-header.png";
