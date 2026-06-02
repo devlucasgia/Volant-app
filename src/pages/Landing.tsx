@@ -1427,7 +1427,7 @@ function SecondaryFeatures() {
   ];
 
   return (
-    <section id="mais" className="px-4 py-16 md:py-24">
+    <section id="mais" className="px-4 py-16 md:py-24 scroll-mt-16">
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow icon={<Brain className="h-3 w-3" />}>Mais inteligência no seu dia</Eyebrow>
