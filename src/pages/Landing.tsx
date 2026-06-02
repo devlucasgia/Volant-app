@@ -1650,27 +1650,76 @@ function FinalCta() {
 /* --------------------------------- footer --------------------------------- */
 
 function Footer() {
+  const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-border/40 bg-card/40 px-4 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:text-left">
-        <div className="flex items-center gap-2">
-          <img src={volantSymbol} alt="Volant" className="h-6 w-6 rounded-full" />
-          <span className="font-semibold text-foreground">Volant</span>
-          <span className="hidden md:inline">— De motorista, para motoristas.</span>
+    <footer className="border-t border-border/40 bg-card/40 px-4 pt-12 pb-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="grid grid-cols-1 gap-10 text-sm text-muted-foreground sm:grid-cols-3 sm:gap-8 text-center sm:text-left">
+          {/* Coluna 1 — marca */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <div className="flex items-center gap-2">
+              <img
+                src={volantSymbol}
+                alt="Volant"
+                width={28}
+                height={28}
+                loading="lazy"
+                decoding="async"
+                className="h-7 w-7 rounded-full"
+              />
+              <span className="text-base font-semibold text-foreground">Volant</span>
+            </div>
+            <p className="max-w-[220px] text-xs leading-relaxed">
+              De motorista, para motoristas. Controle financeiro descomplicado.
+            </p>
+            <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/90">
+              <Lock className="h-3 w-3 accent-text" /> Dados criptografados
+            </p>
+          </div>
+
+          {/* Coluna 2 — Produto */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Produto
+            </h4>
+            <ul className="flex flex-col items-center sm:items-start gap-2">
+              <li><a href="#km" className="transition hover:text-foreground">Recursos</a></li>
+              <li><a href="#planos" className="transition hover:text-foreground">Planos</a></li>
+              <li><a href="#faq" className="transition hover:text-foreground">Perguntas frequentes</a></li>
+              <li><Link to="/auth" className="transition hover:text-foreground">Entrar</Link></li>
+              <li><Link to="/auth" className="transition hover:text-foreground">Criar conta grátis</Link></li>
+            </ul>
+          </div>
+
+          {/* Coluna 3 — Suporte / Legal */}
+          <div className="flex flex-col items-center sm:items-start gap-3">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Suporte
+            </h4>
+            <ul className="flex flex-col items-center sm:items-start gap-2">
+              <li>
+                <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
+                  Fale com a gente
+                </a>
+              </li>
+              <li><Link to="/privacidade" className="transition hover:text-foreground">Privacidade</Link></li>
+              <li><Link to="/termos" className="transition hover:text-foreground">Termos de uso</Link></li>
+            </ul>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:justify-end">
-          <Link to="/auth" className="transition hover:text-foreground">Entrar</Link>
-          <a href="#km" className="transition hover:text-foreground">Recursos</a>
-          <a href="#planos" className="transition hover:text-foreground">Planos</a>
-          <a href="#faq" className="transition hover:text-foreground">FAQ</a>
-          <a href="mailto:suporte@usevolant.com.br" className="transition hover:text-foreground">
-            Dúvidas? suporte@usevolant.com.br
-          </a>
-          <span className="text-muted-foreground/60">© {new Date().getFullYear()} Volant</span>
+
+        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border/40 pt-6 text-[11px] text-muted-foreground/70 sm:flex-row">
+          <span>© {year} Volant. Feito no Brasil.</span>
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="inline-flex items-center gap-1.5 transition hover:text-foreground"
+          >
+            Voltar ao topo <ArrowUp className="h-3 w-3" />
+          </button>
         </div>
       </div>
     </footer>
-
   );
 }
 
