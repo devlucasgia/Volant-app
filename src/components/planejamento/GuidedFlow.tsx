@@ -472,7 +472,6 @@ function Step4({
             onChange={(v) => setDraft((d) => ({ ...d, avgKmPerDay: v ?? 0 }))}
             inputMode="decimal"
             placeholder="Ex: 200"
-            suffix="km"
           />
           <div className="mt-3 flex flex-wrap gap-1.5">
             {KM_QUICK_PICKS.map((km) => {
