@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Car } from "lucide-react";
 import { friendlyAuthError } from "@/lib/friendlyErrors";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -19,6 +20,13 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+
+  useDocumentMeta({
+    title: mode === "signin" ? "Entrar — Volant" : "Criar conta — Volant",
+    description: "Acesse o Volant para registrar ganhos, gastos e acompanhar sua performance como motorista.",
+    canonicalPath: "/auth",
+  });
+
 
   const sendReset = async () => {
     const trimmed = email.trim();
@@ -86,8 +94,8 @@ export default function Auth() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src="/icon-512.png" alt="Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
-          <h1 className="text-2xl font-bold">Volant</h1>
+          <img src="/icon-512.png" alt="Logotipo Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
+          <h1 className="text-2xl font-bold">Volant — Entre ou crie sua conta</h1>
           <p className="text-sm text-muted-foreground">
             {mode === "signin" ? "Entre para acessar seus registros" : "Crie sua conta"}
           </p>

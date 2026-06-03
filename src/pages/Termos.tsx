@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 /**
  * Termos de Uso — página pública, base revisável.
@@ -9,6 +10,11 @@ import { ArrowLeft } from "lucide-react";
  */
 export default function Termos() {
   const navigate = useNavigate();
+  useDocumentMeta({
+    title: "Termos de Uso — Volant",
+    description: "Condições de uso do aplicativo Volant para motoristas: assinatura, responsabilidades e direitos.",
+    canonicalPath: "/termos",
+  });
   const handleBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate("/");

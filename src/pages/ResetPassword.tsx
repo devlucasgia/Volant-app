@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { friendlyAuthError } from "@/lib/friendlyErrors";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 /**
  * Página pública de redefinição de senha.
@@ -27,6 +28,13 @@ export default function ResetPassword() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useDocumentMeta({
+    title: "Redefinir senha — Volant",
+    description: "Crie uma nova senha para acessar sua conta no Volant.",
+    canonicalPath: "/reset-password",
+  });
+
 
   useEffect(() => {
     // Quando o usuário chega pelo link do e-mail, Supabase processa os tokens
@@ -71,7 +79,7 @@ export default function ResetPassword() {
     <div className="dark flex min-h-[100dvh] items-center justify-center bg-background px-4 text-foreground">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src="/icon-512.png" alt="Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
+          <img src="/icon-512.png" alt="Logotipo Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
           <h1 className="text-2xl font-bold">Nova senha</h1>
           <p className="text-sm text-muted-foreground">
             {ready

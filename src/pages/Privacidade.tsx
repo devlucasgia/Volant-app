@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 /**
  * Política de Privacidade — página pública, base revisável.
@@ -9,6 +10,11 @@ import { ArrowLeft } from "lucide-react";
  */
 export default function Privacidade() {
   const navigate = useNavigate();
+  useDocumentMeta({
+    title: "Política de Privacidade — Volant",
+    description: "Como o Volant coleta, usa e protege seus dados pessoais, em conformidade com a LGPD.",
+    canonicalPath: "/privacidade",
+  });
   const handleBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate("/");

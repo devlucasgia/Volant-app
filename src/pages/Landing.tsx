@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 import {
   ArrowRight,
   Check,
@@ -57,6 +58,11 @@ import {
 export default function Landing() {
   const { user, loading } = useAuth();
   const mode = useHeroMode(9000);
+  useDocumentMeta({
+    title: "Volant — O app feito pra quem vive de app",
+    description: "Controle ganhos, gastos, metas e jornada. O app de gestão financeira para motoristas de Uber, 99, inDrive e particulares.",
+    canonicalPath: "/",
+  });
 
   // Força o tema escuro só enquanto a landing está montada.
   useEffect(() => {
@@ -143,7 +149,7 @@ function Header() {
             {open ? <XIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
           <a href="#top" className="flex items-center gap-2">
-            <img src={volantSymbol} alt="Volant" className="h-7 w-7 rounded-full" />
+            <img src={volantSymbol} alt="Logotipo Volant" className="h-7 w-7 rounded-full" />
             <span className="text-base font-bold tracking-tight">Volant</span>
           </a>
         </div>
@@ -1748,7 +1754,7 @@ function Footer() {
             <div className="flex items-center gap-2">
               <img
                 src={volantSymbol}
-                alt="Volant"
+                alt="Logotipo Volant"
                 width={28}
                 height={28}
                 loading="lazy"

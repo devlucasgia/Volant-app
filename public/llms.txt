@@ -1,0 +1,12 @@
+# Volant
+
+> O app feito pra quem vive de app. Gestão financeira para motoristas de Uber, 99, inDrive e particulares: ganhos, gastos, metas, jornada e desempenho em um só lugar.
+
+Volant ajuda motoristas a entender quanto realmente ganharam, quanto gastaram, qual o lucro líquido, e como está a performance por hora, por km, por dia e por corrida. Mobile-first, simples e rápido para o uso diário.
+
+## Pages
+
+- [Início](/): Página de vendas — recursos, benefícios e planos do Volant.
+- [Entrar ou criar conta](/auth): Acesso ao aplicativo (login e cadastro).
+- [Termos de Uso](/termos): Condições de uso do serviço.
+- [Política de Privacidade](/privacidade): Como tratamos dados pessoais (LGPD).
