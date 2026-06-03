@@ -367,7 +367,7 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm && smartKmValue !== null ? (() => {
-      const showGross = settings.goalType === "bruto";
+      const showGross = showGrossView;
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
       const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
       const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
