@@ -169,32 +169,8 @@ export default function PlanejamentoInteligente() {
             onRedo={() => setConfirmRedo(true)}
           />
 
-          {/* Atalhos discretos para as telas existentes — sem refatorar nada */}
-          <div className="mx-auto w-full max-w-md px-4 pb-28">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="h-px flex-1 bg-border/50" />
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-                <Route className="h-3 w-3" /> Mais ajustes
-              </span>
-              <span className="h-px flex-1 bg-border/50" />
-            </div>
-            <div className="space-y-2">
-              <HubCard
-                to="/ajustes/planejamento/metas"
-                icon={<Target className="h-5 w-5" />}
-                title="Metas Inteligentes"
-                description="Ajustes finos da meta e dos dias trabalhados."
-                tone="primary"
-              />
-              <HubCard
-                to="/ajustes/planejamento/km"
-                icon={<Gauge className="h-5 w-5" />}
-                title="KM Inteligente"
-                description="R$/km adaptativo conforme seu progresso."
-                tone="teal"
-              />
-            </div>
-          </div>
+          <div className="pb-28" />
+
         </>
       )}
 
