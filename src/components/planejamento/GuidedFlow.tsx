@@ -677,7 +677,7 @@ function Step6({
   return (
     <div>
       <StepHeader
-        icon={Sparkles}
+        icon={Gauge}
         title="Tudo pronto. Aqui está seu plano."
         subtitle="Confira o resumo antes de concluir."
       />
