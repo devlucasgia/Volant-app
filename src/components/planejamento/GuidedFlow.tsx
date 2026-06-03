@@ -707,7 +707,7 @@ function Step6({
           value={plan.plannedKmTotal > 0 ? fmtKm(plan.plannedKmTotal) : "—"}
         />
         <Stat
-          icon={Sparkles}
+          icon={TrendingUp}
           label="R$/KM mínimo necessário"
           value={plan.requiredRpk != null ? `${fmtRpk(plan.requiredRpk)}/km` : "—"}
         />
