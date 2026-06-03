@@ -203,21 +203,12 @@ export default function Dashboard() {
   }, [period, s.net]);
 
   // KM Inteligente — discrete display under the R$/km cell when valid.
+  // R$/KM Inteligente — vem do motor central do Planejamento Inteligente.
   const smartKmValue = useMemo(() => {
     if (!isFull) return null;
-    const real = getCurrentMonthRealData(entries);
-    const costs = computeMonthlyVehicleCosts(activeCar, settings.kmPlannedMonth);
-    const state = computeSmartKm({
-      monthlyGoal: settings.monthlyGoal,
-      goalType: settings.goalType,
-      kmPlanned: settings.kmPlannedMonth,
-      vehicleMonthlyCost: costs.total,
-      real,
-      remainingWorkingDays: settings.remainingWorkingDays,
-      kmRemainingOverride: settings.kmRemainingOverride,
-    });
-    return state.kind === "ok" ? state.smart : null;
-  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.kmRemainingOverride, settings.monthlyGoal, settings.goalType, settings.remainingWorkingDays]);
+    if (!plan.isPlanningConfigured) return null;
+    return plan.smartRpk > 0 ? plan.smartRpk : null;
+  }, [isFull, plan.isPlanningConfigured, plan.smartRpk]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
