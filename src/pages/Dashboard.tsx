@@ -161,13 +161,12 @@ export default function Dashboard() {
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
   // Alvo mensal e meta diária vêm do motor do Planejamento Inteligente quando configurado.
+  // Lente única: bruto = meta cadastrada; líquido = meta cadastrada + custos fixos.
   const monthlyTargetForView = plan.isPlanningConfigured
-    ? (showGrossView
-        ? (plan.requiredGrossRevenue ?? plan.grossTarget)
-        : (plan.estimatedNetProfit ?? plan.netTarget))
+    ? (showGrossView ? plan.homeGrossTarget : plan.homeNetTarget)
     : settings.monthlyGoal;
   const dailyForView = plan.isPlanningConfigured && plan.remainingWorkdaysCount > 0
-    ? (showGrossView ? plan.dailyGrossNeeded : plan.suggestedDailyNetGoal)
+    ? (showGrossView ? plan.homeDailyGross : plan.homeDailyNet)
     : null;
   const goalOpts = useMemo(
     () => ({
@@ -183,7 +182,10 @@ export default function Dashboard() {
     () => goalForPeriod(period, monthlyTargetForView, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
     [period, monthlyTargetForView, entries, customRange, journeyDailyOverride, goalOpts]
   );
-  const goalProgressValue = showGrossView ? s.gross : s.net;
+  // Progresso sempre baseado no bruto faturado (em ambas as visões),
+  // comparado ao alvo da lente ativa.
+  const goalProgressValue = s.gross;
+
   const goalPct = periodGoal.value > 0 ? Math.min(100, (goalProgressValue / periodGoal.value) * 100) : 0;
   const goalReached = periodGoal.value > 0 && goalProgressValue >= periodGoal.value;
   const goalRemaining = Math.max(0, periodGoal.value - goalProgressValue);
