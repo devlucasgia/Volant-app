@@ -28,7 +28,7 @@ interface FlowConfig {
     goalType: "bruto" | "liquido";
     monthlyGoal: number;
     selectedDates: string[];
-    rpkBase: number;
+    avgKmPerDay: number;
   }>;
   editSteps?: number[];
 }
@@ -40,7 +40,7 @@ interface PlanningResumeState {
     goalType: "bruto" | "liquido";
     monthlyGoal: number;
     selectedDates: string[];
-    rpkBase: number;
+    avgKmPerDay: number;
   };
 }
 
@@ -157,7 +157,7 @@ export default function PlanejamentoInteligente() {
     const editSteps: Record<Exclude<AjustarOpcao, "custos">, number[]> = {
       meta: [1, 2],
       dias: [3],
-      rpk: [4],
+      kmDia: [4],
     };
     setFlowConfig({
       variant: "edit",
