@@ -288,7 +288,7 @@ export default function Dashboard() {
         <button
           type="button"
           key="goal"
-          onClick={() => navigate("/ajustes/planejamento/metas", { state: { from: "/app" } })}
+          onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
           aria-label="Ver meta"
             className={cn(
               "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
