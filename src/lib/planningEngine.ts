@@ -197,6 +197,23 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const smartRpk =
     remainingPlannedKm > 0 ? remainingGrossToTarget / remainingPlannedKm : 0;
 
+  // Home lens — alvos simétricos independentes do goalType cadastrado.
+  // bruto = meta cadastrada; líquido = meta cadastrada + custos fixos.
+  // Progresso usa sempre currentGross (faturado), comparado ao alvo da lente ativa.
+  const homeGrossTarget = monthlyGoal;
+  const homeNetTarget = monthlyGoal + consideredCosts;
+  const homeRemainingGross = clampPos(homeGrossTarget - currentGross);
+  const homeRemainingNet = clampPos(homeNetTarget - currentGross);
+  const homeDailyGross =
+    remainingWorkdaysCount > 0 ? homeRemainingGross / remainingWorkdaysCount : 0;
+  const homeDailyNet =
+    remainingWorkdaysCount > 0 ? homeRemainingNet / remainingWorkdaysCount : 0;
+  const homeSmartRpkGross =
+    remainingPlannedKm > 0 ? homeRemainingGross / remainingPlannedKm : 0;
+  const homeSmartRpkNet =
+    remainingPlannedKm > 0 ? homeRemainingNet / remainingPlannedKm : 0;
+
+
   // Status
   let status: PlanningStatusKind;
   let message: string;
