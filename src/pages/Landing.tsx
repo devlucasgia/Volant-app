@@ -1758,7 +1758,7 @@ function Footer() {
               <span className="text-sm font-semibold text-foreground md:text-base">Volant</span>
             </div>
             <p className="text-xs leading-relaxed md:max-w-[220px]">
-              De motorista, para motoristas.
+               O app para quem vive de app.
             </p>
             <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/90">
               <Lock className="h-3 w-3 accent-text" /> Dados criptografados
