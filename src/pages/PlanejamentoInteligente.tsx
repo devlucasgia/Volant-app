@@ -72,42 +72,6 @@ function PlanHeader({ onBack }: { onBack: () => void }) {
   );
 }
 
-interface HubCardProps {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  tone: "primary" | "teal";
-}
-
-function HubCard({ to, icon, title, description, tone }: HubCardProps) {
-  const navigate = useNavigate();
-  const toneClasses =
-    tone === "primary"
-      ? "border-primary/30 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent hover:border-primary/45"
-      : "border-teal-500/25 bg-gradient-to-br from-teal-500/[0.07] via-teal-500/[0.03] to-transparent hover:border-teal-500/40";
-  const iconWrap =
-    tone === "primary" ? "bg-primary/12 text-primary" : "bg-teal-500/15 text-teal-300";
-  return (
-    <button
-      type="button"
-      onClick={() => navigate(to)}
-      className={cn(
-        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-all duration-200 active:scale-[0.985]",
-        toneClasses,
-      )}
-    >
-      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", iconWrap)}>
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[14px] font-semibold leading-tight text-foreground">{title}</div>
-        <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{description}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
-    </button>
-  );
-}
 
 export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
