@@ -193,16 +193,26 @@ export default function Dashboard() {
   const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
-  // Folga programada — hoje não está em planningSelectedDates e o usuário está
-  // visualizando o dia. Mantém progresso semanal/mensal intacto em outros períodos.
+  // Folga programada — o dia ativo (hoje no "day", dia único em "custom")
+  // não está em planningSelectedDates. Mantém progresso semanal/mensal intacto.
   const todayIsoStr = useMemo(() => toIsoDate(plStartOfDay(new Date())), []);
+  const activeDayIso = useMemo(() => {
+    if (period === "day") return todayIsoStr;
+    if (period === "custom" && customRange) {
+      const sameDay = +customRange.from === +customRange.to
+        || format(customRange.from, "yyyy-MM-dd") === format(customRange.to, "yyyy-MM-dd");
+      if (sameDay) return toIsoDate(plStartOfDay(customRange.from));
+    }
+    return null;
+  }, [period, customRange, todayIsoStr]);
   const isFolga = useMemo(() => {
-    if (period !== "day") return false;
+    if (!activeDayIso) return false;
     if (!plan.isPlanningConfigured) return false;
     if (plan.selectedWorkdaysCount <= 0) return false;
     const dates = settings.planningSelectedDates ?? [];
-    return !dates.includes(todayIsoStr);
-  }, [period, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates, todayIsoStr]);
+    return !dates.includes(activeDayIso);
+  }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates]);
+  const isFolgaToday = isFolga && activeDayIso === todayIsoStr;
 
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
