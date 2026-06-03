@@ -511,7 +511,7 @@ function Step4({
         {/* Preview educativo */}
         <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent p-4">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/90">
-            <Sparkles className="h-3 w-3" /> Com sua rotina planejada
+            <Route className="h-3 w-3" /> Com sua rotina planejada
           </div>
           <ul className="mt-2 space-y-1.5 text-[12.5px] leading-snug">
             <li className="flex items-center justify-between gap-2">
