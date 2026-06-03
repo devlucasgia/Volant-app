@@ -358,7 +358,7 @@ function Hero({ mode }: { mode: HeroMode }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full accent-dot" />
             </span>
-            O app para quem vive de app.
+            O app feito pra quem vive de app.
           </div>
 
           <h1 className="hero-anim hero-anim-2 mt-5 text-balance text-[2.05rem] font-extrabold leading-[1.08] tracking-tight md:text-[3.4rem]">
@@ -1758,7 +1758,7 @@ function Footer() {
               <span className="text-sm font-semibold text-foreground md:text-base">Volant</span>
             </div>
             <p className="text-xs leading-relaxed md:max-w-[220px]">
-               O app para quem vive de app.
+               O app feito pra quem vive de app.
             </p>
             <p className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground/90">
               <Lock className="h-3 w-3 accent-text" /> Dados criptografados
