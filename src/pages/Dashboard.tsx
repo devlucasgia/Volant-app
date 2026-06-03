@@ -209,8 +209,10 @@ export default function Dashboard() {
   const smartKmValue = useMemo(() => {
     if (!isFull) return null;
     if (!plan.isPlanningConfigured) return null;
-    return plan.smartRpk > 0 ? plan.smartRpk : null;
-  }, [isFull, plan.isPlanningConfigured, plan.smartRpk]);
+    const v = showGrossView ? plan.homeSmartRpkGross : plan.homeSmartRpkNet;
+    return v > 0 ? v : null;
+  }, [isFull, plan.isPlanningConfigured, plan.homeSmartRpkGross, plan.homeSmartRpkNet, showGrossView]);
+
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
