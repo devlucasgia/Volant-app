@@ -143,7 +143,7 @@ function Header() {
             {open ? <XIcon className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
           <a href="#top" className="flex items-center gap-2">
-            <img src={volantSymbol} alt="Volant" className="h-7 w-7 rounded-full" />
+            <img src={volantSymbol} alt="Logotipo Volant" className="h-7 w-7 rounded-full" />
             <span className="text-base font-bold tracking-tight">Volant</span>
           </a>
         </div>
@@ -1748,7 +1748,7 @@ function Footer() {
             <div className="flex items-center gap-2">
               <img
                 src={volantSymbol}
-                alt="Volant"
+                alt="Logotipo Volant"
                 width={28}
                 height={28}
                 loading="lazy"
