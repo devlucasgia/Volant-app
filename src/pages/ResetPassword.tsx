@@ -71,7 +71,7 @@ export default function ResetPassword() {
     <div className="dark flex min-h-[100dvh] items-center justify-center bg-background px-4 text-foreground">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
-          <img src="/icon-512.png" alt="Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
+          <img src="/icon-512.png" alt="Logotipo Volant" className="mx-auto mb-3 h-16 w-16 rounded-2xl shadow-elevated" />
           <h1 className="text-2xl font-bold">Nova senha</h1>
           <p className="text-sm text-muted-foreground">
             {ready
