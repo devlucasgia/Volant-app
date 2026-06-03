@@ -59,6 +59,7 @@ const DEFAULT_SETTINGS: Settings = {
   planningStatus: "not_configured",
   planningSelectedDates: null,
   rpkBase: null,
+  planningAvgKmPerDay: null,
 };
 
 function rowToEntry(r: any): Entry {
@@ -178,6 +179,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const ps = ((sRow as any).planning_status as "not_configured" | "configured" | undefined) || "not_configured";
         const psd = (sRow as any).planning_selected_dates;
         const rpk = (sRow as any).rpk_base;
+        const avgKm = (sRow as any).planning_avg_km_per_day;
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
           monthlyGoal: Number((sRow as any).monthly_goal) || 0,
@@ -193,6 +195,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           planningStatus: ps,
           planningSelectedDates: Array.isArray(psd) ? (psd as string[]) : null,
           rpkBase: rpk == null ? null : Number(rpk),
+          planningAvgKmPerDay: avgKm == null ? null : Number(avgKm),
         });
       }
       setLoading(false);
@@ -247,6 +250,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       planning_status: next.planningStatus,
       planning_selected_dates: next.planningSelectedDates as any,
       rpk_base: next.rpkBase,
+      planning_avg_km_per_day: next.planningAvgKmPerDay,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.

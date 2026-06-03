@@ -6,8 +6,9 @@ import { computeFixedMonthlyCosts, startOfDay, toIsoDate } from "@/lib/planejame
 
 export type PlanningStatusKind =
   | "not_configured"
-  | "invalid_rpk"
+  | "invalid_avg_km"
   | "no_workdays"
+  | "needs_adjustment"
   | "completed"
   | "on_track"
   | "behind"
@@ -36,6 +37,7 @@ export interface PlanningSnapshot {
   // Restante
   remainingGross: number;
   remainingNet: number;
+  remainingGrossToTarget: number;
   activeRemainingAmount: number;
 
   // Dias
@@ -47,13 +49,20 @@ export interface PlanningSnapshot {
   suggestedDailyGrossGoal: number;
   suggestedDailyNetGoal: number;
   activeSuggestedDailyGoal: number;
+  dailyGrossNeeded: number;
 
-  // KM
+  // KM — novo modelo
+  averageKmPerDay: number;
+  plannedKmTotal: number;
+  remainingPlannedKm: number;
+  requiredRpk: number;
+  smartRpk: number;
+
+  // Aliases técnicos (compat)
   baseRpk: number;
   requiredKm: number;
   remainingKm: number;
   averageKmPerWorkday: number;
-  smartRpk: number;
 
   status: PlanningStatusKind;
   message: string;
@@ -98,7 +107,6 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const isPlanningConfigured = settings.planningStatus === "configured";
   const mainGoalType: GoalType = settings.goalType ?? "bruto";
   const monthlyGoal = Number(settings.monthlyGoal) || 0;
-  const baseRpk = settings.rpkBase && settings.rpkBase > 0 ? Number(settings.rpkBase) : 0;
 
   // Custos considerados (fixos do veículo) — independentes dos gastos reais
   const costs = computeFixedMonthlyCosts(activeCar);
@@ -122,17 +130,6 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     estimatedNetProfit = monthlyGoal;
   }
 
-  // Progresso real do mês — gastos reais ≠ custos considerados
-  const agg = monthAggregates(entries, now);
-  const currentGross = clampPos(agg.gross);
-  const currentExpenses = clampPos(agg.expenses);
-  const currentNet = agg.net;
-  const currentKm = clampPos(agg.km);
-
-  const remainingGross = clampPos(grossTarget - currentGross);
-  const remainingNet = clampPos(netTarget - currentNet);
-  const activeRemainingAmount = mainGoalType === "bruto" ? remainingGross : remainingNet;
-
   // Dias — hoje conta como restante se estiver selecionado
   const selected = settings.planningSelectedDates ?? [];
   const todayIso = toIsoDate(startOfDay(now));
@@ -144,27 +141,48 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   }
   const selectedWorkdaysCount = selected.length;
 
-  // Meta diária — restante / dias restantes (sem dividir por zero)
+  // KM médio/dia — preferir novo campo; fallback derivado do legado para não
+  // quebrar planos antigos (rpkBase + kmPlannedMonth).
+  let averageKmPerDay = settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
+    ? Number(settings.planningAvgKmPerDay)
+    : 0;
+  if (averageKmPerDay <= 0 && selectedWorkdaysCount > 0 && settings.kmPlannedMonth && settings.kmPlannedMonth > 0) {
+    averageKmPerDay = Number(settings.kmPlannedMonth) / selectedWorkdaysCount;
+  }
+
+  const plannedKmTotal = averageKmPerDay > 0 && selectedWorkdaysCount > 0
+    ? averageKmPerDay * selectedWorkdaysCount
+    : 0;
+
+  // Progresso real do mês
+  const agg = monthAggregates(entries, now);
+  const currentGross = clampPos(agg.gross);
+  const currentExpenses = clampPos(agg.expenses);
+  const currentNet = agg.net;
+  const currentKm = clampPos(agg.km);
+
+  const remainingGross = clampPos(grossTarget - currentGross);
+  const remainingNet = clampPos(netTarget - currentNet);
+  const remainingGrossToTarget = clampPos(requiredGrossRevenue - currentGross);
+  const activeRemainingAmount = mainGoalType === "bruto" ? remainingGross : remainingNet;
+
+  const remainingPlannedKm = clampPos(plannedKmTotal - currentKm);
+
+  // Meta diária — restante / dias restantes
   const suggestedDailyGrossGoal =
     remainingWorkdaysCount > 0 ? remainingGross / remainingWorkdaysCount : 0;
   const suggestedDailyNetGoal =
     remainingWorkdaysCount > 0 ? remainingNet / remainingWorkdaysCount : 0;
   const activeSuggestedDailyGoal =
     mainGoalType === "bruto" ? suggestedDailyGrossGoal : suggestedDailyNetGoal;
+  const dailyGrossNeeded =
+    remainingWorkdaysCount > 0 ? remainingGrossToTarget / remainingWorkdaysCount : 0;
 
-  // KM
-  const grossOperationalRevenue = mainGoalType === "bruto" ? grossTarget : requiredGrossRevenue;
-  const requiredKm = baseRpk > 0 ? grossOperationalRevenue / baseRpk : 0;
-  const remainingKm = clampPos(requiredKm - currentKm);
-  const averageKmPerWorkday =
-    remainingWorkdaysCount > 0 ? remainingKm / remainingWorkdaysCount : 0;
-
-  // R$/km inteligente
-  const grossOperationalRemaining =
-    mainGoalType === "bruto"
-      ? remainingGross
-      : clampPos(requiredGrossRevenue - currentGross);
-  const smartRpk = remainingKm > 0 ? grossOperationalRemaining / remainingKm : 0;
+  // R$/KM mínimo necessário (estático) e R$/KM inteligente (dinâmico)
+  const requiredRpk =
+    plannedKmTotal > 0 ? requiredGrossRevenue / plannedKmTotal : 0;
+  const smartRpk =
+    remainingPlannedKm > 0 ? remainingGrossToTarget / remainingPlannedKm : 0;
 
   // Status
   let status: PlanningStatusKind;
@@ -179,9 +197,9 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     status = "not_configured";
     message =
       "Configure seu Planejamento Inteligente para acompanhar metas e KM com mais precisão.";
-  } else if (baseRpk <= 0) {
-    status = "invalid_rpk";
-    message = "Defina uma base de R$/KM para calcular os KM necessários.";
+  } else if (averageKmPerDay <= 0) {
+    status = "invalid_avg_km";
+    message = "Informe sua média de KM por dia para calcular o R$/KM mínimo necessário.";
   } else if (isCompleted) {
     status = "completed";
     message = "Meta concluída. Você já atingiu o objetivo deste período.";
@@ -189,8 +207,11 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     status = "no_workdays";
     message =
       "Você não tem mais dias planejados neste período. Ajuste o planejamento para recalcular sua meta.";
+  } else if (remainingPlannedKm <= 0 && remainingGrossToTarget > 0) {
+    status = "needs_adjustment";
+    message =
+      "Você já usou os KM planejados. Ajuste sua média de KM, seus dias ou sua meta para recalcular.";
   } else {
-    // Ritmo simples: progresso esperado proporcional aos dias trabalhados / total
     const expectedRatio =
       selectedWorkdaysCount > 0 ? pastWorkdaysCount / selectedWorkdaysCount : 0;
     const target = mainGoalType === "bruto" ? grossTarget : netTarget;
@@ -209,6 +230,9 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     }
   }
 
+  const requiredRpkOut = clampPos(requiredRpk);
+  const remainingPlannedKmOut = clampPos(remainingPlannedKm);
+
   return {
     isPlanningConfigured,
     mainGoalType,
@@ -224,6 +248,7 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     currentKm,
     remainingGross,
     remainingNet,
+    remainingGrossToTarget,
     activeRemainingAmount,
     selectedWorkdaysCount,
     remainingWorkdaysCount,
@@ -231,11 +256,20 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     suggestedDailyGrossGoal: clampPos(suggestedDailyGrossGoal),
     suggestedDailyNetGoal: clampPos(suggestedDailyNetGoal),
     activeSuggestedDailyGoal: clampPos(activeSuggestedDailyGoal),
-    baseRpk,
-    requiredKm: clampPos(requiredKm),
-    remainingKm,
-    averageKmPerWorkday: clampPos(averageKmPerWorkday),
+    dailyGrossNeeded: clampPos(dailyGrossNeeded),
+    averageKmPerDay: clampPos(averageKmPerDay),
+    plannedKmTotal: clampPos(plannedKmTotal),
+    remainingPlannedKm: remainingPlannedKmOut,
+    requiredRpk: requiredRpkOut,
     smartRpk: clampPos(smartRpk),
+    // aliases técnicos (compat com consumidores antigos)
+    baseRpk: requiredRpkOut,
+    requiredKm: clampPos(plannedKmTotal),
+    remainingKm: remainingPlannedKmOut,
+    averageKmPerWorkday:
+      remainingWorkdaysCount > 0
+        ? clampPos(remainingPlannedKm / remainingWorkdaysCount)
+        : 0,
     status,
     message,
   };

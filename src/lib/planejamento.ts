@@ -33,40 +33,49 @@ export function computeFixedMonthlyCosts(car: Car | null): {
 export interface PlanResult {
   diasSelecionados: number;
   custosFixos: number;
-  faturamentoBrutoOperacional: number;
-  kmNecessario: number | null;
+  faturamentoNecessario: number;
+  plannedKmTotal: number;
+  requiredRpk: number | null;
   metaDiaria: number | null;
   lucroEstimado: number | null;
-  faturamentoNecessario: number | null;
 }
 
+/**
+ * Novo modelo: o usuário informa KM médio por dia trabalhado.
+ * O app calcula KM planejado e o R$/KM mínimo necessário.
+ */
 export function computePlan(params: {
   monthlyGoal: number;
   goalType: GoalType;
   diasSelecionados: number;
   custosFixos: number;
-  rpkBase: number | null;
+  avgKmPerDay: number | null;
 }): PlanResult {
-  const { monthlyGoal, goalType, diasSelecionados, custosFixos, rpkBase } = params;
-  const faturamentoBrutoOperacional =
+  const { monthlyGoal, goalType, diasSelecionados, custosFixos, avgKmPerDay } = params;
+  const faturamentoNecessario =
     goalType === "liquido" ? monthlyGoal + custosFixos : monthlyGoal;
-  const kmNecessario =
-    rpkBase && rpkBase > 0 ? faturamentoBrutoOperacional / rpkBase : null;
+  const km = avgKmPerDay && avgKmPerDay > 0 ? avgKmPerDay : 0;
+  const plannedKmTotal = diasSelecionados > 0 && km > 0 ? diasSelecionados * km : 0;
+  const requiredRpk =
+    plannedKmTotal > 0 && faturamentoNecessario > 0
+      ? faturamentoNecessario / plannedKmTotal
+      : null;
   const metaDiaria = diasSelecionados > 0 ? monthlyGoal / diasSelecionados : null;
   const lucroEstimado = goalType === "bruto" ? monthlyGoal - custosFixos : null;
-  const faturamentoNecessario =
-    goalType === "liquido" ? monthlyGoal + custosFixos : null;
   return {
     diasSelecionados,
     custosFixos,
-    faturamentoBrutoOperacional,
-    kmNecessario,
+    faturamentoNecessario,
+    plannedKmTotal,
+    requiredRpk,
     metaDiaria,
     lucroEstimado,
-    faturamentoNecessario,
   };
 }
 
+/** Sugestão inicial — média realista para motoristas urbanos. */
+export const DEFAULT_AVG_KM_PER_DAY = 200;
+/** Legado — mantido por compat de imports antigos. */
 export const DEFAULT_RPK_BASE = 2.0;
 
 /** yyyy-MM-dd em fuso local (não UTC). */
