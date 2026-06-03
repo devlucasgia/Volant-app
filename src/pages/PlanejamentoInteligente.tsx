@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Target, Gauge, ChevronRight, Route } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowLeft, Brain } from "lucide-react";
+
 import { useData } from "@/context/DataContext";
 import { EmptyState } from "@/components/planejamento/EmptyState";
 import { GuidedFlow } from "@/components/planejamento/GuidedFlow";
@@ -72,42 +72,6 @@ function PlanHeader({ onBack }: { onBack: () => void }) {
   );
 }
 
-interface HubCardProps {
-  to: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  tone: "primary" | "teal";
-}
-
-function HubCard({ to, icon, title, description, tone }: HubCardProps) {
-  const navigate = useNavigate();
-  const toneClasses =
-    tone === "primary"
-      ? "border-primary/30 bg-gradient-to-br from-primary/[0.07] via-primary/[0.03] to-transparent hover:border-primary/45"
-      : "border-teal-500/25 bg-gradient-to-br from-teal-500/[0.07] via-teal-500/[0.03] to-transparent hover:border-teal-500/40";
-  const iconWrap =
-    tone === "primary" ? "bg-primary/12 text-primary" : "bg-teal-500/15 text-teal-300";
-  return (
-    <button
-      type="button"
-      onClick={() => navigate(to)}
-      className={cn(
-        "group flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition-all duration-200 active:scale-[0.985]",
-        toneClasses,
-      )}
-    >
-      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", iconWrap)}>
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-[14px] font-semibold leading-tight text-foreground">{title}</div>
-        <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">{description}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
-    </button>
-  );
-}
 
 export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
@@ -205,32 +169,8 @@ export default function PlanejamentoInteligente() {
             onRedo={() => setConfirmRedo(true)}
           />
 
-          {/* Atalhos discretos para as telas existentes — sem refatorar nada */}
-          <div className="mx-auto w-full max-w-md px-4 pb-28">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="h-px flex-1 bg-border/50" />
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-                <Route className="h-3 w-3" /> Mais ajustes
-              </span>
-              <span className="h-px flex-1 bg-border/50" />
-            </div>
-            <div className="space-y-2">
-              <HubCard
-                to="/ajustes/planejamento/metas"
-                icon={<Target className="h-5 w-5" />}
-                title="Metas Inteligentes"
-                description="Ajustes finos da meta e dos dias trabalhados."
-                tone="primary"
-              />
-              <HubCard
-                to="/ajustes/planejamento/km"
-                icon={<Gauge className="h-5 w-5" />}
-                title="KM Inteligente"
-                description="R$/km adaptativo conforme seu progresso."
-                tone="teal"
-              />
-            </div>
-          </div>
+          <div className="pb-28" />
+
         </>
       )}
 

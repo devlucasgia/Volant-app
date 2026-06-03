@@ -193,16 +193,26 @@ export default function Dashboard() {
   const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
-  // Folga programada — hoje não está em planningSelectedDates e o usuário está
-  // visualizando o dia. Mantém progresso semanal/mensal intacto em outros períodos.
+  // Folga programada — o dia ativo (hoje no "day", dia único em "custom")
+  // não está em planningSelectedDates. Mantém progresso semanal/mensal intacto.
   const todayIsoStr = useMemo(() => toIsoDate(plStartOfDay(new Date())), []);
+  const activeDayIso = useMemo(() => {
+    if (period === "day") return todayIsoStr;
+    if (period === "custom" && customRange) {
+      const sameDay = +customRange.from === +customRange.to
+        || format(customRange.from, "yyyy-MM-dd") === format(customRange.to, "yyyy-MM-dd");
+      if (sameDay) return toIsoDate(plStartOfDay(customRange.from));
+    }
+    return null;
+  }, [period, customRange, todayIsoStr]);
   const isFolga = useMemo(() => {
-    if (period !== "day") return false;
+    if (!activeDayIso) return false;
     if (!plan.isPlanningConfigured) return false;
     if (plan.selectedWorkdaysCount <= 0) return false;
     const dates = settings.planningSelectedDates ?? [];
-    return !dates.includes(todayIsoStr);
-  }, [period, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates, todayIsoStr]);
+    return !dates.includes(activeDayIso);
+  }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates]);
+  const isFolgaToday = isFolga && activeDayIso === todayIsoStr;
 
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
@@ -278,7 +288,7 @@ export default function Dashboard() {
         <button
           type="button"
           key="goal"
-          onClick={() => navigate("/ajustes/planejamento/metas", { state: { from: "/app" } })}
+          onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
           aria-label="Ver meta"
             className={cn(
               "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
@@ -305,7 +315,7 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{isFolga ? "Folga programada" : periodGoal.title}</span>
+                <span className="truncate">{isFolga ? (isFolgaToday ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
                 {isFolga && (
                   <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     <Coffee className="h-2.5 w-2.5" /> Descanso
@@ -329,7 +339,9 @@ export default function Dashboard() {
             <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums truncate">
                 {isFolga
-                  ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                  ? (isFolgaToday
+                      ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                      : "Este dia não está no seu planejamento.")
                   : periodGoal.value > 0
                     ? goalReached
                       ? overAmount > 0
@@ -338,10 +350,38 @@ export default function Dashboard() {
                       : `Faltam ${brl(goalRemaining)}`
                     : "Defina sua meta mensal em Ajustes"}
               </span>
-              {periodGoal.value > 0 && (
+              {periodGoal.value > 0 && !isFolga && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
               )}
             </div>
+            {isFolgaToday && (
+              <div className="mt-2">
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const dates = settings.planningSelectedDates ?? [];
+                    if (dates.includes(todayIsoStr)) return;
+                    const next = [...dates, todayIsoStr].sort();
+                    void updateSettings({ planningSelectedDates: next });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const dates = settings.planningSelectedDates ?? [];
+                      if (dates.includes(todayIsoStr)) return;
+                      const next = [...dates, todayIsoStr].sort();
+                      void updateSettings({ planningSelectedDates: next });
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 cursor-pointer"
+                >
+                  Trabalhar hoje mesmo assim
+                </span>
+              </div>
+            )}
             {overAmount > 0 && (
               <div className="mt-1.5">
                 <span className={cn(
@@ -405,7 +445,7 @@ export default function Dashboard() {
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
             type="button"
-            onClick={() => navigate("/ajustes/planejamento/km", { state: { from: "/app" } })}
+            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             aria-label="Ver cálculo"
             className={cn(
               "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
@@ -429,11 +469,18 @@ export default function Dashboard() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
             </span>
           </button>
-          {plan.plannedKmTotal > 0 && (
-            <p className="mt-1.5 text-[10px] text-muted-foreground/70">
-              Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
-            </p>
-          )}
+          {plan.plannedKmTotal > 0 && (() => {
+            const statusTone =
+              plan.status === "ahead" ? "text-success"
+              : plan.status === "behind" ? "text-amber-400"
+              : plan.status === "needs_adjustment" ? "text-rose-400"
+              : "text-muted-foreground/70";
+            return (
+              <p className={cn("mt-1.5 text-[10px]", statusTone)}>
+                Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
+              </p>
+            );
+          })()}
         </div>
       );
     })() : null,
