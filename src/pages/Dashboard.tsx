@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
+import { usePlanningSnapshot } from "@/lib/planningEngine";
+import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -47,7 +49,10 @@ export default function Dashboard() {
   });
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
-  const heroMetric: "net" | "gross" = settings.goalType === "bruto" ? "gross" : "net";
+  const [heroView, setHeroView] = useHeroMetric();
+  const heroMetric: "net" | "gross" = heroView;
+  const plan = usePlanningSnapshot();
+  const showGrossView = heroView === "gross";
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -155,19 +160,30 @@ export default function Dashboard() {
     } catch { return null; }
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
+  // Alvo mensal e meta diária vêm do motor do Planejamento Inteligente quando configurado.
+  const monthlyTargetForView = plan.isPlanningConfigured
+    ? (showGrossView
+        ? (plan.requiredGrossRevenue ?? plan.grossTarget)
+        : (plan.estimatedNetProfit ?? plan.netTarget))
+    : settings.monthlyGoal;
+  const dailyForView = plan.isPlanningConfigured && plan.remainingWorkdaysCount > 0
+    ? (showGrossView ? plan.dailyGrossNeeded : plan.suggestedDailyNetGoal)
+    : null;
   const goalOpts = useMemo(
     () => ({
-      goalType: settings.goalType,
+      goalType: (showGrossView ? "bruto" : "liquido") as "bruto" | "liquido",
       workingDays: settings.workingDaysPerMonth,
-      remainingWorkingDays: settings.remainingWorkingDays,
+      remainingWorkingDays: plan.isPlanningConfigured ? plan.remainingWorkdaysCount : settings.remainingWorkingDays,
+      dailyOverride: dailyForView,
+      plannedDates: settings.planningSelectedDates,
     }),
-    [settings.goalType, settings.workingDaysPerMonth, settings.remainingWorkingDays]
+    [showGrossView, settings.workingDaysPerMonth, settings.remainingWorkingDays, settings.planningSelectedDates, dailyForView, plan.isPlanningConfigured, plan.remainingWorkdaysCount],
   );
   const periodGoal = useMemo(
-    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
-    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride, goalOpts]
+    () => goalForPeriod(period, monthlyTargetForView, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
+    [period, monthlyTargetForView, entries, customRange, journeyDailyOverride, goalOpts]
   );
-  const goalProgressValue = settings.goalType === "liquido" ? s.net : s.gross;
+  const goalProgressValue = showGrossView ? s.gross : s.net;
   const goalPct = periodGoal.value > 0 ? Math.min(100, (goalProgressValue / periodGoal.value) * 100) : 0;
   const goalReached = periodGoal.value > 0 && goalProgressValue >= periodGoal.value;
   const goalRemaining = Math.max(0, periodGoal.value - goalProgressValue);
@@ -187,21 +203,12 @@ export default function Dashboard() {
   }, [period, s.net]);
 
   // KM Inteligente — discrete display under the R$/km cell when valid.
+  // R$/KM Inteligente — vem do motor central do Planejamento Inteligente.
   const smartKmValue = useMemo(() => {
     if (!isFull) return null;
-    const real = getCurrentMonthRealData(entries);
-    const costs = computeMonthlyVehicleCosts(activeCar, settings.kmPlannedMonth);
-    const state = computeSmartKm({
-      monthlyGoal: settings.monthlyGoal,
-      goalType: settings.goalType,
-      kmPlanned: settings.kmPlannedMonth,
-      vehicleMonthlyCost: costs.total,
-      real,
-      remainingWorkingDays: settings.remainingWorkingDays,
-      kmRemainingOverride: settings.kmRemainingOverride,
-    });
-    return state.kind === "ok" ? state.smart : null;
-  }, [isFull, entries, activeCar, settings.kmPlannedMonth, settings.kmRemainingOverride, settings.monthlyGoal, settings.goalType, settings.remainingWorkingDays]);
+    if (!plan.isPlanningConfigured) return null;
+    return plan.smartRpk > 0 ? plan.smartRpk : null;
+  }, [isFull, plan.isPlanningConfigured, plan.smartRpk]);
 
   const totalKmDriven = totalKmAllTime(entries);
   const realCurrentKm = carInitialKm + totalKmDriven;
@@ -241,7 +248,7 @@ export default function Dashboard() {
     ) : null,
 
     goal: widgets.goal ? (() => {
-      const isLiquido = settings.goalType === "liquido";
+      const isLiquido = !showGrossView;
       // Theme tokens: green for líquida, premium blue for bruta.
       const themeText = isLiquido ? "text-success" : "text-[hsl(var(--goal-gross))]";
       const themeBg = isLiquido ? "bg-success/15" : "bg-[hsl(var(--goal-gross))]/15";
@@ -360,7 +367,7 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm && smartKmValue !== null ? (() => {
-      const showGross = settings.goalType === "bruto";
+      const showGross = showGrossView;
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
       const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
       const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
@@ -632,7 +639,7 @@ export default function Dashboard() {
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
           const toggleHero = () => {
-            void updateSettings({ goalType: showGross ? "liquido" : "bruto" });
+            setHeroView(showGross ? "net" : "gross");
           };
           return (
             <div
@@ -674,8 +681,8 @@ export default function Dashboard() {
                         { key: "liquido", label: "Líquido" },
                         { key: "bruto", label: "Bruto" },
                       ]}
-                      value={settings.goalType}
-                      onChange={(v) => { void updateSettings({ goalType: v }); }}
+                      value={showGross ? "bruto" : "liquido"}
+                      onChange={(v) => { setHeroView(v === "bruto" ? "gross" : "net"); }}
                     />
                     <button
                       type="button"

@@ -1,5 +1,5 @@
 import { Entry, EarningEntry, ExpenseEntry } from "@/types";
-import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays } from "date-fns";
+import { startOfDay, endOfDay, startOfWeek, startOfMonth, endOfMonth, isAfter, differenceInCalendarDays, format } from "date-fns";
 
 export type Period = "day" | "week" | "month" | "all" | "custom";
 
@@ -77,6 +77,10 @@ export interface DeriveGoalsOptions {
   workingDays?: number | null;
   /** Dias que o motorista ainda pretende trabalhar até o fim do mês (adaptativo). */
   remainingWorkingDays?: number | null;
+  /** Meta diária resolvida pelo Planejamento Inteligente (sobrescreve cálculos quando informado). */
+  dailyOverride?: number | null;
+  /** Datas (ISO yyyy-MM-dd) planejadas pelo Planejamento Inteligente — usadas para metas semanais e por período. */
+  plannedDates?: string[] | null;
 }
 
 export function deriveGoals(
@@ -146,15 +150,40 @@ export function goalForPeriod(
 ): { value: number; title: string } {
   const g = deriveGoals(monthlyGoal, entries, new Date(), opts);
   const kind = opts.goalType === "liquido" ? "líquida" : "bruta";
+  const planDaily = opts.dailyOverride != null && opts.dailyOverride > 0 ? opts.dailyOverride : null;
+  const plannedDates = opts.plannedDates ?? null;
+
+  const countPlannedInRange = (from: Date, to: Date): number => {
+    if (!plannedDates || plannedDates.length === 0) return 0;
+    const fromIso = format(from, "yyyy-MM-dd");
+    const toIso = format(to, "yyyy-MM-dd");
+    let n = 0;
+    for (const iso of plannedDates) if (iso >= fromIso && iso <= toIso) n += 1;
+    return n;
+  };
+
   if (period === "day") {
-    return {
-      value: dailyOverride && dailyOverride > 0 ? dailyOverride : g.daily,
-      title: `Meta ${kind} do dia`,
-    };
+    const value = dailyOverride && dailyOverride > 0 ? dailyOverride : planDaily ?? g.daily;
+    return { value, title: `Meta ${kind} do dia` };
   }
-  if (period === "week") return { value: g.weekly, title: `Meta ${kind} da semana` };
+  if (period === "week") {
+    if (planDaily) {
+      const now = new Date();
+      const ws = startOfWeek(now, { weekStartsOn: 1 });
+      const we = new Date(ws); we.setDate(we.getDate() + 6);
+      const daysInWeek = countPlannedInRange(ws, we);
+      const fallback = Math.min(7, opts.remainingWorkingDays ?? 7);
+      return { value: planDaily * (daysInWeek > 0 ? daysInWeek : fallback), title: `Meta ${kind} da semana` };
+    }
+    return { value: g.weekly, title: `Meta ${kind} da semana` };
+  }
   if (period === "month") return { value: g.monthly, title: `Meta ${kind} do mês` };
   if (period === "custom" && customRange) {
+    if (planDaily) {
+      const daysPlanned = countPlannedInRange(customRange.from, customRange.to);
+      const daysCalendar = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
+      return { value: planDaily * (daysPlanned > 0 ? daysPlanned : daysCalendar), title: `Meta ${kind} do período` };
+    }
     const days = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
     return { value: g.daily * days, title: `Meta ${kind} do período` };
   }
