@@ -49,7 +49,10 @@ export default function Dashboard() {
   });
   const widgets = settings.dashboardWidgets;
   const [homeOrder] = useHomeOrder();
-  const heroMetric: "net" | "gross" = settings.goalType === "bruto" ? "gross" : "net";
+  const [heroView, setHeroView] = useHeroMetric();
+  const heroMetric: "net" | "gross" = heroView;
+  const plan = usePlanningSnapshot();
+  const showGrossView = heroView === "gross";
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
