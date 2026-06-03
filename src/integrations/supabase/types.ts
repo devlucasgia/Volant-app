@@ -468,6 +468,7 @@ export type Database = {
           last_maintenance_km: number
           maintenance_interval_km: number
           monthly_goal: number
+          planning_avg_km_per_day: number | null
           planning_selected_dates: Json | null
           planning_status: string
           remaining_working_days: number | null
@@ -486,6 +487,7 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          planning_avg_km_per_day?: number | null
           planning_selected_dates?: Json | null
           planning_status?: string
           remaining_working_days?: number | null
@@ -504,6 +506,7 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          planning_avg_km_per_day?: number | null
           planning_selected_dates?: Json | null
           planning_status?: string
           remaining_working_days?: number | null
