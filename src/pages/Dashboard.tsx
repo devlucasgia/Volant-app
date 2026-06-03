@@ -22,6 +22,8 @@ import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
+import { usePlanningSnapshot } from "@/lib/planningEngine";
+import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
