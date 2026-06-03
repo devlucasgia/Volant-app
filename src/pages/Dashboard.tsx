@@ -445,7 +445,7 @@ export default function Dashboard() {
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
             type="button"
-            onClick={() => navigate("/ajustes/planejamento/km", { state: { from: "/app" } })}
+            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             aria-label="Ver cálculo"
             className={cn(
               "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
