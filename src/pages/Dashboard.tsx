@@ -193,6 +193,17 @@ export default function Dashboard() {
   const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
+  // Folga programada — hoje não está em planningSelectedDates e o usuário está
+  // visualizando o dia. Mantém progresso semanal/mensal intacto em outros períodos.
+  const todayIsoStr = useMemo(() => toIsoDate(plStartOfDay(new Date())), []);
+  const isFolga = useMemo(() => {
+    if (period !== "day") return false;
+    if (!plan.isPlanningConfigured) return false;
+    if (plan.selectedWorkdaysCount <= 0) return false;
+    const dates = settings.planningSelectedDates ?? [];
+    return !dates.includes(todayIsoStr);
+  }, [period, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates, todayIsoStr]);
+
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
     if (period !== "month") return null;
