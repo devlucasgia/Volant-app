@@ -639,7 +639,7 @@ export default function Dashboard() {
                 { label: "Gastos", value: s.totalExpenses, dot: "bg-destructive/70" },
               ];
           const toggleHero = () => {
-            void updateSettings({ goalType: showGross ? "liquido" : "bruto" });
+            setHeroView(showGross ? "net" : "gross");
           };
           return (
             <div
