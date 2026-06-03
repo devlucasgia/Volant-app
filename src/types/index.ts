@@ -136,8 +136,10 @@ export interface Settings {
   planningStatus: PlanningStatus;
   /** Datas exatas (ISO yyyy-MM-dd) selecionadas no calendário do Planejamento Inteligente. */
   planningSelectedDates: string[] | null;
-  /** Base de R$/km escolhida no fluxo guiado. */
+  /** Base de R$/km escolhida no fluxo guiado (legado — mantido por compat). */
   rpkBase: number | null;
+  /** Média de KM por dia trabalhado informada no Planejamento Inteligente. */
+  planningAvgKmPerDay: number | null;
 }
 
 export interface CustomCategory {
