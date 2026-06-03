@@ -469,11 +469,18 @@ export default function Dashboard() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
             </span>
           </button>
-          {plan.plannedKmTotal > 0 && (
-            <p className="mt-1.5 text-[10px] text-muted-foreground/70">
-              Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
-            </p>
-          )}
+          {plan.plannedKmTotal > 0 && (() => {
+            const statusTone =
+              plan.status === "ahead" ? "text-success"
+              : plan.status === "behind" ? "text-amber-400"
+              : plan.status === "needs_adjustment" ? "text-rose-400"
+              : "text-muted-foreground/70";
+            return (
+              <p className={cn("mt-1.5 text-[10px]", statusTone)}>
+                Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
+              </p>
+            );
+          })()}
         </div>
       );
     })() : null,
