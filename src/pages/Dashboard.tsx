@@ -339,7 +339,9 @@ export default function Dashboard() {
             <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums truncate">
                 {isFolga
-                  ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                  ? (isFolgaToday
+                      ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                      : "Este dia não está no seu planejamento.")
                   : periodGoal.value > 0
                     ? goalReached
                       ? overAmount > 0
@@ -348,10 +350,38 @@ export default function Dashboard() {
                       : `Faltam ${brl(goalRemaining)}`
                     : "Defina sua meta mensal em Ajustes"}
               </span>
-              {periodGoal.value > 0 && (
+              {periodGoal.value > 0 && !isFolga && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
               )}
             </div>
+            {isFolgaToday && (
+              <div className="mt-2">
+                <span
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const dates = settings.planningSelectedDates ?? [];
+                    if (dates.includes(todayIsoStr)) return;
+                    const next = [...dates, todayIsoStr].sort();
+                    void updateSettings({ planningSelectedDates: next });
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const dates = settings.planningSelectedDates ?? [];
+                      if (dates.includes(todayIsoStr)) return;
+                      const next = [...dates, todayIsoStr].sort();
+                      void updateSettings({ planningSelectedDates: next });
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 cursor-pointer"
+                >
+                  Trabalhar hoje mesmo assim
+                </span>
+              </div>
+            )}
             {overAmount > 0 && (
               <div className="mt-1.5">
                 <span className={cn(
