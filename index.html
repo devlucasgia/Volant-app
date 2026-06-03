@@ -40,7 +40,27 @@
   <meta name="twitter:title" content="Volant — Gestão financeira para motoristas">
   <meta property="og:description" content="Controle ganhos, gastos, metas, jornada e desempenho em um app moderno criado para motoristas de Uber, 99, inDrive e particulares.">
   <meta name="twitter:description" content="Controle ganhos, gastos, metas, jornada e desempenho em um app moderno criado para motoristas de Uber, 99, inDrive e particulares.">
-    <script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Volant",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Web, Android, iOS",
+        "url": "https://usevolant.app/",
+        "description": "Gestão financeira para motoristas de Uber, 99, inDrive e particulares: ganhos, gastos, metas, jornada e desempenho em um só lugar.",
+        "offers": { "@type": "Offer", "priceCurrency": "BRL" }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Volant",
+        "url": "https://usevolant.app/",
+        "logo": "https://usevolant.app/volant-app-icon-512.png"
+      }
+    </script>
       // Apply persisted theme synchronously before first paint to avoid a
       // light-mode flash for users whose preference is dark (which is the
       // default for new accounts). Reads `volant.theme` from localStorage
