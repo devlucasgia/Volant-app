@@ -305,7 +305,12 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{periodGoal.title}</span>
+                <span className="truncate">{isFolga ? "Folga programada" : periodGoal.title}</span>
+                {isFolga && (
+                  <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <Coffee className="h-2.5 w-2.5" /> Descanso
+                  </span>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
