@@ -78,7 +78,6 @@ export function GuidedFlow({
     () => cars.find((c) => c.is_active) || cars[0] || null,
     [cars],
   );
-  const costs = useMemo(() => computeFixedMonthlyCosts(activeCar), [activeCar]);
 
   const isEdit = !!editMode;
   const stepsList = editMode?.steps ?? Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
@@ -107,6 +106,16 @@ export function GuidedFlow({
   }));
   const [saving, setSaving] = useState(false);
 
+  // Custos consideram óleo e pneus prorrateados pelo KM planejado do draft.
+  const draftPlannedKm = useMemo(
+    () => (draft.avgKmPerDay > 0 ? draft.avgKmPerDay * draft.selectedDates.length : 0),
+    [draft.avgKmPerDay, draft.selectedDates.length],
+  );
+  const costs = useMemo(
+    () => computeFixedMonthlyCosts(activeCar, draftPlannedKm),
+    [activeCar, draftPlannedKm],
+  );
+
   const plan = useMemo(
     () =>
       computePlan({
@@ -118,6 +127,7 @@ export function GuidedFlow({
       }),
     [draft, costs.total],
   );
+
 
   const canNext = (() => {
     if (step === 1) return true;
