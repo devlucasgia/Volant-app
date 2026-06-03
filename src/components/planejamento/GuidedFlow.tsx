@@ -4,13 +4,13 @@ import {
   ArrowLeft,
   Check,
   ChevronRight,
-  Sparkles,
   Flag,
   Target,
   CalendarDays,
   Car as CarIcon,
   TrendingUp,
   Route,
+  Gauge,
   AlertTriangle,
   Loader2,
   Pencil,
@@ -78,7 +78,6 @@ export function GuidedFlow({
     () => cars.find((c) => c.is_active) || cars[0] || null,
     [cars],
   );
-  const costs = useMemo(() => computeFixedMonthlyCosts(activeCar), [activeCar]);
 
   const isEdit = !!editMode;
   const stepsList = editMode?.steps ?? Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
@@ -107,6 +106,16 @@ export function GuidedFlow({
   }));
   const [saving, setSaving] = useState(false);
 
+  // Custos consideram óleo e pneus prorrateados pelo KM planejado do draft.
+  const draftPlannedKm = useMemo(
+    () => (draft.avgKmPerDay > 0 ? draft.avgKmPerDay * draft.selectedDates.length : 0),
+    [draft.avgKmPerDay, draft.selectedDates.length],
+  );
+  const costs = useMemo(
+    () => computeFixedMonthlyCosts(activeCar, draftPlannedKm),
+    [activeCar, draftPlannedKm],
+  );
+
   const plan = useMemo(
     () =>
       computePlan({
@@ -118,6 +127,7 @@ export function GuidedFlow({
       }),
     [draft, costs.total],
   );
+
 
   const canNext = (() => {
     if (step === 1) return true;
@@ -501,7 +511,7 @@ function Step4({
         {/* Preview educativo */}
         <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.08] via-primary/[0.03] to-transparent p-4">
           <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/90">
-            <Sparkles className="h-3 w-3" /> Com sua rotina planejada
+            <Route className="h-3 w-3" /> Com sua rotina planejada
           </div>
           <ul className="mt-2 space-y-1.5 text-[12.5px] leading-snug">
             <li className="flex items-center justify-between gap-2">
@@ -667,7 +677,7 @@ function Step6({
   return (
     <div>
       <StepHeader
-        icon={Sparkles}
+        icon={Gauge}
         title="Tudo pronto. Aqui está seu plano."
         subtitle="Confira o resumo antes de concluir."
       />
@@ -697,7 +707,7 @@ function Step6({
           value={plan.plannedKmTotal > 0 ? fmtKm(plan.plannedKmTotal) : "—"}
         />
         <Stat
-          icon={Sparkles}
+          icon={TrendingUp}
           label="R$/KM mínimo necessário"
           value={plan.requiredRpk != null ? `${fmtRpk(plan.requiredRpk)}/km` : "—"}
         />

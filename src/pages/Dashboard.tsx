@@ -8,7 +8,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight, Coffee } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
 import { computeMonthlyVehicleCosts, computeSmartKm, getCurrentMonthRealData } from "@/lib/smartKm";
+import { toIsoDate, startOfDay as plStartOfDay } from "@/lib/planejamento";
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
@@ -192,6 +193,17 @@ export default function Dashboard() {
   const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
+  // Folga programada — hoje não está em planningSelectedDates e o usuário está
+  // visualizando o dia. Mantém progresso semanal/mensal intacto em outros períodos.
+  const todayIsoStr = useMemo(() => toIsoDate(plStartOfDay(new Date())), []);
+  const isFolga = useMemo(() => {
+    if (period !== "day") return false;
+    if (!plan.isPlanningConfigured) return false;
+    if (plan.selectedWorkdaysCount <= 0) return false;
+    const dates = settings.planningSelectedDates ?? [];
+    return !dates.includes(todayIsoStr);
+  }, [period, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates, todayIsoStr]);
+
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
     if (period !== "month") return null;
@@ -293,7 +305,12 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{periodGoal.title}</span>
+                <span className="truncate">{isFolga ? "Folga programada" : periodGoal.title}</span>
+                {isFolga && (
+                  <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    <Coffee className="h-2.5 w-2.5" /> Descanso
+                  </span>
+                )}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
@@ -311,13 +328,15 @@ export default function Dashboard() {
             />
             <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums truncate">
-                {periodGoal.value > 0
-                  ? goalReached
-                    ? overAmount > 0
-                      ? `${brl(overAmount)} acima da meta`
-                      : "Meta atingida"
-                    : `Faltam ${brl(goalRemaining)}`
-                  : "Defina sua meta mensal em Ajustes"}
+                {isFolga
+                  ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                  : periodGoal.value > 0
+                    ? goalReached
+                      ? overAmount > 0
+                        ? `${brl(overAmount)} acima da meta`
+                        : "Meta atingida"
+                      : `Faltam ${brl(goalRemaining)}`
+                    : "Defina sua meta mensal em Ajustes"}
               </span>
               {periodGoal.value > 0 && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
@@ -410,6 +429,11 @@ export default function Dashboard() {
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
             </span>
           </button>
+          {plan.plannedKmTotal > 0 && (
+            <p className="mt-1.5 text-[10px] text-muted-foreground/70">
+              Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
+            </p>
+          )}
         </div>
       );
     })() : null,
