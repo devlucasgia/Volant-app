@@ -121,28 +121,6 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const mainGoalType: GoalType = settings.goalType ?? "bruto";
   const monthlyGoal = Number(settings.monthlyGoal) || 0;
 
-  // Custos considerados (fixos do veículo) — independentes dos gastos reais
-  const costs = computeFixedMonthlyCosts(activeCar);
-  const consideredCosts = costs.total;
-
-  // Targets segundo a meta principal
-  let grossTarget: number;
-  let netTarget: number;
-  let requiredGrossRevenue: number;
-  let estimatedNetProfit: number;
-
-  if (mainGoalType === "bruto") {
-    grossTarget = monthlyGoal;
-    requiredGrossRevenue = monthlyGoal;
-    estimatedNetProfit = monthlyGoal - consideredCosts;
-    netTarget = estimatedNetProfit;
-  } else {
-    netTarget = monthlyGoal;
-    requiredGrossRevenue = monthlyGoal + consideredCosts;
-    grossTarget = requiredGrossRevenue;
-    estimatedNetProfit = monthlyGoal;
-  }
-
   // Dias — hoje conta como restante se estiver selecionado
   const selected = settings.planningSelectedDates ?? [];
   const todayIso = toIsoDate(startOfDay(now));
@@ -166,6 +144,29 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const plannedKmTotal = averageKmPerDay > 0 && selectedWorkdaysCount > 0
     ? averageKmPerDay * selectedWorkdaysCount
     : 0;
+
+  // Custos considerados (fixos + óleo/pneus prorrateados pelo KM planejado)
+  const costs = computeFixedMonthlyCosts(activeCar, plannedKmTotal);
+  const consideredCosts = costs.total;
+
+  // Targets segundo a meta principal
+  let grossTarget: number;
+  let netTarget: number;
+  let requiredGrossRevenue: number;
+  let estimatedNetProfit: number;
+
+  if (mainGoalType === "bruto") {
+    grossTarget = monthlyGoal;
+    requiredGrossRevenue = monthlyGoal;
+    estimatedNetProfit = monthlyGoal - consideredCosts;
+    netTarget = estimatedNetProfit;
+  } else {
+    netTarget = monthlyGoal;
+    requiredGrossRevenue = monthlyGoal + consideredCosts;
+    grossTarget = requiredGrossRevenue;
+    estimatedNetProfit = monthlyGoal;
+  }
+
 
   // Progresso real do mês
   const agg = monthAggregates(entries, now);
