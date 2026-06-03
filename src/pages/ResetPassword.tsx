@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { friendlyAuthError } from "@/lib/friendlyErrors";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 /**
  * Página pública de redefinição de senha.

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 /**
  * Política de Privacidade — página pública, base revisável.

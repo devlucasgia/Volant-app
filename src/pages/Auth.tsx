@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, Car } from "lucide-react";
 import { friendlyAuthError } from "@/lib/friendlyErrors";
+import { useDocumentMeta } from "@/lib/useDocumentMeta";
 
 export default function Auth() {
   const { user, loading } = useAuth();
