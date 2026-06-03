@@ -1,4 +1,4 @@
-import { Target, CalendarDays, Gauge, Car as CarIcon, ChevronRight } from "lucide-react";
+import { Target, CalendarDays, Route, Car as CarIcon, ChevronRight } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -7,7 +7,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 
-export type AjustarOpcao = "meta" | "dias" | "rpk" | "custos";
+export type AjustarOpcao = "meta" | "dias" | "kmDia" | "custos";
 
 interface Props {
   open: boolean;
@@ -34,10 +34,10 @@ const OPCOES: {
     desc: "Atualize os dias em que pretende rodar.",
   },
   {
-    key: "rpk",
-    icon: Gauge,
-    title: "R$/KM de referência",
-    desc: "Altere a referência usada para estimar seus KM.",
+    key: "kmDia",
+    icon: Route,
+    title: "KM médio por dia",
+    desc: "Atualize a média de KM que você costuma rodar em um dia de trabalho.",
   },
   {
     key: "custos",
