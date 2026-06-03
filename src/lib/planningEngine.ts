@@ -58,11 +58,24 @@ export interface PlanningSnapshot {
   requiredRpk: number;
   smartRpk: number;
 
+  // Home lens — alvos simétricos para o toggle bruto/líquido da Home.
+  // bruto = meta cadastrada crua; líquido = meta cadastrada + custos fixos.
+  // Independente do goalType cadastrado. Progresso sempre usa currentGross.
+  homeGrossTarget: number;
+  homeNetTarget: number;
+  homeRemainingGross: number;
+  homeRemainingNet: number;
+  homeDailyGross: number;
+  homeDailyNet: number;
+  homeSmartRpkGross: number;
+  homeSmartRpkNet: number;
+
   // Aliases técnicos (compat)
   baseRpk: number;
   requiredKm: number;
   remainingKm: number;
   averageKmPerWorkday: number;
+
 
   status: PlanningStatusKind;
   message: string;
