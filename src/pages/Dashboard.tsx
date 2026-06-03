@@ -681,8 +681,8 @@ export default function Dashboard() {
                         { key: "liquido", label: "Líquido" },
                         { key: "bruto", label: "Bruto" },
                       ]}
-                      value={settings.goalType}
-                      onChange={(v) => { void updateSettings({ goalType: v }); }}
+                      value={showGross ? "bruto" : "liquido"}
+                      onChange={(v) => { setHeroView(v === "bruto" ? "gross" : "net"); }}
                     />
                     <button
                       type="button"
