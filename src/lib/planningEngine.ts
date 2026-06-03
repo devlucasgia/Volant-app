@@ -58,11 +58,24 @@ export interface PlanningSnapshot {
   requiredRpk: number;
   smartRpk: number;
 
+  // Home lens — alvos simétricos para o toggle bruto/líquido da Home.
+  // bruto = meta cadastrada crua; líquido = meta cadastrada + custos fixos.
+  // Independente do goalType cadastrado. Progresso sempre usa currentGross.
+  homeGrossTarget: number;
+  homeNetTarget: number;
+  homeRemainingGross: number;
+  homeRemainingNet: number;
+  homeDailyGross: number;
+  homeDailyNet: number;
+  homeSmartRpkGross: number;
+  homeSmartRpkNet: number;
+
   // Aliases técnicos (compat)
   baseRpk: number;
   requiredKm: number;
   remainingKm: number;
   averageKmPerWorkday: number;
+
 
   status: PlanningStatusKind;
   message: string;
@@ -184,6 +197,23 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const smartRpk =
     remainingPlannedKm > 0 ? remainingGrossToTarget / remainingPlannedKm : 0;
 
+  // Home lens — alvos simétricos independentes do goalType cadastrado.
+  // bruto = meta cadastrada; líquido = meta cadastrada + custos fixos.
+  // Progresso usa sempre currentGross (faturado), comparado ao alvo da lente ativa.
+  const homeGrossTarget = monthlyGoal;
+  const homeNetTarget = monthlyGoal + consideredCosts;
+  const homeRemainingGross = clampPos(homeGrossTarget - currentGross);
+  const homeRemainingNet = clampPos(homeNetTarget - currentGross);
+  const homeDailyGross =
+    remainingWorkdaysCount > 0 ? homeRemainingGross / remainingWorkdaysCount : 0;
+  const homeDailyNet =
+    remainingWorkdaysCount > 0 ? homeRemainingNet / remainingWorkdaysCount : 0;
+  const homeSmartRpkGross =
+    remainingPlannedKm > 0 ? homeRemainingGross / remainingPlannedKm : 0;
+  const homeSmartRpkNet =
+    remainingPlannedKm > 0 ? homeRemainingNet / remainingPlannedKm : 0;
+
+
   // Status
   let status: PlanningStatusKind;
   let message: string;
@@ -262,6 +292,14 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     remainingPlannedKm: remainingPlannedKmOut,
     requiredRpk: requiredRpkOut,
     smartRpk: clampPos(smartRpk),
+    homeGrossTarget: clampPos(homeGrossTarget),
+    homeNetTarget: clampPos(homeNetTarget),
+    homeRemainingGross,
+    homeRemainingNet,
+    homeDailyGross: clampPos(homeDailyGross),
+    homeDailyNet: clampPos(homeDailyNet),
+    homeSmartRpkGross: clampPos(homeSmartRpkGross),
+    homeSmartRpkNet: clampPos(homeSmartRpkNet),
     // aliases técnicos (compat com consumidores antigos)
     baseRpk: requiredRpkOut,
     requiredKm: clampPos(plannedKmTotal),
