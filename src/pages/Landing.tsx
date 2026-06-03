@@ -358,7 +358,7 @@ function Hero({ mode }: { mode: HeroMode }) {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 accent-dot-ping" />
               <span className="relative inline-flex h-1.5 w-1.5 rounded-full accent-dot" />
             </span>
-            De motorista, para motoristas.
+            O app para quem vive de app.
           </div>
 
           <h1 className="hero-anim hero-anim-2 mt-5 text-balance text-[2.05rem] font-extrabold leading-[1.08] tracking-tight md:text-[3.4rem]">
