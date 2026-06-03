@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Brain, Target, Gauge, ChevronRight, Route } from "lucide-react";
+import { ArrowLeft, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
 import { EmptyState } from "@/components/planejamento/EmptyState";
