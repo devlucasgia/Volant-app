@@ -29,6 +29,13 @@ export default function ResetPassword() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useDocumentMeta({
+    title: "Redefinir senha — Volant",
+    description: "Crie uma nova senha para acessar sua conta no Volant.",
+    canonicalPath: "/reset-password",
+  });
+
+
   useEffect(() => {
     // Quando o usuário chega pelo link do e-mail, Supabase processa os tokens
     // do hash e dispara PASSWORD_RECOVERY. Liberamos o formulário aí.

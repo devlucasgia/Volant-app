@@ -21,6 +21,13 @@ export default function Auth() {
   const [busy, setBusy] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
 
+  useDocumentMeta({
+    title: mode === "signin" ? "Entrar — Volant" : "Criar conta — Volant",
+    description: "Acesse o Volant para registrar ganhos, gastos e acompanhar sua performance como motorista.",
+    canonicalPath: "/auth",
+  });
+
+
   const sendReset = async () => {
     const trimmed = email.trim();
     if (!trimmed) {

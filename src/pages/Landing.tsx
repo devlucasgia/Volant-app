@@ -58,6 +58,11 @@ import {
 export default function Landing() {
   const { user, loading } = useAuth();
   const mode = useHeroMode(9000);
+  useDocumentMeta({
+    title: "Volant — O app feito pra quem vive de app",
+    description: "Controle ganhos, gastos, metas e jornada. O app de gestão financeira para motoristas de Uber, 99, inDrive e particulares.",
+    canonicalPath: "/",
+  });
 
   // Força o tema escuro só enquanto a landing está montada.
   useEffect(() => {

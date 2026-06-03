@@ -10,6 +10,11 @@ import { useDocumentMeta } from "@/lib/useDocumentMeta";
  */
 export default function Termos() {
   const navigate = useNavigate();
+  useDocumentMeta({
+    title: "Termos de Uso — Volant",
+    description: "Condições de uso do aplicativo Volant para motoristas: assinatura, responsabilidades e direitos.",
+    canonicalPath: "/termos",
+  });
   const handleBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate("/");

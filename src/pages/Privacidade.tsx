@@ -10,6 +10,11 @@ import { useDocumentMeta } from "@/lib/useDocumentMeta";
  */
 export default function Privacidade() {
   const navigate = useNavigate();
+  useDocumentMeta({
+    title: "Política de Privacidade — Volant",
+    description: "Como o Volant coleta, usa e protege seus dados pessoais, em conformidade com a LGPD.",
+    canonicalPath: "/privacidade",
+  });
   const handleBack = () => {
     if (window.history.length > 1) navigate(-1);
     else navigate("/");
