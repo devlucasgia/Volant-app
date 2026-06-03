@@ -1,57 +1,74 @@
-# Leva 5 — Ajustes finos WhatsApp/CTA + Revisão pré-lançamento
+## Modelo confirmado
 
-## 1. Footer — Grupo do WhatsApp em 1º lugar e sem ícone (todas as visualizações)
+A meta cadastrada é só **um número**. O toggle decide se os custos entram na conta:
 
-Em `src/pages/Landing.tsx`, coluna "Suporte" (linhas ~1760-1785):
+- **Visão bruta** = número cadastrado, **sem custos**. Sempre o menor.
+- **Visão líquida** = número cadastrado **+ custos fixos do veículo**. Sempre o maior — representa quanto o motorista precisa faturar para levar para casa o valor da meta.
 
-- Mover "Grupo no WhatsApp" para a **primeira posição** da lista.
-- Remover o ícone `MessageCircle` e a cor `#25D366` — deixar idêntico aos outros links (`block py-0.5 transition hover:text-foreground`), preservando `target="_blank"` + `rel="noopener noreferrer"`.
-- Ordem final: **Grupo no WhatsApp → Fale com a gente → Privacidade → Termos de uso**.
+Vale para qualquer `goalType` cadastrado. Exemplos com custos = R$2.000:
 
-## 2. CommunityBanner — logo oficial do WhatsApp + alternância de cor
+| Meta cadastrada | Visão bruta | Visão líquida |
+|---|---|---|
+| R$5.500 (líquida) | R$5.500 | R$7.500 |
+| R$5.500 (bruta) | R$5.500 | R$7.500 |
 
-**Logo oficial:** está dentro das Brand Guidelines do WhatsApp usar o ícone/logo oficial em um botão que abre uma conversa/grupo, desde que não seja modificado e não sugira parceria oficial. Sem problema.
+Progresso e R$/KM Inteligente em **ambas as visões** usam **bruto faturado vs alvo da visão atual**:
+- Progresso = `currentGross / alvoView`
+- R$/KM = `(alvoView − currentGross) / remainingPlannedKm`
+- Meta diária = `(alvoView − currentGross) / diasRestantes`
 
-- Criar um pequeno componente inline `WhatsAppIcon` no próprio `Landing.tsx` (SVG oficial do "balão com fone"), aceitando `className` para tamanho e cor.
-- Usar no badge superior do card (~28px) e no botão (~16-18px).
+Resultado natural: na visão líquida o alvo é maior → meta diária maior, R$/KM maior, progresso percentual menor. Coerente com o raciocínio do motorista.
 
-**Alternância verde/azul (correção):** hoje o banner usa `#25D366` fixo e não acompanha o tema Líquido (verde) ↔ Bruto (azul). Em `CommunityBanner` (linhas 1493-1527), trocar todas as referências `#25D366` pelos tokens:
+## Mudanças
 
-- Container: borda/fundo do gradiente passam a usar `hsl(var(--accent-now)/...)` (mesma família do `accent-badge`).
-- Badge do ícone: `accent-badge` no lugar de `bg-[#25D366]/15 text-[#25D366]`.
-- Botão "Entrar no grupo": `accent-cta text-primary-foreground` (mesma classe do CTA do Hero — herda a transição de 700ms).
-- O `WhatsAppIcon` herda a cor do container, então acompanha automaticamente.
+### 1. `src/lib/planningEngine.ts`
 
-## 3. CTA "Recursos que trabalham por você" — subtítulo faltante
+Redefinir os dois alvos de forma simétrica, ignorando `goalType`:
 
-Em `src/pages/Landing.tsx` (linhas 1481-1483), adicionar o selo **"7 dias grátis. Sem cartão."** entre o botão e o selo "Dados criptografados", igual ao Hero (linhas 540-546). Ordem final:
+```ts
+const registeredGoal = Number(settings.monthlyGoal) || 0;
+const grossTarget = registeredGoal;                    // visão bruta
+const netTarget   = registeredGoal + consideredCosts;  // visão líquida (faturamento necessário)
+```
 
-1. Botão "Ativar esses recursos agora"
-2. `✓ 7 dias grátis. Sem cartão.` (`Check` + `accent-text`)
-3. `🔒 Dados criptografados` (`Lock` + `accent-text`)
+Recalcular tudo que depende de alvo, mantendo bruto faturado como base de progresso:
 
-## 4. Revisão geral pré-lançamento (`/` e `/app`)
+- `remainingGross = max(0, grossTarget − currentGross)`
+- `remainingNet   = max(0, netTarget   − currentGross)` *(usa currentGross, não currentNet)*
+- `suggestedDailyGrossGoal = remainingGross / remainingWorkdaysCount`
+- `suggestedDailyNetGoal   = remainingNet   / remainingWorkdaysCount`
+- `smartRpkGross = remainingGross / remainingPlannedKm`
+- `smartRpkNet   = remainingNet   / remainingPlannedKm`
+- `requiredRpkGross = grossTarget / plannedKmTotal`
+- `requiredRpkNet   = netTarget   / plannedKmTotal`
 
-Para não estourar esta leva, executo a revisão como **Leva 6** logo após aprovar e aplicar os itens 1-3. É um **checklist de QA** que entrego como **relatório** (sem alterar código de cara), classificando cada item em **OK / Atenção / Bloqueador** antes de subir a versão paga.
+Manter `requiredGrossRevenue = netTarget` e `estimatedNetProfit = grossTarget − consideredCosts` como infos do painel do Planejamento (não afetam Home). Manter aliases `baseRpk`, `requiredKm`, `remainingKm` apontando para os campos brutos (compat).
 
-**Landing (`/`):**
-- Hero, SecondaryFeatures, Pricing, FAQ, CommunityBanner, FinalCta, Footer — consistência de spacing, tokens semânticos, sem cores hardcoded fora do design system.
-- Performance: scroll listeners, animações, lazy/conditional renders, `content-visibility`.
-- SEO: title, meta description, H1 único, alt em imagens, JSON-LD, canonical.
-- Links: `/auth`, `/privacidade`, `/termos`, âncoras internas, WhatsApp.
+Status (`on_track` / `behind` / `ahead`) passa a comparar sempre `currentGross` com o alvo da visão principal cadastrada (mantém comportamento atual da tela de Planejamento).
 
-**App (`/app` e rotas protegidas):**
-- Home/Dashboard: cards, filtros de período, performance (R$/h, R$/km, médias).
-- Histórico: agrupamento por data correta, ícones de apps/categorias.
-- Relatórios: ordem dos cards, charts proporcionais, empty states.
-- Ajustes: planejamento, veículos, personalização, categorias.
-- Auth/Paywall/Premium: `RequireAuth`, `RequirePremium`, trial interno 7 dias, Stripe checkout, `CheckoutReturn`.
-- Mobile: BottomNav, FAB, EntryDrawer, safe-area, scroll de formulários.
-- Cálculos: divisores zerados, NaN/Infinity, formatação `R$ 0,00` e `DD/MM/YYYY`.
-- Edge functions e config: `supabase/config.toml`, secrets, webhooks.
+### 2. `src/pages/Dashboard.tsx`
 
-Saída da Leva 6: relatório estruturado + sugestão de Leva 7 só com ajustes necessários antes de upar.
+Toggle = lente única, todos os itens da Home seguem `showGrossView`:
 
-## Arquivos afetados nesta leva (itens 1-3)
+- `monthlyTargetForView` = `showGrossView ? plan.grossTarget : plan.netTarget`
+- `dailyForView` = `showGrossView ? plan.suggestedDailyGrossGoal : plan.suggestedDailyNetGoal`
+- `smartKmValue` = `showGrossView ? plan.smartRpkGross : plan.smartRpkNet`
+- Progresso do card meta = `s.gross / monthlyTargetForView` em ambas as visões
+- Hero card mantém `s.gross` vs `s.net` (já está correto — esse é o realizado, não o alvo)
 
-- `src/pages/Landing.tsx` (Footer, CommunityBanner, `WhatsAppIcon` inline, bloco CTA do SecondaryFeatures)
+Label do R$/KM permanece neutro: **"R$/KM Inteligente"**.
+
+### 3. `src/components/planejamento/PainelResumo.tsx`
+
+A tela do Planejamento Inteligente é planejamento estratégico — mantém como está: mostra meta principal (do `goalType` cadastrado), faturamento necessário, lucro líquido estimado, custos, R$/KM mínimo e R$/KM Inteligente. Sem toggle aqui.
+
+## Fora de escopo
+
+- Redesign premium do Planejamento (remover ícones Sparkles, etc.) — fica para sprint separada, conforme solicitado anteriormente.
+- "Folga programada" na Home — fica para sprint separada.
+- KM Inteligente, Metas Inteligentes, custos variáveis, auth — intactos.
+
+## Arquivos
+
+- `src/lib/planningEngine.ts` — novo cálculo simétrico de alvos + `smartRpkGross`/`smartRpkNet` + `suggestedDailyGrossGoal`/`Net`.
+- `src/pages/Dashboard.tsx` — consumir os novos campos via `showGrossView`.
