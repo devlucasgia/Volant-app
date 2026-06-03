@@ -1,10 +1,19 @@
 import { Car, GoalType } from "@/types";
 
 /**
- * Custos mensais FIXOS do veículo. Sem prorrateio por km (óleo/pneus ficam
- * fora nesta sprint para evitar loop circular: custo ↔ km necessário ↔ custo).
+ * Custos mensais considerados do veículo.
+ *
+ * Inclui custos fixos (financiamento/aluguel, IPVA, seguro, outros) e, quando
+ * `plannedKmTotal > 0`, prorrateia também óleo e pneus pelo KM planejado do
+ * período — usando os mesmos campos cadastrados em Custos do veículo.
+ *
+ * Sem loop circular: `plannedKmTotal` é derivado de `avgKmPerDay × dias`,
+ * portanto não depende de custo.
  */
-export function computeFixedMonthlyCosts(car: Car | null): {
+export function computeFixedMonthlyCosts(
+  car: Car | null,
+  plannedKmTotal?: number,
+): {
   total: number;
   items: { label: string; value: number }[];
 } {
@@ -26,6 +35,27 @@ export function computeFixedMonthlyCosts(car: Car | null): {
   if ((car.other_monthly_costs ?? 0) > 0) {
     items.push({ label: "Outros custos", value: Number(car.other_monthly_costs) });
   }
+
+  // Prorrateio por KM planejado (somente quando há plano definido).
+  if (plannedKmTotal && plannedKmTotal > 0) {
+    const oilCost = Number(car.oil_change_cost ?? 0);
+    const oilInterval = Number(car.oil_change_interval_km ?? 0);
+    if (oilCost > 0 && oilInterval > 0) {
+      items.push({
+        label: "Óleo estimado",
+        value: (plannedKmTotal / oilInterval) * oilCost,
+      });
+    }
+    const tiresCost = Number(car.tires_cost ?? 0);
+    const tiresInterval = Number(car.tires_interval_km ?? 0);
+    if (tiresCost > 0 && tiresInterval > 0) {
+      items.push({
+        label: "Pneus estimados",
+        value: (plannedKmTotal / tiresInterval) * tiresCost,
+      });
+    }
+  }
+
   const total = items.reduce((s, i) => s + i.value, 0);
   return { total, items };
 }
