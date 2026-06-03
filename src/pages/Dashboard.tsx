@@ -160,19 +160,30 @@ export default function Dashboard() {
     } catch { return null; }
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
+  // Alvo mensal e meta diária vêm do motor do Planejamento Inteligente quando configurado.
+  const monthlyTargetForView = plan.isPlanningConfigured
+    ? (showGrossView
+        ? (plan.requiredGrossRevenue ?? plan.grossTarget)
+        : (plan.estimatedNetProfit ?? plan.netTarget))
+    : settings.monthlyGoal;
+  const dailyForView = plan.isPlanningConfigured && plan.remainingWorkdaysCount > 0
+    ? (showGrossView ? plan.dailyGrossNeeded : plan.suggestedDailyNetGoal)
+    : null;
   const goalOpts = useMemo(
     () => ({
-      goalType: settings.goalType,
+      goalType: (showGrossView ? "bruto" : "liquido") as "bruto" | "liquido",
       workingDays: settings.workingDaysPerMonth,
-      remainingWorkingDays: settings.remainingWorkingDays,
+      remainingWorkingDays: plan.isPlanningConfigured ? plan.remainingWorkdaysCount : settings.remainingWorkingDays,
+      dailyOverride: dailyForView,
+      plannedDates: settings.planningSelectedDates,
     }),
-    [settings.goalType, settings.workingDaysPerMonth, settings.remainingWorkingDays]
+    [showGrossView, settings.workingDaysPerMonth, settings.remainingWorkingDays, settings.planningSelectedDates, dailyForView, plan.isPlanningConfigured, plan.remainingWorkdaysCount],
   );
   const periodGoal = useMemo(
-    () => goalForPeriod(period, settings.monthlyGoal, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
-    [period, settings.monthlyGoal, entries, customRange, journeyDailyOverride, goalOpts]
+    () => goalForPeriod(period, monthlyTargetForView, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
+    [period, monthlyTargetForView, entries, customRange, journeyDailyOverride, goalOpts]
   );
-  const goalProgressValue = settings.goalType === "liquido" ? s.net : s.gross;
+  const goalProgressValue = showGrossView ? s.gross : s.net;
   const goalPct = periodGoal.value > 0 ? Math.min(100, (goalProgressValue / periodGoal.value) * 100) : 0;
   const goalReached = periodGoal.value > 0 && goalProgressValue >= periodGoal.value;
   const goalRemaining = Math.max(0, periodGoal.value - goalProgressValue);
