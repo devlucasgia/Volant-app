@@ -77,6 +77,10 @@ export interface DeriveGoalsOptions {
   workingDays?: number | null;
   /** Dias que o motorista ainda pretende trabalhar até o fim do mês (adaptativo). */
   remainingWorkingDays?: number | null;
+  /** Meta diária resolvida pelo Planejamento Inteligente (sobrescreve cálculos quando informado). */
+  dailyOverride?: number | null;
+  /** Datas (ISO yyyy-MM-dd) planejadas pelo Planejamento Inteligente — usadas para metas semanais e por período. */
+  plannedDates?: string[] | null;
 }
 
 export function deriveGoals(
