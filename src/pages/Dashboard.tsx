@@ -328,13 +328,15 @@ export default function Dashboard() {
             />
             <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span className="tabular-nums truncate">
-                {periodGoal.value > 0
-                  ? goalReached
-                    ? overAmount > 0
-                      ? `${brl(overAmount)} acima da meta`
-                      : "Meta atingida"
-                    : `Faltam ${brl(goalRemaining)}`
-                  : "Defina sua meta mensal em Ajustes"}
+                {isFolga
+                  ? "Hoje é seu dia de descanso. Não conta para sua meta."
+                  : periodGoal.value > 0
+                    ? goalReached
+                      ? overAmount > 0
+                        ? `${brl(overAmount)} acima da meta`
+                        : "Meta atingida"
+                      : `Faltam ${brl(goalRemaining)}`
+                    : "Defina sua meta mensal em Ajustes"}
               </span>
               {periodGoal.value > 0 && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
