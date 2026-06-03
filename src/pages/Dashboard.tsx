@@ -248,7 +248,7 @@ export default function Dashboard() {
     ) : null,
 
     goal: widgets.goal ? (() => {
-      const isLiquido = settings.goalType === "liquido";
+      const isLiquido = !showGrossView;
       // Theme tokens: green for líquida, premium blue for bruta.
       const themeText = isLiquido ? "text-success" : "text-[hsl(var(--goal-gross))]";
       const themeBg = isLiquido ? "bg-success/15" : "bg-[hsl(var(--goal-gross))]/15";
