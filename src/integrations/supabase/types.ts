@@ -317,6 +317,7 @@ export type Database = {
           car_model: string | null
           car_onboarded: boolean
           car_plate: string | null
+          costs_onboarded: boolean
           created_at: string
           display_name: string | null
           goal_onboarded: boolean
@@ -324,6 +325,7 @@ export type Database = {
           id: string
           nickname: string | null
           onboarded: boolean
+          planning_onboarded: boolean
           trial_access_granted: boolean
           trial_ends_at: string | null
           trial_started_at: string | null
@@ -337,6 +339,7 @@ export type Database = {
           car_model?: string | null
           car_onboarded?: boolean
           car_plate?: string | null
+          costs_onboarded?: boolean
           created_at?: string
           display_name?: string | null
           goal_onboarded?: boolean
@@ -344,6 +347,7 @@ export type Database = {
           id: string
           nickname?: string | null
           onboarded?: boolean
+          planning_onboarded?: boolean
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
@@ -357,6 +361,7 @@ export type Database = {
           car_model?: string | null
           car_onboarded?: boolean
           car_plate?: string | null
+          costs_onboarded?: boolean
           created_at?: string
           display_name?: string | null
           goal_onboarded?: boolean
@@ -364,6 +369,7 @@ export type Database = {
           id?: string
           nickname?: string | null
           onboarded?: boolean
+          planning_onboarded?: boolean
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
