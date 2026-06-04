@@ -16,9 +16,9 @@ import volantLogoSplash from "@/assets/volant-logo-splash.webp";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
-type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "metas" | "kmInteligente" | "final";
+type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "planejamento" | "final";
 
-const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "metas", "kmInteligente", "final"];
+const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "planejamento", "final"];
 
 export function OnboardingFlow() {
   const { user } = useAuth();
@@ -147,8 +147,7 @@ export function OnboardingFlow() {
                   {step === "jornada" && <JornadaStep />}
                   {step === "relatorios" && <RelatoriosStep />}
                   {step === "customizacao" && <CustomizacaoStep />}
-                  {step === "metas" && <MetasStep />}
-                  {step === "kmInteligente" && <KmInteligenteStep />}
+                  {step === "planejamento" && <PlanejamentoStep />}
                   {step === "final" && <FinalStep onMount={fireConfetti} />}
                 </motion.div>
               </AnimatePresence>
