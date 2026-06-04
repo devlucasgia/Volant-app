@@ -2,7 +2,8 @@ import { Outlet, useLocation } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { EntryDrawer } from "./EntryDrawer";
 import { CarOnboardingDialog } from "./CarOnboardingDialog";
-import { MonthlyGoalOnboardingDialog } from "./MonthlyGoalOnboardingDialog";
+import { VehicleCostsOnboardingDialog } from "./VehicleCostsOnboardingDialog";
+import { PlanningOnboardingDialog } from "./PlanningOnboardingDialog";
 import { OnboardingFlow } from "./onboarding/OnboardingFlow";
 import { TimerFab } from "./TimerFab";
 import { InstallPromptManager } from "./pwa/InstallPromptManager";
@@ -22,9 +23,11 @@ export function AppLayout() {
       <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
       <BottomNav />
       <CarOnboardingDialog />
-      <MonthlyGoalOnboardingDialog />
+      <VehicleCostsOnboardingDialog />
+      <PlanningOnboardingDialog />
       <OnboardingFlow />
       <InstallPromptManager />
     </div>
   );
 }
+

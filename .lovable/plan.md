@@ -1,43 +1,96 @@
 
-## Respostas rápidas
+# Onboarding: planejamento unificado + novo fluxo inicial
 
-**1. Manter KM Inteligente e Metas Inteligentes separados?**
-Não. Depois das mudanças do Painel, as duas telas viraram redundantes — o Painel já mostra meta, dias, KM/dia, R$/km mínimo e R$/km inteligente; o accordion "Detalhes do plano" e o "Ajustar" cobrem os ajustes finos. Manter dois atalhos extras polui a navegação e duplica conceitos. Vamos **remover os cards "Mais ajustes"** do Painel e absorver o que falta dentro do próprio Painel/Ajustar.
+Dois ajustes ligados ao planejamento inteligente:
 
-**2. Bug da folga no dia 16/jun (print 3)**
-Confirmado. A lógica de folga só dispara quando `period === "day"`. O usuário selecionou 16/jun pelo seletor de data customizado (período `custom`, intervalo de 1 dia), e por isso a folga não aparece. Corrigir para também considerar `custom` quando o intervalo é um único dia fora de `planningSelectedDates`.
+## 1. Onboarding animado — unificar "Metas" e "KM Inteligente"
 
-**3. Melhorias simples sugeridas (UX + 1 feature leve)**
-- **Sublabel do R$/KM Inteligente da Home com tom de status** (verde/âmbar/vermelho) espelhando o status do plano — hoje o número é neutro, custa pouco e dá leitura imediata.
-- **Banner compacto "Folga" no Painel** quando hoje é folga, com link rápido para "Trabalhar mesmo assim hoje" (adiciona o dia ao `planningSelectedDates`). Resolve o caso real do motorista que decide trabalhar num dia de folga.
-- **Botão "Ver no calendário"** no accordion "Detalhes do plano" abrindo o passo 3 do GuidedFlow (já existe via Ajustar→Dias) — mero atalho.
+Hoje o tour de boas-vindas (`src/components/onboarding/OnboardingFlow.tsx`) tem duas telas que viraram redundantes:
 
-## O que será feito
+- `metas` — Meta mensal com progresso animado
+- `kmInteligente` — R$/km inteligente derivado
 
-### A. Unificação das telas
-- `src/pages/PlanejamentoInteligente.tsx`: remover o bloco "Mais ajustes" com os dois `HubCard` (Metas/KM). Painel fica enxuto: Hero meta, Hero R$/KM, Detalhes, Custos, Ajustar/Refazer.
-- `src/App.tsx`: manter as rotas `/ajustes/planejamento/metas` e `/ajustes/planejamento/km` por compat (deep links antigos), mas remover do menu de Ajustes (`src/pages/Settings.tsx`) se existirem entradas diretas.
-- Verificar `Settings.tsx` e `BottomNav` para qualquer link direto às duas telas e remover.
+Como o app agora trata tudo dentro de **Planejamento Inteligente**, vou substituir as duas telas por **uma única tela** chamada `planejamento`, baseada visualmente na tela real (`PainelResumo` + cards do `PlanejamentoInteligente.tsx`).
 
-### B. Correção da folga em período custom (1 dia)
-- `src/pages/Dashboard.tsx` — `isFolga`:
-  - Considerar também `period === "custom"` quando `customRange.from === customRange.to` (single day).
-  - Comparar o ISO desse dia único contra `planningSelectedDates`.
-- Garantir que `isFolga` use o ISO do dia ativo (hoje no `day`, dia selecionado no `custom`), não sempre `todayIsoStr`.
-- Texto do badge ajustado: "Folga programada" (hoje) ou "Dia de folga" (custom de outro dia).
+Mudanças no `OnboardingFlow.tsx`:
 
-### C. Polimento R$/KM Inteligente
-- `src/pages/Dashboard.tsx`: aplicar tom no número/ícone do card R$/KM Inteligente conforme `plan.status` (`ahead` emerald, `on_track` neutro, `behind` amber, `needs_adjustment` rose).
+- `StepKey` e `STEPS`: remover `"metas"` e `"kmInteligente"`, adicionar `"planejamento"`. Nova ordem: `welcome → registro → jornada → relatorios → customizacao → planejamento → final`.
+- Apagar os componentes `MetasStep` e `KmInteligenteStep` e criar um novo `PlanejamentoStep` que mostra, dentro do `PhoneFrame`, uma maquete do painel real com:
+  - Header "Planejamento Inteligente" com ícone `Brain`.
+  - Card de **Meta mensal** com barra de progresso animada (count-up dos ganhos).
+  - Card de **R$/km inteligente** com valor calculado e legenda "sugerido para fechar o mês".
+  - Mini-cards de **Dias planejados** e **KM previsto** (espelhando o painel real).
+  - Sequência animada: meta aparece → custos do veículo entram → dias planejados → resultado R$/km destaca-se.
+- Eyebrow: "Planejamento Inteligente" • Título: "Sua meta e o R$/km ideal num só lugar" • Descrição curta explicando que meta e KM agora trabalham juntos.
+- Rodapé com 2–3 `HighlightRow`s combinando os pontos antigos (meta evolui sozinha; sugere R$/km estratégico; ajustável em **Ajustes → Planejamento Inteligente**).
 
-### D. Ação "Trabalhar hoje" no banner de folga (Home)
-- Quando `isFolga` no `day`, adicionar um botão pequeno "Trabalhar hoje mesmo assim" abaixo do badge. Ao clicar, atualizar `settings.planningSelectedDates` (insere o dia, ordena) via `updateSettings` e mostra toast.
-- Sem migration; campo já existe.
+Nada muda no fluxo de finalização (`onboarded=true` ao concluir/pular).
 
-### Arquivos
-- `src/pages/PlanejamentoInteligente.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/pages/Settings.tsx` (apenas se houver links diretos)
-- `.lovable/plan.md` (atualizar status da sprint)
+## 2. Cadastros pós-onboarding — nova ordem
 
-### Fora de escopo
-- Schema, auth, Stripe, motor de cálculo (`planningEngine.ts`, `planejamento.ts`), Metas Inteligentes/KM Inteligente standalone (ficam intocadas, só somem do hub).
+Hoje, após o tour:
+1. `CarOnboardingDialog` (carro)
+2. `MonthlyGoalOnboardingDialog` (meta antiga — não faz mais sentido)
+
+Nova sequência desejada:
+1. **Cadastro do veículo** — mantém `CarOnboardingDialog`
+2. **Custos do veículo** — novo passo
+3. **Perguntas iniciais do Planejamento Inteligente** — usar o `GuidedFlow` real
+
+Todos opcionais, com botão **Pular** visível e mensagem indicando onde concluir depois.
+
+### 2.1. `CarOnboardingDialog.tsx`
+- Adicionar texto auxiliar no rodapé/descrição: "Você pode cadastrar depois em **Ajustes → Meus carros**."
+- Manter botões **Pular** / **Salvar** já existentes.
+- Ao terminar (salvar ou pular), continuar disparando `volant:car-onboarding-finished` (já existe). O próximo dialog escuta esse evento.
+
+### 2.2. Novo `VehicleCostsOnboardingDialog.tsx`
+- Criar em `src/components/VehicleCostsOnboardingDialog.tsx`.
+- Reusa `VehicleCostsSection` (já existe em `src/components/vehicle/VehicleCostsSection.tsx`).
+- Abre quando recebe `volant:car-onboarding-finished` **e** o perfil ainda não tem `costs_onboarded=true`.
+- Se o usuário pulou o cadastro de carro (não tem `cars`), o dialog se auto-pula e dispara o próximo evento.
+- Se existe carro: aplica os custos no carro ativo (`supabase.from('cars').update(costs).eq('id', activeCar.id)`), e salva `profiles.costs_onboarded = true`.
+- Mensagem auxiliar: "Você pode preencher depois em **Ajustes → Veículos → Custos do veículo**."
+- Botões **Pular** / **Salvar**.
+- Ao fechar, dispara novo evento `volant:costs-onboarding-finished`.
+
+### 2.3. Novo `PlanningOnboardingDialog.tsx` (ou redirect leve)
+- Criar em `src/components/PlanningOnboardingDialog.tsx`.
+- Escuta `volant:costs-onboarding-finished`. Se `profiles.planning_onboarded` for falso e `settings.planningStatus !== 'configured'`, abre um diálogo curto explicando o Planejamento Inteligente com dois botões:
+  - **Configurar agora** → navega para `/ajustes/planejamento` (o `GuidedFlow` real já cobre todas as perguntas).
+  - **Agora não** → fecha e marca `planning_onboarded=true`.
+- Mensagem auxiliar: "Você pode configurar quando quiser em **Ajustes → Planejamento Inteligente**."
+- Por que dialog + redirect em vez de embutir o `GuidedFlow` aqui: o `GuidedFlow` real já é uma tela cheia com `useNavigate`, e duplicá-lo dentro de um modal causaria divergência. O redirect mantém uma única fonte de verdade.
+
+### 2.4. Substituir o `MonthlyGoalOnboardingDialog`
+- Remover `<MonthlyGoalOnboardingDialog />` de `src/components/AppLayout.tsx`.
+- Adicionar `<VehicleCostsOnboardingDialog />` e `<PlanningOnboardingDialog />` no mesmo layout.
+- Manter o arquivo `MonthlyGoalOnboardingDialog.tsx` por enquanto? Não — apagar para evitar dead code, já que o conceito de meta isolada não existe mais.
+
+### 2.5. Schema — flags de onboarding
+Adicionar duas colunas booleanas em `profiles` via migração:
+
+```sql
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS costs_onboarded boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS planning_onboarded boolean NOT NULL DEFAULT false;
+```
+
+Sem necessidade de novos GRANT/RLS (a tabela já tem políticas de owner).
+
+A coluna antiga `goal_onboarded` deixa de ser usada, mas mantemos no DB para não quebrar usuários existentes.
+
+## Compatibilidade
+
+- Usuários que já passaram pelo onboarding antigo (`onboarded=true`, `car_onboarded=true`, `goal_onboarded=true`) **não** veem os novos dialogs por causa do default `false` das flags novas. Para evitar reabrir o fluxo para eles, os dialogs novos só abrem se `onboarded=true` **e** o usuário acabou de concluir um passo da cadeia (gatilho por evento, não por load). Como o evento `volant:car-onboarding-finished` só dispara após o `CarOnboardingDialog` rodar, usuários antigos nunca verão os novos passos.
+- Pequena salvaguarda extra: o `VehicleCostsOnboardingDialog` e o `PlanningOnboardingDialog` ignoram a abertura se `costs_onboarded`/`planning_onboarded` já forem `true`.
+
+## Arquivos afetados
+
+- `src/components/onboarding/OnboardingFlow.tsx` — substitui passos metas/km por `planejamento`.
+- `src/components/CarOnboardingDialog.tsx` — adiciona hint de "depois em Ajustes".
+- `src/components/VehicleCostsOnboardingDialog.tsx` — novo.
+- `src/components/PlanningOnboardingDialog.tsx` — novo.
+- `src/components/AppLayout.tsx` — troca `MonthlyGoalOnboardingDialog` pelos dois novos.
+- `src/components/MonthlyGoalOnboardingDialog.tsx` — remover.
+- Migração SQL adicionando as duas novas flags em `profiles`.
