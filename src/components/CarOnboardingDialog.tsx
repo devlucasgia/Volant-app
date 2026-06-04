@@ -74,6 +74,10 @@ export function CarOnboardingDialog() {
           <DialogTitle className="text-center">Cadastre seu carro</DialogTitle>
           <DialogDescription className="text-center">
             Opcional, mas ajuda a manter o controle de manutenção mais preciso.
+            <br />
+            <span className="text-[11px] text-muted-foreground/80">
+              Você pode cadastrar depois em Ajustes → Meus carros.
+            </span>
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
