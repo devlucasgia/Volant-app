@@ -859,6 +859,21 @@ function CustomizacaoStep() {
   );
 }
 
+function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
+  const reduce = useReducedMotion();
+  return (
+    <motion.div
+      initial={reduce ? {} : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.35 }}
+      className="flex items-start gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 text-[11px] text-foreground/85"
+    >
+      <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+      <span>{text}</span>
+    </motion.div>
+  );
+}
+
 /* ============================================================
  *  STEP 6 — Planejamento Inteligente (meta + R$/km unificados)
  * ============================================================ */
