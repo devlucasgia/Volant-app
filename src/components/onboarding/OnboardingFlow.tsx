@@ -860,66 +860,100 @@ function CustomizacaoStep() {
 }
 
 /* ============================================================
- *  STEP 6 — Metas inteligentes (smart goals)
+ *  STEP 6 — Planejamento Inteligente (meta + R$/km unificados)
  * ============================================================ */
-function MetasStep() {
+function PlanejamentoStep() {
   const reduce = useReducedMotion();
-  // Animated state: progress and "earned" value count up smoothly
+
   const MONTHLY = 6000;
   const TARGET_EARNED = 2240;
+  const TARGET_RPK = 2.45;
+
   const [earned, setEarned] = useState(0);
+  const [smartValue, setSmartValue] = useState(0);
+  const [showInputs, setShowInputs] = useState(false);
+  const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
-    if (reduce) { setEarned(TARGET_EARNED); return; }
+    if (reduce) {
+      setEarned(TARGET_EARNED);
+      setSmartValue(TARGET_RPK);
+      setShowInputs(true);
+      setShowResult(true);
+      return;
+    }
+
+    // 1) Conta a meta
     const start = performance.now();
-    const duration = 1400;
+    const duration = 1200;
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
-      // ease-out cubic
       const eased = 1 - Math.pow(1 - p, 3);
       setEarned(Math.round(TARGET_EARNED * eased));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
-    const delay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 350);
-    return () => { clearTimeout(delay); cancelAnimationFrame(raf); };
+    const startDelay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 350);
+
+    // 2) Mostra inputs convergindo
+    const t1 = setTimeout(() => setShowInputs(true), 1500);
+
+    // 3) Anima o R$/km final
+    const t2 = setTimeout(() => {
+      setShowResult(true);
+      const s = performance.now();
+      const dur = 900;
+      let raf2 = 0;
+      const tick2 = (t: number) => {
+        const p = Math.min(1, (t - s) / dur);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setSmartValue(TARGET_RPK * eased);
+        if (p < 1) raf2 = requestAnimationFrame(tick2);
+      };
+      raf2 = requestAnimationFrame(tick2);
+    }, 2400);
+
+    return () => {
+      clearTimeout(startDelay);
+      clearTimeout(t1);
+      clearTimeout(t2);
+      cancelAnimationFrame(raf);
+    };
   }, [reduce]);
 
   const pct = Math.min(100, (earned / MONTHLY) * 100);
   const remaining = Math.max(0, MONTHLY - earned);
-  const dailySuggested = Math.round(remaining / 18); // ~remaining days fictional
 
   return (
     <StepShell
-      eyebrow="Metas inteligentes"
-      title="Metas que evoluem com você"
-      description="Defina uma meta mensal e o Volant calcula sua meta semanal e diária automaticamente."
+      eyebrow="Planejamento Inteligente"
+      title="Sua meta e o R$/km ideal num só lugar"
+      description="Meta mensal, custos do carro e ritmo do mês: o Volant cruza tudo e te diz quanto vale aceitar a próxima corrida."
     >
-      <PhoneFrame compact>
-        <div className="absolute inset-0 flex flex-col bg-background p-2.5">
-          {/* Header */}
-          <div className="mb-1.5 flex items-center justify-between">
-            <div>
-              <div className="text-[11px] font-bold leading-tight">Olá, Lucas 👋</div>
-              <div className="text-[8px] text-muted-foreground">Meta mensal • maio</div>
-            </div>
-            <div className="rounded-full border border-border bg-card px-1.5 py-0.5 text-[7px] font-semibold text-muted-foreground">
-              Hoje · Semana · Mês
+      <PhoneFrame>
+        <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
+          {/* Header espelhando o painel real */}
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Brain className="h-3 w-3" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold leading-tight">Planejamento Inteligente</div>
+              <div className="text-[7px] text-muted-foreground">maio de 2026</div>
             </div>
           </div>
 
-          {/* Goal card with animated progress */}
+          {/* Meta mensal com progresso animado */}
           <motion.div
             initial={reduce ? {} : { y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-xl border border-success/40 bg-success/5 p-2.5 shadow-[0_0_24px_-12px_hsl(var(--success)/0.6)]"
+            transition={{ duration: 0.45, ease: "easeOut" }}
+            className="relative mb-1.5 overflow-hidden rounded-xl border border-success/40 bg-success/5 p-2"
           >
-            {/* soft glow */}
             <motion.div
               aria-hidden
               initial={{ opacity: 0 }}
-              animate={{ opacity: [0.0, 0.35, 0.0] }}
+              animate={{ opacity: [0.0, 0.3, 0.0] }}
               transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
               className="pointer-events-none absolute -inset-2 rounded-2xl bg-success/15 blur-2xl"
             />
@@ -929,197 +963,123 @@ function MetasStep() {
                   <Target className="h-2.5 w-2.5" /> Meta mensal
                 </div>
                 <div className="text-[8px] tabular-nums text-muted-foreground">
-                  R$ {MONTHLY.toLocaleString("pt-BR")},00
+                  R$ {MONTHLY.toLocaleString("pt-BR")}
                 </div>
               </div>
-
               <div className="mt-1 flex items-baseline gap-1.5">
-                <motion.span
-                  key={earned}
-                  initial={reduce ? {} : { opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="text-[18px] font-bold tabular-nums text-success"
-                >
+                <span className="text-base font-bold tabular-nums text-success leading-none">
                   R$ {earned.toLocaleString("pt-BR")}
-                </motion.span>
-                <span className="text-[9px] text-muted-foreground">conquistados</span>
+                </span>
+                <span className="text-[8px] text-muted-foreground">conquistados</span>
               </div>
-
-              {/* Progress bar */}
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
-                  transition={{ duration: 1.4, ease: "easeOut" }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
                   className="h-full rounded-full gradient-success"
                 />
               </div>
-              <div className="mt-1 flex items-center justify-between text-[8px] text-muted-foreground tabular-nums">
+              <div className="mt-0.5 flex items-center justify-between text-[7px] text-muted-foreground tabular-nums">
                 <span>{pct.toFixed(0)}%</span>
                 <span>Faltam R$ {remaining.toLocaleString("pt-BR")}</span>
               </div>
             </div>
           </motion.div>
 
-          {/* Derived goals */}
-          <div className="mt-2 grid grid-cols-2 gap-1.5">
-            <motion.div
-              initial={reduce ? {} : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="rounded-lg border border-border bg-card p-1.5"
-            >
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">Meta semanal</div>
-              <div className="text-[11px] font-bold tabular-nums">R$ {Math.round(remaining / 2.6).toLocaleString("pt-BR")}</div>
-              <div className="text-[7px] text-muted-foreground">calculada</div>
-            </motion.div>
-            <motion.div
-              initial={reduce ? {} : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45 }}
-              className="rounded-lg border border-primary/30 bg-primary/5 p-1.5"
-            >
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-primary">Sugerida hoje</div>
-              <div className="text-[11px] font-bold tabular-nums">R$ {dailySuggested.toLocaleString("pt-BR")}</div>
-              <div className="text-[7px] text-muted-foreground">ajusta sozinha</div>
-            </motion.div>
-          </div>
-        </div>
-      </PhoneFrame>
-
-      <div className="mt-3 space-y-1.5">
-        <HighlightRow delay={0.6} text="Seus ganhos reduzem a meta restante automaticamente." />
-        <HighlightRow delay={0.75} text="A meta da jornada substitui a meta do dia quando definida." />
-        <HighlightRow delay={0.9} text="Tudo se atualiza sozinho — sem cálculo manual." />
-      </div>
-    </StepShell>
-  );
-}
-
-function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
-  const reduce = useReducedMotion();
-  return (
-    <motion.div
-      initial={reduce ? {} : { opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay, duration: 0.35 }}
-      className="flex items-start gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 text-[11px] text-foreground/85"
-    >
-      <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
-      <span>{text}</span>
-    </motion.div>
-  );
-}
-
-/* ============================================================
- *  STEP 7 — KM Inteligente
- * ============================================================ */
-function KmInteligenteStep() {
-  const reduce = useReducedMotion();
-  const [smartValue, setSmartValue] = useState(0);
-  const TARGET = 2.45;
-
-  useEffect(() => {
-    if (reduce) { setSmartValue(TARGET); return; }
-    const start = performance.now();
-    const duration = 1100;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setSmartValue(TARGET * eased);
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    const delay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 1400);
-    return () => { clearTimeout(delay); cancelAnimationFrame(raf); };
-  }, [reduce]);
-
-  const inputs: { icon: React.ReactNode; label: string; value: string; delay: number; tone: string }[] = [
-    { icon: <Target className="h-2.5 w-2.5" />, label: "Meta mensal", value: "R$ 6.000", delay: 0.1, tone: "text-success" },
-    { icon: <Wrench className="h-2.5 w-2.5" />, label: "Custos do veículo", value: "R$ 1.280", delay: 0.35, tone: "text-amber-500" },
-    { icon: <Route className="h-2.5 w-2.5" />, label: "Ritmo do mês", value: "62%", delay: 0.6, tone: "text-primary" },
-  ];
-
-  return (
-    <StepShell
-      eyebrow="KM Inteligente"
-      title="Descubra o valor mínimo por km que faz sentido para sua meta."
-      description="Quanto vale aceitar a próxima corrida? O Volant te mostra."
-    >
-      <PhoneFrame compact>
-        <div className="absolute inset-0 flex flex-col bg-background p-2.5">
-          {/* Inputs converging */}
-          <div className="space-y-1.5">
-            {inputs.map((it) => (
+          {/* Inputs convergindo (custos + ritmo) */}
+          <AnimatePresence>
+            {showInputs && (
               <motion.div
-                key={it.label}
-                initial={reduce ? {} : { opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: it.delay, duration: 0.4 }}
-                className="flex items-center justify-between rounded-lg border border-border bg-card px-2 py-1.5"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35 }}
+                className="space-y-1 overflow-hidden"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className={cn("flex h-5 w-5 items-center justify-center rounded-md bg-muted", it.tone)}>
-                    {it.icon}
-                  </span>
-                  <span className="text-[9px] font-medium text-foreground/80">{it.label}</span>
+                <div className="grid grid-cols-2 gap-1">
+                  <motion.div
+                    initial={reduce ? {} : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="rounded-lg border border-border bg-card p-1.5"
+                  >
+                    <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-amber-500">
+                      <Wrench className="h-2 w-2" /> Custos
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 1.280</div>
+                  </motion.div>
+                  <motion.div
+                    initial={reduce ? {} : { opacity: 0, x: 6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.15 }}
+                    className="rounded-lg border border-border bg-card p-1.5"
+                  >
+                    <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-primary">
+                      <Route className="h-2 w-2" /> Ritmo
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-bold tabular-nums">62%</div>
+                  </motion.div>
                 </div>
-                <span className={cn("text-[10px] font-bold tabular-nums", it.tone)}>{it.value}</span>
+
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex items-center justify-center py-0.5"
+                >
+                  <ChevronDown className="h-3 w-3 text-primary animate-pulse" />
+                </motion.div>
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
 
-          {/* Arrow converging */}
-          <motion.div
-            initial={reduce ? {} : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.95, duration: 0.3 }}
-            className="my-1.5 flex items-center justify-center"
-          >
-            <ChevronDown className="h-3.5 w-3.5 text-primary animate-pulse" />
-          </motion.div>
-
-          {/* Smart result */}
-          <motion.div
-            initial={reduce ? {} : { opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 1.25, duration: 0.5, ease: "easeOut" }}
-            className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-2.5 shadow-[0_0_24px_-12px_hsl(var(--primary)/0.6)]"
-          >
-            <motion.div
-              aria-hidden
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.0, 0.4, 0.0] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-              className="pointer-events-none absolute -inset-2 rounded-2xl bg-primary/15 blur-2xl"
-            />
-            <div className="relative">
-              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-primary">
-                <Gauge className="h-2.5 w-2.5" /> R$/km inteligente
-              </div>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-[22px] font-bold tabular-nums text-foreground leading-none">
-                  R$ {smartValue.toFixed(2).replace(".", ",")}
-                </span>
-                <span className="text-[9px] text-muted-foreground">/ km</span>
-              </div>
-              <p className="mt-1 text-[8.5px] leading-snug text-muted-foreground">
-                Priorize corridas a partir desse valor por km.
-              </p>
-            </div>
-          </motion.div>
+          {/* R$/km inteligente */}
+          <AnimatePresence>
+            {showResult && (
+              <motion.div
+                initial={reduce ? {} : { opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-2 shadow-[0_0_24px_-12px_hsl(var(--primary)/0.6)]"
+              >
+                <motion.div
+                  aria-hidden
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: [0.0, 0.4, 0.0] }}
+                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
+                  className="pointer-events-none absolute -inset-2 rounded-2xl bg-primary/15 blur-2xl"
+                />
+                <div className="relative">
+                  <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-primary">
+                    <Gauge className="h-2.5 w-2.5" /> R$/km inteligente
+                  </div>
+                  <div className="mt-0.5 flex items-baseline gap-1">
+                    <span className="text-[18px] font-bold tabular-nums text-foreground leading-none">
+                      R$ {smartValue.toFixed(2).replace(".", ",")}
+                    </span>
+                    <span className="text-[8px] text-muted-foreground">/ km</span>
+                  </div>
+                  <p className="mt-0.5 text-[8px] leading-snug text-muted-foreground">
+                    Priorize corridas a partir desse valor para fechar a meta.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </PhoneFrame>
 
       <div className="mt-3 space-y-1.5">
-        <HighlightRow delay={1.6} text="Aceitar corridas no escuro tira você da meta sem perceber." />
-        <HighlightRow delay={1.75} text="O Volant cruza meta, custos e ritmo para sugerir um R$/km estratégico." />
-        <HighlightRow delay={1.9} text="Você poderá ajustar isso depois nas Metas Inteligentes." />
+        <HighlightRow delay={0.6} text="Meta semanal e diária calculadas sozinhas a partir do mensal." />
+        <HighlightRow delay={0.75} text="O R$/km ideal se ajusta conforme você roda." />
+        <HighlightRow delay={0.9} text="Ajustável em Ajustes → Planejamento Inteligente." />
       </div>
     </StepShell>
   );
 }
+
+
 
 /* ============================================================
  *  STEP 8 — Final
