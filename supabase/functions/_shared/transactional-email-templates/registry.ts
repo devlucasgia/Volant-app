@@ -10,7 +10,13 @@ export interface TemplateEntry {
 }
 
 import { template as newUserSignup } from './new-user-signup.tsx'
+import { template as newSubscription } from './new-subscription.tsx'
+import { template as subscriptionCanceled } from './subscription-canceled.tsx'
+import { template as paymentFailedInternal } from './payment-failed-internal.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-user-signup': newUserSignup,
+  'new-subscription': newSubscription,
+  'subscription-canceled': subscriptionCanceled,
+  'payment-failed-internal': paymentFailedInternal,
 }
