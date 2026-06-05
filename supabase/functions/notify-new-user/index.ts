@@ -75,8 +75,18 @@ Deno.serve(async (req) => {
       "—";
     const createdAt = u.created_at || new Date().toISOString();
 
-    const { error: invokeErr } = await admin.functions.invoke("send-transactional-email", {
-      body: {
+    // Invoke send-transactional-email directly using service-role auth.
+    // Using fetch with explicit Authorization header avoids the
+    // UNAUTHORIZED_INVALID_JWT_FORMAT issue seen with functions.invoke()
+    // under the new Supabase signing-keys system.
+    const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        apikey: SERVICE_ROLE,
+      },
+      body: JSON.stringify({
         templateName: "new-user-signup",
         idempotencyKey: `new-user-signup-${u.id}`,
         templateData: {
@@ -86,12 +96,13 @@ Deno.serve(async (req) => {
           createdAt,
           userId: u.id,
         },
-      },
+      }),
     });
 
-    if (invokeErr) {
-      console.error("[notify-new-user] invoke failed", invokeErr);
-      return new Response(JSON.stringify({ error: "email_failed" }), {
+    if (!sendRes.ok) {
+      const errText = await sendRes.text().catch(() => "");
+      console.error("[notify-new-user] send failed", sendRes.status, errText);
+      return new Response(JSON.stringify({ error: "email_failed", status: sendRes.status }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
