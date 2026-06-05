@@ -16,6 +16,48 @@ function resolvePriceId(item: any): string {
   return item?.price?.lookup_key || item?.price?.metadata?.lovable_external_id || item?.price?.id;
 }
 
+/**
+ * Resolve the user's email for an internal admin notification.
+ * Prefers Stripe customer email (cheap), falls back to auth.users via service-role.
+ */
+async function resolveUserEmail(userId: string | undefined, stripeEmail?: string): Promise<string> {
+  if (stripeEmail) return stripeEmail;
+  if (!userId) return "—";
+  try {
+    const { data } = await getSupabase().auth.admin.getUserById(userId);
+    return data?.user?.email || "—";
+  } catch {
+    return "—";
+  }
+}
+
+/**
+ * Enqueue an internal admin notification email (to suporte@) using the
+ * transactional email pipeline. Failures are swallowed — we never want a
+ * notification to block a webhook ack.
+ */
+async function notifyInternal(templateName: string, idempotencyKey: string, templateData: Record<string, unknown>) {
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        apikey: SERVICE_ROLE,
+      },
+      body: JSON.stringify({ templateName, idempotencyKey, templateData }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      console.warn("[payments-webhook] notify failed", templateName, res.status, t);
+    }
+  } catch (e) {
+    console.warn("[payments-webhook] notify error", templateName, e);
+  }
+}
+
 async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const userId = subscription.metadata?.userId;
   if (!userId) {
@@ -25,6 +67,7 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const periodEndIso = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
 
   await getSupabase().from("subscriptions").upsert(
     {
@@ -35,13 +78,24 @@ async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
       price_id: resolvePriceId(item),
       status: subscription.status,
       current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
-      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      current_period_end: periodEndIso,
       cancel_at_period_end: subscription.cancel_at_period_end || false,
       environment: env,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "stripe_subscription_id" },
   );
+
+  const email = await resolveUserEmail(userId, subscription.customer_email);
+  await notifyInternal("new-subscription", `new-subscription-${subscription.id}`, {
+    email,
+    userId,
+    priceId: resolvePriceId(item) || "—",
+    productId: item?.price?.product || "—",
+    status: subscription.status || "—",
+    periodEnd: periodEndIso || "—",
+    environment: env,
+  });
 }
 
 async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
@@ -70,6 +124,27 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
     .update({ status: "canceled", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+
+  // Resolve the user_id we stored from our own table (Stripe deletion event may omit metadata).
+  const { data: row } = await getSupabase()
+    .from("subscriptions")
+    .select("user_id, current_period_end")
+    .eq("stripe_subscription_id", subscription.id)
+    .eq("environment", env)
+    .maybeSingle();
+
+  const userId = (row as any)?.user_id || subscription.metadata?.userId;
+  const periodEnd = (row as any)?.current_period_end || null;
+  const email = await resolveUserEmail(userId);
+
+  await notifyInternal("subscription-canceled", `sub-canceled-${subscription.id}`, {
+    email,
+    userId: userId || "—",
+    subscriptionId: subscription.id,
+    environment: env,
+    cancelAtPeriodEnd: String(!!subscription.cancel_at_period_end),
+    periodEnd: periodEnd || "—",
+  });
 }
 
 /**
@@ -88,6 +163,26 @@ async function handleInvoicePaymentFailed(invoice: any, env: StripeEnv) {
     .update({ status: "past_due", updated_at: new Date().toISOString() })
     .eq("stripe_subscription_id", subId)
     .eq("environment", env);
+
+  const { data: row } = await getSupabase()
+    .from("subscriptions")
+    .select("user_id")
+    .eq("stripe_subscription_id", subId)
+    .eq("environment", env)
+    .maybeSingle();
+
+  const userId = (row as any)?.user_id;
+  const email = await resolveUserEmail(userId, invoice.customer_email);
+
+  await notifyInternal("payment-failed-internal", `payment-failed-${invoice.id}-${invoice.attempt_count || 0}`, {
+    email,
+    userId: userId || "—",
+    subscriptionId: subId,
+    invoiceId: invoice.id || "—",
+    amountDue: String(invoice.amount_due ?? "—"),
+    attemptCount: String(invoice.attempt_count ?? "—"),
+    environment: env,
+  });
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
