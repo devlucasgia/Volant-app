@@ -85,7 +85,10 @@ export function GuidedFlow({
   );
 
   const isEdit = !!editMode;
-  const stepsList = editMode?.steps ?? Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
+  // Fluxo novo: a meta é sempre líquida (sobra desejada). Passo 1 (escolha
+  // bruto/líquido) só aparece em editMode legado que peça explicitamente.
+  const stepsList =
+    editMode?.steps ?? Array.from({ length: TOTAL_STEPS - 1 }, (_, i) => i + 2);
   const [stepIdx, setStepIdx] = useState(() => {
     if (initialStep != null) {
       const i = stepsList.indexOf(initialStep);
