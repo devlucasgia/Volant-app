@@ -42,23 +42,17 @@ Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
 
+  // Authorization: require an exact match against the service-role key.
+  // We intentionally do NOT decode/inspect JWT payloads here — verifying claims
+  // without checking the signature would let attackers forge service_role tokens.
   let authorized = false
-  if (expectedServiceKey && token && token === expectedServiceKey) {
-    authorized = true
-  } else if (token) {
-    // Back-compat: accept classic JWTs whose role claim is service_role.
-    try {
-      const payloadB64 = token.split('.')[1]
-      if (payloadB64) {
-        const padded = payloadB64.replace(/-/g, '+').replace(/_/g, '/').padEnd(
-          payloadB64.length + ((4 - (payloadB64.length % 4)) % 4),
-          '=',
-        )
-        const json = JSON.parse(atob(padded))
-        if (json?.role === 'service_role') authorized = true
-      }
-    } catch {
-      // ignore
+  if (expectedServiceKey && token) {
+    const a = new TextEncoder().encode(token)
+    const b = new TextEncoder().encode(expectedServiceKey)
+    if (a.length === b.length) {
+      let diff = 0
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i]
+      if (diff === 0) authorized = true
     }
   }
 
