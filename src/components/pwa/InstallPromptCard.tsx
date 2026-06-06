@@ -13,16 +13,19 @@ interface Props {
   description?: string;
 }
 
-function Body({ onInstall, onDismiss, title, description }: Omit<Props, "open">) {
+function Body({ onInstall, onDismiss, title, description, showCustomClose }: Omit<Props, "open"> & { showCustomClose?: boolean }) {
   return (
     <div className="px-5 pb-6 pt-2">
-      <button
-        onClick={onDismiss}
-        aria-label="Fechar"
-        className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted/60"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      {showCustomClose ? (
+        <DrawerClose asChild>
+          <button
+            aria-label="Fechar"
+            className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted/60"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </DrawerClose>
+      ) : null}
 
       <div className="flex flex-col items-center text-center">
         <div className="relative mb-4">
