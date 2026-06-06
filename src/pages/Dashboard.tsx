@@ -439,50 +439,58 @@ export default function Dashboard() {
       const connectorClass = showGross
         ? "bg-gradient-to-b from-[hsl(var(--goal-gross))]/35 to-transparent"
         : "bg-gradient-to-b from-success/35 to-transparent";
+      const hasFooter = plan.plannedKmTotal > 0;
+      const statusTone =
+        plan.status === "ahead" ? "text-success/90"
+        : plan.status === "behind" ? "text-amber-400/90"
+        : plan.status === "needs_adjustment" ? "text-rose-400/90"
+        : "text-muted-foreground/75";
       return (
-        // Negative top margin pulls this card closer to the Meta card above,
-        // so the KM Inteligente reads as a subcard of the goal — not a loose card.
         <div key="smartKm" className="flex flex-col items-center">
           {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
-          <button
-            type="button"
-            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-            aria-label="Ver cálculo"
+          <div
             className={cn(
-              "group relative mx-auto flex w-[88%] cursor-pointer items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-2.5 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-              themeBorder
+              "mx-auto w-[88%] overflow-hidden rounded-2xl border bg-card shadow-sm",
+              themeBorder,
             )}
           >
-            <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
-              <Gauge className="h-5 w-5" />
-            </span>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
-                R$/km inteligente
+            <button
+              type="button"
+              onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
+              aria-label="Ver cálculo"
+              className="group relative flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            >
+              <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
+                <Gauge className="h-5 w-5" />
+              </span>
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
+                  R$/km inteligente
+                </div>
+                <div className="mt-1 flex items-center justify-center gap-1 text-[17px] font-bold tabular-nums text-foreground leading-tight">
+                  {brl(smartKmValue)}
+                  <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
+                </div>
               </div>
-              <div className="mt-1 flex items-center justify-center gap-1 text-[17px] font-bold tabular-nums text-foreground leading-tight">
-                {brl(smartKmValue)}
-                <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-end">
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+              </span>
+            </button>
+            {hasFooter && (
+              <div className="border-t border-border/40 bg-muted/20 px-4 py-1.5">
+                <div className="flex items-center justify-between gap-3 text-[10.5px] tabular-nums">
+                  <span className="text-muted-foreground/80">
+                    Alvo <span className="font-medium text-foreground/85">{brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)}</span>
+                  </span>
+                  <span aria-hidden className="h-2.5 w-px bg-border/60" />
+                  <span className={cn("font-medium", statusTone)}>
+                    {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")} km restantes
+                  </span>
+                </div>
               </div>
-            </div>
-            {/* Discreet chevron mirrors the icon width so the centered text reads visually symmetric */}
-            <span className="flex h-10 w-10 shrink-0 items-center justify-end">
-              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
-            </span>
-          </button>
-          {plan.plannedKmTotal > 0 && (() => {
-            const statusTone =
-              plan.status === "ahead" ? "text-success"
-              : plan.status === "behind" ? "text-amber-400"
-              : plan.status === "needs_adjustment" ? "text-rose-400"
-              : "text-muted-foreground/70";
-            return (
-              <p className={cn("mt-1.5 text-[10px]", statusTone)}>
-                Alvo {brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)} · KM restante {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")}
-              </p>
-            );
-          })()}
+            )}
+          </div>
         </div>
       );
     })() : null,
