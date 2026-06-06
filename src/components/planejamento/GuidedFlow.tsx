@@ -70,7 +70,7 @@ export function GuidedFlow({
   onCancel,
   prefill = false,
   initialStep,
-  { initialDraft, returnTo,
+  initialDraft,
   editMode,
 }: Props) {
   const navigate = useNavigate();
