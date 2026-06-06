@@ -100,7 +100,8 @@ export function GuidedFlow({
   const isLast = stepIdx === stepsList.length - 1;
 
   const [draft, setDraft] = useState<Draft>(() => ({
-    goalType: prefill || isEdit ? settings.goalType : "liquido",
+    // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
+    goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
     monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
     selectedDates:
       (prefill || isEdit) && settings.planningSelectedDates
