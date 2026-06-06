@@ -823,6 +823,13 @@ export default function SettingsPage() {
                 </Button>
               </div>
 
+              {/* Sign out */}
+              <div className="pt-1">
+                <Button variant="outline" className="w-full" onClick={signOut}>
+                  <LogOut className="mr-2 h-4 w-4" /> Sair da conta
+                </Button>
+              </div>
+
               {/* Reset onboarding (test environment only) */}
               {(() => {
                 const host = typeof window !== "undefined" ? window.location.hostname : "";
