@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // admin client already created above for auth validation
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     // Global rate limit: max 30 notifications per minute (across all users)
     const oneMinAgo = new Date(Date.now() - 60_000).toISOString();
