@@ -12,11 +12,21 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Require service-role bearer token. The DB trigger calls this with
-    // service-role auth via pg_net; external/unauthenticated callers are rejected.
+    // Require either the service-role key (when called from another edge
+    // function) or the shared vault secret (when called from the DB trigger
+    // via pg_net). We fetch the shared secret lazily via a SECURITY DEFINER
+    // RPC so we never need to plumb it into edge function env vars.
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-    if (!token || token !== SERVICE_ROLE) {
+    let authorized = !!token && token === SERVICE_ROLE;
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    if (!authorized && token) {
+      const { data: shared } = await admin.rpc("get_notify_shared_secret");
+      if (typeof shared === "string" && shared.length > 0 && token === shared) {
+        authorized = true;
+      }
+    }
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
