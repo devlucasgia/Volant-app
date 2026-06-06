@@ -1,4 +1,5 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { type StripeEnv, createStripeClient } from "../_shared/stripe.ts";
 
 async function resolveOrCreateCustomer(
@@ -35,7 +36,7 @@ async function resolveOrCreateCustomer(
 async function createCheckoutSession(options: {
   priceId: string;
   customerEmail?: string;
-  userId?: string;
+  userId: string;
   returnUrl: string;
   environment: StripeEnv;
 }) {
@@ -47,25 +48,24 @@ async function createCheckoutSession(options: {
   const stripePrice = prices.data[0];
   const isRecurring = stripePrice.type === "recurring";
 
-  const customerId = (options.customerEmail || options.userId)
-    ? await resolveOrCreateCustomer(stripe, { email: options.customerEmail, userId: options.userId })
-    : undefined;
+  const customerId = await resolveOrCreateCustomer(stripe, {
+    email: options.customerEmail,
+    userId: options.userId,
+  });
 
   const session = await stripe.checkout.sessions.create({
     line_items: [{ price: stripePrice.id, quantity: 1 }],
     mode: isRecurring ? "subscription" : "payment",
     ui_mode: "embedded_page",
     return_url: options.returnUrl,
-    ...(customerId && { customer: customerId }),
-    ...(options.userId && {
-      metadata: { userId: options.userId },
-      ...(isRecurring && {
-        subscription_data: {
-          // No trial_period_days: the 7-day free access is granted in-app
-          // (see useSubscription). Stripe Checkout charges immediately.
-          metadata: { userId: options.userId },
-        },
-      }),
+    customer: customerId,
+    metadata: { userId: options.userId },
+    ...(isRecurring && {
+      subscription_data: {
+        // No trial_period_days: the 7-day free access is granted in-app
+        // (see useSubscription). Stripe Checkout charges immediately.
+        metadata: { userId: options.userId },
+      },
     }),
   });
 
@@ -78,8 +78,40 @@ Deno.serve(async (req) => {
     return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
   try {
+    // Verify caller identity. The userId is derived from the JWT — the
+    // client-supplied userId is ignored to prevent attributing checkouts
+    // to other users.
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: claims, error: claimsErr } = await supabase.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const verifiedUserId = claims.claims.sub as string;
+    const verifiedEmail = (claims.claims.email as string | undefined) ?? undefined;
+
     const body = await req.json();
-    const clientSecret = await createCheckoutSession(body);
+    const clientSecret = await createCheckoutSession({
+      priceId: body.priceId,
+      customerEmail: verifiedEmail ?? body.customerEmail,
+      userId: verifiedUserId,
+      returnUrl: body.returnUrl,
+      environment: body.environment,
+    });
     return new Response(JSON.stringify({ clientSecret }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
