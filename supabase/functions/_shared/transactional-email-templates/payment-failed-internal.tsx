@@ -59,7 +59,7 @@ export const template = {
   component: PaymentFailedInternalEmail,
   subject: (d: Record<string, any>) => `[Volant] Pagamento recusado: ${d.email || 'usuário'}`,
   to: 'suporte@usevolant.com.br',
-  displayName: 'failvolant',
+  displayName: 'Volant · Pagamento falhou',
   previewData: {
     email: 'joao@example.com', userId: '00000000-0000-0000-0000-000000000000',
     subscriptionId: 'sub_123', invoiceId: 'in_123',

@@ -64,7 +64,7 @@ export const template = {
   component: NewUserSignupEmail,
   subject: (d: Record<string, any>) => `[Volant] Novo cadastro: ${d.email || d.name || 'usuário'}`,
   to: 'suporte@usevolant.com.br',
-  displayName: 'newuservolant',
+  displayName: 'Volant · Novo cadastro',
   previewData: {
     name: 'João Silva',
     email: 'joao@example.com',

@@ -76,6 +76,8 @@ export function GuidedFlow({
 }: Props) {
   const navigate = useNavigate();
   const { settings, cars, updateSettings } = useData();
+  const { useHideChrome } = useUI();
+  useHideChrome();
   const activeCar = useMemo(
     () => cars.find((c) => c.is_active) || cars[0] || null,
     [cars],
