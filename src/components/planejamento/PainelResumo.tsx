@@ -308,6 +308,44 @@ function Chip({ label, value }: { label: string; value: string }) {
   );
 }
 
+function MiniStat({
+  label,
+  value,
+  tone,
+  tooltip,
+}: {
+  label: string;
+  value: string;
+  tone: "ok" | "ahead" | "behind";
+  tooltip?: string;
+}) {
+  const toneClass =
+    tone === "behind"
+      ? "border-amber-500/40 bg-amber-500/[0.08]"
+      : tone === "ahead"
+        ? "border-emerald-500/35 bg-emerald-500/[0.07]"
+        : "border-border/60 bg-card/70";
+  const valueClass =
+    tone === "behind"
+      ? "text-amber-200"
+      : tone === "ahead"
+        ? "text-emerald-200"
+        : "text-foreground/95";
+  return (
+    <div
+      title={tooltip}
+      className={cn("rounded-xl border px-2.5 py-1.5 transition-colors", toneClass)}
+    >
+      <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/85">
+        {label}
+      </div>
+      <div className={cn("mt-0.5 text-[13.5px] font-bold tabular-nums leading-tight", valueClass)}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
 function Row({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <li className="flex items-center justify-between gap-2 py-2 first:pt-0 last:pb-0">
