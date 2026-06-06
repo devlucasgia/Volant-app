@@ -353,8 +353,8 @@ function Step1({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
       />
       <div className="space-y-2.5">
         {([
+          { key: "liquido" as const, title: "Lucro líquido", desc: "Quanto quero que SOBRE depois dos gastos. Recomendado." },
           { key: "bruto" as const, title: "Ganho bruto", desc: "Quanto quero faturar no total, antes dos gastos." },
-          { key: "liquido" as const, title: "Lucro líquido", desc: "Quanto quero que sobre depois dos gastos." },
         ]).map((opt) => {
           const active = draft.goalType === opt.key;
           return (
