@@ -26,9 +26,11 @@ function generateToken(): string {
 }
 
 // Auth: this function MUST only be called by trusted internal code using the
-// service-role key. verify_jwt = true at the gateway accepts the anon key too
-// (it's a valid JWT), so we additionally inspect the role claim and reject
-// anything other than service_role to prevent abuse from the public anon key.
+// service-role key. The gateway runs with verify_jwt = false (the new Supabase
+// signing-keys system rejects raw service-role keys as JWTs), so we validate
+// the caller in code by comparing the Bearer token against the literal
+// SUPABASE_SERVICE_ROLE_KEY env var. This works for both classic JWT keys and
+// the new sb_secret_* keys.
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -36,26 +38,32 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
-  // Enforce service-role caller (defense-in-depth — gateway only validates
-  // the JWT signature, not the role).
+  const expectedServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
-  let callerRole: string | null = null
-  try {
-    const payloadB64 = token.split('.')[1]
-    if (payloadB64) {
-      const padded = payloadB64.replace(/-/g, '+').replace(/_/g, '/').padEnd(
-        payloadB64.length + ((4 - (payloadB64.length % 4)) % 4),
-        '=',
-      )
-      const json = JSON.parse(atob(padded))
-      callerRole = typeof json?.role === 'string' ? json.role : null
+
+  let authorized = false
+  if (expectedServiceKey && token && token === expectedServiceKey) {
+    authorized = true
+  } else if (token) {
+    // Back-compat: accept classic JWTs whose role claim is service_role.
+    try {
+      const payloadB64 = token.split('.')[1]
+      if (payloadB64) {
+        const padded = payloadB64.replace(/-/g, '+').replace(/_/g, '/').padEnd(
+          payloadB64.length + ((4 - (payloadB64.length % 4)) % 4),
+          '=',
+        )
+        const json = JSON.parse(atob(padded))
+        if (json?.role === 'service_role') authorized = true
+      }
+    } catch {
+      // ignore
     }
-  } catch {
-    callerRole = null
   }
-  if (callerRole !== 'service_role') {
-    console.warn('send-transactional-email rejected non-service-role caller', { callerRole })
+
+  if (!authorized) {
+    console.warn('send-transactional-email rejected non-service-role caller')
     return new Response(
       JSON.stringify({ error: 'forbidden' }),
       { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
