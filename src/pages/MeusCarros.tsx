@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Car, Plus, Pencil, Trash2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CarFormDialog } from "@/components/CarFormDialog";
@@ -18,9 +18,25 @@ function carLabel(c: CarType) {
 
 export default function MeusCarros() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as
+    | { returnTo?: string; planningResume?: unknown }
+    | null;
+  const returnTo = state?.returnTo;
+  const planningResume = state?.planningResume;
   const { user } = useAuth();
   const { cars, setActiveCar, refreshCars } = useData();
   const [dialog, setDialog] = useState<{ open: boolean; car: CarType | null }>({ open: false, car: null });
+
+  const handleBack = () => {
+    if (returnTo) {
+      navigate(returnTo, {
+        state: planningResume ? { planningResume } : undefined,
+      });
+    } else {
+      navigate("/ajustes/veiculos");
+    }
+  };
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -44,7 +60,7 @@ export default function MeusCarros() {
         <div className="flex items-center gap-3 px-3 py-3">
           <button
             type="button"
-            onClick={() => navigate("/ajustes/veiculos")}
+            onClick={handleBack}
             aria-label="Voltar"
             className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted/50 active:scale-[0.96]"
           >
@@ -114,6 +130,15 @@ export default function MeusCarros() {
         open={dialog.open}
         onOpenChange={(o) => setDialog((s) => ({ ...s, open: o }))}
         car={dialog.car}
+        onSaved={() => {
+          // Se viemos do Planejamento Inteligente, retorna automaticamente
+          // levando o rascunho preservado para continuar a rotina no passo 5.
+          if (returnTo) {
+            navigate(returnTo, {
+              state: planningResume ? { planningResume } : undefined,
+            });
+          }
+        }}
       />
     </div>
   );
