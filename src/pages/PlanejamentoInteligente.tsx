@@ -41,6 +41,7 @@ interface PlanningResumeState {
     monthlyGoal: number;
     selectedDates: string[];
     avgKmPerDay: number;
+  returnTo?: string;
   };
 }
 
@@ -100,7 +101,7 @@ export default function PlanejamentoInteligente() {
     });
     setMode("flow");
     // Limpa o state para não restaurar de novo em refresh
-    navigate(location.pathname, { replace: true });
+    navigate(location.pathname, { replace: true, state: returnTo ? { returnTo } : undefined });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeKey]);
 
@@ -132,7 +133,7 @@ export default function PlanejamentoInteligente() {
 
   if (mode === "flow") {
     return (
-      <GuidedFlow
+      <GuidedFlow returnTo={returnTo}
         prefill={flowConfig.variant === "prefill"}
         initialStep={flowConfig.initialStep}
         initialDraft={flowConfig.initialDraft}
