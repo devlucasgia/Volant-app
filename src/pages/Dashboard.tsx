@@ -162,7 +162,9 @@ export default function Dashboard() {
   }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
 
   // Alvo mensal e meta diária vêm do motor do Planejamento Inteligente quando configurado.
-  // Lente única: bruto = meta cadastrada; líquido = meta cadastrada + custos fixos.
+  // Lente única (semântica financeira correta):
+  //   BRUTO   = faturamento necessário = meta cadastrada + custos fixos + variáveis.
+  //   LÍQUIDO = sobra desejada (meta cadastrada).
   const monthlyTargetForView = plan.isPlanningConfigured
     ? (showGrossView ? plan.homeGrossTarget : plan.homeNetTarget)
     : settings.monthlyGoal;
