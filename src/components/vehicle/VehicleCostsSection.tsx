@@ -1,9 +1,11 @@
 import { Label } from "@/components/ui/label";
 import { NumberField } from "@/components/NumberField";
 import { Segmented } from "@/components/Segmented";
-import { Wallet, Droplet, CircleDot, Receipt } from "lucide-react";
+import { Wallet, Droplet, CircleDot, Receipt, Fuel, UtensilsCrossed } from "lucide-react";
 
 export type OwnershipStatus = "quitado" | "financiado" | "alugado" | null;
+
+export type FuelType = "gasolina" | "etanol" | "diesel" | "gnv" | "flex";
 
 export interface VehicleCosts {
   ownership_status: OwnershipStatus;
@@ -16,6 +18,10 @@ export interface VehicleCosts {
   ipva_yearly: number | null;
   insurance_monthly: number | null;
   other_monthly_costs: number | null;
+  fuel_consumption_kml: number | null;
+  fuel_type: FuelType | null;
+  fuel_price: number | null;
+  food_avg_per_day: number | null;
 }
 
 export const EMPTY_VEHICLE_COSTS: VehicleCosts = {
@@ -29,6 +35,10 @@ export const EMPTY_VEHICLE_COSTS: VehicleCosts = {
   ipva_yearly: null,
   insurance_monthly: null,
   other_monthly_costs: null,
+  fuel_consumption_kml: null,
+  fuel_type: null,
+  fuel_price: null,
+  food_avg_per_day: null,
 };
 
 interface Props {
