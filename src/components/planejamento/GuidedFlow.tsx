@@ -686,10 +686,16 @@ function Step6({
   draft,
   plan,
   costsItems,
+  variableItems,
+  variableTotal,
+  fixedTotal,
 }: {
   draft: Draft;
   plan: ReturnType<typeof computePlan>;
   costsItems: { label: string; value: number }[];
+  variableItems: { label: string; value: number }[];
+  variableTotal: number;
+  fixedTotal: number;
 }) {
   return (
     <div>
@@ -730,8 +736,13 @@ function Step6({
         />
         <Stat
           icon={CarIcon}
-          label="Custos do veículo"
-          value={plan.custosFixos > 0 ? `${fmtBRL(plan.custosFixos)}/mês` : "—"}
+          label="Custos fixos"
+          value={fixedTotal > 0 ? `${fmtBRL(fixedTotal)}/mês` : "—"}
+        />
+        <Stat
+          icon={CarIcon}
+          label="Custos variáveis"
+          value={variableTotal > 0 ? `${fmtBRL(variableTotal)}/mês` : "—"}
         />
         <Stat
           icon={TrendingUp}
@@ -746,24 +757,38 @@ function Step6({
         />
       </div>
 
-      {costsItems.length > 0 && (
-        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4">
-          <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-            Custos considerados
-          </div>
-          <ul className="space-y-1.5">
-            {costsItems.map((it, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between text-[12px] text-muted-foreground"
-              >
-                <span>{it.label}</span>
-                <span className="font-medium tabular-nums text-foreground/85">
-                  {fmtBRL(it.value)}
-                </span>
-              </li>
-            ))}
-          </ul>
+      {(costsItems.length > 0 || variableItems.length > 0) && (
+        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4 space-y-3">
+          {costsItems.length > 0 && (
+            <div>
+              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
+                Custos fixos
+              </div>
+              <ul className="space-y-1.5">
+                {costsItems.map((it, i) => (
+                  <li key={`f-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
+                    <span>{it.label}</span>
+                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {variableItems.length > 0 && (
+            <div className="border-t border-border/40 pt-3">
+              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
+                Custos variáveis estimados
+              </div>
+              <ul className="space-y-1.5">
+                {variableItems.map((it, i) => (
+                  <li key={`v-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
+                    <span>{it.label}</span>
+                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
