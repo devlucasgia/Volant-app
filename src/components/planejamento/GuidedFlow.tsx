@@ -397,14 +397,15 @@ function Step1({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
 }
 
 function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+  const isLiquido = draft.goalType === "liquido";
   return (
     <div>
       <StepHeader
         icon={Target}
-        title={draft.goalType === "liquido" ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
+        title={isLiquido ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
         subtitle={
-          draft.goalType === "liquido"
-            ? "O valor que você quer ter sobrando depois dos gastos."
+          isLiquido
+            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar todos os custos do carro (fixos + variáveis)."
             : "Seu objetivo total de faturamento no mês."
         }
       />
@@ -417,7 +418,7 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
           inputMode="decimal"
         />
         <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-          Exemplo: 6.000 para R$ 6.000,00 no mês.
+          Exemplo: 4.000 para R$ 4.000,00 de sobra no mês.
         </p>
       </div>
     </div>
