@@ -34,6 +34,7 @@ export type Database = {
           other_monthly_costs: number | null
           ownership_status: string | null
           plate: string | null
+          rental_monthly: number | null
           rental_weekly: number | null
           tires_cost: number | null
           tires_interval_km: number | null
@@ -59,6 +60,7 @@ export type Database = {
           other_monthly_costs?: number | null
           ownership_status?: string | null
           plate?: string | null
+          rental_monthly?: number | null
           rental_weekly?: number | null
           tires_cost?: number | null
           tires_interval_km?: number | null
@@ -84,6 +86,7 @@ export type Database = {
           other_monthly_costs?: number | null
           ownership_status?: string | null
           plate?: string | null
+          rental_monthly?: number | null
           rental_weekly?: number | null
           tires_cost?: number | null
           tires_interval_km?: number | null

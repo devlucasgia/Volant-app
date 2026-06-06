@@ -1,120 +1,81 @@
-# Sprint — Otimização do Planejamento Inteligente
+## Contexto
 
-## Vocabulário (canônico após esta sprint)
+No Passo 5 do Planejamento Inteligente ("Custos considerados") só aparecem os custos fixos. Os variáveis (combustível + alimentação) já são calculados (`variable.items` / `variable.total`) e passados para o `Step5`, mas o componente nunca os renderiza. Por isso, depois de cadastrar combustível/alimentação na Central de Veículos e voltar, o motorista não vê os valores.
 
-- **Líquido** = sobra no bolso do motorista (o que vai cadastrar como meta).
-- **Bruto** = faturamento necessário = Líquido + Custos fixos + Custos variáveis estimados.
-- **Custos fixos** = mensalidades do veículo (aluguel, financiamento, seguro, IPVA, óleo/pneus prorrateados).
-- **Custos variáveis** = combustível e alimentação estimados a partir do plano (KM × dias).
+Outros pontos:
+- Empty state só dispara quando NÃO há custos fixos, ignorando o caso "tem fixos, mas zero variáveis" (e vice-versa).
+- Nome do veículo aparece como subtítulo cinza sem destaque.
+- "Alugado" só aceita valor semanal. Precisa aceitar mensal OU semanal (mutuamente exclusivos).
+- Botão "Continuar" do fluxo guiado às vezes exige scroll.
+- Textos "KM restante" / "dias restantes" abaixo do card de R$/KM Inteligente são pequenos e cinza; o sistema de cores (amber/emerald/ok) hoje só pinta o card grande, não esses textos.
 
----
+## Mudanças
 
-## 1.1 — Inverter rótulos Bruto ↔ Líquido [DECIDIDO]
+### 1. Passo 5 — custos variáveis visíveis + empty states inteligentes
+**`src/components/planejamento/GuidedFlow.tsx`** (`Step5`):
+- Renderizar duas seções dentro do mesmo card:
+  - "Custos fixos" — `costsItems` + subtotal
+  - "Custos variáveis" — `variableItems` + subtotal (combustível, alimentação)
+- "Total mensal" = fixos + variáveis.
+- Para cada bloco vazio, mostrar inline um aviso curto + CTA:
+  - Sem fixos: "Nenhum custo fixo cadastrado" + "Cadastrar custos fixos →"
+  - Sem variáveis: "Nenhum custo variável cadastrado" + "Cadastrar custos variáveis →"
+- Ambos os CTAs reusam `onEditCosts` (já navega para `/ajustes/veiculos/custos` com `planningResume`, que restaura o draft ao voltar).
+- Remover o early-return `if (costsItems.length === 0)` — avisos passam a viver dentro do layout normal.
 
-**Estado hoje (errado semanticamente):** `homeGrossTarget = monthlyGoal` e `homeNetTarget = monthlyGoal + custos`. Resultado: a meta "Bruta" é menor que a "Líquida", invertendo o significado financeiro.
+### 2. Destaque do veículo no Passo 5
+**`GuidedFlow.tsx` (`Step5`)**: substituir o subtítulo "Chevrolet Onix" cinza por um chip com ícone de carro + marca/modelo em peso semibold e tom primário suave, logo abaixo do título.
 
-**Mudança:** trocar apenas a atribuição semântica, sem mexer na matemática nem nos KMs planejados.
+### 3. Aluguel mensal opcional
+**Banco** (`supabase--migration`):
+- `ALTER TABLE public.cars ADD COLUMN rental_monthly numeric NULL;`
 
-```ts
-// planningEngine.ts — homeLens
-homeGrossTarget = monthlyGoal + consideredCosts;   // faturamento necessário
-homeNetTarget   = monthlyGoal;                     // sobra desejada
-homeRemainingGross = clampPos(homeGrossTarget - currentGross);
-homeRemainingNet   = clampPos(homeNetTarget   - currentGross);
-homeSmartRpkGross  = homeRemainingGross / remainingPlannedKm;  // maior
-homeSmartRpkNet    = homeRemainingNet   / remainingPlannedKm;  // menor
-```
+**`src/lib/planejamento.ts`** (`computeFixedMonthlyCosts`):
+- Bloco "alugado": se `rental_monthly > 0` usar esse valor; senão, se `rental_weekly > 0` usar `rental_weekly * 4.33`. Nunca soma os dois.
 
-Resultado no exemplo (meta cadastrada 6.000, custos 2.000):
-- Bruta = R$8.000 → R$/KM inteligente **maior**
-- Líquida = R$6.000 → R$/KM inteligente **menor**
+**`src/components/vehicle/VehicleCostsSection.tsx`**:
+- Adicionar `rental_monthly` ao `VehicleCosts` + `EMPTY_VEHICLE_COSTS`.
+- No bloco "alugado", Segmented "Mensal / Semanal" controlando qual campo aparece. Ao trocar, zerar o outro campo para evitar duplicidade.
 
-**Padronizar `goalType` como `"liquido"`** daqui pra frente (a meta cadastrada passa a ser sempre a sobra). Para usuários antigos com `goalType="bruto"`, fazer migração one-shot: o valor cadastrado vira `monthlyGoal_legacy_bruto` e o novo `monthlyGoal` é recalculado como `legacy − custos`, ou exibir banner pedindo recadastro (decidir no momento da migração; default = conversão automática preservando o bruto original).
+**`src/components/vehicle/VehicleCostsCard.tsx`** e **`src/context/DataContext.tsx`**: propagar `rental_monthly` no map/save (mesmo padrão do `rental_weekly`).
 
-**Onboarding:** ajustar copy e exemplo para "quanto você quer SOBRAR no mês".
+**`src/types/index.ts`**: adicionar `rental_monthly?: number | null` em `Car`.
 
-**Arquivos:** `src/lib/planningEngine.ts`, `src/components/planejamento/GuidedFlow.tsx`, `src/components/PlanningOnboardingDialog.tsx`, textos das cards da Home (toggle bruto/líquido).
+### 4. Fluxo guiado sem scroll para o botão Continuar
+**`GuidedFlow.tsx`**:
+- Reduzir o `pb-28` do container central e o `py-3` do footer (ou aplicar `pb-20` + `py-2`) para que o conteúdo + botão caibam em viewports ≥ 640px de altura.
+- Garantir que o container interno (`flex-1 flex flex-col justify-center`) tenha `min-h-0` para conteúdos médios não estourarem.
+- Reduzir levemente paddings/margens internos dos passos densos (Step 4 e Step 5) para folga visual.
+- Validar em viewport 375×667 (iPhone SE) e 390×844.
 
----
+### 5. Mini-cards coloridos abaixo do R$/KM Inteligente
+**`src/components/planejamento/PainelResumo.tsx`** (Hero 2):
+- Trocar a linha única de texto "KM restante: X · Y dias restantes" por dois mini-chips lado a lado:
+  - Chip "KM a alcançar" → `s.remainingPlannedKm`
+  - Chip "Dias para meta" → `s.remainingWorkdaysCount`
+- Cada chip pinta-se conforme `rpkTone` (mesma regra já existente do card):
+  - `behind` (smartRpk > requiredRpk × 1.10) → amber
+  - `ahead`  (smartRpk < requiredRpk × 0.90) → emerald
+  - `ok`     → neutro (border/bg do card)
+- Visual discreto: `rounded-xl`, padding pequeno (`px-2.5 py-1.5`), label uppercase 10px, valor semibold 13px. Sem sombra forte.
+- Adicionar tooltip simples (title) explicando a regra: "Acima do plano: você precisa render mais por km" / "Folga: você pode render menos por km que o mínimo".
 
-## 1.2 — Custos variáveis [DECIDIDO: Variação da Opção A]
-
-### Minha recomendação (justificativa)
-
-| Opção | Prós | Contras |
-|---|---|---|
-| A pura (no fluxo do planejamento) | UX guiada | Duplica conceito com Custos do Veículo; difícil editar depois |
-| **A-variação (em "Custos", renomear)** | Fonte única de verdade; editável fora do onboarding; planejamento só consome | Pequena refatoração de nome |
-| B (sem estimativa, só gastos reais) | Zero atrito | Meta bruta e R$/KM Inteligente oscilam a cada lançamento → UX ruim, sem âncora no início do mês |
-
-**Recomendo A-variação.** Razões: (i) o motorista tem um único lugar para revisar todos os custos; (ii) o Planejamento fica determinístico e estável; (iii) reaproveita a UI/rota `MeusCarros` → `VehicleCostsCard` que já existe; (iv) permite que o app, no futuro, compare estimado vs real automaticamente.
-
-### Escopo
-
-**Renomear** "Custos do Veículo" → **"Custos"** (label, breadcrumb, título de página, callbacks `costs_onboarded`). Manter rota atual.
-
-**Nova seção "Custos variáveis"** no `VehicleCostsCard` com dois campos:
-
-1. **Combustível**
-   - `fuel_consumption_kml` (number, ex.: 8.0)
-   - `fuel_type` (enum: gasolina | etanol | diesel | gnv | flex)
-   - `fuel_price` (R$/litro)
-2. **Alimentação**
-   - `food_avg_per_day` (R$/dia)
-
-**Schema:** novas colunas em `public.cars` (todas nullable, default null) — migração simples, sem quebrar dados existentes.
-
-### Cálculo (somente no `homeGrossTarget`)
-
-```
-litros_mes      = (averageKmPerDay * selectedWorkdaysCount) / fuel_consumption_kml
-custo_combust   = litros_mes * fuel_price
-custo_alimenta  = food_avg_per_day * selectedWorkdaysCount
-custosVariaveis = custo_combust + custo_alimenta
-
-homeGrossTarget = monthlyGoal + custosFixos + custosVariaveis
-```
-
-Custos variáveis **não entram** no líquido (líquido = meta cadastrada cru) e **não alteram** `consideredCosts` antigo usado por outros consumidores — criar novo campo `variableCosts` na snapshot para não quebrar callers.
-
-### Resumo do Planejamento (UI)
-
-Quebrar a card "Custos considerados" em duas linhas:
-- **Custos fixos** — R$ X (do veículo)
-- **Custos variáveis** — R$ Y (combustível estimado + alimentação estimada)
-
-Tooltip explicando o cálculo por trás de cada um.
-
----
-
-## Critério de aceite
-
-- [ ] Home: toggle Bruto mostra valor MAIOR (= meta + custos); Líquido mostra valor MENOR (= meta cadastrada).
-- [ ] R$/KM Inteligente do Bruto > R$/KM Inteligente do Líquido em todos os cenários.
-- [ ] Onboarding do planejamento pergunta "quanto quer sobrar" (líquido).
-- [ ] "Custos do Veículo" passa a se chamar "Custos" em toda a UI.
-- [ ] Nova seção "Custos variáveis" em Custos, com combustível (km/L + tipo + preço) e alimentação (R$/dia).
-- [ ] Snapshot expõe `variableCosts` separado de `consideredCosts` (fixos).
-- [ ] Resumo do planejamento mostra fixos e variáveis em linhas separadas.
-- [ ] Usuários beta existentes continuam com metas coerentes após migração (script de conversão `bruto → liquido`).
-- [ ] Nenhuma regressão em Histórico, Relatórios ou Performance (não tocamos nesses módulos).
-
----
+## Como funciona o sistema de cores (referência para o usuário)
+Tudo é baseado em `rpkTone` em `PainelResumo.tsx`:
+- Compara o **R$/KM Inteligente atual** (`smartRpk` = quanto falta faturar ÷ km restantes) com o **R$/KM mínimo necessário** (`requiredRpk` = faturamento total ÷ km planejado).
+- `smartRpk > requiredRpk × 1.10` → **amarelo (behind)**: rodando o mesmo km, precisa ganhar mais por km para bater a meta.
+- `smartRpk < requiredRpk × 0.90` → **verde (ahead)**: já está com folga.
+- Entre 90% e 110% → **neutro (ok)**: dentro do plano.
 
 ## Fora de escopo
 
-- Itens 3, 6 e 8 do plano de go-live (continuam reservados).
-- Alterar fórmulas de R$/h, R$/km histórico, ou qualquer cálculo de Relatórios.
-- Mexer no fluxo de pagamento, paywall, e-mails.
-- Comparativo automático "estimado vs real" (fica para sprint futura).
+- Step 6 / Dashboard (variáveis já entram lá via `homeGrossTarget`).
+- Refator do sistema de tons; só estendemos o uso atual.
+- Migração de dados (aluguel mensal nasce vazio).
 
----
+## Resultado visível
 
-## Ordem de execução
-
-1. Migração SQL: novas colunas em `cars` + migração one-shot `goalType bruto → liquido`.
-2. `planningEngine.ts`: inversão de rótulos + cálculo de `variableCosts`.
-3. `VehicleCostsCard` + renomeação "Custos do Veículo" → "Custos".
-4. `GuidedFlow` + `PlanningOnboardingDialog`: copy nova (sobra desejada).
-5. Home (toggle bruto/líquido) — textos e tooltips.
-6. Verificação manual no preview com o exemplo R$6.000 / R$2.000.
+- Passo 5 com duas seções claras (Fixos / Variáveis), cada uma com CTA quando vazia, e veículo destacado no topo.
+- "Alugado" passa a oferecer Mensal ou Semanal.
+- Botão "Continuar" visível sem scroll em telas comuns.
+- Abaixo do R$/KM Inteligente, dois mini-cards "KM a alcançar" e "Dias para meta" mudam de cor junto com o card principal.

@@ -1,0 +1,1 @@
+ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS rental_monthly numeric NULL;
