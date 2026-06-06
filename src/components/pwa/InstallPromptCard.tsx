@@ -1,6 +1,6 @@
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerClose } from "@/components/ui/drawer";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 const volantIcon = "/volant-app-icon-192.png";
@@ -13,16 +13,19 @@ interface Props {
   description?: string;
 }
 
-function Body({ onInstall, onDismiss, title, description }: Omit<Props, "open">) {
+function Body({ onInstall, onDismiss, title, description, showCustomClose }: Omit<Props, "open"> & { showCustomClose?: boolean }) {
   return (
     <div className="px-5 pb-6 pt-2">
-      <button
-        onClick={onDismiss}
-        aria-label="Fechar"
-        className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted/60"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      {showCustomClose ? (
+        <DrawerClose asChild>
+          <button
+            aria-label="Fechar"
+            className="absolute right-3 top-3 rounded-full p-2 text-muted-foreground hover:bg-muted/60"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </DrawerClose>
+      ) : null}
 
       <div className="flex flex-col items-center text-center">
         <div className="relative mb-4">
@@ -69,7 +72,8 @@ export function InstallPromptCard({ open, onInstall, onDismiss, title, descripti
       <Drawer open={open} onOpenChange={(o) => { if (!o) onDismiss(); }}>
         <DrawerContent className="border-border/60 bg-card">
           <div className="relative">
-            <Body onInstall={onInstall} onDismiss={onDismiss} title={title} description={description} />
+            <Body onInstall={onInstall} onDismiss={onDismiss} title={title} description={description} showCustomClose />
+
           </div>
         </DrawerContent>
       </Drawer>
