@@ -130,6 +130,34 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Also send a welcome email to the user themselves (best-effort).
+    if (u.email) {
+      try {
+        const welcomeRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_ROLE}`,
+            apikey: SERVICE_ROLE,
+          },
+          body: JSON.stringify({
+            templateName: "welcome",
+            recipientEmail: u.email,
+            idempotencyKey: `welcome-${u.id}`,
+            templateData: {
+              name: name && name !== "—" ? String(name).split(" ")[0] : "",
+              appUrl: "https://usevolant.app/app",
+            },
+          }),
+        });
+        if (!welcomeRes.ok) {
+          console.warn("[notify-new-user] welcome_send_failed", { status: welcomeRes.status });
+        }
+      } catch (e) {
+        console.warn("[notify-new-user] welcome_send_error", String(e));
+      }
+    }
+
     // Marca como notificado apenas após sucesso confirmado do envio.
     // Conflito (23505) significa que outra execução já marcou — sem problema.
     const { error: markErr } = await admin
