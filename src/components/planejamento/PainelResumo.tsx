@@ -109,11 +109,6 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="mt-2 text-[26px] font-bold tabular-nums leading-none text-foreground">
               {s.smartRpk > 0 ? `${fmtBRL2(s.smartRpk)}/km` : "—"}
             </div>
-            <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-              {s.plannedKmTotal > 0
-                ? `KM restante: ${fmtKm(s.remainingPlannedKm)} · ${s.remainingWorkdaysCount} ${s.remainingWorkdaysCount === 1 ? "dia restante" : "dias restantes"}`
-                : "Defina seus dias e KM médio para calcular."}
-            </p>
           </div>
 
           {rpkTone !== "ok" && s.smartRpk > 0 && (
@@ -129,6 +124,40 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             </span>
           )}
         </div>
+
+        {/* Mini-cards: KM a alcançar + Dias para meta — tom segue rpkTone */}
+        {s.plannedKmTotal > 0 ? (
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <MiniStat
+              label="KM a alcançar"
+              value={fmtKm(s.remainingPlannedKm)}
+              tone={rpkTone}
+              tooltip={
+                rpkTone === "behind"
+                  ? "Faltam km para sua meta; o R$/km precisa subir."
+                  : rpkTone === "ahead"
+                    ? "Você tem folga: rodando o restante, sobra ritmo."
+                    : "Distância restante para fechar o plano."
+              }
+            />
+            <MiniStat
+              label="Dias para meta"
+              value={`${s.remainingWorkdaysCount} ${s.remainingWorkdaysCount === 1 ? "dia" : "dias"}`}
+              tone={rpkTone}
+              tooltip={
+                rpkTone === "behind"
+                  ? "Poucos dias restantes para o plano — atenção ao ritmo."
+                  : rpkTone === "ahead"
+                    ? "Dias restantes com folga em relação ao plano."
+                    : "Dias planejados ainda à frente."
+              }
+            />
+          </div>
+        ) : (
+          <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
+            Defina seus dias e KM médio para calcular.
+          </p>
+        )}
       </div>
 
       {/* ============ Detalhes do plano (accordion) ============ */}
@@ -276,6 +305,44 @@ function Chip({ label, value }: { label: string; value: string }) {
       {label}
       <span className="ml-0.5 font-semibold tabular-nums text-foreground/90">{value}</span>
     </span>
+  );
+}
+
+function MiniStat({
+  label,
+  value,
+  tone,
+  tooltip,
+}: {
+  label: string;
+  value: string;
+  tone: "ok" | "ahead" | "behind";
+  tooltip?: string;
+}) {
+  const toneClass =
+    tone === "behind"
+      ? "border-amber-500/40 bg-amber-500/[0.08]"
+      : tone === "ahead"
+        ? "border-emerald-500/35 bg-emerald-500/[0.07]"
+        : "border-border/60 bg-card/70";
+  const valueClass =
+    tone === "behind"
+      ? "text-amber-200"
+      : tone === "ahead"
+        ? "text-emerald-200"
+        : "text-foreground/95";
+  return (
+    <div
+      title={tooltip}
+      className={cn("rounded-xl border px-2.5 py-1.5 transition-colors", toneClass)}
+    >
+      <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/85">
+        {label}
+      </div>
+      <div className={cn("mt-0.5 text-[13.5px] font-bold tabular-nums leading-tight", valueClass)}>
+        {value}
+      </div>
+    </div>
   );
 }
 

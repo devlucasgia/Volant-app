@@ -244,7 +244,7 @@ export function GuidedFlow({
       </header>
 
       <div
-        className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-4 pb-28 animate-fade-in"
+        className="mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col justify-center px-4 py-3 pb-20 animate-fade-in"
         key={`${step}-${stepIdx}`}
       >
         {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
@@ -289,7 +289,7 @@ export function GuidedFlow({
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur-lg">
-        <div className="mx-auto w-full max-w-md px-4 py-3">
+        <div className="mx-auto w-full max-w-md px-4 py-2.5">
           {!isLast ? (
             <Button
               size="lg"
@@ -588,14 +588,14 @@ function Step5({
         <StepHeader
           icon={CarIcon}
           title="Você tem um veículo cadastrado?"
-          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos."
+          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos e variáveis."
         />
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
             <div className="space-y-2">
               <p className="text-[13px] leading-snug text-foreground/90">
-                Sem veículo cadastrado, calculamos seu planejamento sem custos fixos. Os números ficam menos precisos.
+                Sem veículo cadastrado, calculamos seu planejamento sem custos. Os números ficam menos precisos.
               </p>
               <button
                 type="button"
@@ -614,63 +614,111 @@ function Step5({
     );
   }
 
-  if (costsItems.length === 0) {
-    return (
-      <div>
-        <StepHeader
-          icon={CarIcon}
-          title="Seu veículo está sem custos cadastrados"
-          subtitle="Sem custos, calculamos seu planejamento como se você não tivesse gastos fixos."
-        />
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-            <div className="space-y-2">
-              <p className="text-[13px] leading-snug text-foreground/90">
-                Cadastrar financiamento, aluguel, IPVA, seguro e outros custos torna o cálculo bem mais preciso.
-              </p>
-              <button
-                type="button"
-                onClick={onEditCosts}
-                className="text-[12.5px] font-semibold text-primary hover:underline"
-              >
-                Cadastrar custos do veículo →
-              </button>
-            </div>
-          </div>
-        </div>
-        <p className="mt-3 text-center text-[11.5px] text-muted-foreground">
-          Você pode continuar sem custos cadastrados.
-        </p>
-      </div>
-    );
-  }
+  const carName = `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "Veículo";
+  const grandTotal = costsTotal + variableTotal;
 
   return (
     <div>
       <StepHeader
         icon={CarIcon}
         title="Custos considerados"
-        subtitle={`${car.brand ?? "Veículo"} ${car.model ?? ""}`.trim()}
+        subtitle="Fixos e variáveis usados no cálculo do plano."
       />
-      <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-        <ul className="space-y-2">
-          {costsItems.map((it, i) => (
-            <li key={i} className="flex items-center justify-between text-[13px]">
-              <span className="text-muted-foreground">{it.label}</span>
-              <span className="font-semibold tabular-nums text-foreground">{fmtBRL(it.value)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-3">
-          <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
-            Total mensal
-          </span>
-          <span className="text-[16px] font-bold tabular-nums text-foreground">
-            {fmtBRL(costsTotal)}
-          </span>
-        </div>
+
+      {/* Chip de destaque do veículo */}
+      <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.08] px-3 py-1.5">
+        <CarIcon className="h-3.5 w-3.5 text-primary" />
+        <span className="text-[12.5px] font-semibold text-foreground/95">{carName}</span>
       </div>
+
+      <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
+        {/* ===== Custos fixos ===== */}
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+              Custos fixos
+            </span>
+            {costsItems.length > 0 && (
+              <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
+                {fmtBRL(costsTotal)}
+              </span>
+            )}
+          </div>
+          {costsItems.length === 0 ? (
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
+              <p className="text-[12px] leading-snug text-foreground/85">
+                Nenhum custo fixo cadastrado.
+              </p>
+              <button
+                type="button"
+                onClick={onEditCosts}
+                className="mt-1 text-[12px] font-semibold text-primary hover:underline"
+              >
+                Cadastrar custos fixos →
+              </button>
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {costsItems.map((it, i) => (
+                <li key={i} className="flex items-center justify-between text-[13px]">
+                  <span className="text-muted-foreground">{it.label}</span>
+                  <span className="font-medium tabular-nums text-foreground/95">{fmtBRL(it.value)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* ===== Custos variáveis ===== */}
+        <div className="border-t border-border/40 pt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+              Custos variáveis
+            </span>
+            {variableItems.length > 0 && (
+              <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
+                {fmtBRL(variableTotal)}
+              </span>
+            )}
+          </div>
+          {variableItems.length === 0 ? (
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
+              <p className="text-[12px] leading-snug text-foreground/85">
+                Nenhum custo variável cadastrado (combustível e alimentação).
+              </p>
+              <button
+                type="button"
+                onClick={onEditCosts}
+                className="mt-1 text-[12px] font-semibold text-primary hover:underline"
+              >
+                Cadastrar custos variáveis →
+              </button>
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {variableItems.map((it, i) => (
+                <li key={i} className="flex items-center justify-between text-[13px]">
+                  <span className="text-muted-foreground">{it.label}</span>
+                  <span className="font-medium tabular-nums text-foreground/95">{fmtBRL(it.value)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* ===== Total ===== */}
+        {grandTotal > 0 && (
+          <div className="flex items-center justify-between border-t border-border/40 pt-3">
+            <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
+              Total mensal
+            </span>
+            <span className="text-[16px] font-bold tabular-nums text-foreground">
+              {fmtBRL(grandTotal)}
+            </span>
+          </div>
+        )}
+      </div>
+
       <button
         type="button"
         onClick={onEditCosts}

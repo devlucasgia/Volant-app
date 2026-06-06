@@ -111,6 +111,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ownership_status: c.ownership_status ?? null,
       financing_monthly: c.financing_monthly == null ? null : Number(c.financing_monthly),
       rental_weekly: c.rental_weekly == null ? null : Number(c.rental_weekly),
+      rental_monthly: c.rental_monthly == null ? null : Number(c.rental_monthly),
       oil_change_cost: c.oil_change_cost == null ? null : Number(c.oil_change_cost),
       oil_change_interval_km: c.oil_change_interval_km == null ? null : Number(c.oil_change_interval_km),
       tires_cost: c.tires_cost == null ? null : Number(c.tires_cost),
@@ -118,6 +119,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       ipva_yearly: c.ipva_yearly == null ? null : Number(c.ipva_yearly),
       insurance_monthly: c.insurance_monthly == null ? null : Number(c.insurance_monthly),
       other_monthly_costs: c.other_monthly_costs == null ? null : Number(c.other_monthly_costs),
+      fuel_consumption_kml: c.fuel_consumption_kml == null ? null : Number(c.fuel_consumption_kml),
+      fuel_type: c.fuel_type ?? null,
+      fuel_price: c.fuel_price == null ? null : Number(c.fuel_price),
+      food_avg_per_day: c.food_avg_per_day == null ? null : Number(c.food_avg_per_day),
     })));
   }, []);
 

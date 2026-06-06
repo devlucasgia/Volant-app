@@ -11,6 +11,7 @@ export interface VehicleCosts {
   ownership_status: OwnershipStatus;
   financing_monthly: number | null;
   rental_weekly: number | null;
+  rental_monthly: number | null;
   oil_change_cost: number | null;
   oil_change_interval_km: number | null;
   tires_cost: number | null;
@@ -28,6 +29,7 @@ export const EMPTY_VEHICLE_COSTS: VehicleCosts = {
   ownership_status: null,
   financing_monthly: null,
   rental_weekly: null,
+  rental_monthly: null,
   oil_change_cost: null,
   oil_change_interval_km: null,
   tires_cost: null,
@@ -105,9 +107,35 @@ export function VehicleCostsSection({ value, onChange }: Props) {
 
         {value.ownership_status === "alugado" && (
           <div className="space-y-2 pt-1 animate-fade-in">
-            <Label className="text-xs text-muted-foreground">Aluguel semanal</Label>
-            <NumberField currency value={value.rental_weekly}
-              onChange={(v) => set("rental_weekly", v)} />
+            <Label className="text-xs text-muted-foreground">Periodicidade do aluguel</Label>
+            <Segmented
+              value={(value.rental_monthly != null && value.rental_monthly > 0 ? "mensal" : "semanal") as "mensal" | "semanal"}
+              onChange={(v) => {
+                if (v === "mensal") onChange({ ...value, rental_weekly: null });
+                else onChange({ ...value, rental_monthly: null });
+              }}
+              options={[
+                { key: "mensal", label: "Mensal" },
+                { key: "semanal", label: "Semanal" },
+              ]}
+            />
+            {(value.rental_monthly != null && value.rental_monthly > 0) ||
+            (value.rental_weekly == null || value.rental_weekly === 0) ? (
+              <>
+                <Label className="text-xs text-muted-foreground">Aluguel mensal</Label>
+                <NumberField currency value={value.rental_monthly}
+                  onChange={(v) => set("rental_monthly", v)} />
+              </>
+            ) : (
+              <>
+                <Label className="text-xs text-muted-foreground">Aluguel semanal</Label>
+                <NumberField currency value={value.rental_weekly}
+                  onChange={(v) => set("rental_weekly", v)} />
+              </>
+            )}
+            <p className="text-[11px] leading-snug text-muted-foreground/80">
+              Use só uma das opções. A outra é zerada automaticamente para evitar duplicidade no cálculo.
+            </p>
           </div>
         )}
       </Block>
