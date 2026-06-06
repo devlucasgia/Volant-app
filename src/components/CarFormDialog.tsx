@@ -13,9 +13,11 @@ interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   car?: CarType | null;
+  /** Chamado após salvar com sucesso (criar ou editar). */
+  onSaved?: (carId: string | null, created: boolean) => void;
 }
 
-export function CarFormDialog({ open, onOpenChange, car }: Props) {
+export function CarFormDialog({ open, onOpenChange, car, onSaved }: Props) {
   const { user } = useAuth();
   const { refreshCars, cars } = useData();
   const [brand, setBrand] = useState("");
@@ -42,21 +44,28 @@ export function CarFormDialog({ open, onOpenChange, car }: Props) {
       plate: plate || null,
       initial_km: parseFloat(initialKm) || 0,
     };
+    let savedId: string | null = car?.id ?? null;
+    let created = false;
     if (car) {
       const { error } = await supabase.from("cars").update(payload).eq("id", car.id);
       if (error) { setSaving(false); return toast.error("Erro ao salvar"); }
     } else {
       const isFirst = cars.length === 0;
-      const { error } = await supabase.from("cars").insert({
-        ...payload, user_id: user.id, is_active: isFirst,
-      });
+      const { data: inserted, error } = await supabase
+        .from("cars")
+        .insert({ ...payload, user_id: user.id, is_active: isFirst })
+        .select("id")
+        .maybeSingle();
       if (error) { setSaving(false); return toast.error("Erro ao salvar"); }
+      savedId = (inserted as any)?.id ?? null;
+      created = true;
       await supabase.from("profiles").upsert({ id: user.id, car_onboarded: true });
     }
     await refreshCars();
     setSaving(false);
     onOpenChange(false);
     toast.success(car ? "Carro atualizado!" : "Carro adicionado!");
+    onSaved?.(savedId, created);
   };
 
   return (
