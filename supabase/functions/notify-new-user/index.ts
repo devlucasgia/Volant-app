@@ -38,17 +38,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Dedup: insert first; if conflict, we've already notified about this user.
-    const { error: insertErr } = await admin
+    // Dedup check (read-only). NÃO marcamos como notificado aqui — só após o
+    // envio bem-sucedido. Isso evita que uma falha intermediária bloqueie
+    // novas tentativas para o mesmo usuário.
+    const { data: existing } = await admin
       .from("signup_notifications")
-      .insert({ user_id: userId });
-    if (insertErr) {
-      if ((insertErr as { code?: string }).code === "23505") {
-        return new Response(JSON.stringify({ ok: true, duplicate: true }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      console.warn("[notify-new-user] insert failed", insertErr);
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (existing) {
+      return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(userId);
@@ -101,11 +102,20 @@ Deno.serve(async (req) => {
 
     if (!sendRes.ok) {
       const errText = await sendRes.text().catch(() => "");
-      console.error("[notify-new-user] send failed", sendRes.status, errText);
-      return new Response(JSON.stringify({ error: "email_failed", status: sendRes.status }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("[notify-new-user] send_failed", { status: sendRes.status, errText });
+      return new Response(
+        JSON.stringify({ error: "email_failed", stage: "send", status: sendRes.status }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Marca como notificado apenas após sucesso confirmado do envio.
+    // Conflito (23505) significa que outra execução já marcou — sem problema.
+    const { error: markErr } = await admin
+      .from("signup_notifications")
+      .insert({ user_id: userId });
+    if (markErr && (markErr as { code?: string }).code !== "23505") {
+      console.warn("[notify-new-user] mark_dedup_failed", markErr);
     }
 
     return new Response(JSON.stringify({ ok: true }), {
