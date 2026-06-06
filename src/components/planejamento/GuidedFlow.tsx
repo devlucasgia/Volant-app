@@ -256,6 +256,8 @@ export function GuidedFlow({
             car={activeCar}
             costsTotal={costs.total}
             costsItems={costs.items}
+            variableTotal={variable.total}
+            variableItems={variable.items}
             onAddCar={() =>
               navigate("/ajustes/veiculos/carros", {
                 state: {
@@ -279,6 +281,9 @@ export function GuidedFlow({
             draft={draft}
             plan={plan}
             costsItems={costs.items}
+            variableItems={variable.items}
+            variableTotal={variable.total}
+            fixedTotal={costs.total}
           />
         )}
       </div>
@@ -564,12 +569,16 @@ function Step5({
   car,
   costsTotal,
   costsItems,
+  variableTotal,
+  variableItems,
   onAddCar,
   onEditCosts,
 }: {
   car: ReturnType<typeof useData>["cars"][number] | null;
   costsTotal: number;
   costsItems: { label: string; value: number }[];
+  variableTotal: number;
+  variableItems: { label: string; value: number }[];
   onAddCar: () => void;
   onEditCosts: () => void;
 }) {
