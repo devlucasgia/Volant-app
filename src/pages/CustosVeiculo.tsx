@@ -42,10 +42,10 @@ export default function CustosVeiculo() {
           </span>
           <div className="min-w-0">
             <h1 className="truncate text-[17px] font-bold leading-tight tracking-tight text-foreground">
-              Custos do veículo
+              Custos
             </h1>
             <p className="text-[11px] leading-tight text-muted-foreground/80">
-              Cadastre os custos usados nos cálculos do Volant.
+              Custos fixos e variáveis usados nos cálculos do Volant.
             </p>
           </div>
         </div>

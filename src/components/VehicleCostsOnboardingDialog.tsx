@@ -76,7 +76,7 @@ export function VehicleCostsOnboardingDialog() {
         return;
       }
       await refreshCars();
-      toast.success("Custos do veículo salvos");
+      toast.success("Custos salvos");
     }
     await markDone();
     setSaving(false);
@@ -91,12 +91,12 @@ export function VehicleCostsOnboardingDialog() {
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 text-primary">
             <Wrench className="h-6 w-6" />
           </div>
-          <DialogTitle className="text-center">Custos do seu veículo</DialogTitle>
+          <DialogTitle className="text-center">Seus custos</DialogTitle>
           <DialogDescription className="text-center">
             Opcional. Esses valores ajudam o Volant a calcular o R$/km ideal e o lucro líquido real.
             <br />
             <span className="text-[11px] text-muted-foreground/80">
-              Você pode preencher depois em Ajustes → Veículos → Custos do veículo.
+              Você pode preencher depois em Ajustes → Veículos → Custos.
             </span>
           </DialogDescription>
         </DialogHeader>

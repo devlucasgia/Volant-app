@@ -86,7 +86,7 @@ export default function CentralVeiculos() {
         <HubCard
           to="/ajustes/veiculos/custos"
           icon={<Wallet className="h-5 w-5" />}
-          title="Custos do veículo"
+          title="Custos"
           description="Cadastre os custos usados nos cálculos do Volant."
           delayMs={60}
         />

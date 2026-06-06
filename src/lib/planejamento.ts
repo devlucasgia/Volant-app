@@ -60,6 +60,41 @@ export function computeFixedMonthlyCosts(
   return { total, items };
 }
 
+/**
+ * Custos variáveis mensais estimados a partir do plano (KM × dias).
+ * Inclui combustível (consumo + tipo + preço) e alimentação média/dia.
+ * Usados apenas no alvo BRUTO da home — não entram no líquido.
+ */
+export function computeVariableMonthlyCosts(
+  car: Car | null,
+  averageKmPerDay: number,
+  selectedWorkdaysCount: number,
+): {
+  total: number;
+  items: { label: string; value: number }[];
+} {
+  const items: { label: string; value: number }[] = [];
+  if (!car || averageKmPerDay <= 0 || selectedWorkdaysCount <= 0) {
+    return { total: 0, items };
+  }
+  const c = car as any;
+  const consumo = Number(c.fuel_consumption_kml ?? 0);
+  const preco = Number(c.fuel_price ?? 0);
+  const food = Number(c.food_avg_per_day ?? 0);
+  const kmTotal = averageKmPerDay * selectedWorkdaysCount;
+
+  if (consumo > 0 && preco > 0) {
+    const litros = kmTotal / consumo;
+    items.push({ label: "Combustível estimado", value: litros * preco });
+  }
+  if (food > 0) {
+    items.push({ label: "Alimentação estimada", value: food * selectedWorkdaysCount });
+  }
+
+  const total = items.reduce((s, i) => s + i.value, 0);
+  return { total, items };
+}
+
 export interface PlanResult {
   diasSelecionados: number;
   custosFixos: number;

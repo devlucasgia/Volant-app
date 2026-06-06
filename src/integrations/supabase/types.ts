@@ -19,6 +19,10 @@ export type Database = {
           brand: string | null
           created_at: string
           financing_monthly: number | null
+          food_avg_per_day: number | null
+          fuel_consumption_kml: number | null
+          fuel_price: number | null
+          fuel_type: string | null
           id: string
           initial_km: number
           insurance_monthly: number | null
@@ -40,6 +44,10 @@ export type Database = {
           brand?: string | null
           created_at?: string
           financing_monthly?: number | null
+          food_avg_per_day?: number | null
+          fuel_consumption_kml?: number | null
+          fuel_price?: number | null
+          fuel_type?: string | null
           id?: string
           initial_km?: number
           insurance_monthly?: number | null
@@ -61,6 +69,10 @@ export type Database = {
           brand?: string | null
           created_at?: string
           financing_monthly?: number | null
+          food_avg_per_day?: number | null
+          fuel_consumption_kml?: number | null
+          fuel_price?: number | null
+          fuel_type?: string | null
           id?: string
           initial_km?: number
           insurance_monthly?: number | null

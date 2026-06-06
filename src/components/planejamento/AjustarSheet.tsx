@@ -42,8 +42,8 @@ const OPCOES: {
   {
     key: "custos",
     icon: CarIcon,
-    title: "Custos do veículo",
-    desc: "Edite os custos considerados no planejamento.",
+    title: "Custos",
+    desc: "Edite os custos fixos e variáveis considerados no planejamento.",
   },
 ];
 

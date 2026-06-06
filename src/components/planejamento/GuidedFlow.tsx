@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import {
   applyShortcut,
   computeFixedMonthlyCosts,
+  computeVariableMonthlyCosts,
   computePlan,
   DEFAULT_AVG_KM_PER_DAY,
   ShortcutKey,
@@ -93,7 +94,7 @@ export function GuidedFlow({
   const isLast = stepIdx === stepsList.length - 1;
 
   const [draft, setDraft] = useState<Draft>(() => ({
-    goalType: prefill || isEdit ? settings.goalType : "bruto",
+    goalType: prefill || isEdit ? settings.goalType : "liquido",
     monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
     selectedDates:
       (prefill || isEdit) && settings.planningSelectedDates
@@ -116,17 +117,23 @@ export function GuidedFlow({
     () => computeFixedMonthlyCosts(activeCar, draftPlannedKm),
     [activeCar, draftPlannedKm],
   );
+  const variable = useMemo(
+    () => computeVariableMonthlyCosts(activeCar, draft.avgKmPerDay, draft.selectedDates.length),
+    [activeCar, draft.avgKmPerDay, draft.selectedDates.length],
+  );
 
+  // No modelo novo, a meta cadastrada representa o LÍQUIDO desejado (sobra).
+  // Para o cálculo do faturamento necessário (BRUTO), somamos fixos + variáveis.
   const plan = useMemo(
     () =>
       computePlan({
         monthlyGoal: draft.monthlyGoal,
         goalType: draft.goalType,
         diasSelecionados: draft.selectedDates.length,
-        custosFixos: costs.total,
+        custosFixos: costs.total + (draft.goalType === "liquido" ? variable.total : 0),
         avgKmPerDay: draft.avgKmPerDay,
       }),
-    [draft, costs.total],
+    [draft, costs.total, variable.total],
   );
 
 
@@ -249,6 +256,8 @@ export function GuidedFlow({
             car={activeCar}
             costsTotal={costs.total}
             costsItems={costs.items}
+            variableTotal={variable.total}
+            variableItems={variable.items}
             onAddCar={() =>
               navigate("/ajustes/veiculos/carros", {
                 state: {
@@ -272,6 +281,9 @@ export function GuidedFlow({
             draft={draft}
             plan={plan}
             costsItems={costs.items}
+            variableItems={variable.items}
+            variableTotal={variable.total}
+            fixedTotal={costs.total}
           />
         )}
       </div>
@@ -341,8 +353,8 @@ function Step1({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
       />
       <div className="space-y-2.5">
         {([
+          { key: "liquido" as const, title: "Lucro líquido", desc: "Quanto quero que SOBRE depois dos gastos. Recomendado." },
           { key: "bruto" as const, title: "Ganho bruto", desc: "Quanto quero faturar no total, antes dos gastos." },
-          { key: "liquido" as const, title: "Lucro líquido", desc: "Quanto quero que sobre depois dos gastos." },
         ]).map((opt) => {
           const active = draft.goalType === opt.key;
           return (
@@ -557,12 +569,16 @@ function Step5({
   car,
   costsTotal,
   costsItems,
+  variableTotal,
+  variableItems,
   onAddCar,
   onEditCosts,
 }: {
   car: ReturnType<typeof useData>["cars"][number] | null;
   costsTotal: number;
   costsItems: { label: string; value: number }[];
+  variableTotal: number;
+  variableItems: { label: string; value: number }[];
   onAddCar: () => void;
   onEditCosts: () => void;
 }) {
@@ -670,10 +686,16 @@ function Step6({
   draft,
   plan,
   costsItems,
+  variableItems,
+  variableTotal,
+  fixedTotal,
 }: {
   draft: Draft;
   plan: ReturnType<typeof computePlan>;
   costsItems: { label: string; value: number }[];
+  variableItems: { label: string; value: number }[];
+  variableTotal: number;
+  fixedTotal: number;
 }) {
   return (
     <div>
@@ -714,8 +736,13 @@ function Step6({
         />
         <Stat
           icon={CarIcon}
-          label="Custos do veículo"
-          value={plan.custosFixos > 0 ? `${fmtBRL(plan.custosFixos)}/mês` : "—"}
+          label="Custos fixos"
+          value={fixedTotal > 0 ? `${fmtBRL(fixedTotal)}/mês` : "—"}
+        />
+        <Stat
+          icon={CarIcon}
+          label="Custos variáveis"
+          value={variableTotal > 0 ? `${fmtBRL(variableTotal)}/mês` : "—"}
         />
         <Stat
           icon={TrendingUp}
@@ -730,24 +757,38 @@ function Step6({
         />
       </div>
 
-      {costsItems.length > 0 && (
-        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4">
-          <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-            Custos considerados
-          </div>
-          <ul className="space-y-1.5">
-            {costsItems.map((it, i) => (
-              <li
-                key={i}
-                className="flex items-center justify-between text-[12px] text-muted-foreground"
-              >
-                <span>{it.label}</span>
-                <span className="font-medium tabular-nums text-foreground/85">
-                  {fmtBRL(it.value)}
-                </span>
-              </li>
-            ))}
-          </ul>
+      {(costsItems.length > 0 || variableItems.length > 0) && (
+        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4 space-y-3">
+          {costsItems.length > 0 && (
+            <div>
+              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
+                Custos fixos
+              </div>
+              <ul className="space-y-1.5">
+                {costsItems.map((it, i) => (
+                  <li key={`f-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
+                    <span>{it.label}</span>
+                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {variableItems.length > 0 && (
+            <div className="border-t border-border/40 pt-3">
+              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
+                Custos variáveis estimados
+              </div>
+              <ul className="space-y-1.5">
+                {variableItems.map((it, i) => (
+                  <li key={`v-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
+                    <span>{it.label}</span>
+                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </div>
