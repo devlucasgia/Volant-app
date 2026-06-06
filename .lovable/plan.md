@@ -1,43 +1,34 @@
-## Objetivo
-Corrigir os 3 pontos pendentes sem ampliar escopo:
-1. Ajustar os nomes dos remetentes dos emails internos.
-2. Integrar o “Alvo + KM restante” no card de R$/km da Home, sem ficar solto.
-3. Garantir que o botão “Continuar” do Planejamento Inteligente fique visível no mobile sem exigir scroll.
+## 1) Home — rodapé do card R$/km centralizado
 
-## O que vou implementar
-### 1) Remetentes dos emails
-Vou substituir os nomes atuais dos templates pelos nomes aprovados:
-- Volant · Novo cadastro
-- Volant · Nova assinatura
-- Volant · Cancelamento
-- Volant · Pagamento falhou
+No `src/pages/Dashboard.tsx` (bloco do KM Inteligente, ~linhas 480–492), o rodapé hoje usa `flex justify-between` com um divisor vertical no meio (Alvo à esquerda, KM restantes à direita).
 
-Também vou validar que o cabeçalho `From` continue usando esses rótulos, sem alterar o domínio de envio.
+Vou alinhar visualmente ao card principal (Líquido/Bruto do print 2):
+- Trocar o layout para **uma linha centralizada**, com “Alvo R$ … • 3.750 km restantes” usando um separador discreto (bullet `•` ou pequeno divisor) — exatamente o mesmo padrão de “Bruto R$ … | Gastos R$ …”.
+- Pequeno respiro entre a linha divisória do card e o texto (aumentar `py` do bloco de `py-1.5` para `py-2`).
+- Manter a tipografia atual (mesmo tamanho, mesma cor sóbria) e o destaque de cor apenas no “restantes” quando fora do ritmo.
 
-### 2) Home — KM alvo + restante
-Hoje essa informação está sendo renderizada como uma linha solta abaixo do card de R$/km.
-Vou mover essa informação para dentro do próprio card, como um rodapé discreto e integrado ao bloco principal, com:
-- separação visual sutil
-- tipografia menor e mais estável
-- destaque sóbrio para o estado do ritmo
-- sem aparência de “mini-card solto”
+## 2) Jornada na Home — cor e sugestão inteligente
 
-### 3) Planejamento Inteligente — botão “Continuar”
-Vou corrigir o conflito entre o footer fixo do fluxo e a navegação fixa inferior do app.
-Ajuste previsto:
-- elevar o footer do fluxo acima da barra inferior
-- reservar espaço inferior real para o conteúdo
-- manter o CTA sempre acessível no mobile
+Causa: `src/components/JourneyModule.tsx` ainda lê `settings.goalType` para definir a cor e para calcular a sugestão diária. A Home migrou para o seletor Líquido/Bruto via `useHeroMetric()` (localStorage `volant.heroMetric.v1`), então o `settings.goalType` ficou estagnado — por isso a cor parou de responder e a sugestão sumiu/ficou errada.
 
-## Resultado esperado
-- Próximos emails chegam com o nome correto do remetente.
-- O card de R$/km da Home fica mais sofisticado e coeso.
-- O usuário consegue avançar no Planejamento Inteligente sem precisar rolar para revelar o botão.
+Correção mínima no `JourneyModule.tsx`:
+- Importar `useHeroMetric` e derivar `isGross = heroView === "gross"` (em vez de `settings.goalType`).
+- Para a **sugestão inteligente de meta diária**, usar o mesmo snapshot do Planejamento Inteligente que a Home já usa (`usePlanningSnapshot()` de `@/lib/planningEngine`): pegar a meta diária correspondente ao modo atual (bruto/líquido). Fallback para `deriveGoals(settings.monthlyGoal, …)` apenas quando o planejamento não estiver configurado, agora passando `goalType` derivado do `heroView`.
+- O texto “Sugestão inteligente: R$ X” volta a aparecer sempre que houver meta válida.
 
-## Detalhes técnicos
-- Email: ajustar os `displayName` dos templates e manter o `from` montado com esse nome.
-- Home: editar o bloco do card de KM Inteligente na tela `/app`.
-- Planejamento: ajustar `GuidedFlow` e a convivência dele com `BottomNav`/layout fixo.
+Nada muda na lógica do timer, das pausas, do encerramento ou do drawer de lançamento.
 
-## Observação sobre créditos
-Eu não consigo confirmar, alterar ou prometer cobrança de créditos pelo sistema daqui. Se houve promessa anterior sobre não cobrar, isso precisa ser tratado pelo suporte/plataforma. Da minha parte, vou manter a correção estritamente nesses 3 itens para evitar novo escopo.
+## 3) Ajustes → Central de Veículos → Custos — atalho para cadastrar carro
+
+Hoje o estado vazio (`src/components/vehicle/VehicleCostsCard.tsx`, linhas 84–95) só orienta por texto. Vou:
+- Adicionar um botão primário **“Cadastrar carro”** logo abaixo da mensagem, navegando para `/ajustes/veiculos/carros` com `state: { returnTo: "/ajustes/veiculos/custos" }`.
+- A página `MeusCarros` já trata `returnTo` no `CarFormDialog.onSaved` (linhas 133–140), então após salvar o usuário volta automaticamente para a tela de Custos — e não para a lista de veículos cadastrados.
+- Manter o texto explicativo atual logo acima do botão, levemente reduzido para evitar redundância.
+
+## Arquivos alterados
+- `src/pages/Dashboard.tsx` — rodapé do card R$/km centralizado.
+- `src/components/JourneyModule.tsx` — passa a usar `useHeroMetric` + `usePlanningSnapshot` para cor e sugestão.
+- `src/components/vehicle/VehicleCostsCard.tsx` — botão “Cadastrar carro” no estado vazio com `returnTo`.
+
+## Fora de escopo
+Sem mudanças em banco, e-mails, planejamento, autenticação ou navegação global.
