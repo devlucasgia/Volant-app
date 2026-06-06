@@ -8,6 +8,8 @@ import { useUI } from "@/context/UIContext";
 import { Play, RotateCcw, Coffee, StopCircle, CheckCircle2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deriveGoals } from "@/lib/stats";
+import { useHeroMetric } from "@/lib/heroMetric";
+import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { format } from "date-fns";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -29,20 +31,27 @@ export function JourneyModule() {
   const { settings, entries } = useData();
   const { openDrawer } = useUI();
 
-  // Visually mirrors the Home Líquido/Bruto mode. Lógica intacta.
-  const isGross = settings.goalType === "bruto";
+  // Visually mirrors the Home Líquido/Bruto mode (heroView), não mais o settings.goalType.
+  const [heroView] = useHeroMetric();
+  const isGross = heroView === "gross";
   const journeyAccentBtn = isGross
     ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_12px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] hover:from-[hsl(var(--goal-gross))]/95 hover:to-[hsl(var(--goal-gross))]/80"
     : "gradient-success text-primary-foreground";
 
-  const suggestedDaily = useMemo(
-    () => Math.round(deriveGoals(settings.monthlyGoal, entries, new Date(), {
-      goalType: settings.goalType,
+  // Sugestão inteligente: prioriza o motor do Planejamento Inteligente
+  // (mesma fonte usada pela Home). Cai para deriveGoals quando o planejamento
+  // ainda não foi configurado.
+  const plan = usePlanningSnapshot();
+  const suggestedDaily = useMemo(() => {
+    const fromPlan = isGross ? plan.homeDailyGross : plan.homeDailyNet;
+    if (fromPlan && fromPlan > 0) return Math.round(fromPlan);
+    const fallback = deriveGoals(settings.monthlyGoal, entries, new Date(), {
+      goalType: isGross ? "bruto" : "liquido",
       workingDays: settings.workingDaysPerMonth,
       remainingWorkingDays: settings.remainingWorkingDays,
-    }).daily),
-    [settings.monthlyGoal, entries, settings.goalType, settings.workingDaysPerMonth, settings.remainingWorkingDays]
-  );
+    }).daily;
+    return Math.round(fallback || 0);
+  }, [isGross, plan.homeDailyGross, plan.homeDailyNet, settings.monthlyGoal, entries, settings.workingDaysPerMonth, settings.remainingWorkingDays]);
 
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
