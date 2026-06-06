@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import {
