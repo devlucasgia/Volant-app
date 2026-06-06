@@ -40,6 +40,7 @@ async function notifyInternal(templateName: string, idempotencyKey: string, temp
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    console.log("[payments-webhook] notify_start", { templateName, idempotencyKey });
     const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
@@ -49,12 +50,14 @@ async function notifyInternal(templateName: string, idempotencyKey: string, temp
       },
       body: JSON.stringify({ templateName, idempotencyKey, templateData }),
     });
+    const text = await res.text().catch(() => "");
     if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      console.warn("[payments-webhook] notify failed", templateName, res.status, t);
+      console.error("[payments-webhook] notify_failed", { templateName, status: res.status, body: text });
+    } else {
+      console.log("[payments-webhook] notify_ok", { templateName, status: res.status });
     }
   } catch (e) {
-    console.warn("[payments-webhook] notify error", templateName, e);
+    console.error("[payments-webhook] notify_error", { templateName, error: String(e) });
   }
 }
 
