@@ -16,6 +16,8 @@ import { template as paymentFailedInternal } from './payment-failed-internal.tsx
 import { template as welcome } from './welcome.tsx'
 import { template as subscriptionReceipt } from './subscription-receipt.tsx'
 import { template as paymentFailed } from './payment-failed.tsx'
+import { template as weeklySummary } from './weekly-summary.tsx'
+import { template as maintenanceAlert } from './maintenance-alert.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-user-signup': newUserSignup,
@@ -25,4 +27,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'welcome': welcome,
   'subscription-receipt': subscriptionReceipt,
   'payment-failed': paymentFailed,
+  'weekly-summary': weeklySummary,
+  'maintenance-alert': maintenanceAlert,
 }
