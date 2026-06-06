@@ -20,6 +20,7 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sendingReset, setSendingReset] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useDocumentMeta({
     title: mode === "signin" ? "Entrar — Volant" : "Criar conta — Volant",
