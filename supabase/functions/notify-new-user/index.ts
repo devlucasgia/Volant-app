@@ -12,6 +12,17 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    // Require service-role bearer token. The DB trigger calls this with
+    // service-role auth via pg_net; external/unauthenticated callers are rejected.
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    if (!token || token !== SERVICE_ROLE) {
+      return new Response(JSON.stringify({ error: "forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const body = await req.json().catch(() => ({}));
     const userId = String(body?.user_id || "").trim();
     if (!userId || !/^[0-9a-f-]{36}$/i.test(userId)) {
