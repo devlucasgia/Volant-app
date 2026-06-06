@@ -180,6 +180,58 @@ async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
   });
 }
 
+function formatBRL(amountInCents: number | null | undefined): string {
+  if (amountInCents == null || Number.isNaN(amountInCents)) return "—";
+  const reais = amountInCents / 100;
+  return reais.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDateBR(secs: number | null | undefined): string {
+  if (!secs) return "—";
+  try {
+    return new Date(secs * 1000).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  } catch {
+    return "—";
+  }
+}
+
+async function lookupUserFromSubscription(subId: string, env: StripeEnv): Promise<{ userId?: string; email?: string }> {
+  const { data: row } = await getSupabase()
+    .from("subscriptions")
+    .select("user_id")
+    .eq("stripe_subscription_id", subId)
+    .eq("environment", env)
+    .maybeSingle();
+  const userId = (row as any)?.user_id as string | undefined;
+  const email = await resolveUserEmail(userId);
+  return { userId, email };
+}
+
+/**
+ * Recibo de cobrança paga (assinatura inicial + renovações).
+ * Disparado pelo evento invoice.paid do Stripe. Idempotente via invoice.id.
+ * Só envia em produção (env=live) para não poluir sandbox.
+ */
+async function handleInvoicePaid(invoice: any, env: StripeEnv) {
+  if (env !== "live") return;
+  const subId = invoice.subscription;
+  if (!subId) return;
+
+  const lookup = await lookupUserFromSubscription(subId, env);
+  const recipientEmail = invoice.customer_email || lookup.email;
+  if (!recipientEmail || recipientEmail === "—") return;
+
+  const currency = (invoice.currency || "brl").toUpperCase() === "BRL" ? "R$" : (invoice.currency || "").toUpperCase();
+  await notifyUser("subscription-receipt", recipientEmail, `receipt-${invoice.id}`, {
+    name: "",
+    amount: formatBRL(invoice.amount_paid ?? invoice.amount_due),
+    currency,
+    periodEnd: formatDateBR(invoice.lines?.data?.[0]?.period?.end),
+    invoiceUrl: invoice.hosted_invoice_url || "",
+    appUrl: "https://usevolant.app/app",
+  });
+}
+
 /**
  * Quando um invoice falha (cartão recusado, fundos insuficientes etc.), o
  * Stripe envia invoice.payment_failed antes mesmo de uma transição para
@@ -216,6 +268,16 @@ async function handleInvoicePaymentFailed(invoice: any, env: StripeEnv) {
     attemptCount: String(invoice.attempt_count ?? "—"),
     environment: env,
   });
+
+  // Notifica o próprio usuário (apenas em produção).
+  if (env === "live" && email && email !== "—") {
+    await notifyUser("payment-failed", email, `payment-failed-user-${invoice.id}-${invoice.attempt_count || 0}`, {
+      name: "",
+      amount: formatBRL(invoice.amount_due),
+      currency: (invoice.currency || "brl").toUpperCase() === "BRL" ? "R$" : (invoice.currency || "").toUpperCase(),
+      portalUrl: "https://usevolant.app/app/ajustes",
+    });
+  }
 }
 
 async function handleWebhook(req: Request, env: StripeEnv) {
@@ -229,6 +291,9 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "customer.subscription.deleted":
       await handleSubscriptionDeleted(event.data.object, env);
+      break;
+    case "invoice.paid":
+      await handleInvoicePaid(event.data.object, env);
       break;
     case "invoice.payment_failed":
       await handleInvoicePaymentFailed(event.data.object, env);
