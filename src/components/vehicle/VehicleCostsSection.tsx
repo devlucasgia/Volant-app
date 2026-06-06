@@ -76,7 +76,7 @@ export function VehicleCostsSection({ value, onChange }: Props) {
     <div className="space-y-3">
       <div className="px-1 pt-1">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-          Custos do veículo
+          Custos
         </h3>
       </div>
 
@@ -169,6 +169,60 @@ export function VehicleCostsSection({ value, onChange }: Props) {
           <Label className="text-xs text-muted-foreground">Outros custos mensais</Label>
           <NumberField currency value={value.other_monthly_costs}
             onChange={(v) => set("other_monthly_costs", v)} />
+        </div>
+      </Block>
+
+      <div className="px-1 pt-3">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+          Custos variáveis
+        </h3>
+        <p className="mt-1 px-0 text-[11px] leading-snug text-muted-foreground">
+          Usados apenas para estimar a meta bruta no Planejamento Inteligente.
+        </p>
+      </div>
+
+      <Block
+        icon={<Fuel className="h-4 w-4" />}
+        title="Combustível"
+        description="Consumo médio do veículo, tipo de combustível e preço médio do litro."
+      >
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Consumo (km/L)</Label>
+            <NumberField value={value.fuel_consumption_kml}
+              onChange={(v) => set("fuel_consumption_kml", v)} placeholder="Ex: 8.0" />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Preço do litro</Label>
+            <NumberField currency value={value.fuel_price}
+              onChange={(v) => set("fuel_price", v)} placeholder="Ex: 3,89" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Tipo de combustível</Label>
+          <Segmented
+            value={(value.fuel_type ?? "") as "" | FuelType}
+            onChange={(v) => set("fuel_type", (v || null) as FuelType | null)}
+            options={[
+              { key: "gasolina", label: "Gasolina" },
+              { key: "etanol", label: "Etanol" },
+              { key: "diesel", label: "Diesel" },
+              { key: "gnv", label: "GNV" },
+              { key: "flex", label: "Flex" },
+            ]}
+          />
+        </div>
+      </Block>
+
+      <Block
+        icon={<UtensilsCrossed className="h-4 w-4" />}
+        title="Alimentação"
+        description="Quanto você gasta em média por dia trabalhado."
+      >
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground">Gasto médio por dia</Label>
+          <NumberField currency value={value.food_avg_per_day}
+            onChange={(v) => set("food_avg_per_day", v)} placeholder="Ex: 30,00" />
         </div>
       </Block>
     </div>
