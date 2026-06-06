@@ -1,55 +1,82 @@
-# Plano: Planejamento Inteligente alinhado à Home
+# Plano: Ajustes de Ajustes + Go-live + Mostrar senha + Resposta sobre contador
 
-## Objetivo
-Corrigir a inconsistência entre Home e `/ajustes/planejamento`: hoje o Planejamento ignora custos variáveis (combustível + alimentação) no cálculo de "Faturamento necessário" e no R$/km, e não responde ao toggle Bruto/Líquido. Vamos alinhar a semântica e a UX com a Home, mantendo Planejamento como a visão "detalhada".
+## 1. Ajustes na tela de Ajustes (`src/pages/Settings.tsx`)
 
-## 1. Onboarding (GuidedFlow)
-- Remover a etapa de escolha Bruto/Líquido.
-- Ir direto para **meta líquida** com um texto curto explicando: *"Líquido é o que sobra no seu bolso depois de pagar todos os custos do carro (fixos + variáveis)."*
-- Restante do onboarding (dias, horas, km) permanece igual.
-- `goal_type` passa a ser sempre `"liquido"` para novos usuários (sem migração — base atual é desprezível).
+**1.1 Mover "Sair da conta" para o card Perfil**
+- Remover o botão `<Button onClick={signOut}>Sair da conta</Button>` do card `account` (linhas 870-872).
+- Adicionar o mesmo botão dentro do card `profile`, logo abaixo do bloco "Refazer tour de boas-vindas" (após linha 824), antes do bloco de reset onboarding (teste).
 
-## 2. Engine (`planningEngine.ts`)
-Ajustar para que **Bruto = Líquido + custos fixos + custos variáveis** em todos os lugares:
+**1.2 Renomear card "Conta e dados" → "Dados"**
+- Linha 869: `title="Conta e dados"` → `title="Dados"`.
+- Card passa a conter apenas a "Zona de perigo" (apagar dados).
 
-- `requiredGrossRevenue` = `metaLiquida + fixedMonthlyCosts + variableMonthlyCosts` (hoje só soma fixos).
-- `smartRpk`, `dailyGross`, `minRpk` recalculados a partir desse novo bruto.
-- `homeGrossTarget` já usa fixos + variáveis — vira a mesma fonte de verdade do Planejamento (números casam entre as duas telas).
-- Exposição clara no snapshot: `fixedCosts`, `variableCosts` (com breakdown combustível/alimentação) e `totalCosts`.
+Sem mudanças em lógica de auth ou estrutura do `SettingsCard`.
 
-## 3. PainelResumo (`/ajustes/planejamento`)
-Mirror leve da Home, **sem replicar o design inteiro**:
+---
 
-- Adicionar **toggle Bruto/Líquido** no topo, sincronizado com `useHeroMetric()` (mesmo estado da Home).
-- Card principal clicável: clicar alterna a lente (igual Home).
-- KM inteligente segue a lente ativa (bruto usa `dailyGross`, líquido usa `dailyNet`).
+## 2. Mostrar/ocultar senha no `/auth`
 
-### Modo Bruto
-Mostrar a composição completa que chega no faturamento necessário:
-- Meta líquida desejada
-- **Custos fixos** (lista detalhada: IPVA, seguro, financiamento, etc. — como hoje)
-- **Custos variáveis** (combustível estimado + alimentação, com label "estimado")
-- Total = Faturamento bruto necessário
-- R$/km bruto, R$/dia bruto, horas, etc. (como hoje, mas recalculados)
+No formulário de login/cadastro (`src/pages/Auth.tsx`), adicionar ícone de olho ao lado do campo senha:
+- Estado local `showPassword` (boolean).
+- Botão/ícone dentro do `Input` (sufixo absoluto ou usando um wrapper).
+- Ícone padrão de mercado: `Eye` (mostrar) / `EyeOff` (ocultar) do Lucide.
+- `type={showPassword ? "text" : "password"}`.
+- Label acessível: "Mostrar senha" / "Ocultar senha" (aria-label).
+- Aplicar nos dois campos senha quando houver confirmação de senha (signup).
+- Posição: dentro do campo, alinhado à direita, com `pr-10` no input para não cobrir o texto.
 
-### Modo Líquido
-Mesmo formato, mostrando o que compõe o líquido:
-- Faturamento bruto previsto
-- (–) Custos fixos
-- (–) Custos variáveis
-- = Meta líquida
-- R$/km líquido, R$/dia líquido, etc.
+Arquivo: `src/pages/Auth.tsx`.
 
-## 4. "Custos considerados"
-Passa a listar **fixos + variáveis** juntos, com combustível e alimentação marcados como "estimado". Total reflete a soma real usada no cálculo.
+---
+
+## 3. Sprint Go-live (itens 3, 6 e 8 da memory `mem://sprints/go-live`)
+
+### Item 3 — Templates de e-mail user-facing
+Criar 3 novos templates em `supabase/functions/_shared/transactional-email-templates/`:
+- **`welcome.tsx`** — boas-vindas ao motorista após cadastro confirmado (dica: cadastrar carro e custos). Disparado no `notify-new-user` (ou trigger de signup confirmado) via `enqueue_email`.
+- **`subscription-receipt.tsx`** — confirmação/recibo da assinatura. Disparado no `payments-webhook` em `customer.subscription.created` e `invoice.paid` (buscar email do user via `auth.users` por `user_id`).
+- **`payment-failed.tsx`** — cobrança recusada. Disparado em `invoice.payment_failed`.
+
+Registrar os 3 em `registry.ts`. Disparos sempre via `enqueue_email` na fila `transactional_emails` (nunca invoke direto, conforme regra core).
+
+### Item 6 — Revisão final pré-publicação
+- `public/sitemap.xml` — atualizar `lastmod` para data atual, conferir URLs (`/`, `/auth`, `/privacidade`, `/termos`).
+- `public/robots.txt` — confirmar `Sitemap:` apontando para domínio correto.
+- Rodar `seo_chat--trigger_scan` e fechar findings remanescentes.
+- Validar manualmente paywall: ações premium chamam `requirePremium()` para não-`beta_grandfathered` (revisar `RequirePremium`, `Paywall`).
+- Esconder badge "Edit with Lovable" via `publish_settings--set_badge_visibility` (se o plano permitir).
+
+### Item 8 — Pós-lançamento (infra)
+- **Resumo semanal por motorista**: cron `pg_cron` (2ª-feira 08:00 BRT) que enfileira 1 e-mail por usuário ativo na fila `transactional_emails`. Novo template `weekly-summary.tsx` com bruto/líquido/km/horas dos últimos 7 dias.
+- **Alerta de manutenção**: trigger SQL em `cars` (ou job diário) que dispara e-mail quando km atual atinge intervalo configurado. Novo template `maintenance-alert.tsx`.
+- **`/admin/metrics`**: página interna restrita a whitelist de `user_id` (constante no front + RLS no back). Painel com: total usuários, ativos 7/14/30d, novos cadastros, MRR, churn. Queries via edge function `admin-metrics` (verifica whitelist server-side).
+
+---
+
+## 4. Resposta sobre contador flutuante "sobre a tela do celular"
+
+**Não é possível** em um PWA / web app rodando em Lovable. Tecnicamente:
+
+- **Web/PWA não tem permissão de "overlay sobre outros apps"**. Esse recurso (tipo bolha do Messenger, contador do Strava) só existe em apps nativos Android (permissão `SYSTEM_ALERT_WINDOW`) e nem todos iOS permitem (iOS não tem overlays globais — só Live Activities/Dynamic Island, exclusivos de app nativo iOS 16+).
+- Mesmo empacotando via **Capacitor** (APK), seria preciso escrever um plugin Android nativo (Java/Kotlin) com `WindowManager` + serviço foreground. iOS continuaria limitado a Live Activities, exigindo Swift + extensão de widget.
+- O que **dá** para fazer hoje no web/PWA atual:
+  1. **Timer continua contando em background** (já funciona — `TimerContext` salva timestamps em `localStorage`, ao reabrir o app recalcula o tempo decorrido). ✅ já implementado.
+  2. **Notificação persistente do navegador** com tempo decorrido (atualizada a cada minuto via Service Worker). Limitada: o número não fica "ao vivo" segundo a segundo, e iOS Safari tem suporte parcial.
+  3. **PWA instalável + ícone na home** + ao abrir, mostra contador em tempo real (FAB já existe quando dentro do app).
+
+**Recomendação**: manter o comportamento atual (timer persistente em `localStorage`) e, se quiser dar mais presença, adicionar notificação periódica via Service Worker com "Jornada em andamento — 02:15". Overlay flutuante real só com APK nativo + plugin custom (fora do escopo Lovable).
+
+---
 
 ## Arquivos afetados
-- `src/lib/planningEngine.ts` — somar variáveis em `requiredGrossRevenue` e derivados
-- `src/components/planejamento/GuidedFlow.tsx` — remover escolha bruto/líquido, ir direto pra meta líquida
-- `src/components/planejamento/PainelResumo.tsx` — toggle, card clicável, breakdown por lente
-- `src/components/planejamento/CustosConsiderados.tsx` (ou equivalente) — incluir variáveis
+- `src/pages/Settings.tsx` (item 1)
+- `src/pages/Auth.tsx` (item 2)
+- `supabase/functions/_shared/transactional-email-templates/*.tsx` + `registry.ts` (item 3, 8)
+- `supabase/functions/payments-webhook/index.ts`, `notify-new-user/index.ts` (item 3)
+- `public/sitemap.xml`, `public/robots.txt` (item 6)
+- Nova migration com `pg_cron` + edge function `send-weekly-summary` (item 8)
+- Nova edge function `admin-metrics` + `src/pages/AdminMetrics.tsx` + rota em `App.tsx` (item 8)
 
 ## Fora de escopo
-- Home permanece como está (já está correta).
-- Nenhuma mudança em schema/banco.
-- Sem migração de `goal_type` de usuários antigos.
+- Implementar overlay flutuante nativo (impossível sem app nativo).
+- Mexer em cálculos do planejamento ou home.
