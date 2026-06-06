@@ -23,8 +23,13 @@ export function computeFixedMonthlyCosts(
   const status = car.ownership_status;
   if (status === "financiado" && (car.financing_monthly ?? 0) > 0) {
     items.push({ label: "Financiamento", value: Number(car.financing_monthly) });
-  } else if (status === "alugado" && (car.rental_weekly ?? 0) > 0) {
-    items.push({ label: "Aluguel", value: Number(car.rental_weekly) * 4.33 });
+  } else if (status === "alugado") {
+    // Mensal tem prioridade sobre semanal para evitar duplicidade.
+    if ((car.rental_monthly ?? 0) > 0) {
+      items.push({ label: "Aluguel", value: Number(car.rental_monthly) });
+    } else if ((car.rental_weekly ?? 0) > 0) {
+      items.push({ label: "Aluguel", value: Number(car.rental_weekly) * 4.33 });
+    }
   }
   if ((car.ipva_yearly ?? 0) > 0) {
     items.push({ label: "IPVA estimado", value: Number(car.ipva_yearly) / 12 });

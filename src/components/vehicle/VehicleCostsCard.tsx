@@ -43,6 +43,7 @@ export function VehicleCostsCard() {
       ownership_status: c.ownership_status ?? null,
       financing_monthly: c.financing_monthly ?? null,
       rental_weekly: c.rental_weekly ?? null,
+      rental_monthly: c.rental_monthly ?? null,
       oil_change_cost: c.oil_change_cost ?? null,
       oil_change_interval_km: c.oil_change_interval_km ?? null,
       tires_cost: c.tires_cost ?? null,

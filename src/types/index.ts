@@ -64,6 +64,7 @@ export interface Car {
   ownership_status?: "quitado" | "financiado" | "alugado" | null;
   financing_monthly?: number | null;
   rental_weekly?: number | null;
+  rental_monthly?: number | null;
   oil_change_cost?: number | null;
   oil_change_interval_km?: number | null;
   tires_cost?: number | null;
