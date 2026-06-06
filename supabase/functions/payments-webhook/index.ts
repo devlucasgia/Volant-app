@@ -61,6 +61,36 @@ async function notifyInternal(templateName: string, idempotencyKey: string, temp
   }
 }
 
+/**
+ * Send a user-facing transactional email (welcome, receipt, payment-failed).
+ * Requires recipientEmail. Best-effort: failures are swallowed.
+ */
+async function notifyUser(templateName: string, recipientEmail: string, idempotencyKey: string, templateData: Record<string, unknown>) {
+  if (!recipientEmail) {
+    console.warn("[payments-webhook] notifyUser skipped — no recipientEmail", { templateName, idempotencyKey });
+    return;
+  }
+  try {
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        apikey: SERVICE_ROLE,
+      },
+      body: JSON.stringify({ templateName, recipientEmail, idempotencyKey, templateData }),
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error("[payments-webhook] notifyUser_failed", { templateName, status: res.status, body: text });
+    }
+  } catch (e) {
+    console.error("[payments-webhook] notifyUser_error", { templateName, error: String(e) });
+  }
+}
+
 async function handleSubscriptionCreated(subscription: any, env: StripeEnv) {
   const userId = subscription.metadata?.userId;
   if (!userId) {
