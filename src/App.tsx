@@ -38,6 +38,7 @@ import CategoriasGastos from "./pages/CategoriasGastos";
 import CheckoutReturn from "./pages/CheckoutReturn";
 import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound.tsx";
+import AdminMetrics from "./pages/AdminMetrics";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,14 @@ const App = () => (
                   <Route path="/termos" element={<Termos />} />
                   <Route path="/privacidade" element={<Privacidade />} />
                   <Route path="/unsubscribe" element={<Unsubscribe />} />
+                  <Route
+                    path="/admin/metrics"
+                    element={
+                      <RequireAuth>
+                        <AdminMetrics />
+                      </RequireAuth>
+                    }
+                  />
                   {/* Checkout return must bypass the paywall so the webhook can confirm */}
                   <Route
                     path="/checkout/return"
