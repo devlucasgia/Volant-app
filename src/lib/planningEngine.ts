@@ -161,14 +161,20 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   let requiredGrossRevenue: number;
   let estimatedNetProfit: number;
 
+  // Custos totais (fixos + variáveis) entram no faturamento necessário.
+  // Bruto = Líquido + custos fixos + custos variáveis — mesma fonte da Home.
+  const totalCosts = consideredCosts + variable.total;
+
   if (mainGoalType === "bruto") {
+    // Legacy: meta cadastrada é o faturamento; líquido = bruto - todos os custos.
     grossTarget = monthlyGoal;
     requiredGrossRevenue = monthlyGoal;
-    estimatedNetProfit = monthlyGoal - consideredCosts;
+    estimatedNetProfit = monthlyGoal - totalCosts;
     netTarget = estimatedNetProfit;
   } else {
+    // Novo modelo: meta cadastrada é a sobra desejada (líquido).
     netTarget = monthlyGoal;
-    requiredGrossRevenue = monthlyGoal + consideredCosts;
+    requiredGrossRevenue = monthlyGoal + totalCosts;
     grossTarget = requiredGrossRevenue;
     estimatedNetProfit = monthlyGoal;
   }

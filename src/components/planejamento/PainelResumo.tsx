@@ -2,8 +2,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Target,
-  CalendarDays,
-  Route,
   TrendingUp,
   Pencil,
   RotateCcw,
@@ -12,8 +10,11 @@ import {
   CheckCircle2,
   Gauge,
   ChevronDown,
+  ArrowDownCircle,
+  ArrowUpCircle,
 } from "lucide-react";
 import { usePlanningSnapshot, type PlanningSnapshot } from "@/lib/planningEngine";
+import { useHeroMetric } from "@/lib/heroMetric";
 import { cn } from "@/lib/utils";
 
 const fmtBRL = (v: number) =>
@@ -31,53 +32,83 @@ interface Props {
 export function PainelResumo({ onAdjust, onRedo }: Props) {
   const navigate = useNavigate();
   const s = usePlanningSnapshot();
-  const isLiquido = s.mainGoalType === "liquido";
+  const [heroMetric, setHeroMetric] = useHeroMetric();
+  const isGross = heroMetric === "gross";
   const [costsOpen, setCostsOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
-  // Tom do hero secundário (R$/km Inteligente) em relação ao mínimo necessário.
+  // Valores ativos pela lente
+  const activeTarget = isGross ? s.homeGrossTarget : s.homeNetTarget;
+  const activeRemaining = isGross ? s.homeRemainingGross : s.homeRemainingNet;
+  const activeDaily = isGross ? s.homeDailyGross : s.homeDailyNet;
+  const activeSmartRpk = isGross ? s.homeSmartRpkGross : s.homeSmartRpkNet;
+
   const rpkTone: "ok" | "ahead" | "behind" =
-    s.smartRpk > 0 && s.requiredRpk > 0
-      ? s.smartRpk > s.requiredRpk * 1.1
+    activeSmartRpk > 0 && s.requiredRpk > 0
+      ? activeSmartRpk > s.requiredRpk * 1.1
         ? "behind"
-        : s.smartRpk < s.requiredRpk * 0.9
+        : activeSmartRpk < s.requiredRpk * 0.9
           ? "ahead"
           : "ok"
       : "ok";
 
+  const toggleLens = () => setHeroMetric(isGross ? "net" : "gross");
+
   return (
     <div className="mx-auto w-full max-w-md space-y-3 px-4 py-5 pb-28 animate-fade-in">
-      {/* ============ Hero 1 — Meta principal ============ */}
-      <div className="rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/[0.08] via-primary/[0.02] to-transparent p-5 shadow-[0_1px_0_0_hsl(var(--primary)/0.08),0_18px_42px_-32px_hsl(var(--primary)/0.55)]">
+      {/* ============ Toggle Bruto / Líquido ============ */}
+      <div className="flex items-center justify-center">
+        <div className="inline-flex rounded-full border border-border/60 bg-card/60 p-0.5">
+          <button
+            type="button"
+            onClick={() => setHeroMetric("net")}
+            className={cn(
+              "rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all",
+              !isGross
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Líquido
+          </button>
+          <button
+            type="button"
+            onClick={() => setHeroMetric("gross")}
+            className={cn(
+              "rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold transition-all",
+              isGross
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Bruto
+          </button>
+        </div>
+      </div>
+
+      {/* ============ Hero 1 — Meta principal (clicável) ============ */}
+      <button
+        type="button"
+        onClick={toggleLens}
+        className="block w-full text-left rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/[0.08] via-primary/[0.02] to-transparent p-5 shadow-[0_1px_0_0_hsl(var(--primary)/0.08),0_18px_42px_-32px_hsl(var(--primary)/0.55)] transition-transform active:scale-[0.99]"
+      >
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/85">
-          <Target className="h-3 w-3" /> Meta {isLiquido ? "líquida" : "bruta"}
+          <Target className="h-3 w-3" /> {isGross ? "Meta bruta (faturamento)" : "Meta líquida (sobra)"}
         </div>
         <div className="mt-2 text-3xl font-bold tabular-nums leading-none text-foreground">
-          {fmtBRL(isLiquido ? s.netTarget : s.grossTarget)}
+          {fmtBRL(activeTarget)}
         </div>
 
-        {/* Chips de apoio inline */}
-        {(s.requiredGrossRevenue > 0 || s.consideredCosts > 0) && (
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {isLiquido && s.requiredGrossRevenue > 0 && (
-              <Chip label="Faturar" value={fmtBRL(s.requiredGrossRevenue)} />
-            )}
-            {!isLiquido && s.consideredCosts > 0 && (
-              <Chip label="Lucro est." value={fmtBRL(s.estimatedNetProfit)} />
-            )}
-            {s.activeSuggestedDailyGoal > 0 && (
-              <Chip
-                label="Por dia"
-                value={`${fmtBRL(
-                  isLiquido && s.dailyGrossNeeded > 0
-                    ? s.dailyGrossNeeded
-                    : s.activeSuggestedDailyGoal,
-                )}`}
-              />
-            )}
-          </div>
-        )}
-      </div>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {activeRemaining > 0 && (
+            <Chip label="Falta" value={fmtBRL(activeRemaining)} />
+          )}
+          {activeDaily > 0 && (
+            <Chip label="Por dia" value={fmtBRL(activeDaily)} />
+          )}
+          <span className="ml-auto text-[10px] text-muted-foreground/70">toque p/ trocar</span>
+        </div>
+      </button>
 
       {/* ============ Status banner ============ */}
       {(s.status === "completed" ||
@@ -104,14 +135,14 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              <TrendingUp className="h-3 w-3" /> R$/KM Inteligente
+              <TrendingUp className="h-3 w-3" /> R$/KM Inteligente · {isGross ? "Bruto" : "Líquido"}
             </div>
             <div className="mt-2 text-[26px] font-bold tabular-nums leading-none text-foreground">
-              {s.smartRpk > 0 ? `${fmtBRL2(s.smartRpk)}/km` : "—"}
+              {activeSmartRpk > 0 ? `${fmtBRL2(activeSmartRpk)}/km` : "—"}
             </div>
           </div>
 
-          {rpkTone !== "ok" && s.smartRpk > 0 && (
+          {rpkTone !== "ok" && activeSmartRpk > 0 && (
             <span
               className={cn(
                 "shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",
@@ -125,32 +156,17 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
           )}
         </div>
 
-        {/* Mini-cards: KM a alcançar + Dias para meta — tom segue rpkTone */}
         {s.plannedKmTotal > 0 ? (
           <div className="mt-3 grid grid-cols-2 gap-2">
             <MiniStat
               label="KM a alcançar"
               value={fmtKm(s.remainingPlannedKm)}
               tone={rpkTone}
-              tooltip={
-                rpkTone === "behind"
-                  ? "Faltam km para sua meta; o R$/km precisa subir."
-                  : rpkTone === "ahead"
-                    ? "Você tem folga: rodando o restante, sobra ritmo."
-                    : "Distância restante para fechar o plano."
-              }
             />
             <MiniStat
               label="Dias para meta"
               value={`${s.remainingWorkdaysCount} ${s.remainingWorkdaysCount === 1 ? "dia" : "dias"}`}
               tone={rpkTone}
-              tooltip={
-                rpkTone === "behind"
-                  ? "Poucos dias restantes para o plano — atenção ao ritmo."
-                  : rpkTone === "ahead"
-                    ? "Dias restantes com folga em relação ao plano."
-                    : "Dias planejados ainda à frente."
-              }
             />
           </div>
         ) : (
@@ -159,6 +175,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
           </p>
         )}
       </div>
+
+      {/* ============ Composição (lente ativa) ============ */}
+      <CompositionCard snapshot={s} isGross={isGross} />
 
       {/* ============ Detalhes do plano (accordion) ============ */}
       <button
@@ -199,17 +218,10 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               label="Dias planejados"
               value={`${s.selectedWorkdaysCount} ${s.selectedWorkdaysCount === 1 ? "dia" : "dias"}`}
             />
-            <Row
-              label="Dias restantes"
-              value={`${s.remainingWorkdaysCount}`}
-            />
+            <Row label="Dias restantes" value={`${s.remainingWorkdaysCount}`} />
             <Row
               label="Faturamento necessário"
-              value={s.requiredGrossRevenue > 0 ? fmtBRL(s.requiredGrossRevenue) : "—"}
-            />
-            <Row
-              label="Falta para a meta"
-              value={fmtBRL(s.activeRemainingAmount)}
+              value={s.homeGrossTarget > 0 ? fmtBRL(s.homeGrossTarget) : "—"}
             />
             <Row
               label="Gastos registrados"
@@ -220,7 +232,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       )}
 
       {/* ============ Custos considerados ============ */}
-      {s.costItems.length > 0 && (
+      {(s.costItems.length > 0 || s.variableCostItems.length > 0) && (
         <div className="rounded-2xl border border-border/60 bg-card/60 overflow-hidden">
           <button
             type="button"
@@ -236,7 +248,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   Custos considerados
                 </div>
                 <div className="text-[11px] text-muted-foreground">
-                  {fmtBRL(s.consideredCosts)}/mês
+                  {fmtBRL(s.consideredCosts + s.variableCosts)}/mês
                 </div>
               </div>
             </div>
@@ -248,20 +260,47 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             />
           </button>
           {costsOpen && (
-            <div className="border-t border-border/40 px-4 py-3 animate-fade-in">
-              <ul className="space-y-1.5">
-                {s.costItems.map((it, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between text-[12px] text-muted-foreground"
-                  >
-                    <span>{it.label}</span>
-                    <span className="font-medium tabular-nums text-foreground/85">
-                      {fmtBRL(it.value)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+            <div className="border-t border-border/40 px-4 py-3 animate-fade-in space-y-3">
+              {s.costItems.length > 0 && (
+                <div>
+                  <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+                    Fixos
+                  </div>
+                  <ul className="space-y-1.5">
+                    {s.costItems.map((it, i) => (
+                      <li
+                        key={`f-${i}`}
+                        className="flex items-center justify-between text-[12px] text-muted-foreground"
+                      >
+                        <span>{it.label}</span>
+                        <span className="font-medium tabular-nums text-foreground/85">
+                          {fmtBRL(it.value)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {s.variableCostItems.length > 0 && (
+                <div className="border-t border-border/40 pt-3">
+                  <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+                    Variáveis (estimados)
+                  </div>
+                  <ul className="space-y-1.5">
+                    {s.variableCostItems.map((it, i) => (
+                      <li
+                        key={`v-${i}`}
+                        className="flex items-center justify-between text-[12px] text-muted-foreground"
+                      >
+                        <span>{it.label}</span>
+                        <span className="font-medium tabular-nums text-foreground/85">
+                          {fmtBRL(it.value)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() =>
@@ -269,7 +308,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                     state: { returnTo: "/ajustes/planejamento" },
                   })
                 }
-                className="mt-3 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-primary hover:underline"
+                className="mt-1 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-primary hover:underline"
               >
                 <Pencil className="h-3 w-3" /> Editar custos
               </button>
@@ -299,6 +338,131 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   );
 }
 
+/* ===================== Composition Card ===================== */
+
+function CompositionCard({
+  snapshot: s,
+  isGross,
+}: {
+  snapshot: PlanningSnapshot;
+  isGross: boolean;
+}) {
+  const liquido = s.homeNetTarget;
+  const fixos = s.consideredCosts;
+  const variaveis = s.variableCosts;
+  const bruto = s.homeGrossTarget;
+
+  if (bruto <= 0 && liquido <= 0) return null;
+
+  return (
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+      <div className="mb-2.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+        <Coins className="h-3 w-3" />
+        {isGross ? "Como chega no bruto" : "Como chega no líquido"}
+      </div>
+
+      {isGross ? (
+        <ul className="space-y-1.5">
+          <CompLine label="Meta líquida (sobra)" value={fmtBRL(liquido)} />
+          <CompLine
+            label="Custos fixos"
+            value={fmtBRL(fixos)}
+            sign="+"
+            muted
+          />
+          <CompLine
+            label="Custos variáveis (estimados)"
+            value={fmtBRL(variaveis)}
+            sign="+"
+            muted
+          />
+          <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
+            <span className="text-[12px] font-semibold text-foreground/90">
+              = Faturamento bruto necessário
+            </span>
+            <span className="text-[14px] font-bold tabular-nums text-primary">
+              {fmtBRL(bruto)}
+            </span>
+          </li>
+        </ul>
+      ) : (
+        <ul className="space-y-1.5">
+          <CompLine label="Faturamento bruto previsto" value={fmtBRL(bruto)} />
+          <CompLine
+            label="Custos fixos"
+            value={fmtBRL(fixos)}
+            sign="-"
+            muted
+            negative
+          />
+          <CompLine
+            label="Custos variáveis (estimados)"
+            value={fmtBRL(variaveis)}
+            sign="-"
+            muted
+            negative
+          />
+          <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
+            <span className="text-[12px] font-semibold text-foreground/90">
+              = Sobra líquida
+            </span>
+            <span className="text-[14px] font-bold tabular-nums text-primary">
+              {fmtBRL(liquido)}
+            </span>
+          </li>
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function CompLine({
+  label,
+  value,
+  sign,
+  muted,
+  negative,
+}: {
+  label: string;
+  value: string;
+  sign?: "+" | "-";
+  muted?: boolean;
+  negative?: boolean;
+}) {
+  const Icon = sign === "+" ? ArrowUpCircle : sign === "-" ? ArrowDownCircle : null;
+  return (
+    <li className="flex items-center justify-between gap-2">
+      <span
+        className={cn(
+          "flex items-center gap-1.5 text-[12.5px]",
+          muted ? "text-muted-foreground" : "text-foreground/90",
+        )}
+      >
+        {Icon && (
+          <Icon
+            className={cn(
+              "h-3 w-3",
+              negative ? "text-rose-400/70" : "text-emerald-400/70",
+            )}
+          />
+        )}
+        {label}
+      </span>
+      <span
+        className={cn(
+          "tabular-nums text-[12.5px] font-semibold",
+          muted ? "text-foreground/80" : "text-foreground/95",
+        )}
+      >
+        {sign && <span className="mr-0.5 text-muted-foreground">{sign}</span>}
+        {value}
+      </span>
+    </li>
+  );
+}
+
+/* ===================== Bits ===================== */
+
 function Chip({ label, value }: { label: string; value: string }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-background/40 px-2.5 py-1 text-[11px] text-muted-foreground">
@@ -312,12 +476,10 @@ function MiniStat({
   label,
   value,
   tone,
-  tooltip,
 }: {
   label: string;
   value: string;
   tone: "ok" | "ahead" | "behind";
-  tooltip?: string;
 }) {
   const toneClass =
     tone === "behind"
@@ -332,10 +494,7 @@ function MiniStat({
         ? "text-emerald-200"
         : "text-foreground/95";
   return (
-    <div
-      title={tooltip}
-      className={cn("rounded-xl border px-2.5 py-1.5 transition-colors", toneClass)}
-    >
+    <div className={cn("rounded-xl border px-2.5 py-1.5 transition-colors", toneClass)}>
       <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/85">
         {label}
       </div>
