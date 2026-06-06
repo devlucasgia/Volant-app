@@ -873,10 +873,8 @@ export default function SettingsPage() {
               })()}
             </SettingsCard>
 
-            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Conta e dados" iconTone="bg-amber-300/10 text-amber-200/90">
-              <Button variant="outline" className="w-full" onClick={signOut}>
-                <LogOut className="mr-2 h-4 w-4" /> Sair da conta
-              </Button>
+            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Dados" iconTone="bg-amber-300/10 text-amber-200/90">
+
 
               <div className="rounded-xl border border-border bg-muted/30 p-3.5">
                 <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
