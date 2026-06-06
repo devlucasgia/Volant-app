@@ -77,7 +77,7 @@ export function VehicleCostsCard() {
     }
     setBaseline(costs);
     await refreshCars();
-    toast.success("Custos do veículo salvos");
+    toast.success("Custos salvos");
   };
 
   if (cars.length === 0) {
