@@ -552,6 +552,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_notify_shared_secret: { Args: never; Returns: string }
       has_premium_access: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
