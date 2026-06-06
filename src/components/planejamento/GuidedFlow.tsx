@@ -44,6 +44,7 @@ interface Props {
    * campos relacionados (sem alterar planningStatus nem campos não-editados).
    * Quando undefined → fluxo completo normal.
    */
+  returnTo?: string;
   editMode?: { steps: number[] };
 }
 
@@ -69,7 +70,7 @@ export function GuidedFlow({
   onCancel,
   prefill = false,
   initialStep,
-  initialDraft,
+  { initialDraft, returnTo,
   editMode,
 }: Props) {
   const navigate = useNavigate();
@@ -252,7 +253,7 @@ export function GuidedFlow({
               navigate("/ajustes/veiculos/carros", {
                 state: {
                   returnTo: "/ajustes/planejamento",
-                  planningResume: { variant: prefill ? "prefill" : "fresh", step: 5, draft },
+                  planningResume: { variant: prefill ? "prefill" : "fresh", step: 5, draft, returnTo },
                 },
               })
             }
@@ -260,7 +261,7 @@ export function GuidedFlow({
               navigate("/ajustes/veiculos/custos", {
                 state: {
                   returnTo: "/ajustes/planejamento",
-                  planningResume: { variant: prefill ? "prefill" : "fresh", step: 5, draft },
+                  planningResume: { variant: prefill ? "prefill" : "fresh", step: 5, draft, returnTo },
                 },
               })
             }

@@ -41,8 +41,8 @@ interface PlanningResumeState {
     monthlyGoal: number;
     selectedDates: string[];
     avgKmPerDay: number;
-  returnTo?: string;
   };
+  returnTo?: string;
 }
 
 function PlanHeader({ onBack }: { onBack: () => void }) {
@@ -77,9 +77,9 @@ function PlanHeader({ onBack }: { onBack: () => void }) {
 export default function PlanejamentoInteligente() {
   const navigate = useNavigate();
   const location = useLocation();
-  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
-  const planningResume = (location.state as { planningResume?: PlanningResumeState } | null)
-    ?.planningResume;
+  const state = location.state as { returnTo?: string; planningResume?: PlanningResumeState } | null;
+  const returnTo = state?.returnTo;
+  const planningResume = state?.planningResume;
 
   const { settings, loading } = useData();
   const [mode, setMode] = useState<Mode>("panel");
@@ -100,8 +100,14 @@ export default function PlanejamentoInteligente() {
       initialDraft: planningResume.draft,
     });
     setMode("flow");
-    // Limpa o state para não restaurar de novo em refresh
-    navigate(location.pathname, { replace: true, state: returnTo ? { returnTo } : undefined });
+    
+    // Limpa o planningResume para não restaurar de novo em refresh,
+    // mas preserva o returnTo (pode vir do planningResume ou do state original)
+    const finalReturnTo = planningResume.returnTo || returnTo;
+    navigate(location.pathname, { 
+      replace: true, 
+      state: finalReturnTo ? { returnTo: finalReturnTo } : undefined 
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeKey]);
 
@@ -133,7 +139,7 @@ export default function PlanejamentoInteligente() {
 
   if (mode === "flow") {
     return (
-      <GuidedFlow returnTo={returnTo}
+      <GuidedFlow
         prefill={flowConfig.variant === "prefill"}
         initialStep={flowConfig.initialStep}
         initialDraft={flowConfig.initialDraft}
@@ -144,6 +150,7 @@ export default function PlanejamentoInteligente() {
         }
         onCancel={() => setMode("panel")}
         onDone={() => setMode("panel")}
+        returnTo={returnTo}
       />
     );
   }
