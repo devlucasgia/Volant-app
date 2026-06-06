@@ -72,7 +72,8 @@ export function InstallPromptCard({ open, onInstall, onDismiss, title, descripti
       <Drawer open={open} onOpenChange={(o) => { if (!o) onDismiss(); }}>
         <DrawerContent className="border-border/60 bg-card">
           <div className="relative">
-            <Body onInstall={onInstall} onDismiss={onDismiss} title={title} description={description} />
+            <Body onInstall={onInstall} onDismiss={onDismiss} title={title} description={description} showCustomClose />
+
           </div>
         </DrawerContent>
       </Drawer>
