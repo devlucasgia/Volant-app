@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { startOfMonth, endOfMonth } from "date-fns";
 import { Car, Entry, EarningEntry, ExpenseEntry, GoalType, Settings } from "@/types";
 import { useData } from "@/context/DataContext";
-import { computeFixedMonthlyCosts, startOfDay, toIsoDate } from "@/lib/planejamento";
+import { computeFixedMonthlyCosts, computeVariableMonthlyCosts, startOfDay, toIsoDate } from "@/lib/planejamento";
 
 export type PlanningStatusKind =
   | "not_configured"
@@ -25,8 +25,12 @@ export interface PlanningSnapshot {
   estimatedNetProfit: number;
 
   // Costs
-  consideredCosts: number;
+  consideredCosts: number;          // fixos (compat)
   costItems: { label: string; value: number }[];
+  fixedCosts: number;               // alias semântico
+  fixedCostItems: { label: string; value: number }[];
+  variableCosts: number;            // combustível + alimentação estimados
+  variableCostItems: { label: string; value: number }[];
 
   // Progresso real do mês
   currentGross: number;
@@ -148,6 +152,8 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   // Custos considerados (fixos + óleo/pneus prorrateados pelo KM planejado)
   const costs = computeFixedMonthlyCosts(activeCar, plannedKmTotal);
   const consideredCosts = costs.total;
+  // Custos variáveis estimados (combustível + alimentação) — só compõem o alvo BRUTO da home.
+  const variable = computeVariableMonthlyCosts(activeCar, averageKmPerDay, selectedWorkdaysCount);
 
   // Targets segundo a meta principal
   let grossTarget: number;
@@ -198,11 +204,12 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const smartRpk =
     remainingPlannedKm > 0 ? remainingGrossToTarget / remainingPlannedKm : 0;
 
-  // Home lens — alvos simétricos independentes do goalType cadastrado.
-  // bruto = meta cadastrada; líquido = meta cadastrada + custos fixos.
+  // Home lens — semântica financeira correta:
+  // BRUTO  = faturamento necessário = meta cadastrada (sobra) + custos fixos + variáveis.
+  // LÍQUIDO = meta cadastrada (sobra desejada após custos).
   // Progresso usa sempre currentGross (faturado), comparado ao alvo da lente ativa.
-  const homeGrossTarget = monthlyGoal;
-  const homeNetTarget = monthlyGoal + consideredCosts;
+  const homeGrossTarget = monthlyGoal + consideredCosts + variable.total;
+  const homeNetTarget = monthlyGoal;
   const homeRemainingGross = clampPos(homeGrossTarget - currentGross);
   const homeRemainingNet = clampPos(homeNetTarget - currentGross);
   const homeDailyGross =
@@ -273,6 +280,10 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     estimatedNetProfit: safe(estimatedNetProfit),
     consideredCosts,
     costItems: costs.items,
+    fixedCosts: consideredCosts,
+    fixedCostItems: costs.items,
+    variableCosts: variable.total,
+    variableCostItems: variable.items,
     currentGross,
     currentExpenses,
     currentNet,
