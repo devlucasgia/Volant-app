@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import {
   applyShortcut,
   computeFixedMonthlyCosts,
+  computeVariableMonthlyCosts,
   computePlan,
   DEFAULT_AVG_KM_PER_DAY,
   ShortcutKey,
@@ -93,7 +94,7 @@ export function GuidedFlow({
   const isLast = stepIdx === stepsList.length - 1;
 
   const [draft, setDraft] = useState<Draft>(() => ({
-    goalType: prefill || isEdit ? settings.goalType : "bruto",
+    goalType: prefill || isEdit ? settings.goalType : "liquido",
     monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
     selectedDates:
       (prefill || isEdit) && settings.planningSelectedDates
@@ -116,17 +117,23 @@ export function GuidedFlow({
     () => computeFixedMonthlyCosts(activeCar, draftPlannedKm),
     [activeCar, draftPlannedKm],
   );
+  const variable = useMemo(
+    () => computeVariableMonthlyCosts(activeCar, draft.avgKmPerDay, draft.selectedDates.length),
+    [activeCar, draft.avgKmPerDay, draft.selectedDates.length],
+  );
 
+  // No modelo novo, a meta cadastrada representa o LÍQUIDO desejado (sobra).
+  // Para o cálculo do faturamento necessário (BRUTO), somamos fixos + variáveis.
   const plan = useMemo(
     () =>
       computePlan({
         monthlyGoal: draft.monthlyGoal,
         goalType: draft.goalType,
         diasSelecionados: draft.selectedDates.length,
-        custosFixos: costs.total,
+        custosFixos: costs.total + (draft.goalType === "liquido" ? variable.total : 0),
         avgKmPerDay: draft.avgKmPerDay,
       }),
-    [draft, costs.total],
+    [draft, costs.total, variable.total],
   );
 
 
