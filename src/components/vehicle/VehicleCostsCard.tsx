@@ -50,6 +50,10 @@ export function VehicleCostsCard() {
       ipva_yearly: c.ipva_yearly ?? null,
       insurance_monthly: c.insurance_monthly ?? null,
       other_monthly_costs: c.other_monthly_costs ?? null,
+      fuel_consumption_kml: c.fuel_consumption_kml ?? null,
+      fuel_type: c.fuel_type ?? null,
+      fuel_price: c.fuel_price ?? null,
+      food_avg_per_day: c.food_avg_per_day ?? null,
     };
     setCosts(loaded);
     setBaseline(loaded);
