@@ -90,24 +90,18 @@ export function useSubscription(userId: string | null | undefined): Subscription
         !subHasAccess;
 
       if (shouldGrant) {
-        const startedAt = new Date();
-        const endsAt = new Date(startedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const { error: grantError } = await supabase
-          .from("profiles")
-          .update({
-            trial_started_at: startedAt.toISOString(),
-            trial_ends_at: endsAt.toISOString(),
-            trial_access_granted: true,
-          })
-          .eq("id", userId)
-          // Belt-and-suspenders: never overwrite an existing grant, even
-          // under a race condition with another tab.
-          .eq("trial_access_granted", false);
-        if (!grantError) {
+        // Entitlement columns are protected by a DB trigger that only allows
+        // service_role writes — grant the trial via the secure edge function.
+        const { data: grantData, error: grantError } = await supabase.functions.invoke(
+          "grant-trial",
+          { body: {} },
+        );
+        if (!grantError && (grantData as { ok?: boolean })?.ok) {
+          const g = grantData as { trial_started_at?: string; trial_ends_at?: string };
           setProfile({
             ...profData,
-            trial_started_at: startedAt.toISOString(),
-            trial_ends_at: endsAt.toISOString(),
+            trial_started_at: g.trial_started_at ?? profData.trial_started_at,
+            trial_ends_at: g.trial_ends_at ?? profData.trial_ends_at,
             trial_access_granted: true,
           });
         }
