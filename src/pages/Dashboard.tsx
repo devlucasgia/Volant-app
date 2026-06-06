@@ -478,12 +478,12 @@ export default function Dashboard() {
               </span>
             </button>
             {hasFooter && (
-              <div className="border-t border-border/40 bg-muted/20 px-4 py-1.5">
-                <div className="flex items-center justify-between gap-3 text-[10.5px] tabular-nums">
+              <div className="border-t border-border/40 bg-muted/20 px-4 py-2">
+                <div className="flex items-center justify-center gap-2 text-[10.5px] tabular-nums">
                   <span className="text-muted-foreground/80">
                     Alvo <span className="font-medium text-foreground/85">{brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)}</span>
                   </span>
-                  <span aria-hidden className="h-2.5 w-px bg-border/60" />
+                  <span aria-hidden className="text-muted-foreground/50">•</span>
                   <span className={cn("font-medium", statusTone)}>
                     {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")} km restantes
                   </span>

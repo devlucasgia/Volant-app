@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -8,7 +9,7 @@ import { useAccess } from "@/context/AccessContext";
 import { VehicleCostsSection, EMPTY_VEHICLE_COSTS, type VehicleCosts } from "@/components/vehicle/VehicleCostsSection";
 import type { Car as CarType } from "@/types";
 import { toast } from "sonner";
-import { Car as CarIcon } from "lucide-react";
+import { Car as CarIcon, Plus } from "lucide-react";
 
 function carLabel(c: CarType) {
   const parts = [c.brand, c.model].filter(Boolean).join(" ");
@@ -17,6 +18,7 @@ function carLabel(c: CarType) {
 
 export function VehicleCostsCard() {
   const { cars, activeCar, refreshCars } = useData();
+  const navigate = useNavigate();
   const { requirePremium } = useAccess();
   const [selectedId, setSelectedId] = useState<string>("");
   const [costs, setCosts] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
@@ -89,8 +91,19 @@ export function VehicleCostsCard() {
         </div>
         <div className="text-sm font-medium">Nenhum carro cadastrado</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          Cadastre um carro em <span className="font-medium text-foreground">Meus carros</span> para configurar os custos.
+          Cadastre seu carro para configurar os custos.
         </p>
+        <Button
+          size="sm"
+          className="mt-3 gradient-success text-primary-foreground"
+          onClick={() =>
+            navigate("/ajustes/veiculos/carros", {
+              state: { returnTo: "/ajustes/veiculos/custos" },
+            })
+          }
+        >
+          <Plus className="mr-1 h-4 w-4" /> Cadastrar carro
+        </Button>
       </div>
     );
   }
