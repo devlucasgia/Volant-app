@@ -57,7 +57,7 @@ export const template = {
   component: SubscriptionCanceledEmail,
   subject: (d: Record<string, any>) => `[Volant] Assinatura cancelada: ${d.email || 'usuário'}`,
   to: 'suporte@usevolant.com.br',
-  displayName: 'cancelvolant',
+  displayName: 'Volant · Cancelamento',
   previewData: {
     email: 'joao@example.com', userId: '00000000-0000-0000-0000-000000000000',
     subscriptionId: 'sub_123', environment: 'live',

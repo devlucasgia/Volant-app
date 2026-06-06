@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
+import { useUI } from "@/context/UIContext";
 import { NumberField } from "@/components/NumberField";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +77,8 @@ export function GuidedFlow({
 }: Props) {
   const navigate = useNavigate();
   const { settings, cars, updateSettings } = useData();
+  const { useHideChrome } = useUI();
+  useHideChrome();
   const activeCar = useMemo(
     () => cars.find((c) => c.is_active) || cars[0] || null,
     [cars],

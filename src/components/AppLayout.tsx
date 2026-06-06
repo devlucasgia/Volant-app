@@ -10,18 +10,18 @@ import { InstallPromptManager } from "./pwa/InstallPromptManager";
 import { useUI } from "@/context/UIContext";
 
 export function AppLayout() {
-  const { drawerOpen, setDrawerOpen, drawerPreset } = useUI();
+  const { drawerOpen, setDrawerOpen, drawerPreset, chromeHidden } = useUI();
   const location = useLocation();
   return (
     <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-md pb-32">
+      <main className={`mx-auto max-w-md ${chromeHidden ? "pb-0" : "pb-32"}`}>
         <div key={location.pathname} className="animate-fade-in-up">
           <Outlet />
         </div>
       </main>
-      <TimerFab />
+      {!chromeHidden && <TimerFab />}
       <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
-      <BottomNav />
+      {!chromeHidden && <BottomNav />}
       <CarOnboardingDialog />
       <VehicleCostsOnboardingDialog />
       <PlanningOnboardingDialog />
