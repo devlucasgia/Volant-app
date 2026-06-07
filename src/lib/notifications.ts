@@ -328,9 +328,12 @@ export function ensureMaintenanceNotifications(
   if (!userId || !alerts || alerts.length === 0) return;
   for (const a of alerts) {
     const milestoneRounded = Math.round(a.milestoneKm);
-    const id = `${MAINTENANCE_NOTIFICATION_ID_PREFIX}${a.type}_${milestoneRounded}`;
-    const label = TYPE_LABEL[a.type];
     const overdue = a.kmRemaining < 0;
+    const status = overdue ? "overdue" : "approaching";
+    // ID inclui status para que a transição "próximo" → "atrasado" gere uma
+    // notificação nova (vermelha) mesmo no mesmo milestone.
+    const id = `${MAINTENANCE_NOTIFICATION_ID_PREFIX}${a.type}_${milestoneRounded}_${status}`;
+    const label = TYPE_LABEL[a.type];
     const kmAbs = Math.abs(Math.round(a.kmRemaining)).toLocaleString("pt-BR");
     const summary = overdue
       ? `${label} atrasada em ${kmAbs} km.`
@@ -353,6 +356,7 @@ export function ensureMaintenanceNotifications(
       () => true,
     );
   }
+
 }
 
 export const NOTIFICATIONS_EVENT = EVENT;
