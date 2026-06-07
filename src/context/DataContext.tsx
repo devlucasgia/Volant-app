@@ -107,7 +107,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase.from("cars").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     setCars((data || []).map((c: any) => ({
       id: c.id, brand: c.brand, model: c.model, plate: c.plate,
-      initial_km: Number(c.initial_km) || 0, is_active: !!c.is_active,
+      initial_km: Number(c.initial_km) || 0,
+      km_adjustment: Number(c.km_adjustment) || 0,
+      is_active: !!c.is_active,
       ownership_status: c.ownership_status ?? null,
       financing_monthly: c.financing_monthly == null ? null : Number(c.financing_monthly),
       rental_weekly: c.rental_weekly == null ? null : Number(c.rental_weekly),
