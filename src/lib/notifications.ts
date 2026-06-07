@@ -344,6 +344,7 @@ export function ensureMaintenanceNotifications(
         id,
         category: "veiculo",
         iconType: "vehicle-costs",
+        tone: overdue ? "alert" : "default",
         title: overdue ? `${label} atrasada` : `${label} se aproximando`,
         summary,
         content,
