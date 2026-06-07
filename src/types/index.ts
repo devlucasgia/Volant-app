@@ -60,6 +60,7 @@ export interface Car {
   model: string | null;
   plate: string | null;
   initial_km: number;
+  km_adjustment: number;
   is_active: boolean;
   ownership_status?: "quitado" | "financiado" | "alugado" | null;
   financing_monthly?: number | null;
