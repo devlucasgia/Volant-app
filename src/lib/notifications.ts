@@ -302,4 +302,52 @@ export function ensureVehicleCostsMissingNotification(
   });
 }
 
+// ---------- Maintenance (oleo / pneus) ----------
+export const MAINTENANCE_NOTIFICATION_ID_PREFIX = "maintenance_";
+
+export interface MaintenanceAlertSnapshot {
+  type: "oleo" | "pneus";
+  milestoneKm: number;
+  kmRemaining: number;
+  carLabel?: string;
+}
+
+const TYPE_LABEL: Record<"oleo" | "pneus", string> = {
+  oleo: "Troca de óleo",
+  pneus: "Troca de pneus",
+};
+
+export function ensureMaintenanceNotifications(
+  userId: string | null | undefined,
+  alerts: MaintenanceAlertSnapshot[] | null | undefined,
+) {
+  if (!userId || !alerts || alerts.length === 0) return;
+  for (const a of alerts) {
+    const milestoneRounded = Math.round(a.milestoneKm);
+    const id = `${MAINTENANCE_NOTIFICATION_ID_PREFIX}${a.type}_${milestoneRounded}`;
+    const label = TYPE_LABEL[a.type];
+    const overdue = a.kmRemaining < 0;
+    const kmAbs = Math.abs(Math.round(a.kmRemaining)).toLocaleString("pt-BR");
+    const summary = overdue
+      ? `${label} atrasada em ${kmAbs} km.`
+      : `Faltam ${kmAbs} km para a próxima ${label.toLowerCase()}.`;
+    const content = overdue
+      ? `Sua próxima ${label.toLowerCase()} estava prevista para ${milestoneRounded.toLocaleString("pt-BR")} km e o carro já passou desse ponto. Registre a manutenção quando fizer para o Volant continuar acompanhando.`
+      : `Sua próxima ${label.toLowerCase()} está prevista para ${milestoneRounded.toLocaleString("pt-BR")} km. Programe-se para fazer em breve e mantenha o carro em dia.`;
+    ensureNotification(
+      userId,
+      {
+        id,
+        category: "veiculo",
+        iconType: "vehicle-costs",
+        title: overdue ? `${label} atrasada` : `${label} se aproximando`,
+        summary,
+        content,
+        cta: { label: "Ver manutenção", route: "/ajustes/veiculos/manutencao" },
+      },
+      () => true,
+    );
+  }
+}
+
 export const NOTIFICATIONS_EVENT = EVENT;
