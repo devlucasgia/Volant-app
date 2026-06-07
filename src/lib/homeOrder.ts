@@ -21,10 +21,27 @@ function read(): HomeCardKey[] {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_HOME_ORDER;
     const parsed = JSON.parse(raw) as HomeCardKey[];
-    // Reconcile: keep stored order but append any new defaults missing.
+    // Reconcile: keep stored order but insert any missing defaults at their
+    // canonical position (right after the previous default that exists in the
+    // saved order). Falls back to appending if no anchor is found.
     const known = new Set<HomeCardKey>(DEFAULT_HOME_ORDER);
-    const filtered = parsed.filter((k) => known.has(k));
-    for (const k of DEFAULT_HOME_ORDER) if (!filtered.includes(k)) filtered.push(k);
+    const filtered: HomeCardKey[] = parsed.filter((k) => known.has(k));
+    for (let i = 0; i < DEFAULT_HOME_ORDER.length; i++) {
+      const k = DEFAULT_HOME_ORDER[i];
+      if (filtered.includes(k)) continue;
+      // Walk backwards through defaults to find the nearest predecessor that
+      // is already present, and insert right after it.
+      let insertAt = filtered.length;
+      for (let j = i - 1; j >= 0; j--) {
+        const prev = DEFAULT_HOME_ORDER[j];
+        const idx = filtered.indexOf(prev);
+        if (idx >= 0) {
+          insertAt = idx + 1;
+          break;
+        }
+      }
+      filtered.splice(insertAt, 0, k);
+    }
     return filtered;
   } catch {
     return DEFAULT_HOME_ORDER;
