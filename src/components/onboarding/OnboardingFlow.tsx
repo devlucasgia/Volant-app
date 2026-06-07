@@ -186,6 +186,7 @@ export function OnboardingFlow() {
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="flex min-h-full flex-col"
                 >
+                  {step === "instalar" && <OnboardingInstallStep onDone={handleInstallDone} />}
                   {step === "welcome" && <WelcomeStep />}
                   {step === "registro" && <RegistroStep />}
                   {step === "jornada" && <JornadaStep />}
@@ -196,6 +197,10 @@ export function OnboardingFlow() {
                 </motion.div>
               </AnimatePresence>
             </div>
+
+            {/* Footer CTA — always visible, respects iOS safe area. Suprimido no passo de instalação (tem CTA próprio). */}
+            {!isInstallStep && (
+
 
             {/* Footer CTA — always visible, respects iOS safe area */}
             <div
