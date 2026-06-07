@@ -148,6 +148,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await loadCars(user.id);
   }, [user, loadCars]);
 
+  // Dispara verificação on-demand de alertas de manutenção (e-mail + dedupe server-side).
+  // Throttle simples: 1 chamada a cada 15s por usuário, fire-and-forget.
+  const triggerMaintenanceCheck = useCallback((userId: string | undefined) => {
+    if (!userId) return;
+    const now = Date.now();
+    const w = window as any;
+    w.__volantMaintCheck ??= new Map<string, number>();
+    const last = w.__volantMaintCheck.get(userId) || 0;
+    if (now - last < 15_000) return;
+    w.__volantMaintCheck.set(userId, now);
+    supabase.functions.invoke("check-maintenance-alerts", { body: { user_id: userId } })
+      .catch((err) => { console.warn("[maint] trigger failed", err); });
+  }, []);
+
   const updateCarKmAdjustment = useCallback(async (carId: string, adjustment: number) => {
     if (!user) return;
     const { error } = await supabase
@@ -156,7 +170,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       .eq("id", carId);
     if (error) throw error;
     await loadCars(user.id);
-  }, [user, loadCars]);
+    triggerMaintenanceCheck(user.id);
+  }, [user, loadCars, triggerMaintenanceCheck]);
+
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", settings.theme === "dark");
