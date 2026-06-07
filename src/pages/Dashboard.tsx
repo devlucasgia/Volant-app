@@ -28,6 +28,7 @@ import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
+import { ensureMaintenanceNotifications } from "@/lib/notifications";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -243,8 +244,8 @@ export default function Dashboard() {
   // Banner de manutenção agora vem dos intervalos cadastrados em Custos (óleo e pneus),
   // não mais do antigo settings.maintenanceIntervalKm.
   const maintAlerts = useMemo(() => {
-    if (!activeCar) return [] as Array<{ type: "oleo" | "pneus"; kmRemaining: number }>;
-    const out: Array<{ type: "oleo" | "pneus"; kmRemaining: number }> = [];
+    if (!activeCar) return [] as Array<{ type: "oleo" | "pneus"; kmRemaining: number; milestoneKm: number }>;
+    const out: Array<{ type: "oleo" | "pneus"; kmRemaining: number; milestoneKm: number }> = [];
     for (const type of ["oleo", "pneus"] as const) {
       const intervalKm = Number(
         type === "oleo" ? activeCar.oil_change_interval_km : activeCar.tires_interval_km,
@@ -263,14 +264,20 @@ export default function Dashboard() {
         }, 0);
         lastKm = realCurrentKm - kmAfter;
       }
-      const kmRemaining = (lastKm + intervalKm) - realCurrentKm;
-      if (kmRemaining <= 500) out.push({ type, kmRemaining });
+      const milestoneKm = lastKm + intervalKm;
+      const kmRemaining = milestoneKm - realCurrentKm;
+      if (kmRemaining <= 500) out.push({ type, kmRemaining, milestoneKm });
     }
     return out.sort((a, b) => a.kmRemaining - b.kmRemaining);
   }, [activeCar, entries, carInitialKm, realCurrentKm]);
   const showMaintAlert = maintAlerts.length > 0;
   const primaryMaint = maintAlerts[0];
   const kmToNext = primaryMaint?.kmRemaining ?? 0;
+
+  useEffect(() => {
+    if (!user?.id || dataLoading) return;
+    ensureMaintenanceNotifications(user.id, maintAlerts);
+  }, [user?.id, dataLoading, maintAlerts]);
 
   const activeApps = Object.keys(apps)
     .filter((k) => apps[k] > 0)

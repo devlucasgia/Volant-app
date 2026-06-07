@@ -1,10 +1,10 @@
 // check-maintenance-alerts
-// Cron-invoked daily. For each active car with maintenance intervals set,
-// compute total km rodados (initial_km + sum(entries.km where earning))
-// and compare to the last `oleo` / `pneus` entry (treating each maintenance
-// entry as resetting the counter at that point in time). If the user is
-// within 500 km (or already past) the next interval, send one email per
-// milestone (deduped via public.maintenance_alerts_sent).
+// Cron-invoked daily. For each active car with maintenance intervals set
+// (oleo / pneus), compute the car's real KM (initial_km + sum(earnings.km) +
+// km_adjustment) and the KM in which the last maintenance of that type
+// happened (heuristic via entry date). If the user is within 500 km of —
+// or already past — the next milestone (lastKm + intervalKm), send one
+// email per milestone, deduped via public.maintenance_alerts_sent.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 
@@ -22,7 +22,6 @@ Deno.serve(async (req) => {
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-  // Same auth scheme as weekly summary
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   let authorized = !!token && token === SERVICE_ROLE;
@@ -36,10 +35,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 1. All active cars with at least one interval configured
   const { data: cars, error: carsErr } = await admin
     .from("cars")
-    .select("id, user_id, brand, model, initial_km, oil_change_interval_km, tires_interval_km, is_active")
+    .select("id, user_id, brand, model, initial_km, km_adjustment, oil_change_interval_km, tires_interval_km, is_active")
     .eq("is_active", true);
   if (carsErr) {
     console.error("[maint] cars query failed", carsErr);
@@ -53,19 +51,20 @@ Deno.serve(async (req) => {
     const userId = (car as any).user_id as string;
     const carId = (car as any).id as string;
     const initialKm = Number((car as any).initial_km || 0);
+    const adjustment = Number((car as any).km_adjustment || 0);
     const oilInterval = Number((car as any).oil_change_interval_km || 0);
     const tiresInterval = Number((car as any).tires_interval_km || 0);
     if (oilInterval <= 0 && tiresInterval <= 0) continue;
 
-    // Total km driven by this user (proxy for car km — single-car assumption ok for MVP)
     const { data: kmRows } = await admin
       .from("entries")
-      .select("km")
+      .select("km, entry_date")
       .eq("user_id", userId)
       .eq("type", "earning");
-    const totalKm = initialKm + (kmRows || []).reduce((s: number, r: any) => s + Number(r.km || 0), 0);
+    const earnings = (kmRows || []) as Array<{ km: number | null; entry_date: string }>;
+    const totalDriven = earnings.reduce((s, r) => s + Number(r.km || 0), 0);
+    const currentKm = initialKm + totalDriven + adjustment;
 
-    // Last maintenance entries
     for (const [intervalKm, mtype] of [[oilInterval, "oleo"], [tiresInterval, "pneus"]] as Array<[number, string]>) {
       if (intervalKm <= 0) continue;
 
@@ -78,23 +77,20 @@ Deno.serve(async (req) => {
         .order("entry_date", { ascending: false })
         .limit(1);
 
-      let kmSinceLast = totalKm; // se nunca registrou, considera tudo
+      let lastKm = initialKm;
       if (lastMaint && lastMaint.length > 0) {
-        const lastDate = (lastMaint[0] as any).entry_date as string;
-        const { data: kmAfter } = await admin
-          .from("entries")
-          .select("km")
-          .eq("user_id", userId)
-          .eq("type", "earning")
-          .gte("entry_date", lastDate);
-        kmSinceLast = (kmAfter || []).reduce((s: number, r: any) => s + Number(r.km || 0), 0);
+        const lastDate = new Date((lastMaint[0] as any).entry_date as string).getTime();
+        const kmAfter = earnings.reduce((s, r) => {
+          if (new Date(r.entry_date).getTime() <= lastDate) return s;
+          return s + Number(r.km || 0);
+        }, 0);
+        lastKm = currentKm - kmAfter;
       }
 
-      if (kmSinceLast < intervalKm - WARN_THRESHOLD_KM) continue;
+      const milestone = lastKm + intervalKm;
+      const kmRemaining = milestone - currentKm;
+      if (kmRemaining > WARN_THRESHOLD_KM) continue;
 
-      const milestone = Math.floor(kmSinceLast / intervalKm) * intervalKm + intervalKm;
-
-      // Dedup
       const { data: existing } = await admin
         .from("maintenance_alerts_sent")
         .select("id")
@@ -103,7 +99,6 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existing) continue;
 
-      // Resolve user email
       const { data: u } = await admin.auth.admin.getUserById(userId);
       const email = u?.user?.email;
       if (!email) continue;
@@ -111,6 +106,7 @@ Deno.serve(async (req) => {
       const fullName = (meta.display_name as string) || (meta.full_name as string) || "";
       const firstName = fullName.split(" ")[0] || "";
       const carLabel = [(car as any).brand, (car as any).model].filter(Boolean).join(" ").trim() || "seu carro";
+      const kmSinceLast = Math.max(0, currentKm - lastKm);
 
       const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
         method: "POST",

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   AppNotification,
+  MaintenanceAlertSnapshot,
   NOTIFICATIONS_EVENT,
   PlanningSnapshot,
   VehicleCostsSnapshot,
   clearAllNotifications,
+  ensureMaintenanceNotifications,
   ensurePlanningIncompleteNotification,
   ensurePremiumWelcomeNotification,
   ensureVehicleCostsMissingNotification,
@@ -18,6 +20,7 @@ interface NotificationsContext {
   isPaidPremium?: boolean;
   planning?: PlanningSnapshot | null;
   cars?: VehicleCostsSnapshot[] | null;
+  maintenanceAlerts?: MaintenanceAlertSnapshot[] | null;
   /**
    * Só dispara notificações condicionais quando os dados do usuário
    * (settings/cars) terminaram de carregar. Evita criar notificações
@@ -47,6 +50,7 @@ export function useNotifications(
   const isPaidPremium = context?.isPaidPremium === true;
   const planning = context?.planning ?? null;
   const cars = context?.cars ?? null;
+  const maintenanceAlerts = context?.maintenanceAlerts ?? null;
   const ready = context?.ready !== false; // default true para chamadas sem contexto
 
   useEffect(() => {
@@ -57,6 +61,7 @@ export function useNotifications(
     if (ready) {
       ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
       ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+      ensureMaintenanceNotifications(userId, maintenanceAlerts);
     }
     refresh();
 
@@ -73,12 +78,13 @@ export function useNotifications(
         if (ready) {
           ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
           ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+          ensureMaintenanceNotifications(userId, maintenanceAlerts);
         }
         refresh();
       }, remaining + 500);
       return () => window.clearTimeout(t);
     }
-  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, ready, refresh]);
+  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, maintenanceAlerts, ready, refresh]);
 
   useEffect(() => {
     const onChange = () => refresh();
