@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   AppNotification,
+  MaintenanceAlertSnapshot,
   NOTIFICATIONS_EVENT,
   PlanningSnapshot,
   VehicleCostsSnapshot,
   clearAllNotifications,
+  ensureMaintenanceNotifications,
   ensurePlanningIncompleteNotification,
   ensurePremiumWelcomeNotification,
   ensureVehicleCostsMissingNotification,
