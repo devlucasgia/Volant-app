@@ -21,10 +21,14 @@ export interface NotificationCta {
   route?: string;
 }
 
+export type NotificationTone = "default" | "alert";
+
 export interface AppNotification {
   id: string;
   category: NotificationCategory;
   iconType: NotificationIcon;
+  /** Tom visual (default herda categoria; "alert" pinta tudo em vermelho). */
+  tone?: NotificationTone;
   title: string;
   /** Short text shown in the list. */
   summary: string;
@@ -340,6 +344,7 @@ export function ensureMaintenanceNotifications(
         id,
         category: "veiculo",
         iconType: "vehicle-costs",
+        tone: overdue ? "alert" : "default",
         title: overdue ? `${label} atrasada` : `${label} se aproximando`,
         summary,
         content,

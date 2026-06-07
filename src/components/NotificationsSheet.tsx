@@ -24,7 +24,7 @@ import { useData } from "@/context/DataContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import { CATEGORY_LABEL, type AppNotification, type NotificationIcon } from "@/lib/notifications";
+import { CATEGORY_LABEL, type AppNotification, type NotificationIcon, type NotificationTone } from "@/lib/notifications";
 import { VolantNotificationIcon } from "@/components/VolantNotificationIcon";
 
 /**
@@ -183,7 +183,9 @@ function NotificationList({
             </div>
           </div>
         ) : (
-          items.map((n) => (
+          items.map((n) => {
+            const isAlert = n.tone === "alert";
+            return (
             <button
               key={n.id}
               type="button"
@@ -191,19 +193,31 @@ function NotificationList({
               className={cn(
                 "group flex w-full items-start gap-3 rounded-2xl border bg-card p-3 text-left shadow-sm transition-all",
                 "hover:border-border/80 hover:bg-card/80 active:scale-[0.99]",
-                !n.readAt ? "border-success/30" : "border-border",
+                isAlert
+                  ? "border-destructive/40 bg-destructive/[0.04]"
+                  : !n.readAt
+                    ? "border-success/30"
+                    : "border-border",
               )}
             >
-              <NotificationIconBadge iconType={n.iconType} unread={!n.readAt} />
+              <NotificationIconBadge iconType={n.iconType} tone={n.tone} unread={!n.readAt} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <span className={cn(
+                    "truncate text-[11px] font-medium uppercase tracking-wide",
+                    isAlert ? "text-destructive" : "text-muted-foreground",
+                  )}>
                     {CATEGORY_LABEL[n.category]}
                   </span>
                   {!n.readAt && (
                     <span
                       aria-label="Não lida"
-                      className="inline-block h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]"
+                      className={cn(
+                        "inline-block h-1.5 w-1.5 rounded-full",
+                        isAlert
+                          ? "bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.7)]"
+                          : "bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]",
+                      )}
                     />
                   )}
                 </div>
@@ -216,7 +230,8 @@ function NotificationList({
               </div>
               <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </>
@@ -270,7 +285,7 @@ function NotificationDetail({
 
       <div className="space-y-3 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm">
-          <NotificationIconBadge iconType={n.iconType} large />
+          <NotificationIconBadge iconType={n.iconType} tone={n.tone} large />
           <p className="flex-1 whitespace-pre-line text-[13px] leading-relaxed text-muted-foreground">{n.content}</p>
         </div>
 
@@ -316,15 +331,18 @@ function NotificationDetail({
 // ---------- Icon badge ----------
 function NotificationIconBadge({
   iconType,
+  tone: notifTone,
   unread,
   large,
 }: {
   iconType: NotificationIcon;
+  tone?: NotificationTone;
   unread?: boolean;
   large?: boolean;
 }) {
   const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
   const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
+  const isAlert = notifTone === "alert";
 
   // Símbolo institucional do Volant: fundo escuro + glow verde sutil,
   // para o "V" aparecer com identidade clara em vez de se diluir no verde.
@@ -339,11 +357,13 @@ function NotificationIconBadge({
     );
   }
 
-  const tone =
-    iconType === "premium"
+  // Em modo "alert" tudo vira destructive (vermelho), independente da categoria.
+  const toneClass = isAlert
+    ? "bg-destructive/15 text-destructive"
+    : iconType === "premium"
       ? "bg-warning/15 text-warning"
       : iconType === "vehicle-costs"
-        ? "bg-primary/15 text-primary"
+        ? "bg-cyan-500/10 text-cyan-300"
         : "bg-primary/15 text-primary"; // planning
 
   const Icon = () => {
@@ -357,8 +377,9 @@ function NotificationIconBadge({
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-border/50",
         sizeBox,
-        tone,
-        unread && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        toneClass,
+        unread && !isAlert && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        isAlert && "shadow-[0_0_18px_-6px_hsl(var(--destructive)/0.55)]",
       )}
     >
       <Icon />
