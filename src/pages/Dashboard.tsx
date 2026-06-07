@@ -73,6 +73,8 @@ export default function Dashboard() {
     ready: !dataLoading,
   });
 
+
+
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
   }, [hideValues]);
@@ -463,7 +465,38 @@ export default function Dashboard() {
       </section>
     ) : null,
 
-    smartKm: widgets.smartKm && smartKmValue !== null ? (() => {
+    smartKm: widgets.smartKm ? (() => {
+      // Caso "KM planejado atingido" — plano configurado, mas remainingPlannedKm <= 0.
+      // Mantém o slot na home com um aviso acionável em vez de sumir.
+      if (plan.isPlanningConfigured && plan.remainingPlannedKm <= 0 && smartKmValue === null) {
+        return (
+          <div key="smartKm" className="flex flex-col items-center">
+            <span aria-hidden className="h-0.5 w-px bg-gradient-to-b from-amber-400/35 to-transparent" />
+            <button
+              type="button"
+              onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
+              className="group mx-auto flex w-[88%] items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-left shadow-sm transition-all hover:bg-amber-400/[0.08] active:scale-[0.99]"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-400">
+                <Gauge className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[13.5px] font-semibold leading-tight text-foreground">
+                  KM planejado atingido
+                </div>
+                <div className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
+                  Você já usou os KM previstos do mês. Ajuste sua média de KM, dias ou meta.
+                </div>
+                <div className="mt-1 text-[11px] font-medium text-amber-400">
+                  Ajustar planejamento →
+                </div>
+              </div>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
+        );
+      }
+      if (smartKmValue === null) return null;
       const showGross = showGrossView;
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
       const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
@@ -526,6 +559,7 @@ export default function Dashboard() {
         </div>
       );
     })() : null,
+
 
     byApp: widgets.byApp ? (
       <div key="byApp" className="rounded-2xl border border-border bg-card p-4">
