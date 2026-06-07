@@ -243,8 +243,8 @@ export default function Dashboard() {
   // Banner de manutenção agora vem dos intervalos cadastrados em Custos (óleo e pneus),
   // não mais do antigo settings.maintenanceIntervalKm.
   const maintAlerts = useMemo(() => {
-    if (!activeCar) return [] as Array<{ type: "oleo" | "pneus"; kmRemaining: number }>;
-    const out: Array<{ type: "oleo" | "pneus"; kmRemaining: number }> = [];
+    if (!activeCar) return [] as Array<{ type: "oleo" | "pneus"; kmRemaining: number; milestoneKm: number }>;
+    const out: Array<{ type: "oleo" | "pneus"; kmRemaining: number; milestoneKm: number }> = [];
     for (const type of ["oleo", "pneus"] as const) {
       const intervalKm = Number(
         type === "oleo" ? activeCar.oil_change_interval_km : activeCar.tires_interval_km,
@@ -263,8 +263,9 @@ export default function Dashboard() {
         }, 0);
         lastKm = realCurrentKm - kmAfter;
       }
-      const kmRemaining = (lastKm + intervalKm) - realCurrentKm;
-      if (kmRemaining <= 500) out.push({ type, kmRemaining });
+      const milestoneKm = lastKm + intervalKm;
+      const kmRemaining = milestoneKm - realCurrentKm;
+      if (kmRemaining <= 500) out.push({ type, kmRemaining, milestoneKm });
     }
     return out.sort((a, b) => a.kmRemaining - b.kmRemaining);
   }, [activeCar, entries, carInitialKm, realCurrentKm]);
