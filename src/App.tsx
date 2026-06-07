@@ -39,6 +39,9 @@ import CheckoutReturn from "./pages/CheckoutReturn";
 import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound.tsx";
 import AdminMetrics from "./pages/AdminMetrics";
+import AdminHome from "./pages/AdminHome";
+import AdminAccess from "./pages/AdminAccess";
+import AdminSubscribers from "./pages/AdminSubscribers";
 
 const queryClient = new QueryClient();
 
