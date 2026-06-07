@@ -201,17 +201,30 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
               </div>
             </div>
           ) : view === "active" ? (
+            (() => {
+              const isCanceling =
+                subscription?.status === "canceled" ||
+                subscription?.cancel_at_period_end === true;
+              return (
             <div className="mt-6 space-y-3">
               <div className="rounded-2xl border border-border bg-card p-4 text-sm space-y-2">
                 <div className="font-medium">
                   {isYearly ? "Plano Anual" : "Plano Mensal"}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Status: {STATUS_LABEL[subscription?.status ?? ""] ?? subscription?.status}
-                  {subscription?.cancel_at_period_end ? " · cancelamento agendado" : ""}
+                  Status: {isCanceling
+                    ? (nextBilling ? `será encerrado em ${nextBilling}` : "cancelada")
+                    : (STATUS_LABEL[subscription?.status ?? ""] ?? subscription?.status)}
                 </div>
                 {nextBilling && (
-                  <div className="text-xs text-muted-foreground">Próxima cobrança: {nextBilling}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {isCanceling ? "Acesso até" : "Próxima cobrança"}: {nextBilling}
+                  </div>
+                )}
+                {isCanceling && (
+                  <div className="text-xs text-muted-foreground">
+                    Seu plano foi cancelado. Você mantém acesso Premium até o fim do período pago.
+                  </div>
                 )}
               </div>
 
