@@ -70,8 +70,10 @@ export default function Dashboard() {
     isPaidPremium,
     planning: planningSnapshot,
     cars: cars as any,
+    maintenanceAlerts: maintAlertsForNotif,
     ready: !dataLoading,
   });
+
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
