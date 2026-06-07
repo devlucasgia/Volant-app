@@ -22,6 +22,17 @@ Deno.serve(async (req) => {
   const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
 
+  // Body opcional: { user_id } restringe a varredura a um único usuário.
+  // Permite disparo on-demand (UI dispara ao salvar earning / ajustar KM / registrar manutenção)
+  // sem precisar esperar o cron diário.
+  let targetUserId: string | null = null;
+  try {
+    const body = await req.json();
+    if (body && typeof body.user_id === "string") targetUserId = body.user_id;
+  } catch { /* sem body — varredura global */ }
+
+  // Autorização: cron usa service role; cliente autenticado pode disparar
+  // apenas para o próprio user_id (validado pelo JWT do Supabase).
   const authHeader = req.headers.get("Authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   let authorized = !!token && token === SERVICE_ROLE;
@@ -29,22 +40,30 @@ Deno.serve(async (req) => {
     const { data: shared } = await admin.rpc("get_notify_shared_secret");
     if (typeof shared === "string" && shared.length > 0 && token === shared) authorized = true;
   }
+  if (!authorized && targetUserId) {
+    // Tenta validar token de usuário autenticado e exigir que user_id bata.
+    const { data: userData } = await admin.auth.getUser(token);
+    if (userData?.user?.id && userData.user.id === targetUserId) authorized = true;
+  }
   if (!authorized) {
     return new Response(JSON.stringify({ error: "forbidden" }), {
       status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const { data: cars, error: carsErr } = await admin
+  let carsQuery = admin
     .from("cars")
     .select("id, user_id, brand, model, initial_km, km_adjustment, oil_change_interval_km, tires_interval_km, is_active")
     .eq("is_active", true);
+  if (targetUserId) carsQuery = carsQuery.eq("user_id", targetUserId);
+  const { data: cars, error: carsErr } = await carsQuery;
   if (carsErr) {
     console.error("[maint] cars query failed", carsErr);
     return new Response(JSON.stringify({ error: "cars_query_failed" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 
   let alertsEnqueued = 0;
   for (const car of cars || []) {
