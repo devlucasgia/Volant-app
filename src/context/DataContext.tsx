@@ -147,6 +147,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await loadCars(user.id);
   }, [user, loadCars]);
 
+  const updateCarKmAdjustment = useCallback(async (carId: string, adjustment: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("cars")
+      .update({ km_adjustment: adjustment } as any)
+      .eq("id", carId);
+    if (error) throw error;
+    await loadCars(user.id);
+  }, [user, loadCars]);
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", settings.theme === "dark");
     // Persist for the inline pre-paint script in index.html so the next
