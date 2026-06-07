@@ -174,10 +174,25 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         }));
       }
       await Promise.all(tasks);
-      toast.success(
-        hasEarning && hasExpense ? "Ganho e gasto registrados!" :
-        hasEarning ? "Ganho registrado!" : "Gasto registrado!"
-      );
+      const wasMaintOilOrTires =
+        hasExpense && category === "manutencao" && (maintenanceType === "oleo" || maintenanceType === "pneus");
+      if (wasMaintOilOrTires) {
+        toast.success("Gasto registrado!", {
+          description: "Quer atualizar o KM da última troca para o acompanhamento?",
+          action: {
+            label: "Atualizar",
+            onClick: () => {
+              window.location.assign(`/ajustes/veiculos/manutencao#${maintenanceType}`);
+            },
+          },
+          duration: 6000,
+        });
+      } else {
+        toast.success(
+          hasEarning && hasExpense ? "Ganho e gasto registrados!" :
+          hasEarning ? "Ganho registrado!" : "Gasto registrado!"
+        );
+      }
       const cb = preset?.onAfterSave;
       const wasMaint = hasExpense && category === "manutencao";
       reset();
