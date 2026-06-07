@@ -249,6 +249,8 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
                 {portalLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerenciar assinatura"}
               </Button>
             </div>
+              );
+            })()
           ) : view === "trial_internal" ? (
             <div className="mt-6 space-y-3">
               {/* Bloco 1 — Status do acesso */}
