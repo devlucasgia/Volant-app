@@ -21,10 +21,14 @@ export interface NotificationCta {
   route?: string;
 }
 
+export type NotificationTone = "default" | "alert";
+
 export interface AppNotification {
   id: string;
   category: NotificationCategory;
   iconType: NotificationIcon;
+  /** Tom visual (default herda categoria; "alert" pinta tudo em vermelho). */
+  tone?: NotificationTone;
   title: string;
   /** Short text shown in the list. */
   summary: string;
