@@ -849,26 +849,28 @@ export default function Dashboard() {
         </div>
 
         {/* Maintenance alert (conditional, fixed position, not in personalization) */}
-        {showMaintAlert && (
+        {showMaintAlert && primaryMaint && (
           <button
             type="button"
-            onClick={() => openDrawer({ tab: "expense", category: "manutencao" })}
+            onClick={() => navigate("/ajustes/veiculos/manutencao")}
             className={cn(
               "mt-4 flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
-              kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
+              kmToNext < 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
             )}
           >
-            <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext <= 0 ? "text-destructive" : "text-warning")} />
+            <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext < 0 ? "text-destructive" : "text-warning")} />
             <div className="text-sm flex-1">
               <div className="font-semibold">
-                {kmToNext <= 0 ? "Manutenção atrasada!" : "Manutenção próxima"}
+                {kmToNext < 0
+                  ? `${primaryMaint.type === "oleo" ? "Troca de óleo" : "Troca de pneus"} atrasada!`
+                  : `${primaryMaint.type === "oleo" ? "Troca de óleo" : "Troca de pneus"} próxima`}
               </div>
               <div className="text-muted-foreground">
-                {kmToNext <= 0
+                {kmToNext < 0
                   ? `Você ultrapassou em ${num(Math.abs(kmToNext), 0)} km`
-                  : `Faltam ${num(kmToNext, 0)} km para a próxima revisão`}
+                  : `Faltam ${num(kmToNext, 0)} km para a próxima troca`}
               </div>
-              <div className="mt-1 text-[11px] font-medium text-primary">Registrar manutenção →</div>
+              <div className="mt-1 text-[11px] font-medium text-primary">Ver manutenção →</div>
             </div>
           </button>
         )}
