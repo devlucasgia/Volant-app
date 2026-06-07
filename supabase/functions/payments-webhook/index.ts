@@ -135,6 +135,17 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
   const item = subscription.items?.data?.[0];
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
+  const periodEndIso = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+  const nextCancel = !!subscription.cancel_at_period_end;
+
+  // Read previous state to detect transitions (e.g., schedule-to-cancel).
+  const { data: prev } = await getSupabase()
+    .from("subscriptions")
+    .select("cancel_at_period_end, user_id")
+    .eq("stripe_subscription_id", subscription.id)
+    .eq("environment", env)
+    .maybeSingle();
+  const prevCancel = !!(prev as any)?.cancel_at_period_end;
 
   await getSupabase()
     .from("subscriptions")
@@ -143,12 +154,32 @@ async function handleSubscriptionUpdated(subscription: any, env: StripeEnv) {
       product_id: item?.price?.product,
       price_id: resolvePriceId(item),
       current_period_start: periodStart ? new Date(periodStart * 1000).toISOString() : null,
-      current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
-      cancel_at_period_end: subscription.cancel_at_period_end || false,
+      current_period_end: periodEndIso,
+      cancel_at_period_end: nextCancel,
       updated_at: new Date().toISOString(),
     })
     .eq("stripe_subscription_id", subscription.id)
     .eq("environment", env);
+
+  // Notify support when the user schedules a cancellation in the portal.
+  // The deletion event only fires at the end of the billing period — without
+  // this we'd never hear about portal cancellations until then.
+  if (nextCancel && !prevCancel) {
+    const userId = (prev as any)?.user_id || subscription.metadata?.userId;
+    const email = await resolveUserEmail(userId, subscription.customer_email);
+    await notifyInternal(
+      "subscription-canceled",
+      `sub-cancel-scheduled-${subscription.id}`,
+      {
+        email,
+        userId: userId || "—",
+        subscriptionId: subscription.id,
+        environment: env,
+        cancelAtPeriodEnd: "true",
+        periodEnd: periodEndIso || "—",
+      },
+    );
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {
