@@ -50,6 +50,7 @@ export function useNotifications(
   const isPaidPremium = context?.isPaidPremium === true;
   const planning = context?.planning ?? null;
   const cars = context?.cars ?? null;
+  const maintenanceAlerts = context?.maintenanceAlerts ?? null;
   const ready = context?.ready !== false; // default true para chamadas sem contexto
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export function useNotifications(
     if (ready) {
       ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
       ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+      ensureMaintenanceNotifications(userId, maintenanceAlerts);
     }
     refresh();
 
@@ -76,12 +78,13 @@ export function useNotifications(
         if (ready) {
           ensurePlanningIncompleteNotification(userId, accountCreatedAt, planning);
           ensureVehicleCostsMissingNotification(userId, accountCreatedAt, cars);
+          ensureMaintenanceNotifications(userId, maintenanceAlerts);
         }
         refresh();
       }, remaining + 500);
       return () => window.clearTimeout(t);
     }
-  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, ready, refresh]);
+  }, [userId, accountCreatedAt, isPaidPremium, planning, cars, maintenanceAlerts, ready, refresh]);
 
   useEffect(() => {
     const onChange = () => refresh();
