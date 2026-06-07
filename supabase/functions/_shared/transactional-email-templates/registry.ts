@@ -18,6 +18,9 @@ import { template as subscriptionReceipt } from './subscription-receipt.tsx'
 import { template as paymentFailed } from './payment-failed.tsx'
 import { template as weeklySummary } from './weekly-summary.tsx'
 import { template as maintenanceAlert } from './maintenance-alert.tsx'
+import { template as trialWelcome } from './trial-welcome.tsx'
+import { template as trialEndingSoon } from './trial-ending-soon.tsx'
+import { template as trialEnded } from './trial-ended.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'new-user-signup': newUserSignup,
@@ -29,4 +32,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-failed': paymentFailed,
   'weekly-summary': weeklySummary,
   'maintenance-alert': maintenanceAlert,
+  'trial-welcome': trialWelcome,
+  'trial-ending-soon': trialEndingSoon,
+  'trial-ended': trialEnded,
 }

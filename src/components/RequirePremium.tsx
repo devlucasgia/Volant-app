@@ -2,31 +2,30 @@ import { useAuth } from "@/context/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { AccessProvider } from "@/context/AccessContext";
 import { SplashScreen } from "./SplashScreen";
+import { Paywall } from "./Paywall";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Wraps the app in an access mode (full vs. limited) based on subscription state.
+ * Wraps the app in an access mode based on subscription state.
  *
- * Behavior:
- * - Full access: subscription is active / trialing / past_due (within period),
- *   canceled with future period_end, or the profile is beta_grandfathered.
- * - Limited access: any other case, INCLUDING load errors or unknown states.
- *   Limited users can navigate the app and complete onboarding, but
- *   operational actions are gated — components call `requirePremium()` from
- *   `useAccess()` which opens the Paywall modal.
- *
- * Why no more "sticky onboarding" fallback: the previous version returned
- * `children` unconditionally while onboarding was incomplete, which let
- * non-subscribed accounts keep using the app indefinitely if a flag was
- * never flipped. Access is now decided solely by `useSubscription` and
- * always defaults to limited (fail-closed) when uncertain.
+ * - Full access (isActive): paid sub OR ongoing 7-day internal trial → renders children.
+ * - Trial expired (internalTrialExpired && !isPaidPremium): renders a hard
+ *   full-screen Paywall — the user can only assinar ou sair.
+ * - Other "limited" states (loading errors, never granted): fall back to
+ *   AccessProvider with limited mode so onboarding can still complete.
  */
 export function RequirePremium({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { loading, isActive } = useSubscription(user?.id);
+  const sub = useSubscription(user?.id);
 
   if (!user) return <>{children}</>;
+  if (sub.loading) return <SplashScreen />;
 
-  if (loading) return <SplashScreen />;
+  // Hard block: trial acabou e não há assinatura → paywall cheia.
+  if (sub.internalTrialExpired && !sub.isPaidPremium) {
+    return <Paywall onSignOut={() => supabase.auth.signOut()} />;
+  }
 
-  return <AccessProvider isFull={isActive}>{children}</AccessProvider>;
+  return <AccessProvider isFull={sub.isActive}>{children}</AccessProvider>;
 }
+
