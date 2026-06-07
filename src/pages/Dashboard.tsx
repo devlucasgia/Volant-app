@@ -274,6 +274,11 @@ export default function Dashboard() {
   const primaryMaint = maintAlerts[0];
   const kmToNext = primaryMaint?.kmRemaining ?? 0;
 
+  useEffect(() => {
+    if (!user?.id || dataLoading) return;
+    ensureMaintenanceNotifications(user.id, maintAlerts);
+  }, [user?.id, dataLoading, maintAlerts]);
+
   const activeApps = Object.keys(apps)
     .filter((k) => apps[k] > 0)
     .sort((a, b) => apps[b] - apps[a]);
