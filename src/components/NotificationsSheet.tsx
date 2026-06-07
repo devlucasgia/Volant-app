@@ -331,15 +331,18 @@ function NotificationDetail({
 // ---------- Icon badge ----------
 function NotificationIconBadge({
   iconType,
+  tone: notifTone,
   unread,
   large,
 }: {
   iconType: NotificationIcon;
+  tone?: NotificationTone;
   unread?: boolean;
   large?: boolean;
 }) {
   const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
   const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
+  const isAlert = notifTone === "alert";
 
   // Símbolo institucional do Volant: fundo escuro + glow verde sutil,
   // para o "V" aparecer com identidade clara em vez de se diluir no verde.
@@ -354,11 +357,13 @@ function NotificationIconBadge({
     );
   }
 
-  const tone =
-    iconType === "premium"
+  // Em modo "alert" tudo vira destructive (vermelho), independente da categoria.
+  const toneClass = isAlert
+    ? "bg-destructive/15 text-destructive"
+    : iconType === "premium"
       ? "bg-warning/15 text-warning"
       : iconType === "vehicle-costs"
-        ? "bg-primary/15 text-primary"
+        ? "bg-cyan-500/10 text-cyan-300"
         : "bg-primary/15 text-primary"; // planning
 
   const Icon = () => {
@@ -372,8 +377,9 @@ function NotificationIconBadge({
       className={cn(
         "relative inline-flex shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-border/50",
         sizeBox,
-        tone,
-        unread && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        toneClass,
+        unread && !isAlert && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        isAlert && "shadow-[0_0_18px_-6px_hsl(var(--destructive)/0.55)]",
       )}
     >
       <Icon />
