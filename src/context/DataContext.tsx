@@ -383,11 +383,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
-      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor,
       earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory }),
-    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory]
   );
