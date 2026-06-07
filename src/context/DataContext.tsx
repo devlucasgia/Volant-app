@@ -237,15 +237,23 @@ export function DataProvider({ children }: { children: ReactNode }) {
     return () => { active = false; };
   }, [user, loadCars, loadCategories]);
 
+  const shouldTriggerMaintFor = (e: Entry) => {
+    if (e.type === "earning") return Number((e as any).km || 0) > 0;
+    if (e.type === "expense" && (e as any).expense?.category === "manutencao") return true;
+    return false;
+  };
+
   const addEntry = useCallback(async (e: Entry) => {
     if (!user) return;
     setEntries((prev) => [e, ...prev]);
     const { error } = await supabase.from("entries").insert(entryToRow(e, user.id) as any);
     if (error) { setEntries((prev) => prev.filter((x) => x.id !== e.id)); throw error; }
-  }, [user]);
+    if (shouldTriggerMaintFor(e)) triggerMaintenanceCheck(user.id);
+  }, [user, triggerMaintenanceCheck]);
 
   const removeEntry = useCallback(async (id: string) => {
     const snapshot = entries;
+    const removed = entries.find((x) => x.id === id);
     setEntries((prev) => prev.filter((x) => x.id !== id));
     const { error } = await supabase.from("entries").delete().eq("id", id);
     if (error) {
@@ -253,7 +261,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setEntries(snapshot);
       throw error;
     }
-  }, [entries]);
+    if (removed && shouldTriggerMaintFor(removed)) triggerMaintenanceCheck(user?.id);
+  }, [entries, user, triggerMaintenanceCheck]);
 
   const updateEntry = useCallback(async (e: Entry) => {
     if (!user) return;
@@ -263,7 +272,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     delete row.user_id;
     const { error } = await supabase.from("entries").update(row).eq("id", e.id);
     if (error) throw error;
-  }, [user]);
+    if (shouldTriggerMaintFor(e)) triggerMaintenanceCheck(user.id);
+  }, [user, triggerMaintenanceCheck]);
+
 
   const updateSettings = useCallback(async (patch: Partial<Settings>) => {
     if (!user) return;
