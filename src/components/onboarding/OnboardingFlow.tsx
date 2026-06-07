@@ -200,32 +200,31 @@ export function OnboardingFlow() {
 
             {/* Footer CTA — always visible, respects iOS safe area. Suprimido no passo de instalação (tem CTA próprio). */}
             {!isInstallStep && (
-
-
-            {/* Footer CTA — always visible, respects iOS safe area */}
-            <div
-              className="shrink-0 pt-3"
-              style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
-            >
-              {isLast ? (
-                <Button
-                  onClick={finish}
-                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
-                >
-                  Bora rodar e lucrar
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={next}
-                  className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
-                >
-                  {isFirst ? "Começar" : "Continuar"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              )}
-            </div>
+              <div
+                className="shrink-0 pt-3"
+                style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+              >
+                {isLast ? (
+                  <Button
+                    onClick={finish}
+                    className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  >
+                    Bora rodar e lucrar
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={next}
+                    className="h-14 w-full gradient-success text-base font-semibold text-primary-foreground shadow-fab"
+                  >
+                    {isFirst ? "Começar" : "Continuar"}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
+
         </motion.div>
       )}
     </AnimatePresence>
