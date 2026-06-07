@@ -379,6 +379,7 @@ export type Database = {
           goal_onboarded: boolean
           greeting_message: string | null
           id: string
+          install_prompt_seen: boolean
           nickname: string | null
           onboarded: boolean
           planning_onboarded: boolean
@@ -401,6 +402,7 @@ export type Database = {
           goal_onboarded?: boolean
           greeting_message?: string | null
           id: string
+          install_prompt_seen?: boolean
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
@@ -423,6 +425,7 @@ export type Database = {
           goal_onboarded?: boolean
           greeting_message?: string | null
           id?: string
+          install_prompt_seen?: boolean
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
@@ -517,6 +520,27 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      trial_email_log: {
+        Row: {
+          id: string
+          sent_at: string
+          stage: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          sent_at?: string
+          stage: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          sent_at?: string
+          stage?: string
+          user_id?: string
         }
         Relationships: []
       }
