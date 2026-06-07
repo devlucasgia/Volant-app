@@ -12,18 +12,31 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { isStandalone, detectPlatform } from "@/lib/pwaInstall";
+import { OnboardingInstallStep } from "./OnboardingInstallStep";
 import volantLogoSplash from "@/assets/volant-logo-splash.webp";
 
 export const ONBOARDING_OPEN_EVENT = "volant:open-onboarding";
 
-type StepKey = "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "planejamento" | "final";
+type StepKey = "instalar" | "welcome" | "registro" | "jornada" | "relatorios" | "customizacao" | "planejamento" | "final";
 
-const STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "planejamento", "final"];
+const BASE_STEPS: StepKey[] = ["welcome", "registro", "jornada", "relatorios", "customizacao", "planejamento", "final"];
+
+/** Decide se o passo "instalar" deve ser incluído pra este usuário/sessão. */
+function shouldShowInstallStep(installPromptSeen: boolean): boolean {
+  if (installPromptSeen) return false;
+  if (typeof window === "undefined") return false;
+  if (isStandalone()) return false;
+  const p = detectPlatform();
+  // Desktop / não-suportado: sem valor mostrar o passo.
+  return p === "android-chrome" || p === "ios-safari" || p === "ios-other";
+}
 
 export function OnboardingFlow() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [stepIdx, setStepIdx] = useState(0);
+  const [steps, setSteps] = useState<StepKey[]>(BASE_STEPS);
   const checked = useRef(false);
 
   // Initial check from DB (only once after auth)
@@ -32,11 +45,16 @@ export function OnboardingFlow() {
     checked.current = true;
     supabase
       .from("profiles")
-      .select("onboarded")
+      .select("onboarded, install_prompt_seen")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data && (data as any).onboarded === false) {
+          const seen = Boolean((data as any).install_prompt_seen);
+          const withInstall: StepKey[] = shouldShowInstallStep(seen)
+            ? ["instalar", ...BASE_STEPS]
+            : BASE_STEPS;
+          setSteps(withInstall);
           setStepIdx(0);
           setOpen(true);
         }
@@ -45,7 +63,12 @@ export function OnboardingFlow() {
 
   // Manual reopen via Settings
   useEffect(() => {
-    const handler = () => { setStepIdx(0); setOpen(true); };
+    const handler = () => {
+      // Reopen sem o passo de instalação (já viu / não relevante)
+      setSteps(BASE_STEPS);
+      setStepIdx(0);
+      setOpen(true);
+    };
     window.addEventListener(ONBOARDING_OPEN_EVENT, handler);
     return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handler);
   }, []);
@@ -53,17 +76,38 @@ export function OnboardingFlow() {
   const finish = async () => {
     setOpen(false);
     if (user) {
-      await supabase.from("profiles").upsert({ id: user.id, onboarded: true } as any);
+      await supabase.from("profiles").upsert({
+        id: user.id,
+        onboarded: true,
+        install_prompt_seen: true,
+      } as any);
     }
     // Notify other dialogs (e.g. car onboarding) that the tour is done
     window.dispatchEvent(new CustomEvent("volant:onboarding-finished"));
   };
 
-  const step = STEPS[stepIdx];
+  /** Marca o passo de instalação como visto (sem fechar o onboarding). */
+  const markInstallSeen = async () => {
+    if (user) {
+      await supabase.from("profiles").upsert({
+        id: user.id,
+        install_prompt_seen: true,
+      } as any);
+    }
+  };
+
+  const step = steps[stepIdx];
   const isFirst = stepIdx === 0;
-  const isLast = stepIdx === STEPS.length - 1;
-  const next = () => setStepIdx((i) => Math.min(STEPS.length - 1, i + 1));
+  const isLast = stepIdx === steps.length - 1;
+  const isInstallStep = step === "instalar";
+  const next = () => setStepIdx((i) => Math.min(steps.length - 1, i + 1));
   const prev = () => setStepIdx((i) => Math.max(0, i - 1));
+
+  const handleInstallDone = async () => {
+    await markInstallSeen();
+    next();
+  };
+
 
   return (
     <AnimatePresence>
