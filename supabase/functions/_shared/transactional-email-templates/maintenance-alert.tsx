@@ -54,7 +54,7 @@ const MaintenanceAlertEmail = ({
   kmSinceLast = '0',
   kmRemaining = '0',
   kmOverdue = '0',
-  appUrl = 'https://usevolant.app/app/ajustes/veiculos/manutencao',
+  appUrl = 'https://usevolant.app/ajustes/veiculos/manutencao',
 }: Props) => {
   const isOverdue = status === 'overdue'
   const palette = isOverdue ? PALETTES.overdue : PALETTES.approaching
@@ -120,7 +120,7 @@ export const template = {
     name: 'João', carLabel: 'seu Onix Plus',
     alertType: 'oleo', status: 'approaching',
     intervalKm: '10.000', kmSinceLast: '9.500', kmRemaining: '500', kmOverdue: '0',
-    appUrl: 'https://usevolant.app/app/ajustes/veiculos/manutencao',
+    appUrl: 'https://usevolant.app/ajustes/veiculos/manutencao',
   },
 } satisfies TemplateEntry
 

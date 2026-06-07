@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
             kmSinceLast: Math.round(kmSinceLast).toLocaleString("pt-BR"),
             kmRemaining: Math.max(0, Math.round(kmRemaining)).toLocaleString("pt-BR"),
             kmOverdue: Math.max(0, Math.round(-kmRemaining)).toLocaleString("pt-BR"),
-            appUrl: "https://usevolant.app/app/ajustes/veiculos/manutencao",
+            appUrl: "https://usevolant.app/ajustes/veiculos/manutencao",
           },
         }),
       });
