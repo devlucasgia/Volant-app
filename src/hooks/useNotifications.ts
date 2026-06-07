@@ -20,6 +20,7 @@ interface NotificationsContext {
   isPaidPremium?: boolean;
   planning?: PlanningSnapshot | null;
   cars?: VehicleCostsSnapshot[] | null;
+  maintenanceAlerts?: MaintenanceAlertSnapshot[] | null;
   /**
    * Só dispara notificações condicionais quando os dados do usuário
    * (settings/cars) terminaram de carregar. Evita criar notificações
