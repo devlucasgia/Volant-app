@@ -145,7 +145,7 @@ export function OnboardingFlow() {
 
             {/* Progress dots — only during tour steps */}
             <div className="flex items-center gap-1.5">
-              {STEPS.map((_, i) => (
+              {steps.map((_, i) => (
                 <span
                   key={i}
                   className={cn(
