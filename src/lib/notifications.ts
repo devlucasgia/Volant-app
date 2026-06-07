@@ -21,7 +21,7 @@ export interface NotificationCta {
   route?: string;
 }
 
-export type NotificationTone = "default" | "alert";
+export type NotificationTone = "default" | "warning" | "alert";
 
 export interface AppNotification {
   id: string;
