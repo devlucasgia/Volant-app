@@ -183,7 +183,9 @@ function NotificationList({
             </div>
           </div>
         ) : (
-          items.map((n) => (
+          items.map((n) => {
+            const isAlert = n.tone === "alert";
+            return (
             <button
               key={n.id}
               type="button"
@@ -191,19 +193,31 @@ function NotificationList({
               className={cn(
                 "group flex w-full items-start gap-3 rounded-2xl border bg-card p-3 text-left shadow-sm transition-all",
                 "hover:border-border/80 hover:bg-card/80 active:scale-[0.99]",
-                !n.readAt ? "border-success/30" : "border-border",
+                isAlert
+                  ? "border-destructive/40 bg-destructive/[0.04]"
+                  : !n.readAt
+                    ? "border-success/30"
+                    : "border-border",
               )}
             >
-              <NotificationIconBadge iconType={n.iconType} unread={!n.readAt} />
+              <NotificationIconBadge iconType={n.iconType} tone={n.tone} unread={!n.readAt} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <span className={cn(
+                    "truncate text-[11px] font-medium uppercase tracking-wide",
+                    isAlert ? "text-destructive" : "text-muted-foreground",
+                  )}>
                     {CATEGORY_LABEL[n.category]}
                   </span>
                   {!n.readAt && (
                     <span
                       aria-label="Não lida"
-                      className="inline-block h-1.5 w-1.5 rounded-full bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]"
+                      className={cn(
+                        "inline-block h-1.5 w-1.5 rounded-full",
+                        isAlert
+                          ? "bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.7)]"
+                          : "bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]",
+                      )}
                     />
                   )}
                 </div>
@@ -216,7 +230,8 @@ function NotificationList({
               </div>
               <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5" />
             </button>
-          ))
+            );
+          })
         )}
       </div>
     </>
