@@ -77,13 +77,13 @@ export function useSubscription(userId: string | null | undefined): Subscription
       setProfile(profData);
       setSubscription(subData);
 
-      // Grant internal 7-day access on FIRST live access, when no paid access exists.
-      // Why "live only": preview/dev would otherwise burn the user's free week
-      // before the new logic is even published.
+      // Grant internal 7-day access on first access when no paid access exists.
+      // Fallback de retrocompat: o gatilho no banco já concede no INSERT do
+      // profile, mas mantemos esse caminho para perfis antigos criados antes
+      // do gatilho. Roda em qualquer env — `trial_access_granted` impede regrant.
       const isGrandfathered = Boolean(profData?.beta_grandfathered);
       const subHasAccess = isPaidSubActive(subData);
       const shouldGrant =
-        env === "live" &&
         profData &&
         !profData.trial_access_granted &&
         !isGrandfathered &&
