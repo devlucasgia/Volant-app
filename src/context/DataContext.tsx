@@ -27,6 +27,7 @@ interface DataCtx {
   refreshProfile: () => Promise<void>;
   refreshCars: () => Promise<void>;
   setActiveCar: (id: string) => Promise<void>;
+  updateCarKmAdjustment: (carId: string, adjustment: number) => Promise<void>;
 
   // categories (expenses)
   earningCategories: CustomCategory[];
