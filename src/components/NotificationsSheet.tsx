@@ -185,6 +185,7 @@ function NotificationList({
         ) : (
           items.map((n) => {
             const isAlert = n.tone === "alert";
+            const isWarning = n.tone === "warning";
             return (
             <button
               key={n.id}
@@ -195,9 +196,11 @@ function NotificationList({
                 "hover:border-border/80 hover:bg-card/80 active:scale-[0.99]",
                 isAlert
                   ? "border-destructive/40 bg-destructive/[0.04]"
-                  : !n.readAt
-                    ? "border-success/30"
-                    : "border-border",
+                  : isWarning
+                    ? "border-warning/40 bg-warning/[0.04]"
+                    : !n.readAt
+                      ? "border-success/30"
+                      : "border-border",
               )}
             >
               <NotificationIconBadge iconType={n.iconType} tone={n.tone} unread={!n.readAt} />
@@ -205,7 +208,7 @@ function NotificationList({
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "truncate text-[11px] font-medium uppercase tracking-wide",
-                    isAlert ? "text-destructive" : "text-muted-foreground",
+                    isAlert ? "text-destructive" : isWarning ? "text-warning" : "text-muted-foreground",
                   )}>
                     {CATEGORY_LABEL[n.category]}
                   </span>
@@ -216,7 +219,9 @@ function NotificationList({
                         "inline-block h-1.5 w-1.5 rounded-full",
                         isAlert
                           ? "bg-destructive shadow-[0_0_6px_hsl(var(--destructive)/0.7)]"
-                          : "bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]",
+                          : isWarning
+                            ? "bg-warning shadow-[0_0_6px_hsl(var(--warning)/0.7)]"
+                            : "bg-success shadow-[0_0_6px_hsl(var(--success)/0.7)]",
                       )}
                     />
                   )}
@@ -343,6 +348,7 @@ function NotificationIconBadge({
   const sizeBox = large ? "h-10 w-10" : "h-9 w-9";
   const sizeIcon = large ? "h-5 w-5" : "h-4 w-4";
   const isAlert = notifTone === "alert";
+  const isWarning = notifTone === "warning";
 
   // Símbolo institucional do Volant: fundo escuro + glow verde sutil,
   // para o "V" aparecer com identidade clara em vez de se diluir no verde.
@@ -357,14 +363,17 @@ function NotificationIconBadge({
     );
   }
 
-  // Em modo "alert" tudo vira destructive (vermelho), independente da categoria.
+  // Tom "alert" → vermelho (destructive); "warning" → laranja (warning);
+  // caso contrário usa a cor da categoria.
   const toneClass = isAlert
     ? "bg-destructive/15 text-destructive"
-    : iconType === "premium"
+    : isWarning
       ? "bg-warning/15 text-warning"
-      : iconType === "vehicle-costs"
-        ? "bg-cyan-500/10 text-cyan-300"
-        : "bg-primary/15 text-primary"; // planning
+      : iconType === "premium"
+        ? "bg-warning/15 text-warning"
+        : iconType === "vehicle-costs"
+          ? "bg-cyan-500/10 text-cyan-300"
+          : "bg-primary/15 text-primary"; // planning
 
   const Icon = () => {
     if (iconType === "premium") return <Crown className={sizeIcon} />;
@@ -378,7 +387,8 @@ function NotificationIconBadge({
         "relative inline-flex shrink-0 items-center justify-center rounded-xl ring-1 ring-inset ring-border/50",
         sizeBox,
         toneClass,
-        unread && !isAlert && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        unread && !isAlert && !isWarning && "shadow-[0_0_18px_-6px_hsl(var(--success)/0.4)]",
+        isWarning && "shadow-[0_0_18px_-6px_hsl(var(--warning)/0.55)]",
         isAlert && "shadow-[0_0_18px_-6px_hsl(var(--destructive)/0.55)]",
       )}
     >

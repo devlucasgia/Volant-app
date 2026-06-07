@@ -1,85 +1,64 @@
-# Manutenção em tempo real + KM planejado atingido na home
+# Unificar alertas de manutenção (Home + Central + E-mail)
 
-## Diagnóstico
+## Padrão único de tom
 
-### 1. E-mail de manutenção não chega "na hora"
+| Estado | Cor | Significado |
+|---|---|---|
+| Próxima / se aproximando | **Laranja** (token `warning` / amber) | Atenção, programar |
+| Atrasada | **Vermelho** (token `destructive`) | Urgente |
 
-O cron `volant-daily-maintenance-check` roda **1× por dia, às 10:00 UTC (07:00 BRT)**. Confirmei no log:
+Hoje a Home já segue esse padrão. A Central pinta "se aproximando" em ciano (cor da categoria Veículo) e o e-mail usa laranja fixo para os dois estados. Vou alinhar Central e E-mail à Home.
 
-- Hoje às 10:00 UTC, foram enfileirados e enviados com sucesso **2 e-mails de manutenção para `lucassgprofissional@gmail.com`** (óleo milestone 70.000 e pneus 100.000) — status `sent` em `email_send_log`.
-- O teste de "atrasado" da sprint anterior gerou o e-mail, **mas só caiu na caixa de manhã** (provavelmente foi parar em promoções/spam). Não é bug, é só o ciclo diário.
-- O teste novo de "próximo" (8.500 km às 11:13 BRT) **não dispara e-mail até amanhã 07:00 BRT**, porque o gatilho é só o cron diário.
+## 1. Central de Notificações
 
-→ Precisamos de gatilho **on-demand**, além do cron, sempre que o KM do carro muda.
+**`src/lib/notifications.ts`**
+- Estender `NotificationTone` para `"default" | "warning" | "alert"`.
+- Em `ensureMaintenanceNotifications`: `tone = overdue ? "alert" : "warning"` (hoje vai pra `"default"` quando próximo).
 
-### 2. Notificação na central não apareceu no teste "próximo"
+**`src/components/NotificationsSheet.tsx`** (`NotificationIconBadge` + card)
+- Novo ramo `tone === "warning"`:
+  - badge do ícone: `bg-warning/15 text-warning` + glow âmbar suave
+  - rótulo da categoria (`VEÍCULO`): `text-warning`
+  - borda do card: `border-warning/40 bg-warning/[0.04]`
+  - bolinha de não-lido: `bg-warning`
+- Mantém `alert` (vermelho) e `default` (ciano para Veículo, etc.) como hoje.
 
-A central usa `ensureMaintenanceNotifications` (localStorage). Ela é chamada do `Dashboard` quando há alerta. ID é `maintenance_<tipo>_<milestoneKm>`.
+Resultado: na Central, "Troca de óleo se aproximando" fica laranja igual à Home, "atrasada" continua vermelha.
 
-Causa provável: o `Dashboard` chama o ensure dentro de um `useEffect` cuja dep é `maintAlerts` — mas o `useNotifications` (que monta a lista da central) **não recebe `maintenanceAlerts` no contexto**, então só refaz a leitura via evento `storage`/custom. Em alguns casos o `write` dispara antes do sheet montar e o estado fica fora de sincronia em navegação rápida. Vou simplificar: o `Dashboard` passa `maintenanceAlerts` para `useNotifications`, igual ao `planning` e `cars`, fechando o caminho do hook.
+## 2. E-mail (`maintenance-alert.tsx`)
 
-### 3. Card "KM Inteligente" some quando KM planejado é atingido
+- Aceitar prop `status: "approaching" | "overdue"` (default `approaching`) vinda do `check-maintenance-alerts`.
+- Paleta dinâmica:
+  - **approaching** → laranja (mantém atual: `#ea580c`, fundo `#fff7ed`, borda `#fed7aa`, texto `#7c2d12`)
+  - **overdue** → vermelho (`#dc2626`, fundo `#fef2f2`, borda `#fecaca`, texto `#7f1d1d`)
+- Heading/preview/copy refletindo o estado:
+  - approaching: "Troca de óleo se aproximando 🔧" — "faltam X km…"
+  - overdue: "Troca de óleo atrasada ⚠️" — "você já passou em X km do intervalo…"
+- CTA continua "Ver minhas manutenções".
 
-No `planningEngine.ts`, quando `remainingPlannedKm <= 0`, `homeSmartRpkGross/Net` retornam 0 → `smartKmValue = null` no `Dashboard` → bloco "smartKm" deixa de renderizar.
-A página Planejamento mostra o aviso laranja "Você já usou os KM planejados…", mas a home some com a informação.
+**`supabase/functions/check-maintenance-alerts/index.ts`**
+- Já calcula `isOverdue`; passar `status` no `templateData` e ajustar texto enviado (km restantes vs. km ultrapassados). Manter idempotency key separada por status (`maint-<user>-<type>-<milestone>-<status>`) para o vermelho disparar mesmo após o laranja.
 
----
+## 3. Resposta ao usuário — e-mails ativos hoje
 
-## Execução
+Após o plano ser aprovado, listo no chat os e-mails ativos em produção e seus gatilhos:
 
-### A) Disparo de e-mail em tempo real
+- **welcome** — primeiro cadastro de usuário (em `notify-new-user`)
+- **new-user-signup** — aviso interno ao time quando um novo usuário se cadastra
+- **maintenance-alert** — cron diário `check-maintenance-alerts` + trigger em tempo real ao registrar KM/manutenção
+- **weekly-summary** — cron semanal `send-weekly-summary`
+- **subscription-receipt** — webhook Stripe: `invoice.payment_succeeded`
+- **payment-failed** — webhook Stripe: `invoice.payment_failed` (cliente)
+- **payment-failed-internal** — webhook Stripe: `invoice.payment_failed` (time interno)
+- **new-subscription** — webhook Stripe: nova assinatura (interno)
+- **subscription-canceled** — webhook Stripe: cancelamento (interno)
+- **send-feedback-email** — quando o usuário envia feedback/bug pelo app
 
-1. **`check-maintenance-alerts` (edge function)** — adicionar suporte a invocação direcionada:
-   - Aceitar body `{ user_id }`: quando presente, processar só o(s) carro(s) ativos desse usuário.
-   - Sem body → mantém varredura global (cron diário continua igual, como rede de segurança).
-   - Dedupe atual via `maintenance_alerts_sent` (chave `user_id+car_id+alert_type+milestone_km`) já evita e-mail duplicado.
+## Arquivos editados
 
-2. **Disparo client-side** no `DataContext`, chamando `supabase.functions.invoke("check-maintenance-alerts", { body: { user_id } })` (fire-and-forget) sempre que:
-   - um `earning` é salvo/atualizado/excluído com `km > 0`;
-   - `km_adjustment` muda (`updateCarKmAdjustment`);
-   - um `expense` de manutenção (óleo/pneus) é salvo (reseta milestone).
-   - Throttle simples em memória (1 chamada a cada 15 s por usuário) para não floodar.
+- `src/lib/notifications.ts`
+- `src/components/NotificationsSheet.tsx`
+- `supabase/functions/_shared/transactional-email-templates/maintenance-alert.tsx`
+- `supabase/functions/check-maintenance-alerts/index.ts`
 
-3. Cron diário **permanece** como fallback.
-
-### B) Central de notificações — fechar o loop
-
-- Em `Dashboard.tsx`, passar `maintenanceAlerts: maintAlerts` no contexto do `useNotifications` (além de continuar chamando `ensureMaintenanceNotifications` no `useEffect`), assim o hook reage à mudança e re-lista imediatamente.
-- Em `useNotifications.ts`, isso já está previsto (`maintenanceAlerts` está nas deps); só falta o consumer enviar.
-- Ajuste defensivo: em `ensureMaintenanceNotifications`, se já existir notificação de **mesmo tipo** com status `default` e o novo alerta virou `alert` (overdue), criar a versão alert mesmo assim (hoje só checa ID exato; milestone igual ficaria preso no estado "próximo"). Diferenciar ID por status: `maintenance_<tipo>_<milestoneKm>_<approaching|overdue>`.
-
-### C) Home — "KM planejado atingido"
-
-No `Dashboard.tsx`, substituir o `smartKmValue !== null` por uma renderização condicional do bloco `smartKm`:
-
-- **Caso 1 (atual)** — KM ainda disponível e plano configurado → mostra `R$/km inteligente` (sem mudança).
-- **Caso 2 (novo)** — `plan.isPlanningConfigured` e `plan.remainingPlannedKm <= 0`:
-  - Renderiza um mini-card com ícone de alerta laranja, título **"KM planejado atingido"**, subtítulo **"Você já usou os KM previstos do mês. Ajuste sua média de KM, dias ou meta para recalcular."** e CTA "Ajustar planejamento" → `/ajustes/planejamento`.
-  - Mantém o slot ocupado para não quebrar a ordem dos cards (`homeOrder`).
-- **Caso 3** — plano não configurado → permanece oculto (igual hoje).
-
-Mesma mensagem já existe no Planejamento, então o tom fica coerente entre as duas telas.
-
-### D) Verificação pós-mudança
-
-1. Confirmar com `supabase--curl_edge_functions` chamando `check-maintenance-alerts` com `{ user_id: <id_do_lucas> }` e observar `email_send_log` + `maintenance_alerts_sent`.
-2. Na conta de teste: salvar earning com KM que cruza o limiar e validar:
-   - banner na home;
-   - item na central com ícone ciano (próximo) / vermelho (atrasado);
-   - e-mail (checar `email_send_log` em segundos).
-3. Zerar `remainingPlannedKm` (ex.: registrar KM acima do planejado) e verificar o novo card "KM planejado atingido" na home.
-
----
-
-## Detalhes técnicos
-
-- `supabase/functions/check-maintenance-alerts/index.ts`: aceitar `await req.json().catch(()=>({}))`; se `body.user_id`, filtrar `.eq("user_id", body.user_id)` na query de `cars`.
-- `src/context/DataContext.tsx`: util `triggerMaintenanceCheck(userId)` com throttle em `Map<userId, lastTs>`; chamar dentro dos handlers de earning/expense/maintenance/`updateCarKmAdjustment`.
-- `src/lib/notifications.ts`: novo sufixo `_approaching` / `_overdue` no ID + lógica para criar a versão "overdue" mesmo se "approaching" do mesmo milestone já existe (marcar a antiga como dismissed ou só inserir a nova — vou só inserir a nova; usuário pode limpar manualmente).
-- `src/pages/Dashboard.tsx`: passar `maintenanceAlerts: maintAlerts` no `useNotifications`; novo render condicional do bloco `smartKm` quando `plan.isPlanningConfigured && plan.remainingPlannedKm <= 0`.
-- Sem migração de banco. Sem alteração de RLS. Sem mudança de cron.
-
-## Comunicação ao usuário (após implementar)
-
-- Os 2 e-mails de manutenção do teste atrasado **foram enviados às 07:00 BRT de hoje** — confirmar caixa de entrada / promoções / spam do `lucassgprofissional@gmail.com`.
-- Daqui pra frente, e-mail + central + home **disparam juntos em segundos** após cruzar o limiar (registro de KM, ajuste manual ou registro de manutenção).
+Sem mudanças de schema. Deploy: `check-maintenance-alerts` e `send-transactional-email` (template novo).

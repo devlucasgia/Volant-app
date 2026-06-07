@@ -109,12 +109,15 @@ Deno.serve(async (req) => {
       const milestone = lastKm + intervalKm;
       const kmRemaining = milestone - currentKm;
       if (kmRemaining > WARN_THRESHOLD_KM) continue;
+      const isOverdue = kmRemaining < 0;
+      const alertStatus = isOverdue ? "overdue" : "approaching";
 
       const { data: existing } = await admin
         .from("maintenance_alerts_sent")
         .select("id")
         .eq("user_id", userId).eq("car_id", carId)
         .eq("alert_type", mtype).eq("milestone_km", milestone)
+        .eq("alert_status", alertStatus)
         .maybeSingle();
       if (existing) continue;
 
@@ -137,20 +140,23 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           templateName: "maintenance-alert",
           recipientEmail: email,
-          idempotencyKey: `maint-${carId}-${mtype}-${milestone}`,
+          idempotencyKey: `maint-${carId}-${mtype}-${milestone}-${alertStatus}`,
           templateData: {
             name: firstName,
             carLabel: carLabel.startsWith("seu") ? carLabel : `seu ${carLabel}`,
             alertType: mtype,
+            status: alertStatus,
             intervalKm: intervalKm.toLocaleString("pt-BR"),
             kmSinceLast: Math.round(kmSinceLast).toLocaleString("pt-BR"),
+            kmRemaining: Math.max(0, Math.round(kmRemaining)).toLocaleString("pt-BR"),
+            kmOverdue: Math.max(0, Math.round(-kmRemaining)).toLocaleString("pt-BR"),
             appUrl: "https://usevolant.app/app/ajustes/veiculos/manutencao",
           },
         }),
       });
       if (sendRes.ok) {
         await admin.from("maintenance_alerts_sent").insert({
-          user_id: userId, car_id: carId, alert_type: mtype, milestone_km: milestone,
+          user_id: userId, car_id: carId, alert_type: mtype, milestone_km: milestone, alert_status: alertStatus,
         });
         alertsEnqueued++;
       } else {
