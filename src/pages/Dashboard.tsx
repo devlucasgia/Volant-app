@@ -70,9 +70,9 @@ export default function Dashboard() {
     isPaidPremium,
     planning: planningSnapshot,
     cars: cars as any,
-    maintenanceAlerts: maintAlertsForNotif,
     ready: !dataLoading,
   });
+
 
 
   useEffect(() => {
