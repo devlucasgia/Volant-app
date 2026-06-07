@@ -239,13 +239,38 @@ export default function Dashboard() {
 
 
   const totalKmDriven = totalKmAllTime(entries);
-  const realCurrentKm = carInitialKm + totalKmDriven;
-  const lastMaint = settings.lastMaintenanceKm > 0 ? settings.lastMaintenanceKm : carInitialKm;
-  const kmSinceMaint = Math.max(0, realCurrentKm - lastMaint);
-  const interval = settings.maintenanceIntervalKm || 0;
-  const kmToNext = interval - kmSinceMaint;
-  const threshold = interval > 0 ? Math.max(500, Math.round(interval * 0.1)) : 0;
-  const showMaintAlert = interval > 0 && kmToNext <= threshold;
+  const realCurrentKm = carInitialKm + totalKmDriven + Number(activeCar?.km_adjustment || 0);
+  // Banner de manutenção agora vem dos intervalos cadastrados em Custos (óleo e pneus),
+  // não mais do antigo settings.maintenanceIntervalKm.
+  const maintAlerts = useMemo(() => {
+    if (!activeCar) return [] as Array<{ type: "oleo" | "pneus"; kmRemaining: number }>;
+    const out: Array<{ type: "oleo" | "pneus"; kmRemaining: number }> = [];
+    for (const type of ["oleo", "pneus"] as const) {
+      const intervalKm = Number(
+        type === "oleo" ? activeCar.oil_change_interval_km : activeCar.tires_interval_km,
+      ) || 0;
+      if (intervalKm <= 0) continue;
+      const maintEntries = entries
+        .filter((e) => e.type === "expense" && e.expense.category === "manutencao" && e.expense.maintenanceType === type)
+        .sort((a, b) => +new Date(b.date) - +new Date(a.date));
+      let lastKm = carInitialKm;
+      if (maintEntries.length > 0) {
+        const lastDate = +new Date(maintEntries[0].date);
+        const kmAfter = entries.reduce((s, e) => {
+          if (e.type !== "earning") return s;
+          if (+new Date(e.date) <= lastDate) return s;
+          return s + (Number(e.km) || 0);
+        }, 0);
+        lastKm = realCurrentKm - kmAfter;
+      }
+      const kmRemaining = (lastKm + intervalKm) - realCurrentKm;
+      if (kmRemaining <= 500) out.push({ type, kmRemaining });
+    }
+    return out.sort((a, b) => a.kmRemaining - b.kmRemaining);
+  }, [activeCar, entries, carInitialKm, realCurrentKm]);
+  const showMaintAlert = maintAlerts.length > 0;
+  const primaryMaint = maintAlerts[0];
+  const kmToNext = primaryMaint?.kmRemaining ?? 0;
 
   const activeApps = Object.keys(apps)
     .filter((k) => apps[k] > 0)
@@ -824,26 +849,28 @@ export default function Dashboard() {
         </div>
 
         {/* Maintenance alert (conditional, fixed position, not in personalization) */}
-        {showMaintAlert && (
+        {showMaintAlert && primaryMaint && (
           <button
             type="button"
-            onClick={() => openDrawer({ tab: "expense", category: "manutencao" })}
+            onClick={() => navigate("/ajustes/veiculos/manutencao")}
             className={cn(
               "mt-4 flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-colors hover:bg-muted/30",
-              kmToNext <= 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
+              kmToNext < 0 ? "border-destructive/40 bg-destructive/10" : "border-warning/40 bg-warning/10"
             )}
           >
-            <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext <= 0 ? "text-destructive" : "text-warning")} />
+            <Wrench className={cn("mt-0.5 h-5 w-5", kmToNext < 0 ? "text-destructive" : "text-warning")} />
             <div className="text-sm flex-1">
               <div className="font-semibold">
-                {kmToNext <= 0 ? "Manutenção atrasada!" : "Manutenção próxima"}
+                {kmToNext < 0
+                  ? `${primaryMaint.type === "oleo" ? "Troca de óleo" : "Troca de pneus"} atrasada!`
+                  : `${primaryMaint.type === "oleo" ? "Troca de óleo" : "Troca de pneus"} próxima`}
               </div>
               <div className="text-muted-foreground">
-                {kmToNext <= 0
+                {kmToNext < 0
                   ? `Você ultrapassou em ${num(Math.abs(kmToNext), 0)} km`
-                  : `Faltam ${num(kmToNext, 0)} km para a próxima revisão`}
+                  : `Faltam ${num(kmToNext, 0)} km para a próxima troca`}
               </div>
-              <div className="mt-1 text-[11px] font-medium text-primary">Registrar manutenção →</div>
+              <div className="mt-1 text-[11px] font-medium text-primary">Ver manutenção →</div>
             </div>
           </button>
         )}

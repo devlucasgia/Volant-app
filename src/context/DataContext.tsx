@@ -27,6 +27,7 @@ interface DataCtx {
   refreshProfile: () => Promise<void>;
   refreshCars: () => Promise<void>;
   setActiveCar: (id: string) => Promise<void>;
+  updateCarKmAdjustment: (carId: string, adjustment: number) => Promise<void>;
 
   // categories (expenses)
   earningCategories: CustomCategory[];
@@ -107,7 +108,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const { data } = await supabase.from("cars").select("*").eq("user_id", uid).order("created_at", { ascending: true });
     setCars((data || []).map((c: any) => ({
       id: c.id, brand: c.brand, model: c.model, plate: c.plate,
-      initial_km: Number(c.initial_km) || 0, is_active: !!c.is_active,
+      initial_km: Number(c.initial_km) || 0,
+      km_adjustment: Number(c.km_adjustment) || 0,
+      is_active: !!c.is_active,
       ownership_status: c.ownership_status ?? null,
       financing_monthly: c.financing_monthly == null ? null : Number(c.financing_monthly),
       rental_weekly: c.rental_weekly == null ? null : Number(c.rental_weekly),
@@ -142,6 +145,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     await supabase.from("cars").update({ is_active: false }).eq("user_id", user.id);
     await supabase.from("cars").update({ is_active: true }).eq("id", id);
+    await loadCars(user.id);
+  }, [user, loadCars]);
+
+  const updateCarKmAdjustment = useCallback(async (carId: string, adjustment: number) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("cars")
+      .update({ km_adjustment: adjustment } as any)
+      .eq("id", carId);
+    if (error) throw error;
     await loadCars(user.id);
   }, [user, loadCars]);
 
@@ -370,11 +383,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
-      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor,
       earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory }),
-    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar,
+    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory]
   );

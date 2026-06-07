@@ -28,6 +28,7 @@ export type Database = {
           insurance_monthly: number | null
           ipva_yearly: number | null
           is_active: boolean
+          km_adjustment: number
           model: string | null
           oil_change_cost: number | null
           oil_change_interval_km: number | null
@@ -54,6 +55,7 @@ export type Database = {
           insurance_monthly?: number | null
           ipva_yearly?: number | null
           is_active?: boolean
+          km_adjustment?: number
           model?: string | null
           oil_change_cost?: number | null
           oil_change_interval_km?: number | null
@@ -80,6 +82,7 @@ export type Database = {
           insurance_monthly?: number | null
           ipva_yearly?: number | null
           is_active?: boolean
+          km_adjustment?: number
           model?: string | null
           oil_change_cost?: number | null
           oil_change_interval_km?: number | null

@@ -1,0 +1,1 @@
+ALTER TABLE public.cars ADD COLUMN IF NOT EXISTS km_adjustment numeric NOT NULL DEFAULT 0;
