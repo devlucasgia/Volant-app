@@ -328,6 +328,7 @@ export type Database = {
       }
       maintenance_alerts_sent: {
         Row: {
+          alert_status: string
           alert_type: string
           car_id: string
           id: string
@@ -336,6 +337,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_status?: string
           alert_type: string
           car_id: string
           id?: string
@@ -344,6 +346,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          alert_status?: string
           alert_type?: string
           car_id?: string
           id?: string

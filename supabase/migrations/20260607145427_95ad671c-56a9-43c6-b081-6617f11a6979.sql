@@ -1,0 +1,3 @@
+ALTER TABLE public.maintenance_alerts_sent ADD COLUMN IF NOT EXISTS alert_status text NOT NULL DEFAULT 'approaching';
+ALTER TABLE public.maintenance_alerts_sent DROP CONSTRAINT IF EXISTS maintenance_alerts_sent_user_id_car_id_alert_type_milestone_key;
+ALTER TABLE public.maintenance_alerts_sent ADD CONSTRAINT maintenance_alerts_sent_user_car_type_milestone_status_key UNIQUE (user_id, car_id, alert_type, milestone_km, alert_status);
