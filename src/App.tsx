@@ -42,6 +42,8 @@ import AdminMetrics from "./pages/AdminMetrics";
 import AdminHome from "./pages/AdminHome";
 import AdminAccess from "./pages/AdminAccess";
 import AdminSubscribers from "./pages/AdminSubscribers";
+import AdminLogin from "./pages/AdminLogin";
+import { RequireAdmin } from "./components/RequireAdmin";
 
 const queryClient = new QueryClient();
 
@@ -63,21 +65,22 @@ const App = () => (
                   <Route path="/termos" element={<Termos />} />
                   <Route path="/privacidade" element={<Privacidade />} />
                   <Route path="/unsubscribe" element={<Unsubscribe />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
                   <Route
                     path="/admin"
-                    element={<RequireAuth><AdminHome /></RequireAuth>}
+                    element={<RequireAdmin><AdminHome /></RequireAdmin>}
                   />
                   <Route
                     path="/admin/metrics"
-                    element={<RequireAuth><AdminMetrics /></RequireAuth>}
+                    element={<RequireAdmin><AdminMetrics /></RequireAdmin>}
                   />
                   <Route
                     path="/admin/access"
-                    element={<RequireAuth><AdminAccess /></RequireAuth>}
+                    element={<RequireAdmin><AdminAccess /></RequireAdmin>}
                   />
                   <Route
                     path="/admin/subscribers"
-                    element={<RequireAuth><AdminSubscribers /></RequireAuth>}
+                    element={<RequireAdmin><AdminSubscribers /></RequireAdmin>}
                   />
                   {/* Checkout return must bypass the paywall so the webhook can confirm */}
                   <Route
