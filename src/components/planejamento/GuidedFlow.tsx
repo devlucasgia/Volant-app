@@ -201,8 +201,10 @@ export function GuidedFlow({
   })();
 
   const back = () => {
-    if (stepIdx === 0) onCancel();
-    else setStepIdx((s) => s - 1);
+    if (stepIdx === 0) {
+      planningDraft.clear();
+      onCancel();
+    } else setStepIdx((s) => s - 1);
   };
 
   const finish = async () => {
@@ -244,6 +246,7 @@ export function GuidedFlow({
       }
 
       await updateSettings(patch);
+      planningDraft.clear();
       toast.success(isEdit ? "Alteração salva" : "Planejamento concluído");
       onDone();
     } catch {
