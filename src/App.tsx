@@ -45,7 +45,15 @@ import AdminSubscribers from "./pages/AdminSubscribers";
 import AdminLogin from "./pages/AdminLogin";
 import { RequireAdmin } from "./components/RequireAdmin";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 60_000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

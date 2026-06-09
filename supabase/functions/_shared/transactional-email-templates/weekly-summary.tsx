@@ -27,7 +27,7 @@ const WeeklySummaryEmail = ({
   hours = '0',
   rpkm = 'R$ 0,00',
   rpHour = 'R$ 0,00',
-  appUrl = 'https://usevolant.app/app',
+  appUrl = 'https://usevolant.app/relatorios',
 }: Props) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
@@ -87,7 +87,7 @@ export const template = {
     name: 'João', periodLabel: '01/06 a 07/06',
     gross: 'R$ 2.450,00', expenses: 'R$ 680,00', net: 'R$ 1.770,00',
     km: '1.230', hours: '52', rpkm: 'R$ 1,44', rpHour: 'R$ 34,04',
-    appUrl: 'https://usevolant.app/app',
+    appUrl: 'https://usevolant.app/relatorios',
   },
 } satisfies TemplateEntry
 

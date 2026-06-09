@@ -1,6 +1,11 @@
 /// <reference types="npm:@types/react@18.3.1" />
 import * as React from 'npm:react@18.3.1'
 
+// Base URL do app — use sempre que precisar gerar deep links em e-mails.
+// Rotas reais pós-login: /app, /historico, /relatorios, /ajustes, /ajustes/veiculos/manutencao, ...
+// (NÃO existem /app/relatorios, /app/ajustes etc.)
+export const APP_BASE_URL = 'https://usevolant.app'
+
 export interface TemplateEntry {
   component: React.ComponentType<any>
   subject: string | ((data: Record<string, any>) => string)
