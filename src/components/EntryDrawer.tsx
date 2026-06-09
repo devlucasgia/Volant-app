@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { NumberField } from "@/components/NumberField";
@@ -18,6 +18,26 @@ import { PlatformLogo } from "@/components/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useDraftPersistence } from "@/hooks/useDraftPersistence";
+
+const ENTRY_DRAFT_KEY = "volant_draft_entry_v1";
+interface EntryDraft {
+  tab: "earning" | "expense";
+  date: string; // ISO
+  app: AppName;
+  kmMode: "total" | "range";
+  kmTotal: number | null;
+  kmStart: number | null;
+  kmEnd: number | null;
+  hours: number | null;
+  gross: number | null;
+  rides: number | null;
+  notes: string;
+  category: ExpenseCategory;
+  maintenanceType: MaintenanceType;
+  amount: number | null;
+  description: string;
+}
 
 interface EntryDrawerPreset {
   tab?: "earning" | "expense";
