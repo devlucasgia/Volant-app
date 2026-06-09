@@ -81,9 +81,23 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const [maintenanceType, setMaintenanceType] = useState<MaintenanceType>("oleo");
   const [description, setDescription] = useState("");
 
+  // ── Persistência de rascunho (só para criação nova; nunca para edição) ──
+  // Salva o estado em sessionStorage com debounce. Restaura ao reabrir o drawer
+  // se o usuário não tiver finalizado (ex.: trocou de aba/voltou de outro app).
+  const draftValue: EntryDraft = {
+    tab, date: date.toISOString(), app, kmMode, kmTotal, kmStart, kmEnd,
+    hours, gross, rides, notes, category, maintenanceType, amount, description,
+  };
+  const draftEnabled = open && !isEditing && !preset?.prefillHours;
+  const draftRef = useDraftPersistence<EntryDraft>(ENTRY_DRAFT_KEY, draftValue, {
+    enabled: draftEnabled,
+    storage: "session",
+  });
+  const restoredOnceRef = useRef(false);
+
   // Apply preset / editing on open
   useEffect(() => {
-    if (!open) return;
+    if (!open) { restoredOnceRef.current = false; return; }
     if (editing) {
       setDate(new Date(editing.date));
       if (editing.type === "earning") {
@@ -117,6 +131,34 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     if (preset?.prefillHours !== undefined && preset.prefillHours > 0) {
       setHours(Math.round(preset.prefillHours * 100) / 100);
     }
+
+    // Tentar restaurar rascunho (uma vez por abertura) — não restaura quando
+    // veio um preset.prefillHours (fluxo "fim da jornada" tem dados próprios).
+    if (!restoredOnceRef.current && !preset?.prefillHours) {
+      restoredOnceRef.current = true;
+      const saved = draftRef.load();
+      if (saved) {
+        try {
+          setTab(saved.tab ?? (preset?.tab ?? "earning"));
+          setDate(saved.date ? new Date(saved.date) : new Date());
+          setApp(saved.app ?? "uber");
+          setKmMode(saved.kmMode ?? "total");
+          setKmTotal(saved.kmTotal ?? null);
+          setKmStart(saved.kmStart ?? null);
+          setKmEnd(saved.kmEnd ?? null);
+          setHours(saved.hours ?? null);
+          setGross(saved.gross ?? null);
+          setRides(saved.rides ?? null);
+          setNotes(saved.notes ?? "");
+          setCategory(saved.category ?? (preset?.category ?? "combustivel"));
+          setMaintenanceType(saved.maintenanceType ?? "oleo");
+          setAmount(saved.amount ?? null);
+          setDescription(saved.description ?? "");
+          toast("Rascunho restaurado", { description: "Continuamos de onde você parou." });
+        } catch { /* noop */ }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, preset, editing]);
 
   const reset = () => {
@@ -124,6 +166,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     setHours(null); setGross(null); setRides(null); setNotes("");
     setAmount(null); setDescription("");
     setDate(new Date());
+    draftRef.clear();
   };
 
   const submit = async () => {
