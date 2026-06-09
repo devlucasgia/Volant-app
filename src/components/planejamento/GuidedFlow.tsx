@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -31,6 +31,13 @@ import {
 } from "@/lib/planejamento";
 import type { GoalType } from "@/types";
 import { CalendarGrid } from "./CalendarGrid";
+import { useDraftPersistence } from "@/hooks/useDraftPersistence";
+
+const PLANNING_DRAFT_KEY = "volant_planning_draft_v1";
+interface PlanningDraftSnapshot {
+  step: number;
+  draft: Draft;
+}
 
 interface Props {
   onDone: () => void;
@@ -89,31 +96,71 @@ export function GuidedFlow({
   // bruto/líquido) só aparece em editMode legado que peça explicitamente.
   const stepsList =
     editMode?.steps ?? Array.from({ length: TOTAL_STEPS - 1 }, (_, i) => i + 2);
+
+  // ── Persistência de rascunho (apenas para o fluxo "fresh" — sem editMode/initialStep/initialDraft) ──
+  // Permite voltar exatamente para o mesmo passo + valores depois de um reload
+  // ou volta-de-outro-app, sem perder progresso do wizard.
+  const draftPersistenceEnabled = !isEdit && initialStep == null && !initialDraft;
+  // Hidratação síncrona (no primeiro render) — evita "piscar" passo 1 antes de pular para o salvo.
+  const hydratedSnapshot = useRef<PlanningDraftSnapshot | null>(null);
+  if (draftPersistenceEnabled && hydratedSnapshot.current === null) {
+    try {
+      const raw = typeof window !== "undefined" ? window.sessionStorage.getItem(PLANNING_DRAFT_KEY) : null;
+      hydratedSnapshot.current = raw ? (JSON.parse(raw) as PlanningDraftSnapshot) : null;
+    } catch { hydratedSnapshot.current = null; }
+  }
+
   const [stepIdx, setStepIdx] = useState(() => {
     if (initialStep != null) {
       const i = stepsList.indexOf(initialStep);
       return i >= 0 ? i : 0;
+    }
+    const savedStep = hydratedSnapshot.current?.step;
+    if (typeof savedStep === "number") {
+      const i = stepsList.indexOf(savedStep);
+      if (i >= 0) return i;
     }
     return 0;
   });
   const step = stepsList[stepIdx];
   const isLast = stepIdx === stepsList.length - 1;
 
-  const [draft, setDraft] = useState<Draft>(() => ({
-    // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
-    goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
-    monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
-    selectedDates:
-      (prefill || isEdit) && settings.planningSelectedDates
-        ? settings.planningSelectedDates
-        : [],
-    avgKmPerDay:
-      (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
-        ? settings.planningAvgKmPerDay
-        : DEFAULT_AVG_KM_PER_DAY,
-    ...(initialDraft ?? {}),
-  }));
+  const [draft, setDraft] = useState<Draft>(() => {
+    const base: Draft = {
+      // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
+      goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
+      monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
+      selectedDates:
+        (prefill || isEdit) && settings.planningSelectedDates
+          ? settings.planningSelectedDates
+          : [],
+      avgKmPerDay:
+        (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
+          ? settings.planningAvgKmPerDay
+          : DEFAULT_AVG_KM_PER_DAY,
+      ...(initialDraft ?? {}),
+    };
+    const saved = hydratedSnapshot.current?.draft;
+    return saved ? { ...base, ...saved } : base;
+  });
   const [saving, setSaving] = useState(false);
+
+  // Persiste step + draft (debounce) enquanto o wizard está aberto.
+  const snapshot = useMemo<PlanningDraftSnapshot>(() => ({ step, draft }), [step, draft]);
+  const planningDraft = useDraftPersistence<PlanningDraftSnapshot>(
+    PLANNING_DRAFT_KEY,
+    snapshot,
+    { enabled: draftPersistenceEnabled, storage: "session" },
+  );
+  useEffect(() => {
+    if (hydratedSnapshot.current && draftPersistenceEnabled) {
+      // Avisa o usuário que voltamos para onde ele parou — apenas uma vez.
+      toast("Rascunho restaurado", {
+        description: "Continuamos seu planejamento de onde você parou.",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Custos consideram óleo e pneus prorrateados pelo KM planejado do draft.
   const draftPlannedKm = useMemo(
@@ -154,8 +201,10 @@ export function GuidedFlow({
   })();
 
   const back = () => {
-    if (stepIdx === 0) onCancel();
-    else setStepIdx((s) => s - 1);
+    if (stepIdx === 0) {
+      planningDraft.clear();
+      onCancel();
+    } else setStepIdx((s) => s - 1);
   };
 
   const finish = async () => {
@@ -197,6 +246,7 @@ export function GuidedFlow({
       }
 
       await updateSettings(patch);
+      planningDraft.clear();
       toast.success(isEdit ? "Alteração salva" : "Planejamento concluído");
       onDone();
     } catch {

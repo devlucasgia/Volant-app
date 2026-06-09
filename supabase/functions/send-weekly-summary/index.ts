@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
           hours: fmtNum(agg.hours, 1),
           rpkm: brl(rpkm),
           rpHour: brl(rpHour),
-          appUrl: "https://usevolant.app/app/relatorios",
+          appUrl: "https://usevolant.app/relatorios",
         },
       }),
     });

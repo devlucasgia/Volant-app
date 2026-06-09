@@ -18,12 +18,31 @@ import {
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 
 const todayKey = () => format(new Date(), "yyyy-MM-dd");
-const readDayGoal = (): number | null => {
+const goalStorageKey = (view: "gross" | "net") =>
+  `volant_day_goal_${view}_${todayKey()}`;
+
+const readDayGoal = (view: "gross" | "net"): number | null => {
   try {
-    const raw = localStorage.getItem(`volant_day_goal_${todayKey()}`);
-    const n = raw ? Number(raw) : 0;
-    return n > 0 ? n : null;
-  } catch { return null; }
+    // 1) Chave nova por visão
+    const raw = localStorage.getItem(goalStorageKey(view));
+    if (raw) {
+      const n = Number(raw);
+      if (n > 0) return n;
+    }
+    // 2) Migração leve: chave antiga sem visão — usa para a visão ativa e remove.
+    const legacy = localStorage.getItem(`volant_day_goal_${todayKey()}`);
+    if (legacy) {
+      const n = Number(legacy);
+      if (n > 0) {
+        localStorage.setItem(goalStorageKey(view), String(n));
+        localStorage.removeItem(`volant_day_goal_${todayKey()}`);
+        return n;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export function JourneyModule() {
@@ -53,9 +72,10 @@ export function JourneyModule() {
     return Math.round(fallback || 0);
   }, [isGross, plan.homeDailyGross, plan.homeDailyNet, settings.monthlyGoal, entries, settings.workingDaysPerMonth, settings.remainingWorkingDays]);
 
+  const view: "gross" | "net" = isGross ? "gross" : "net";
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
-  const [goalValue, setGoalValue] = useState<number | null>(readDayGoal() ?? suggestedDaily ?? null);
+  const [goalValue, setGoalValue] = useState<number | null>(readDayGoal(view) ?? suggestedDaily ?? null);
   const [pendingResetThenStart, setPendingResetThenStart] = useState(false);
 
   const totalMs = workMs + restMs;
@@ -73,7 +93,7 @@ export function JourneyModule() {
     state === "ended" ? "bg-success" : "bg-muted-foreground/40";
 
   const openGoal = (resetFirst: boolean) => {
-    setGoalValue(readDayGoal() ?? suggestedDaily ?? null);
+    setGoalValue(readDayGoal(view) ?? suggestedDaily ?? null);
     setPendingResetThenStart(resetFirst);
     setGoalOpen(true);
   };
@@ -81,8 +101,9 @@ export function JourneyModule() {
   const confirmGoalAndStart = async () => {
     const v = goalValue ?? 0;
     try {
-      if (v > 0) localStorage.setItem(`volant_day_goal_${todayKey()}`, String(v));
-      else localStorage.removeItem(`volant_day_goal_${todayKey()}`);
+      const key = goalStorageKey(view);
+      if (v > 0) localStorage.setItem(key, String(v));
+      else localStorage.removeItem(key);
       window.dispatchEvent(new CustomEvent("volant:dayGoalChanged"));
     } catch { /* noop */ }
     setGoalOpen(false);

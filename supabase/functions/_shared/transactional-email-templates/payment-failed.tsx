@@ -15,7 +15,7 @@ const PaymentFailedEmail = ({
   name = '',
   amount = '—',
   currency = 'R$',
-  portalUrl = 'https://usevolant.app/app/ajustes',
+  portalUrl = 'https://usevolant.app/ajustes',
 }: Props) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
@@ -60,7 +60,7 @@ export const template = {
     name: 'João',
     amount: '19,90',
     currency: 'R$',
-    portalUrl: 'https://usevolant.app/app/ajustes',
+    portalUrl: 'https://usevolant.app/ajustes',
   },
 } satisfies TemplateEntry
 
