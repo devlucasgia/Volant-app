@@ -18,12 +18,31 @@ import {
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 
 const todayKey = () => format(new Date(), "yyyy-MM-dd");
-const readDayGoal = (): number | null => {
+const goalStorageKey = (view: "gross" | "net") =>
+  `volant_day_goal_${view}_${todayKey()}`;
+
+const readDayGoal = (view: "gross" | "net"): number | null => {
   try {
-    const raw = localStorage.getItem(`volant_day_goal_${todayKey()}`);
-    const n = raw ? Number(raw) : 0;
-    return n > 0 ? n : null;
-  } catch { return null; }
+    // 1) Chave nova por visão
+    const raw = localStorage.getItem(goalStorageKey(view));
+    if (raw) {
+      const n = Number(raw);
+      if (n > 0) return n;
+    }
+    // 2) Migração leve: chave antiga sem visão — usa para a visão ativa e remove.
+    const legacy = localStorage.getItem(`volant_day_goal_${todayKey()}`);
+    if (legacy) {
+      const n = Number(legacy);
+      if (n > 0) {
+        localStorage.setItem(goalStorageKey(view), String(n));
+        localStorage.removeItem(`volant_day_goal_${todayKey()}`);
+        return n;
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
 };
 
 export function JourneyModule() {
