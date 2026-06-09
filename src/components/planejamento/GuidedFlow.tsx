@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -31,6 +31,13 @@ import {
 } from "@/lib/planejamento";
 import type { GoalType } from "@/types";
 import { CalendarGrid } from "./CalendarGrid";
+import { useDraftPersistence } from "@/hooks/useDraftPersistence";
+
+const PLANNING_DRAFT_KEY = "volant_planning_draft_v1";
+interface PlanningDraftSnapshot {
+  step: number;
+  draft: Draft;
+}
 
 interface Props {
   onDone: () => void;
