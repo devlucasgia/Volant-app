@@ -158,11 +158,17 @@ export default function Dashboard() {
   }, []);
   const journeyDailyOverride = useMemo(() => {
     try {
-      const raw = localStorage.getItem(`volant_day_goal_${todayKey}`);
+      const view = showGrossView ? "gross" : "net";
+      // 1) Chave nova por visão (líquido/bruto não se sobrescrevem)
+      const raw = localStorage.getItem(`volant_day_goal_${view}_${todayKey}`);
       const n = raw ? Number(raw) : 0;
-      return n > 0 ? n : null;
+      if (n > 0) return n;
+      // 2) Migração leve: chave antiga sem visão (compat com metas de hoje gravadas antes do hotfix)
+      const legacy = localStorage.getItem(`volant_day_goal_${todayKey}`);
+      const ln = legacy ? Number(legacy) : 0;
+      return ln > 0 ? ln : null;
     } catch { return null; }
-  }, [todayKey, settings.monthlyGoal, calOpen, overrideTick]);
+  }, [todayKey, settings.monthlyGoal, calOpen, overrideTick, showGrossView]);
 
   // Alvo mensal e meta diária vêm do motor do Planejamento Inteligente quando configurado.
   // Lente única (semântica financeira correta):
