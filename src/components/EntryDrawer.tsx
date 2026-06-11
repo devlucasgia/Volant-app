@@ -154,7 +154,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           setMaintenanceType(saved.maintenanceType ?? "oleo");
           setAmount(saved.amount ?? null);
           setDescription(saved.description ?? "");
-          toast("Rascunho restaurado", { description: "Continuamos de onde você parou." });
+          // Restauração silenciosa — sem toast.
         } catch { /* noop */ }
       }
     }

@@ -152,15 +152,7 @@ export function GuidedFlow({
     snapshot,
     { enabled: draftPersistenceEnabled, storage: "session" },
   );
-  useEffect(() => {
-    if (hydratedSnapshot.current && draftPersistenceEnabled) {
-      // Avisa o usuário que voltamos para onde ele parou — apenas uma vez.
-      toast("Rascunho restaurado", {
-        description: "Continuamos seu planejamento de onde você parou.",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Rascunho é restaurado silenciosamente no mount (sem toast).
 
   // Custos consideram óleo e pneus prorrateados pelo KM planejado do draft.
   const draftPlannedKm = useMemo(
