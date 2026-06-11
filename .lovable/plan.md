@@ -1,55 +1,55 @@
-# Estabilização PWA + UX Silenciosa
+# Estabilização PWA — Fluxos críticos (Entrada e Planejamento)
 
-## Fase 1 — Validação de escopo (divergências encontradas)
+## Resposta direta à sua pergunta
 
-Antes do código, alguns ajustes ao briefing original:
+Não, esse comportamento **não é esperado** e não é como apps consolidados (Nubank, Uber, iFood, WhatsApp) tratam volta de background. PWAs também conseguem o mesmo padrão premium — desde que a app:
 
-1. **QueryClient não está em `main.tsx`.** Está em `src/App.tsx` (linhas 52-59). `refetchOnWindowFocus: false` e `refetchOnReconnect: false` já existem. Faltam `refetchOnMount: false` e ampliar o `staleTime` (hoje 60s) para 5min.
-2. **`useDraftPersistence` usa `sessionStorage`, não `localStorage`.** Isso é proposital (motorista pode usar celular compartilhado / valores sensíveis) e está consistente com a memória do projeto. Vou manter `sessionStorage` — o efeito prático é o mesmo (sobrevive a troca de aba/volta do app), só não persiste após fechar o navegador. Se você quiser mudar para `localStorage` mesmo assim, me avise.
-3. **`CarFormDialog.tsx` e `CategoryDialog.tsx` NÃO usam `useDraftPersistence`.** Eles têm estado local que reseta no `useEffect([open, …])`. Não há cache para limpar neles — então não há nada a fazer. Os únicos formulários que realmente persistem rascunho hoje são `EntryDrawer` e `GuidedFlow` (planejamento). Vou focar a limpeza explícita do `clearDraft()` nesses dois.
-4. **Sobre o toast "Rascunho restaurado":** existe em `EntryDrawer.tsx:157` e `GuidedFlow.tsx:158`. Ambos serão removidos.
+1. Não desmonte componentes ao perder/recuperar foco.
+2. Não dispare refetch de dados que causa re-render visual em formulários abertos.
+3. Mantenha o estado do wizard preservado em memória + fallback persistente, sem reanimar a tela de entrada.
 
-## Fase 2 — Implementação
+Hoje o Volant ainda tem 3 causas que sobraram da sprint anterior:
 
-### A. `src/App.tsx` — QueryClient global
-```ts
-defaultOptions: {
-  queries: {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
-    staleTime: 5 * 60 * 1000,
-  },
-}
-```
+### Causa raiz
 
-### B. `src/components/EntryDrawer.tsx`
-- Remover o `toast("Rascunho restaurado", …)` (linha 157).
-- Garantir que `onOpenChange(false)` (cancelar/fechar/overlay) chame `draftRef.clear()`. Hoje só limpa em sucesso/`reset()` chamado no submit. Vou interceptar o `onOpenChange` do Drawer raiz: se `open === false` e não houve submit bem-sucedido, chamar `draftRef.clear()`. Mantemos o salvamento automático no `onChange` intacto.
-- A hidratação já ocorre uma única vez por abertura via `restoredOnceRef` — isso atende ao requisito de "apenas no mount do formulário". Não muda.
+1. **`useSubscription`** ainda escuta `window.focus`, `online` e `visibilitychange` e dispara `load()` (duas queries Supabase) toda vez que o app volta do background. Isso re-renderiza `RequirePremium` → `AppLayout` → todo o conteúdo, e qualquer drawer/modal aberto sofre re-mount visual (a animação de entrada do Drawer roda de novo porque o Radix Drawer reage à mudança de árvore).
+2. **`AppLayout`** usa `<div key={location.pathname}>` com `animate-fade-in-up`. Em re-render do pai, mesmo sem mudar rota, o React pode reconciliar e a animação CSS re-executa em alguns casos (especialmente quando o filho remonta por causa de mudança em contexto premium).
+3. **`GuidedFlow`** hoje persiste rascunho corretamente, mas o container interno usa `key={`${step}-${stepIdx}`} className="animate-fade-in"` — toda vez que o pai re-renderiza por causa do refetch acima, o passo atual reanima. Em caso pior (re-mount do `RequirePremium`), o wizard inteiro é desmontado, perdendo `useState` e exibindo "passo 1" antes de o sessionStorage reidratar — exatamente o caso que você reportou.
+
+## Fase 2 — Implementação (escopo cirúrgico, só críticos)
+
+### A. `src/hooks/useSubscription.ts`
+- Remover os listeners de `window.focus`, `window.online` e `document.visibilitychange` que disparam `load()`.
+- Manter o canal realtime do Supabase (`postgres_changes`) — esse já cobre invalidação quando a assinatura realmente muda no banco, sem custo de re-render ao alternar app.
+- Resultado: voltar do background não dispara mais nenhuma query nem re-render em `RequirePremium`/`AppLayout`.
+
+### B. `src/components/AppLayout.tsx`
+- Remover `animate-fade-in-up` do wrapper `<div key={location.pathname}>`. Manter o `key` (necessário para resetar scroll/animação entre rotas), mas trocar a animação por uma transição neutra ou remover totalmente. Motivo: essa classe é a fonte da "animação de entrada" visível ao voltar do background quando algo no contexto força re-render.
+- Não altera navegação real entre rotas (a transição entre páginas continua suave pelo próprio router).
 
 ### C. `src/components/planejamento/GuidedFlow.tsx`
-- Remover o `useEffect` que dispara `toast("Rascunho restaurado", …)` (linhas 155-163).
-- Garantir `planningDraft.clear()` em todos os caminhos de cancelamento: `onCancel` (já existe), e também quando o usuário fecha o sheet sem concluir. Conferir os handlers já presentes — adicionar `.clear()` onde estiver faltando.
+- Remover o `animate-fade-in` do container `<div key={`${step}-${stepIdx}`}>`. O `key` continua trocando entre passos (transição interna), mas sem reanimar quando o pai re-renderiza.
+- Garantir hidratação síncrona já existente continua funcionando — sem mudanças no `useRef` de snapshot.
 
-### D. `useDraftPersistence.ts`
-- Já expõe `clear()` (equivalente a `clearDraft`). Sem mudanças no hook.
-- Adicionar comentário curto reforçando: "Hidratação deve acontecer no mount; nunca em listeners de foco/visibility."
+### D. `src/components/EntryDrawer.tsx`
+- Sem mudanças de lógica. A correção em A (parar refetch no foco) já elimina o re-mount do Drawer ao voltar do app. A persistência de rascunho (sessionStorage) continua cobrindo qualquer caso residual de reload real.
+
+### O que NÃO vou mexer
+- `useDraftPersistence` (sessionStorage continua — atende "só retorno rápido" como você pediu).
+- `QueryClient` (já está com `refetchOnWindowFocus/Reconnect/Mount: false` e `staleTime` de 5min — correto).
+- Cálculos, rotas, Supabase, schemas, RLS, lógica de planejamento.
+- Outros modais (`CarFormDialog`, `CategoryDialog`, `NotificationsSheet`, etc.) — não estão na lista de críticos.
 
 ## Arquivos impactados
-- `src/App.tsx`
-- `src/components/EntryDrawer.tsx`
-- `src/components/planejamento/GuidedFlow.tsx`
-- `src/hooks/useDraftPersistence.ts` (apenas comentário)
-
-## Blindagem
-- Sem mudanças em rotas, Supabase, lógica de cálculo, ou em `CarFormDialog`/`CategoryDialog`.
-- Salvamento automático de rascunho permanece (apenas silencioso).
+- `src/hooks/useSubscription.ts` (remover 3 listeners + cleanup)
+- `src/components/AppLayout.tsx` (remover `animate-fade-in-up`)
+- `src/components/planejamento/GuidedFlow.tsx` (remover `animate-fade-in` do container do passo)
 
 ## Critérios de aceite
-- Voltar de outra aba/app não dispara refetch visível.
-- Cancelar/fechar EntryDrawer e GuidedFlow limpa o rascunho imediatamente.
-- Nenhum toast de restauração aparece.
+- Minimizar o app no meio do EntryDrawer e voltar: drawer continua aberto, valores preservados, **sem reanimação de entrada**.
+- Minimizar no meio do GuidedFlow (qualquer passo) e voltar: continua no mesmo passo, com os campos preenchidos, sem voltar ao passo 1, sem flash.
+- Trocar de aba e voltar não dispara nenhuma chamada à `subscriptions`/`profiles`.
+- Premium continua sincronizado quando há mudança real (canal realtime intacto).
 
 ## Fase 3 — Relatório final
-Ao concluir, entrego: causa raiz, lista de arquivos, resumo da solução e status dos critérios.
+Ao concluir, te entrego: causa raiz validada, lista exata de arquivos, resumo da solução e status dos critérios.
