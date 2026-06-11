@@ -119,6 +119,9 @@ export function useSubscription(userId: string | null | undefined): Subscription
     load();
     if (!userId) return;
 
+    // Sincronização passiva: apenas o canal realtime do backend.
+    // Não escutamos focus/visibilitychange/online — voltar do background
+    // não deve disparar refetch e re-render que reanime modais abertos.
     const ch = supabase
       .channel(`sub-${userId}-${Math.random().toString(36).slice(2)}`)
       .on(
@@ -128,19 +131,8 @@ export function useSubscription(userId: string | null | undefined): Subscription
       )
       .subscribe();
 
-    const onFocus = () => load();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") load();
-    };
-    window.addEventListener("focus", onFocus);
-    window.addEventListener("online", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-
     return () => {
       supabase.removeChannel(ch);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener("online", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
