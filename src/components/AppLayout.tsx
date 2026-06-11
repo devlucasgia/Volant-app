@@ -15,7 +15,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <main className={`mx-auto max-w-md ${chromeHidden ? "pb-0" : "pb-32"}`}>
-        <div key={location.pathname} className="animate-fade-in-up">
+        <div key={location.pathname}>
           <Outlet />
         </div>
       </main>
