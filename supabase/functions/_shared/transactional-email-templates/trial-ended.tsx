@@ -10,6 +10,8 @@ interface Props {
   entriesCount?: number
   checkoutUrl?: string
   couponCode?: string
+  discountLabel?: string
+  promoEnabled?: boolean
 }
 
 const TrialEndedEmail = ({
@@ -17,8 +19,12 @@ const TrialEndedEmail = ({
   netTotal = 'R$ 0,00',
   entriesCount = 0,
   checkoutUrl = 'https://usevolant.app/app',
-  couponCode = 'primeiros25',
-}: Props) => (
+  couponCode = '',
+  discountLabel = '25% off',
+  promoEnabled = false,
+}: Props) => {
+  const showPromo = promoEnabled && !!couponCode
+  return (
   <Html lang="pt-BR" dir="ltr">
     <Head />
     <Preview>Seu trial acabou — seus dados estão salvos, é só ativar pra continuar</Preview>
@@ -32,16 +38,18 @@ const TrialEndedEmail = ({
           continuar de onde parou.
         </Text>
 
-        <Section style={cardHighlight}>
-          <Text style={badgeText}>CUPOM AINDA VÁLIDO</Text>
-          <Text style={offerTitle}>25% off no primeiro pagamento</Text>
-          <Text style={offerCode}>
-            Cupom: <strong>{couponCode}</strong>
-          </Text>
-          <Text style={offerHint}>
-            Volte a registrar suas corridas e a ver seu lucro real em segundos.
-          </Text>
-        </Section>
+        {showPromo && (
+          <Section style={cardHighlight}>
+            <Text style={badgeText}>CUPOM AINDA VÁLIDO</Text>
+            <Text style={offerTitle}>{discountLabel} no primeiro pagamento</Text>
+            <Text style={offerCode}>
+              Cupom: <strong>{couponCode}</strong>
+            </Text>
+            <Text style={offerHint}>
+              Volte a registrar suas corridas e a ver seu lucro real em segundos.
+            </Text>
+          </Section>
+        )}
 
         <Section style={{ textAlign: 'center', margin: '24px 0 8px' }}>
           <Button href={checkoutUrl} style={cta}>Voltar a usar o Volant</Button>
@@ -55,7 +63,9 @@ const TrialEndedEmail = ({
       </Container>
     </Body>
   </Html>
-)
+  )
+}
+
 
 export const template = {
   component: TrialEndedEmail,
