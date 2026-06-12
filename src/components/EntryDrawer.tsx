@@ -139,7 +139,11 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       const saved = draftRef.load();
       if (saved) {
         try {
-          setTab(saved.tab ?? (preset?.tab ?? "earning"));
+          // IMPORTANTE: quando o usuário tocou em "Novo ganho" ou "Novo gasto",
+          // o `preset.tab` precisa vencer qualquer aba salva no rascunho — caso
+          // contrário o app reabre sempre na última aba aberta. Mesma regra
+          // vale para a categoria de gasto vinda do preset.
+          setTab(preset?.tab ?? saved.tab ?? "earning");
           setDate(saved.date ? new Date(saved.date) : new Date());
           setApp(saved.app ?? "uber");
           setKmMode(saved.kmMode ?? "total");
@@ -150,7 +154,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           setGross(saved.gross ?? null);
           setRides(saved.rides ?? null);
           setNotes(saved.notes ?? "");
-          setCategory(saved.category ?? (preset?.category ?? "combustivel"));
+          setCategory(preset?.category ?? saved.category ?? "combustivel");
           setMaintenanceType(saved.maintenanceType ?? "oleo");
           setAmount(saved.amount ?? null);
           setDescription(saved.description ?? "");
@@ -158,6 +162,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         } catch { /* noop */ }
       }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, preset, editing]);
 
