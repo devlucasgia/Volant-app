@@ -8,6 +8,7 @@
 // Skips users who already have an active paid/grandfathered subscription.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { TRIAL_PROMO, isPromoActive } from "../_shared/promo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,7 @@ const corsHeaders = {
 };
 
 const APP_URL = "https://usevolant.app/app";
-const COUPON = "primeiros25";
+
 
 type Stage = "welcome" | "ending_soon" | "ended";
 
@@ -150,13 +151,17 @@ Deno.serve(async (req) => {
         const expenses = rows.filter(r => r.type === "expense").reduce((s, r) => s + Number(r.expense_amount || 0), 0);
         const net = gross - expenses;
         templateName = stage === "ending_soon" ? "trial-ending-soon" : "trial-ended";
+        const promoOn = isPromoActive();
         templateData = {
           name: firstName,
           netTotal: formatBRL(Math.max(0, net)),
           entriesCount: rows.length,
           checkoutUrl,
-          couponCode: COUPON,
+          couponCode: promoOn ? TRIAL_PROMO.couponCode : "",
+          discountLabel: promoOn ? TRIAL_PROMO.discountLabel : "",
+          promoEnabled: promoOn,
         };
+
       }
 
       const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
