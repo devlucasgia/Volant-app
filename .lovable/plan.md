@@ -1,55 +1,103 @@
-# Estabilização PWA — Fluxos críticos (Entrada e Planejamento)
-
-## Resposta direta à sua pergunta
-
-Não, esse comportamento **não é esperado** e não é como apps consolidados (Nubank, Uber, iFood, WhatsApp) tratam volta de background. PWAs também conseguem o mesmo padrão premium — desde que a app:
-
-1. Não desmonte componentes ao perder/recuperar foco.
-2. Não dispare refetch de dados que causa re-render visual em formulários abertos.
-3. Mantenha o estado do wizard preservado em memória + fallback persistente, sem reanimar a tela de entrada.
-
-Hoje o Volant ainda tem 3 causas que sobraram da sprint anterior:
+## 1. Bug do botão Novo Ganho/Novo Gasto
 
 ### Causa raiz
+O `EntryDrawer` aplica o `preset.tab` no `useEffect` de abertura, mas logo em seguida carrega o rascunho da sessão (`useDraftPersistence`) e sobrescreve `setTab(saved.tab ?? …)`. Resultado: o app sempre reabre na última aba salva, ignorando o botão que o usuário acabou de tocar.
 
-1. **`useSubscription`** ainda escuta `window.focus`, `online` e `visibilitychange` e dispara `load()` (duas queries Supabase) toda vez que o app volta do background. Isso re-renderiza `RequirePremium` → `AppLayout` → todo o conteúdo, e qualquer drawer/modal aberto sofre re-mount visual (a animação de entrada do Drawer roda de novo porque o Radix Drawer reage à mudança de árvore).
-2. **`AppLayout`** usa `<div key={location.pathname}>` com `animate-fade-in-up`. Em re-render do pai, mesmo sem mudar rota, o React pode reconciliar e a animação CSS re-executa em alguns casos (especialmente quando o filho remonta por causa de mudança em contexto premium).
-3. **`GuidedFlow`** hoje persiste rascunho corretamente, mas o container interno usa `key={`${step}-${stepIdx}`} className="animate-fade-in"` — toda vez que o pai re-renderiza por causa do refetch acima, o passo atual reanima. Em caso pior (re-mount do `RequirePremium`), o wizard inteiro é desmontado, perdendo `useState` e exibindo "passo 1" antes de o sessionStorage reidratar — exatamente o caso que você reportou.
+### Correção
+No bloco de restauração do rascunho em `src/components/EntryDrawer.tsx`, **respeitar o `preset.tab` quando ele vier definido** (e o mesmo para `preset.category`):
 
-## Fase 2 — Implementação (escopo cirúrgico, só críticos)
+```ts
+setTab(preset?.tab ?? saved.tab ?? "earning");
+setCategory(preset?.category ?? saved.category ?? "combustivel");
+```
 
-### A. `src/hooks/useSubscription.ts`
-- Remover os listeners de `window.focus`, `window.online` e `document.visibilitychange` que disparam `load()`.
-- Manter o canal realtime do Supabase (`postgres_changes`) — esse já cobre invalidação quando a assinatura realmente muda no banco, sem custo de re-render ao alternar app.
-- Resultado: voltar do background não dispara mais nenhuma query nem re-render em `RequirePremium`/`AppLayout`.
+Mudança de 2 linhas, nenhum efeito colateral nos demais campos do rascunho (km, valor, observações continuam sendo restaurados normalmente).
 
-### B. `src/components/AppLayout.tsx`
-- Remover `animate-fade-in-up` do wrapper `<div key={location.pathname}>`. Manter o `key` (necessário para resetar scroll/animação entre rotas), mas trocar a animação por uma transição neutra ou remover totalmente. Motivo: essa classe é a fonte da "animação de entrada" visível ao voltar do background quando algo no contexto força re-render.
-- Não altera navegação real entre rotas (a transição entre páginas continua suave pelo próprio router).
+---
 
-### C. `src/components/planejamento/GuidedFlow.tsx`
-- Remover o `animate-fade-in` do container `<div key={`${step}-${stepIdx}`}>`. O `key` continua trocando entre passos (transição interna), mas sem reanimar quando o pai re-renderiza.
-- Garantir hidratação síncrona já existente continua funcionando — sem mudanças no `useRef` de snapshot.
+## 2. Header cobrindo o relógio do iPhone
 
-### D. `src/components/EntryDrawer.tsx`
-- Sem mudanças de lógica. A correção em A (parar refetch no foco) já elimina o re-mount do Drawer ao voltar do app. A persistência de rascunho (sessionStorage) continua cobrindo qualquer caso residual de reload real.
+### Causa raiz
+`apple-mobile-web-app-status-bar-style = black-translucent` + `viewport-fit=cover` fazem o conteúdo ocupar a área da Dynamic Island. O `<main>` do `AppLayout` não aplica `env(safe-area-inset-top)`.
 
-### O que NÃO vou mexer
-- `useDraftPersistence` (sessionStorage continua — atende "só retorno rápido" como você pediu).
-- `QueryClient` (já está com `refetchOnWindowFocus/Reconnect/Mount: false` e `staleTime` de 5min — correto).
-- Cálculos, rotas, Supabase, schemas, RLS, lógica de planejamento.
-- Outros modais (`CarFormDialog`, `CategoryDialog`, `NotificationsSheet`, etc.) — não estão na lista de críticos.
+### Correção
+Em `src/components/AppLayout.tsx`, adicionar no `<main>`:
 
-## Arquivos impactados
-- `src/hooks/useSubscription.ts` (remover 3 listeners + cleanup)
-- `src/components/AppLayout.tsx` (remover `animate-fade-in-up`)
-- `src/components/planejamento/GuidedFlow.tsx` (remover `animate-fade-in` do container do passo)
+```tsx
+<main
+  className={…}
+  style={{ paddingTop: "env(safe-area-inset-top)" }}
+>
+```
 
-## Critérios de aceite
-- Minimizar o app no meio do EntryDrawer e voltar: drawer continua aberto, valores preservados, **sem reanimação de entrada**.
-- Minimizar no meio do GuidedFlow (qualquer passo) e voltar: continua no mesmo passo, com os campos preenchidos, sem voltar ao passo 1, sem flash.
-- Trocar de aba e voltar não dispara nenhuma chamada à `subscriptions`/`profiles`.
-- Premium continua sincronizado quando há mudança real (canal realtime intacto).
+Resolve Tela de Início, Histórico, Relatórios e Ajustes de uma vez. Páginas fora do `AppLayout` (Auth, Landing, Checkout, Paywall, Onboarding) já tratam safe-area.
 
-## Fase 3 — Relatório final
-Ao concluir, te entrego: causa raiz validada, lista exata de arquivos, resumo da solução e status dos critérios.
+---
+
+## 3. Modal in-app de fim de trial (D-2 / D-1 / D-0) com cupom 25%
+
+### Comportamento
+Quando o usuário abrir o app e estiver no trial interno (`internalTrialActive` ou `internalTrialExpired`) com **0, 1 ou 2 dias** restantes, exibir um **modal premium** (mesmo visual do paywall, mais enxuto) com:
+
+- Título dinâmico:
+  - D-2: "Faltam 2 dias do seu acesso gratuito"
+  - D-1: "Seu acesso termina amanhã"
+  - D-0 ativo: "Seu acesso termina hoje"
+  - D-0 expirado: "Seu acesso gratuito acabou"
+- Resumo curto: "Continue acompanhando seus ganhos, gastos e lucro com o Volant Premium."
+- Destaque do cupom **PRIMEIROS25 — 25% off** (quando ativo)
+- CTA principal: "Assinar com desconto" → abre o paywall (`openPaywall()`) com o cupom já visível
+- CTA secundário: "Agora não" — fecha
+
+### Frequência (não-invasivo)
+- Aparece no máximo **1× por dia por usuário** (localStorage: `volant_trial_modal_last_shown_<userId>`).
+- Não aparece se o usuário já tem premium pago.
+- Não aparece em rotas sensíveis (`/checkout/*`, `/auth`).
+- Aparece com 1,5s de atraso após carregar a Home, para não competir com outros prompts (install PWA).
+
+### Onde monta
+Componente novo `src/components/TrialEndingModal.tsx`, montado no `AppLayout` (uma única instância para o app inteiro). Lê `useSubscription` + `useAuth` para decidir.
+
+### Controle do cupom (resposta à sua pergunta)
+Hoje o cupom `primeiros25` está **hard-coded** em `supabase/functions/check-trial-emails/index.ts`. Para você não precisar voltar aqui no futuro, vou centralizar em um único arquivo de configuração:
+
+`src/config/promo.ts` (frontend) e `supabase/functions/_shared/promo.ts` (backend):
+
+```ts
+export const TRIAL_PROMO = {
+  enabled: true,           // ← desligue aqui para parar e-mail e modal
+  couponCode: "PRIMEIROS25",
+  discountLabel: "25% off",
+  endsAt: null,            // opcional: ISO date para auto-expirar
+};
+```
+
+- **Modal in-app**: quando `enabled=false` ou `endsAt` passou → modal continua aparecendo (D-2/-1/-0) mas **sem** a faixa do cupom (texto vira "Assinar agora").
+- **E-mails de trial**: o `check-trial-emails` lê a mesma flag — quando `enabled=false`, os templates `trial-ending-soon` e `trial-ended` são enviados sem mencionar cupom.
+- **Resultado**: para parar a promoção no futuro, você muda **uma linha** (`enabled: true → false`) e me pede para publicar — nada mais.
+
+### Disparo retroativo "essa noite"
+Para os usuários que **já estão** em D-2/D-1/D-0 hoje à noite: o modal aparece automaticamente na próxima vez que abrirem o app (não precisa job manual). Não vou criar nenhum job de push nem reenviar e-mails — só o modal in-app cobre esse caso.
+
+---
+
+## 4. Resumo de mudanças
+
+| Arquivo | Mudança |
+|---|---|
+| `src/components/EntryDrawer.tsx` | Respeitar `preset.tab`/`preset.category` ao restaurar rascunho |
+| `src/components/AppLayout.tsx` | `paddingTop: env(safe-area-inset-top)` no `<main>` + montar `<TrialEndingModal />` |
+| `src/components/TrialEndingModal.tsx` (novo) | Modal premium D-2/D-1/D-0 com CTA e cupom |
+| `src/config/promo.ts` (novo) | Flag única `enabled` + `couponCode` para frontend |
+| `supabase/functions/_shared/promo.ts` (novo) | Mesma config para edge functions |
+| `supabase/functions/check-trial-emails/index.ts` | Ler config compartilhada em vez de constante local |
+| `supabase/functions/_shared/transactional-email-templates/trial-ending-soon.tsx` | Renderizar cupom condicionalmente |
+| `supabase/functions/_shared/transactional-email-templates/trial-ended.tsx` | Idem |
+
+Não mexe em: schema, autenticação, cálculos, planejamento, outras telas, navegação ou cron.
+
+### Critério de aceite
+- iPhone PWA: header "Olá, Gabriela" não toca mais o relógio.
+- Abrir Novo Ganho → fechar → abrir Novo Gasto → drawer abre em "Gasto" (e vice-versa).
+- Conta no trial D-2/D-1/D-0 sem premium pago: ao abrir o app, modal aparece com cupom **PRIMEIROS25** e botão "Assinar com desconto"; aparece no máximo 1×/dia; não aparece para premium pago.
+- Mudar `TRIAL_PROMO.enabled = false` esconde o cupom no modal e nos e-mails sem outras mudanças.

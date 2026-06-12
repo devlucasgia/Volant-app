@@ -10,6 +10,8 @@ interface Props {
   entriesCount?: number
   checkoutUrl?: string
   couponCode?: string
+  discountLabel?: string
+  promoEnabled?: boolean
 }
 
 const TrialEndingSoonEmail = ({
@@ -17,11 +19,19 @@ const TrialEndingSoonEmail = ({
   netTotal = 'R$ 0,00',
   entriesCount = 0,
   checkoutUrl = 'https://usevolant.app/app',
-  couponCode = 'primeiros25',
-}: Props) => (
+  couponCode = '',
+  discountLabel = '25% off',
+  promoEnabled = false,
+}: Props) => {
+  const showPromo = promoEnabled && !!couponCode
+  return (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Faltam 2 dias do seu trial — use {couponCode} e leve 25% off</Preview>
+    <Preview>
+      {showPromo
+        ? `Faltam 2 dias do seu trial — use ${couponCode} e leve ${discountLabel}`
+        : 'Faltam 2 dias do seu trial — continue de onde parou'}
+    </Preview>
     <Body style={main}>
       <Container style={container}>
         <Heading style={h1}>Faltam 2 dias do seu trial{name ? `, ${name}` : ''} ⏳</Heading>
@@ -31,20 +41,24 @@ const TrialEndingSoonEmail = ({
           no Volant. Não perca esse histórico nem a clareza que ele te dá.
         </Text>
 
-        <Section style={cardHighlight}>
-          <Text style={badgeText}>OFERTA PRA VOCÊ</Text>
-          <Text style={offerTitle}>25% off no primeiro pagamento</Text>
-          <Text style={offerCode}>
-            Cupom: <strong>{couponCode}</strong>
-          </Text>
-          <Text style={offerHint}>
-            Vale no plano mensal ou anual. Ative agora e mantenha tudo no lugar
-            quando o trial acabar.
-          </Text>
-        </Section>
+        {showPromo && (
+          <Section style={cardHighlight}>
+            <Text style={badgeText}>OFERTA PRA VOCÊ</Text>
+            <Text style={offerTitle}>{discountLabel} no primeiro pagamento</Text>
+            <Text style={offerCode}>
+              Cupom: <strong>{couponCode}</strong>
+            </Text>
+            <Text style={offerHint}>
+              Vale no plano mensal ou anual. Ative agora e mantenha tudo no lugar
+              quando o trial acabar.
+            </Text>
+          </Section>
+        )}
 
         <Section style={{ textAlign: 'center', margin: '24px 0 8px' }}>
-          <Button href={checkoutUrl} style={cta}>Assinar com 25% off</Button>
+          <Button href={checkoutUrl} style={cta}>
+            {showPromo ? `Assinar com ${discountLabel}` : 'Assinar agora'}
+          </Button>
         </Section>
 
         <Hr style={hr} />
@@ -55,7 +69,9 @@ const TrialEndingSoonEmail = ({
       </Container>
     </Body>
   </Html>
-)
+  )
+}
+
 
 export const template = {
   component: TrialEndingSoonEmail,
