@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useDraftPersistence } from "@/hooks/useDraftPersistence";
+import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 
 const ENTRY_DRAFT_KEY = "volant_draft_entry_v1";
 interface EntryDraft {
