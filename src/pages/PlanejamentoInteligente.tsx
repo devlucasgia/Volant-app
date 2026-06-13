@@ -125,8 +125,9 @@ export default function PlanejamentoInteligente() {
       });
       return;
     }
+    // Meta agora é sempre líquida — passo 1 (bruto/líquido) some do fluxo de ajuste.
     const editSteps: Record<Exclude<AjustarOpcao, "custos">, number[]> = {
-      meta: [1, 2],
+      meta: [2],
       dias: [3],
       kmDia: [4],
     };
