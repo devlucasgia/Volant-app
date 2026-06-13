@@ -207,7 +207,8 @@ export function GuidedFlow({
       if (isEdit) {
         if (stepsList.includes(1) || stepsList.includes(2)) {
           patch.monthlyGoal = draft.monthlyGoal;
-          patch.goalType = draft.goalType;
+          // Modelo atual: meta cadastrada representa SEMPRE o líquido desejado.
+          patch.goalType = stepsList.includes(1) ? draft.goalType : "liquido";
         }
         if (stepsList.includes(3)) {
           patch.planningSelectedDates = draft.selectedDates;
