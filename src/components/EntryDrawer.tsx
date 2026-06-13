@@ -275,15 +275,24 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     }
   };
 
+  const { ref: scrollRef, keyboardHeight } = useKeyboardAwareScroll<HTMLDivElement>();
+
   return (
     <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DrawerContent className="max-h-[92dvh] flex flex-col">
+      <DrawerContent className={cn("flex flex-col", keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]") }>
         <div className="mx-auto flex w-full max-w-md flex-1 min-h-0 flex-col">
           <DrawerHeader className="pb-2 shrink-0">
             <DrawerTitle>{isEditing ? "Editar registro" : "Novo registro"}</DrawerTitle>
           </DrawerHeader>
 
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-4" style={{ WebkitOverflowScrolling: "touch" }}>
+          <div
+            ref={scrollRef}
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-4"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              paddingBottom: keyboardHeight > 0 ? keyboardHeight + 24 : undefined,
+            }}
+          >
             <div className="mb-4 space-y-2">
               <Label>Data do registro</Label>
               <Popover>
