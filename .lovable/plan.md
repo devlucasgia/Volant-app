@@ -1,103 +1,64 @@
-## 1. Bug do botão Novo Ganho/Novo Gasto
+# 4 ajustes pontuais
 
-### Causa raiz
-O `EntryDrawer` aplica o `preset.tab` no `useEffect` de abertura, mas logo em seguida carrega o rascunho da sessão (`useDraftPersistence`) e sobrescreve `setTab(saved.tab ?? …)`. Resultado: o app sempre reabre na última aba salva, ignorando o botão que o usuário acabou de tocar.
+## Ajuste 1 — "Ajustar Meta" sem bruto/líquido
+**Arquivos:** `src/components/planejamento/AjustarSheet.tsx` + `src/components/planejamento/GuidedFlow.tsx` (apenas no fluxo de edição)
 
-### Correção
-No bloco de restauração do rascunho em `src/components/EntryDrawer.tsx`, **respeitar o `preset.tab` quando ele vier definido** (e o mesmo para `preset.category`):
+- No `AjustarSheet`, o mapeamento da opção `meta` hoje envia `editSteps: [1, 2]`. O passo 1 é a escolha bruto/líquido — incoerente, já que o cadastro novo é sempre líquido.
+- Trocar para `editSteps: [2]` (apenas o valor da meta mensal).
+- No `GuidedFlow.finish()`, quando o usuário edita só o passo 2, garantir `patch.goalType = "liquido"` (caso o registro antigo ainda esteja com `bruto`), normalizando silenciosamente. Sem alterar tela, textos ou cálculos do passo 2.
 
-```ts
-setTab(preset?.tab ?? saved.tab ?? "earning");
-setCategory(preset?.category ?? saved.category ?? "combustivel");
-```
+Nada muda no fluxo inicial nem em "Refazer planejamento".
 
-Mudança de 2 linhas, nenhum efeito colateral nos demais campos do rascunho (km, valor, observações continuam sendo restaurados normalmente).
+## Ajuste 2 — Card de Jornada mais compacto na Home
+**Arquivo:** `src/components/JourneyModule.tsx`
 
----
+Reduzir verticalmente preservando todas as funções (iniciar, pausa descanso, retornar, encerrar, meta do dia, status, prefill no fim da jornada):
 
-## 2. Header cobrindo o relógio do iPhone
+- Header de status + cronômetro em **uma única linha** (status à esquerda, tempo grande à direita) em vez do bloco central atual de ~80px.
+- Remover o bloco "Tempo" duplicado: o cronômetro grande passa a ser o próprio relógio principal, em linha com o status.
+- Mini-stats "Trabalhado / Descanso" colapsam para uma linha discreta abaixo do cronômetro, em texto menor (apenas visíveis quando há tempo > 0 ou jornada ativa/encerrada). Quando `idle`, só aparece o CTA.
+- Padding interno do card: `p-4` → `p-3.5`; gaps reduzidos; botão principal `h-11` → `h-10`.
+- Tipografia do cronômetro `text-4xl` → `text-3xl tabular-nums`, mantendo legibilidade.
+- Texto de rodapé ("O timer continua...") só aparece em estado `idle`; nos demais estados some para reduzir altura.
+- Manter cor de acento (verde/azul) ligada a `heroView`, animações de pulse e ícones — só muda a densidade.
 
-### Causa raiz
-`apple-mobile-web-app-status-bar-style = black-translucent` + `viewport-fit=cover` fazem o conteúdo ocupar a área da Dynamic Island. O `<main>` do `AppLayout` não aplica `env(safe-area-inset-top)`.
+Resultado esperado: card encolhe ~40% em altura, retangular, ainda premium e legível.
 
-### Correção
-Em `src/components/AppLayout.tsx`, adicionar no `<main>`:
+## Ajuste 3 — Header da Landing sobrepondo a status bar do iPhone
+**Arquivo:** `src/pages/Landing.tsx` (componente `Header`)
 
-```tsx
-<main
-  className={…}
-  style={{ paddingTop: "env(safe-area-inset-top)" }}
->
-```
+- Adicionar `style={{ paddingTop: "env(safe-area-inset-top)" }}` no `<header sticky top-0 ...>`.
+- Aplicar a mesma técnica no painel mobile do menu hambúrguer (já herda o pai, mas validar).
+- O `<html>` da landing já roda dark + viewport-fit=cover via `index.html`; nenhuma mudança global necessária.
 
-Resolve Tela de Início, Histórico, Relatórios e Ajustes de uma vez. Páginas fora do `AppLayout` (Auth, Landing, Checkout, Paywall, Onboarding) já tratam safe-area.
+Resolve o "Testar grátis" preso embaixo do relógio no iPhone 12 Pro Max e qualquer notch/Dynamic Island.
 
----
+## Ajuste 4 — Teclado do iOS cobrindo campos em formulários
+**Arquivos:** `src/components/EntryDrawer.tsx` (e qualquer Drawer com inputs reusa o mesmo padrão); novo hook `src/hooks/useKeyboardAwareScroll.ts`.
 
-## 3. Modal in-app de fim de trial (D-2 / D-1 / D-0) com cupom 25%
+Causa: no iOS o teclado **não** redimensiona `100dvh`; ele apenas cobre a tela. `DrawerContent` com `max-h-[92dvh]` continua do mesmo tamanho e o input ativo fica atrás do teclado.
 
-### Comportamento
-Quando o usuário abrir o app e estiver no trial interno (`internalTrialActive` ou `internalTrialExpired`) com **0, 1 ou 2 dias** restantes, exibir um **modal premium** (mesmo visual do paywall, mais enxuto) com:
+Correção (padrão consolidado de apps PWA):
+1. Novo hook `useKeyboardAwareScroll` que:
+   - Observa `window.visualViewport` (`resize` + `scroll`).
+   - Quando a diferença entre `window.innerHeight` e `visualViewport.height` indica teclado aberto (>150px), expõe `keyboardHeight`.
+   - No `focusin` de qualquer `input/textarea/[contenteditable]` dentro de um container ref, faz `el.scrollIntoView({ block: "center", behavior: "smooth" })` após 50ms (espera o teclado animar).
+2. Aplicar no `EntryDrawer`: 
+   - Anexar ref no container rolável (`<div className="flex-1 min-h-0 overflow-y-auto ...">`).
+   - Aplicar `paddingBottom: keyboardHeight` nesse container quando teclado aberto, garantindo que o último campo + botão "Salvar" continuem alcançáveis com scroll.
+   - Ajustar `DrawerContent` para `max-h-[100dvh]` quando teclado aberto (evita conflito do drawer "snapping").
+3. O hook fica genérico e pode ser plugado em outros Drawers/Sheets com formulários (Meta da jornada, Feedback, etc.) — nesta sprint aplicamos só ao `EntryDrawer` para manter escopo crítico; demais ficam para futuro se necessário.
 
-- Título dinâmico:
-  - D-2: "Faltam 2 dias do seu acesso gratuito"
-  - D-1: "Seu acesso termina amanhã"
-  - D-0 ativo: "Seu acesso termina hoje"
-  - D-0 expirado: "Seu acesso gratuito acabou"
-- Resumo curto: "Continue acompanhando seus ganhos, gastos e lucro com o Volant Premium."
-- Destaque do cupom **PRIMEIROS25 — 25% off** (quando ativo)
-- CTA principal: "Assinar com desconto" → abre o paywall (`openPaywall()`) com o cupom já visível
-- CTA secundário: "Agora não" — fecha
-
-### Frequência (não-invasivo)
-- Aparece no máximo **1× por dia por usuário** (localStorage: `volant_trial_modal_last_shown_<userId>`).
-- Não aparece se o usuário já tem premium pago.
-- Não aparece em rotas sensíveis (`/checkout/*`, `/auth`).
-- Aparece com 1,5s de atraso após carregar a Home, para não competir com outros prompts (install PWA).
-
-### Onde monta
-Componente novo `src/components/TrialEndingModal.tsx`, montado no `AppLayout` (uma única instância para o app inteiro). Lê `useSubscription` + `useAuth` para decidir.
-
-### Controle do cupom (resposta à sua pergunta)
-Hoje o cupom `primeiros25` está **hard-coded** em `supabase/functions/check-trial-emails/index.ts`. Para você não precisar voltar aqui no futuro, vou centralizar em um único arquivo de configuração:
-
-`src/config/promo.ts` (frontend) e `supabase/functions/_shared/promo.ts` (backend):
-
-```ts
-export const TRIAL_PROMO = {
-  enabled: true,           // ← desligue aqui para parar e-mail e modal
-  couponCode: "PRIMEIROS25",
-  discountLabel: "25% off",
-  endsAt: null,            // opcional: ISO date para auto-expirar
-};
-```
-
-- **Modal in-app**: quando `enabled=false` ou `endsAt` passou → modal continua aparecendo (D-2/-1/-0) mas **sem** a faixa do cupom (texto vira "Assinar agora").
-- **E-mails de trial**: o `check-trial-emails` lê a mesma flag — quando `enabled=false`, os templates `trial-ending-soon` e `trial-ended` são enviados sem mencionar cupom.
-- **Resultado**: para parar a promoção no futuro, você muda **uma linha** (`enabled: true → false`) e me pede para publicar — nada mais.
-
-### Disparo retroativo "essa noite"
-Para os usuários que **já estão** em D-2/D-1/D-0 hoje à noite: o modal aparece automaticamente na próxima vez que abrirem o app (não precisa job manual). Não vou criar nenhum job de push nem reenviar e-mails — só o modal in-app cobre esse caso.
+Sem mudanças em cálculos, dados, autenticação ou backend.
 
 ---
 
-## 4. Resumo de mudanças
-
+## Resumo dos arquivos
 | Arquivo | Mudança |
 |---|---|
-| `src/components/EntryDrawer.tsx` | Respeitar `preset.tab`/`preset.category` ao restaurar rascunho |
-| `src/components/AppLayout.tsx` | `paddingTop: env(safe-area-inset-top)` no `<main>` + montar `<TrialEndingModal />` |
-| `src/components/TrialEndingModal.tsx` (novo) | Modal premium D-2/D-1/D-0 com CTA e cupom |
-| `src/config/promo.ts` (novo) | Flag única `enabled` + `couponCode` para frontend |
-| `supabase/functions/_shared/promo.ts` (novo) | Mesma config para edge functions |
-| `supabase/functions/check-trial-emails/index.ts` | Ler config compartilhada em vez de constante local |
-| `supabase/functions/_shared/transactional-email-templates/trial-ending-soon.tsx` | Renderizar cupom condicionalmente |
-| `supabase/functions/_shared/transactional-email-templates/trial-ended.tsx` | Idem |
-
-Não mexe em: schema, autenticação, cálculos, planejamento, outras telas, navegação ou cron.
-
-### Critério de aceite
-- iPhone PWA: header "Olá, Gabriela" não toca mais o relógio.
-- Abrir Novo Ganho → fechar → abrir Novo Gasto → drawer abre em "Gasto" (e vice-versa).
-- Conta no trial D-2/D-1/D-0 sem premium pago: ao abrir o app, modal aparece com cupom **PRIMEIROS25** e botão "Assinar com desconto"; aparece no máximo 1×/dia; não aparece para premium pago.
-- Mudar `TRIAL_PROMO.enabled = false` esconde o cupom no modal e nos e-mails sem outras mudanças.
+| `src/components/planejamento/AjustarSheet.tsx` | mapeamento `meta` → `[2]` |
+| `src/components/planejamento/GuidedFlow.tsx` | normaliza `goalType="liquido"` ao salvar edição de meta |
+| `src/components/JourneyModule.tsx` | layout compacto preservando funções |
+| `src/pages/Landing.tsx` | `paddingTop: env(safe-area-inset-top)` no `<header>` |
+| `src/hooks/useKeyboardAwareScroll.ts` (novo) | hook keyboard-aware (visualViewport + scrollIntoView) |
+| `src/components/EntryDrawer.tsx` | usa o hook + padding dinâmico no container rolável |

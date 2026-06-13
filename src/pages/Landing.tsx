@@ -134,7 +134,10 @@ function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+    <header
+      className="sticky top-0 z-30 border-b border-border/40 bg-background/70 backdrop-blur-xl"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <ScrollProgressBar />
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-4">
         <div className="flex items-center gap-2">
