@@ -119,54 +119,55 @@ export function JourneyModule() {
     }, 200);
   };
 
+  const hasTime = workMs > 0 || restMs > 0;
+
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className={cn("h-1.5 w-1.5 rounded-full", statusDot)} />
-          {statusLabel}
+    <section className="rounded-2xl border border-border bg-card p-3.5 shadow-sm">
+      {/* Linha única: status à esquerda, cronômetro à direita */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />
+          <span className="truncate text-[12px] font-medium text-muted-foreground">
+            {statusLabel}
+          </span>
+          {isEnded && <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />}
         </div>
-        {isEnded && <CheckCircle2 className="h-4 w-4 text-success" />}
+        <span className="text-2xl font-bold tabular-nums leading-none text-foreground">
+          {formatHMS(workMs)}
+        </span>
       </div>
 
-      {/* Compact timer — visually centered */}
-      <div className="flex flex-col items-center justify-center rounded-xl bg-muted/40 px-4 py-4">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Tempo</span>
-        <span className="mt-1 text-4xl font-bold tabular-nums leading-none">{formatHMS(workMs)}</span>
-      </div>
-
-      {/* Mini stats */}
-      <div className={cn("mt-3 grid gap-2", isEnded ? "grid-cols-3" : "grid-cols-2")}>
-        <div className="rounded-lg bg-muted/50 px-3 py-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Trabalhado</div>
-          <div className="text-sm font-bold tabular-nums">{formatHMS(workMs)}</div>
+      {/* Mini stats — só aparecem quando há tempo registrado */}
+      {hasTime && (
+        <div className="mt-2.5 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+          <span>
+            Trabalhado <span className="font-semibold tabular-nums text-foreground/85">{formatHMS(workMs)}</span>
+          </span>
+          <span>
+            Descanso <span className="font-semibold tabular-nums text-foreground/85">{formatHMS(restMs)}</span>
+          </span>
+          {isEnded && (
+            <span>
+              Total <span className="font-semibold tabular-nums text-foreground/85">{formatHMS(totalMs)}</span>
+            </span>
+          )}
         </div>
-        <div className="rounded-lg bg-muted/50 px-3 py-2">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Descanso</div>
-          <div className="text-sm font-bold tabular-nums">{formatHMS(restMs)}</div>
-        </div>
-        {isEnded && (
-          <div className="rounded-lg bg-success/10 px-3 py-2">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total</div>
-            <div className="text-sm font-bold tabular-nums">{formatHMS(totalMs)}</div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Controls */}
       <div className="mt-3 space-y-2">
         {state === "idle" && (
-          <Button onClick={() => openGoal(false)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
+          <Button onClick={() => openGoal(false)} className={cn("h-10 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Iniciar jornada
           </Button>
         )}
         {state === "running" && (
-          <Button onClick={pauseRest} variant="outline" className="h-11 w-full">
+          <Button onClick={pauseRest} variant="outline" className="h-10 w-full">
             <Coffee className="mr-2 h-4 w-4" /> Pausar para descanso
           </Button>
         )}
         {state === "resting" && (
-          <Button onClick={resumeWork} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
+          <Button onClick={resumeWork} className={cn("h-10 w-full transition-colors duration-500", journeyAccentBtn)}>
             <Play className="mr-2 h-4 w-4" /> Retornar do descanso
           </Button>
         )}
@@ -174,14 +175,14 @@ export function JourneyModule() {
           <Button
             onClick={() => setConfirmEnd(true)}
             variant="outline"
-            className="h-10 w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            className="h-9 w-full border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <StopCircle className="mr-2 h-4 w-4" /> Encerrar jornada
           </Button>
         )}
         {isEnded && (
           <>
-            <Button onClick={() => openGoal(true)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
+            <Button onClick={() => openGoal(true)} className={cn("h-10 w-full transition-colors duration-500", journeyAccentBtn)}>
               <Play className="mr-2 h-4 w-4" /> Iniciar nova jornada
             </Button>
             <Button onClick={reset} variant="ghost" className="h-9 w-full text-muted-foreground">
@@ -191,11 +192,11 @@ export function JourneyModule() {
         )}
       </div>
 
-      <p className="mt-3 text-center text-[11px] text-muted-foreground">
-        {isEnded
-          ? "A jornada anterior foi encerrada. Inicie uma nova quando quiser."
-          : "O timer continua mesmo se você fechar ou trocar de tela."}
-      </p>
+      {state === "idle" && (
+        <p className="mt-2.5 text-center text-[10.5px] text-muted-foreground/80">
+          O timer continua mesmo se você fechar ou trocar de tela.
+        </p>
+      )}
 
       {/* End confirmation */}
       <AlertDialog open={confirmEnd} onOpenChange={setConfirmEnd}>
