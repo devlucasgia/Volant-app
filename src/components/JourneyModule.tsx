@@ -121,105 +121,109 @@ export function JourneyModule() {
 
   const hasTime = workMs > 0 || restMs > 0;
 
+  const accentText =
+    state === "running" ? (isGross ? "text-[hsl(var(--goal-gross))]" : "text-success") :
+    state === "resting" ? "text-warning" :
+    "text-foreground";
+
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-card to-card/60 p-4 shadow-sm">
-      {/* Status pill */}
-      <div className="flex items-center justify-between">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-2.5 py-1">
-          <span className={cn("h-1.5 w-1.5 rounded-full", statusDot)} />
-          <span className="text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground">
-            {statusLabel}
-          </span>
-        </div>
-        {isEnded && (
-          <span className="inline-flex items-center gap-1 text-[10.5px] font-medium text-success">
-            <CheckCircle2 className="h-3 w-3" /> Concluída
-          </span>
-        )}
-      </div>
-
-      {/* Cronômetro hero */}
-      <div className="mt-3 text-center">
-        <div
-          className={cn(
-            "text-[44px] font-bold tabular-nums leading-none tracking-tight transition-colors",
-            state === "running" && (isGross ? "text-[hsl(var(--goal-gross))]" : "text-success"),
-            state === "resting" && "text-warning",
-            state === "ended" && "text-foreground",
-            state === "idle" && "text-foreground/85",
-          )}
-        >
-          {formatHMS(workMs)}
-        </div>
-        {hasTime ? (
-          <div className="mt-1.5 flex items-center justify-center gap-3 text-[11px] text-muted-foreground">
-            <span>
-              Trab. <span className="font-semibold tabular-nums text-foreground/85">{formatHMS(workMs)}</span>
-            </span>
-            <span className="h-2.5 w-px bg-border/70" />
-            <span className="inline-flex items-center gap-1">
-              <Coffee className="h-3 w-3" />
-              <span className="font-semibold tabular-nums text-foreground/85">{formatHMS(restMs)}</span>
-            </span>
-          </div>
-        ) : (
-          <div className="mt-1.5 text-[11px] text-muted-foreground">Tempo trabalhado hoje</div>
-        )}
-      </div>
-
-      {/* Controls */}
-      <div className="mt-4">
+    <section className="flex min-h-[72px] items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+      {/* Left: status + cronômetro */}
+      <div className="flex min-w-0 items-center gap-3">
         {state === "idle" && (
-          <Button onClick={() => openGoal(false)} className={cn("h-11 w-full transition-colors duration-500", journeyAccentBtn)}>
-            <Play className="mr-2 h-4 w-4" /> Iniciar jornada
+          <>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/40 text-muted-foreground">
+              <Play className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-foreground leading-tight">Jornada de hoje</div>
+              <div className="text-[11px] text-muted-foreground leading-tight">Toque para iniciar</div>
+            </div>
+          </>
+        )}
+
+        {(state === "running" || state === "resting") && (
+          <>
+            <span className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />
+            <div className="min-w-0">
+              <div className={cn("font-mono tabular-nums text-xl font-semibold leading-none", accentText)}>
+                {formatHMS(workMs)}
+              </div>
+              <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none">
+                {state === "running" ? "Ao vivo" : "Em descanso"}
+              </div>
+            </div>
+          </>
+        )}
+
+        {isEnded && (
+          <>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
+              <CheckCircle2 className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-foreground leading-tight">Jornada encerrada</div>
+              <div className="text-[11px] text-muted-foreground leading-tight tabular-nums">
+                Trab. {formatHMS(workMs)} · Pausa {formatHMS(restMs)}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Right: controls */}
+      <div className="flex shrink-0 items-center gap-1.5">
+        {state === "idle" && (
+          <Button onClick={() => openGoal(false)} className={cn("h-9 px-4 transition-colors duration-500", journeyAccentBtn)}>
+            <Play className="mr-1.5 h-3.5 w-3.5" /> Iniciar
           </Button>
         )}
 
         {state === "running" && (
-          <div className="flex gap-2">
-            <Button onClick={pauseRest} variant="outline" className="h-10 flex-1">
-              <Coffee className="mr-2 h-4 w-4" /> Descanso
+          <>
+            <Button onClick={pauseRest} variant="outline" size="sm" className="h-9">
+              <Coffee className="mr-1.5 h-3.5 w-3.5" /> Pausar
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              variant="outline"
               size="icon"
-              className="h-10 w-10 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-9 w-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
               <StopCircle className="h-4 w-4" />
             </Button>
-          </div>
+          </>
         )}
 
         {state === "resting" && (
-          <div className="flex gap-2">
-            <Button onClick={resumeWork} className={cn("h-10 flex-1 transition-colors duration-500", journeyAccentBtn)}>
-              <Play className="mr-2 h-4 w-4" /> Retornar
+          <>
+            <Button onClick={resumeWork} size="sm" className={cn("h-9 transition-colors duration-500", journeyAccentBtn)}>
+              <Play className="mr-1.5 h-3.5 w-3.5" /> Retornar
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              variant="outline"
               size="icon"
-              className="h-10 w-10 shrink-0 border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="h-9 w-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
               <StopCircle className="h-4 w-4" />
             </Button>
-          </div>
+          </>
         )}
 
         {isEnded && (
-          <div className="flex gap-2">
-            <Button onClick={() => openGoal(true)} className={cn("h-10 flex-1 transition-colors duration-500", journeyAccentBtn)}>
-              <Play className="mr-2 h-4 w-4" /> Nova jornada
+          <>
+            <Button onClick={() => openGoal(true)} size="sm" className={cn("h-9 transition-colors duration-500", journeyAccentBtn)}>
+              <Play className="mr-1.5 h-3.5 w-3.5" /> Nova
             </Button>
-            <Button onClick={reset} variant="outline" size="icon" className="h-10 w-10 shrink-0 text-muted-foreground" aria-label="Limpar tempos">
+            <Button onClick={reset} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" aria-label="Limpar tempos">
               <RotateCcw className="h-4 w-4" />
             </Button>
-          </div>
+          </>
         )}
       </div>
+      {/* statusLabel reservado para acessibilidade futura */}
+      <span className="sr-only">{statusLabel}</span>
 
       {/* End confirmation */}
       <AlertDialog open={confirmEnd} onOpenChange={setConfirmEnd}>
