@@ -524,126 +524,172 @@ export default function Reports() {
         </Drawer>
 
 
-        {/* Cards rendered in user-defined order. Adjacent twin metrics merge into pair layouts. */}
+        {/* Cards rendered in user-defined order.
+            - First visible item, if "net" or "grossExpenses" → HERO (no chrome, huge typography).
+            - "chart" → standalone block with no border.
+            - All other items → continuous list rows grouped in a single subtle container. */}
         {(() => {
-          const renderers: Record<ReportCardKey, () => React.ReactNode> = {
-            net: () => (
-              <div key="net" className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/20 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.4)]">
-                <div className="pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full bg-success/15 blur-[60px]" />
-                <div className="pointer-events-none absolute -left-12 -bottom-20 h-32 w-32 rounded-full bg-success/10 blur-[60px]" />
-                <div className="relative flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-success" />
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Lucro líquido</div>
-                </div>
-                <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
-                  {brl(s.net)}
-                </div>
-                <div className="relative mt-3 h-14">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
-                      <defs>
-                        <linearGradient id="netGlow" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.4} />
-                          <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlow)" dot={false} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            ),
-            perHour: () => (
-              <div key="perHour" className="relative overflow-hidden rounded-2xl border border-success/30 bg-gradient-to-br from-success/18 via-success/8 to-success/[0.03] p-4 shadow-[0_8px_32px_-16px_hsl(var(--success)/0.38)] flex flex-col">
-                <div className="pointer-events-none absolute -right-12 -top-16 h-36 w-36 rounded-full bg-success/15 blur-[60px]" />
-                <div className="relative flex items-center gap-2">
-                  <Gauge className="h-4 w-4 text-success" />
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-success">Média por hora</div>
-                </div>
-                <div className="relative mt-2 text-[clamp(24px,5.2vw,32px)] font-bold leading-[1.05] tracking-tight tabular-nums text-foreground">
-                  {brl(s.perHour)}
-                </div>
-                <div className="relative mt-auto pt-3 text-[11.5px] leading-snug text-muted-foreground/90">
-                  com <span className="font-medium text-foreground/80 tabular-nums">{num(s.totalHours, 1)}h</span> trabalhadas
-                </div>
-              </div>
-            ),
-            grossExpenses: () => (
-              <div key="grossExpenses" className="grid grid-cols-2 gap-3">
-                <SideStatCard label="Bruto" value={brl(s.gross)} icon={<Wallet className="h-4 w-4" />} tone="info" />
-                <SideStatCard label="Gastos" value={brl(s.totalExpenses)} icon={<Receipt className="h-4 w-4" />} tone="destructive" />
-              </div>
-            ),
-            daysGroup: () => (
-              <PairCard
-                key="daysGroup"
-                showTotal showAvg
-                totalIcon={<CalendarDays className="h-3.5 w-3.5" />}
-                totalLabel="Dias ativos"
-                totalValue={`${workedDays} ${workedDays === 1 ? "dia" : "dias"}`}
-                avgIcon={<Clock className="h-3.5 w-3.5" />}
-                avgLabel="Média / dia"
-                avgValue={brl(avgPerDay)}
-                accent="success"
-              />
-            ),
-            kmGroup: () => (
-              <PairCard
-                key="kmGroup"
-                showTotal showAvg
-                totalIcon={<Route className="h-3.5 w-3.5" />}
-                totalLabel="KM total"
-                totalValue={`${num(s.totalKm, 0)} km`}
-                avgIcon={<Route className="h-3.5 w-3.5" />}
-                avgLabel="Média / km"
-                avgValue={brl(s.perKm)}
-                accent="info"
-              />
-            ),
-            tripsGroup: () => (
-              <PairCard
-                key="tripsGroup"
-                showTotal showAvg
-                totalIcon={<Flag className="h-3.5 w-3.5" />}
-                totalLabel="Corridas"
-                totalValue={String(s.totalRides)}
-                avgIcon={<Flag className="h-3.5 w-3.5" />}
-                avgLabel="R$ / corrida"
-                avgValue={brl(s.perRide)}
-                accent="purple"
-              />
-            ),
-            chart: () => (
-              <div key="chart" className="rounded-2xl border border-border bg-card/80 p-4 sm:p-5 shadow-sm">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div className="flex flex-col gap-0.5">
-                    <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-                    <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+          const visibleKeys = reportOrder.filter((k) => widgets[k]);
+          const heroKey = (visibleKeys[0] === "net" || visibleKeys[0] === "grossExpenses")
+            ? visibleKeys[0]
+            : null;
+
+          const renderHero = (k: ReportCardKey) => {
+            if (k === "net") {
+              return (
+                <div key="hero-net" className="py-5 text-center">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Lucro líquido
                   </div>
-                  <div className="min-w-[150px]">
-                    <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
-                      <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {CHARTS.map((c) => (
-                          <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="mt-2 text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-success leading-none">
+                    {brl(s.net)}
+                  </div>
+                  <div className="mt-3 text-xs text-muted-foreground tabular-nums">
+                    Bruto {brl(s.gross)} · Gastos {brl(s.totalExpenses)}
+                  </div>
+                  <div className="mt-3 h-12">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+                        <defs>
+                          <linearGradient id="netGlowHero" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
+                            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlowHero)" dot={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
-                <div className="h-72">
-                  <ResponsiveContainer width="100%" height="100%">
-                    {renderChart()}
-                  </ResponsiveContainer>
+              );
+            }
+            // grossExpenses hero
+            const saldo = s.gross - s.totalExpenses;
+            return (
+              <div key="hero-grossExpenses" className="py-5 text-center">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Saldo do período
+                </div>
+                <div className="mt-2 text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-foreground leading-none">
+                  {brl(saldo)}
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground tabular-nums">
+                  Bruto <span className="text-info">{brl(s.gross)}</span> · Gastos <span className="text-destructive">{brl(s.totalExpenses)}</span>
                 </div>
               </div>
-            ),
+            );
           };
-          return (
-            <div className="space-y-3">
-              {reportOrder.map((k) => (widgets[k] ? renderers[k]() : null))}
+
+          // Each non-hero, non-chart key produces one or more rows.
+          const rowsFor = (k: ReportCardKey): { icon: React.ReactNode; label: string; value: string; sub?: string }[] => {
+            switch (k) {
+              case "net":
+                return [{ icon: <Wallet className="h-4 w-4 text-success" />, label: "Lucro líquido", value: brl(s.net) }];
+              case "grossExpenses":
+                return [
+                  { icon: <Wallet className="h-4 w-4 text-info" />, label: "Bruto", value: brl(s.gross) },
+                  { icon: <Receipt className="h-4 w-4 text-destructive" />, label: "Gastos", value: brl(s.totalExpenses) },
+                ];
+              case "perHour":
+                return [{
+                  icon: <Gauge className="h-4 w-4 text-success" />,
+                  label: "Média por hora",
+                  value: brl(s.perHour),
+                  sub: `${num(s.totalHours, 1)}h trabalhadas`,
+                }];
+              case "daysGroup":
+                return [
+                  { icon: <CalendarDays className="h-4 w-4 text-success" />, label: "Dias ativos", value: `${workedDays} ${workedDays === 1 ? "dia" : "dias"}` },
+                  { icon: <Clock className="h-4 w-4 text-success" />, label: "Média / dia", value: brl(avgPerDay) },
+                ];
+              case "kmGroup":
+                return [
+                  { icon: <Route className="h-4 w-4 text-info" />, label: "KM total", value: `${num(s.totalKm, 0)} km` },
+                  { icon: <Route className="h-4 w-4 text-info" />, label: "R$ / km", value: brl(s.perKm) },
+                ];
+              case "tripsGroup":
+                return [
+                  { icon: <Flag className="h-4 w-4 text-[hsl(265_85%_70%)]" />, label: "Corridas", value: String(s.totalRides) },
+                  { icon: <Flag className="h-4 w-4 text-[hsl(265_85%_70%)]" />, label: "R$ / corrida", value: brl(s.perRide) },
+                ];
+              default:
+                return [];
+            }
+          };
+
+          const renderChartBlock = () => (
+            <div key="chart" className="pt-1">
+              <div className="mb-3 flex items-center justify-between gap-3 px-1">
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+                  <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
+                </div>
+                <div className="min-w-[150px]">
+                  <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
+                    <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CHARTS.map((c) => (
+                        <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  {renderChart()}
+                </ResponsiveContainer>
+              </div>
             </div>
           );
+
+          // Walk visibleKeys, grouping contiguous row-friendly items into a single container.
+          const blocks: React.ReactNode[] = [];
+          let rowGroup: { key: ReportCardKey; rows: ReturnType<typeof rowsFor> }[] = [];
+          const flushRowGroup = () => {
+            if (rowGroup.length === 0) return;
+            const flat = rowGroup.flatMap((g) => g.rows.map((r, idx) => ({ ...r, _key: `${g.key}-${idx}` })));
+            blocks.push(
+              <div key={`group-${blocks.length}`} className="rounded-2xl bg-card/40">
+                {flat.map((r, i) => (
+                  <div
+                    key={r._key}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3.5",
+                      i < flat.length - 1 && "border-b border-border/40",
+                    )}
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                      {r.icon}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-foreground">{r.label}</div>
+                      {r.sub && <div className="text-[11px] text-muted-foreground">{r.sub}</div>}
+                    </div>
+                    <div className="text-base font-semibold tabular-nums text-foreground">{r.value}</div>
+                  </div>
+                ))}
+              </div>
+            );
+            rowGroup = [];
+          };
+
+          visibleKeys.forEach((k, i) => {
+            if (i === 0 && k === heroKey) {
+              flushRowGroup();
+              blocks.push(renderHero(k));
+              return;
+            }
+            if (k === "chart") {
+              flushRowGroup();
+              blocks.push(renderChartBlock());
+              return;
+            }
+            rowGroup.push({ key: k, rows: rowsFor(k) });
+          });
+          flushRowGroup();
+
+          return <div className="space-y-4">{blocks}</div>;
         })()}
 
       </div>
