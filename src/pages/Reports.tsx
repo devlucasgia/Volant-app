@@ -16,12 +16,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, LabelList,
+  ResponsiveContainer, Tooltip, XAxis,
   Area, AreaChart,
 } from "recharts";
 import {
   CalendarIcon, CalendarRange,
-  Wallet, Receipt, CalendarDays, Route, Flag, Clock, Gauge,
+  Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -339,35 +339,24 @@ export default function Reports() {
       padding: "8px 12px",
     };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
-    const count = dailySeries.length;
-    // Adaptive bar sizing: fewer points → wider, more points → slimmer
-    const barSize = Math.max(10, Math.min(46, Math.round(220 / Math.max(count, 1))));
-    const showLabels = count <= 12;
-    const tickInterval = count > 24 ? Math.ceil(count / 12) : "preserveStartEnd";
     return (
-      <BarChart data={dailySeries} margin={{ top: 24, right: 12, bottom: 4, left: -12 }} barCategoryGap="22%">
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+      <AreaChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id="reportAreaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <XAxis
           dataKey="name"
           tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-          interval={tickInterval as any}
           tickMargin={6}
           axisLine={false}
           tickLine={false}
         />
-        <YAxis
-          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-          axisLine={false}
-          tickLine={false}
-          width={42}
-        />
-        <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]} maxBarSize={barSize}>
-          {showLabels && (
-            <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-          )}
-        </Bar>
-      </BarChart>
+        <Tooltip cursor={{ stroke: "hsl(var(--success) / 0.4)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--success))" strokeWidth={2} fill="url(#reportAreaFill)" dot={false} />
+      </AreaChart>
     );
   };
 
@@ -390,15 +379,16 @@ export default function Reports() {
             value={mode}
             onChange={setMode}
             size="sm"
+            tone="flat"
             className="flex-1"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 aria-label="Exportar relatório"
-                className="h-9 w-9 shrink-0 rounded-xl"
+                className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
               >
                 <Download className="h-4 w-4" />
               </Button>
@@ -421,13 +411,14 @@ export default function Reports() {
         </div>
 
 
+
         {mode === "month" ? (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setMonthRef(subMonths(monthRef, 1))}>‹</Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => setMonthRef(subMonths(monthRef, 1))}>‹</Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex-1 justify-center font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                <Button variant="ghost" className="flex-1 justify-center font-medium text-foreground hover:bg-foreground/[0.04]">
+                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span className="capitalize">{format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })}</span>
                 </Button>
               </PopoverTrigger>
@@ -439,20 +430,20 @@ export default function Reports() {
                   className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
-            <Button variant="outline" size="icon"
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               disabled={endOfMonth(monthRef) >= endOfMonth(new Date())}
               onClick={() => setMonthRef(addMonths(monthRef, 1))}>›</Button>
           </div>
         ) : mode === "year" ? (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
             <Select
               value={String(getYear(yearRef))}
               onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
             >
-              <SelectTrigger className="flex-1 justify-center font-normal [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
+              <SelectTrigger className="flex-1 justify-center border-0 bg-transparent font-medium text-foreground hover:bg-foreground/[0.04] [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
                 <SelectValue>
-                  <CalendarIcon className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   <span>{format(yearRef, "yyyy")}</span>
                 </SelectValue>
               </SelectTrigger>
@@ -462,20 +453,20 @@ export default function Reports() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon"
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               disabled={getYear(yearRef) >= getYear(new Date())}
               onClick={() => setYearRef(addYears(yearRef, 1))}>›</Button>
           </div>
         ) : (
           <Button
-            variant="outline"
-            className="w-full justify-center font-normal"
+            variant="ghost"
+            className="w-full justify-center font-medium text-foreground hover:bg-foreground/[0.04]"
             onClick={() => {
               setCalDraft({ from, to });
               setCalOpen(true);
             }}
           >
-            <CalendarRange className="mr-2 h-4 w-4 text-success" />
+            <CalendarRange className="mr-2 h-4 w-4 text-muted-foreground" />
             {format(from, "dd/MM/yy")} – {format(to, "dd/MM/yy")}
           </Button>
         )}
@@ -547,19 +538,6 @@ export default function Reports() {
                   <div className="mt-3 text-xs text-muted-foreground tabular-nums">
                     Bruto {brl(s.gross)} · Gastos {brl(s.totalExpenses)}
                   </div>
-                  <div className="mt-3 h-12">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={dailySeries} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
-                        <defs>
-                          <linearGradient id="netGlowHero" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
-                            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <Area type="monotone" dataKey="net" stroke="hsl(var(--success))" strokeWidth={2} fill="url(#netGlowHero)" dot={false} />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
                 </div>
               );
             }
@@ -581,67 +559,95 @@ export default function Reports() {
           };
 
           // Each non-hero, non-chart key produces one or more rows.
+          // Icons are monochromatic (success/70) to keep the list calm.
+          const iconCls = "h-4 w-4 text-success/70";
           const rowsFor = (k: ReportCardKey): { icon: React.ReactNode; label: string; value: string; sub?: string }[] => {
             switch (k) {
               case "net":
-                return [{ icon: <Wallet className="h-4 w-4 text-success" />, label: "Lucro líquido", value: brl(s.net) }];
+                return [{ icon: <Wallet className={iconCls} />, label: "Lucro líquido", value: brl(s.net) }];
               case "grossExpenses":
+                // Absorvido pelo herói "Lucro líquido".
+                if (heroKey === "net") return [];
                 return [
-                  { icon: <Wallet className="h-4 w-4 text-info" />, label: "Bruto", value: brl(s.gross) },
-                  { icon: <Receipt className="h-4 w-4 text-destructive" />, label: "Gastos", value: brl(s.totalExpenses) },
+                  { icon: <Wallet className={iconCls} />, label: "Bruto", value: brl(s.gross) },
+                  { icon: <Receipt className={iconCls} />, label: "Gastos", value: brl(s.totalExpenses) },
                 ];
               case "perHour":
                 return [{
-                  icon: <Gauge className="h-4 w-4 text-success" />,
+                  icon: <Gauge className={iconCls} />,
                   label: "Média por hora",
                   value: brl(s.perHour),
-                  sub: `${num(s.totalHours, 1)}h trabalhadas`,
+                  sub: s.totalHours > 0 ? `${num(s.totalHours, 1)}h trabalhadas` : undefined,
                 }];
               case "daysGroup":
-                return [
-                  { icon: <CalendarDays className="h-4 w-4 text-success" />, label: "Dias ativos", value: `${workedDays} ${workedDays === 1 ? "dia" : "dias"}` },
-                  { icon: <Clock className="h-4 w-4 text-success" />, label: "Média / dia", value: brl(avgPerDay) },
-                ];
+                return [{
+                  icon: <CalendarDays className={iconCls} />,
+                  label: "Média / dia",
+                  value: brl(avgPerDay),
+                  sub: workedDays > 0 ? `${workedDays} ${workedDays === 1 ? "ativo" : "ativos"}` : undefined,
+                }];
               case "kmGroup":
-                return [
-                  { icon: <Route className="h-4 w-4 text-info" />, label: "KM total", value: `${num(s.totalKm, 0)} km` },
-                  { icon: <Route className="h-4 w-4 text-info" />, label: "R$ / km", value: brl(s.perKm) },
-                ];
+                return [{
+                  icon: <Route className={iconCls} />,
+                  label: "R$ / km",
+                  value: brl(s.perKm),
+                  sub: s.totalKm > 0 ? `${num(s.totalKm, 0)} km rodados` : undefined,
+                }];
               case "tripsGroup":
-                return [
-                  { icon: <Flag className="h-4 w-4 text-[hsl(265_85%_70%)]" />, label: "Corridas", value: String(s.totalRides) },
-                  { icon: <Flag className="h-4 w-4 text-[hsl(265_85%_70%)]" />, label: "R$ / corrida", value: brl(s.perRide) },
-                ];
+                return [{
+                  icon: <Flag className={iconCls} />,
+                  label: "R$ / corrida",
+                  value: brl(s.perRide),
+                  sub: s.totalRides > 0 ? `${s.totalRides} ${s.totalRides === 1 ? "corrida" : "corridas"}` : undefined,
+                }];
               default:
                 return [];
             }
           };
 
+          const hasChartData = dailySeries.length > 0
+            && dailySeries.some((d) => Number((d as unknown as Record<string, number>)[dataKey]) > 0);
+
           const renderChartBlock = () => (
             <div key="chart" className="pt-1">
-              <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                <div className="flex flex-col gap-0.5">
-                  <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-                  <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>{chartMeta.label}</div>
-                </div>
-                <div className="min-w-[150px]">
-                  <Select value={chart} onValueChange={(v) => setChart(v as ChartKey)}>
-                    <SelectTrigger className="h-9 rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CHARTS.map((c) => (
-                        <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="mb-3 flex flex-col gap-0.5 px-1">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
+                <div className="text-sm font-semibold text-foreground">{chartMeta.label}</div>
+              </div>
+              <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {CHARTS.map((c) => {
+                  const active = c.key === chart;
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      onClick={() => setChart(c.key)}
+                      className={cn(
+                        "shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
+                        active
+                          ? "bg-success/15 text-success ring-1 ring-success/30"
+                          : "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
               </div>
               <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  {renderChart()}
-                </ResponsiveContainer>
+                {hasChartData ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    {renderChart()}
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                    Sem dados para este período.
+                  </div>
+                )}
               </div>
             </div>
           );
+
 
           // Walk visibleKeys, grouping contiguous row-friendly items into a single container.
           const blocks: React.ReactNode[] = [];

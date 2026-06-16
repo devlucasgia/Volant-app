@@ -77,6 +77,7 @@ export default function OrganizacaoCards() {
           value={tab}
           onChange={setTab}
           size="sm"
+          tone="flat"
         />
 
         {tab === "home" ? <HomeOrganizer /> : <ReportsOrganizer />}
