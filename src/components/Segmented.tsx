@@ -15,10 +15,12 @@ interface Props<T extends string> {
    * "default" → green active state (legacy / standard segmented).
    * "contextual" → minimal pill: muted track + subtle tinted knob that
    *  follows the option key (success for "liquido", info-blue for "bruto").
-   *  Used inside the Home hero card so the selector feels integrated and
-   *  premium instead of dominant.
+   *  Used inside the Home hero card.
+   * "flat" → flat navigation/filter style: no background, no border;
+   *  inactive items use reduced opacity, active uses solid foreground
+   *  with a thin underline. Used across navigation/filter selectors.
    */
-  tone?: "default" | "contextual";
+  tone?: "default" | "contextual" | "flat";
 }
 
 /**
@@ -34,10 +36,13 @@ export function Segmented<T extends string>({
   tone = "default",
 }: Props<T>) {
   const isContextual = tone === "contextual";
+  const isFlat = tone === "flat";
 
-  const trackClass = isContextual
-    ? "rounded-full border border-white/10 bg-white/5 p-0.5 backdrop-blur-sm"
-    : "rounded-xl border border-border/60 bg-muted/60 p-1";
+  const trackClass = isFlat
+    ? "bg-transparent p-0 gap-1"
+    : isContextual
+      ? "rounded-full border border-white/10 bg-white/5 p-0.5 backdrop-blur-sm"
+      : "rounded-xl border border-border/60 bg-muted/60 p-1";
 
   return (
     <div role="tablist" className={cn("flex w-full", trackClass, className)}>
@@ -52,18 +57,22 @@ export function Segmented<T extends string>({
               ? "py-1.5 text-xs"
               : "py-2 text-sm";
 
-        const activeClass = isContextual
-          ? cn(
-              "text-foreground shadow-[inset_0_1px_0_hsl(0_0%_100%/0.12)]",
-              isGross
-                ? "bg-[hsl(var(--goal-gross))]/22 ring-1 ring-[hsl(var(--goal-gross))]/45"
-                : "bg-success/22 ring-1 ring-success/45",
-            )
-          : "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
+        const activeClass = isFlat
+          ? "text-foreground after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full after:bg-foreground/70"
+          : isContextual
+            ? cn(
+                "text-foreground shadow-[inset_0_1px_0_hsl(0_0%_100%/0.12)]",
+                isGross
+                  ? "bg-[hsl(var(--goal-gross))]/22 ring-1 ring-[hsl(var(--goal-gross))]/45"
+                  : "bg-success/22 ring-1 ring-success/45",
+              )
+            : "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
 
-        const inactiveClass = isContextual
-          ? "text-muted-foreground/80 hover:text-foreground"
-          : "text-muted-foreground hover:text-foreground";
+        const inactiveClass = isFlat
+          ? "text-muted-foreground/60 hover:text-foreground"
+          : isContextual
+            ? "text-muted-foreground/80 hover:text-foreground"
+            : "text-muted-foreground hover:text-foreground";
 
         return (
           <button
@@ -72,8 +81,8 @@ export function Segmented<T extends string>({
             aria-selected={active}
             onClick={() => onChange(o.key)}
             className={cn(
-              "flex-1 font-medium transition-all duration-300",
-              isContextual ? "rounded-full" : "rounded-lg",
+              "relative flex-1 font-medium transition-all duration-300",
+              isFlat ? "rounded-none pb-2" : isContextual ? "rounded-full" : "rounded-lg",
               sizeClass,
               active ? activeClass : inactiveClass,
             )}
