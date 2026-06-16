@@ -606,7 +606,7 @@ export default function Reports() {
           };
 
           const hasChartData = dailySeries.length > 0
-            && dailySeries.some((d) => Number((d as Record<string, number>)[dataKey]) > 0);
+            && dailySeries.some((d) => Number((d as unknown as Record<string, number>)[dataKey]) > 0);
 
           const renderChartBlock = () => (
             <div key="chart" className="pt-1">
