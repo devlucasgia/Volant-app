@@ -413,12 +413,12 @@ export default function Reports() {
 
 
         {mode === "month" ? (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setMonthRef(subMonths(monthRef, 1))}>‹</Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => setMonthRef(subMonths(monthRef, 1))}>‹</Button>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="flex-1 justify-center font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                <Button variant="ghost" className="flex-1 justify-center font-medium text-foreground hover:bg-foreground/[0.04]">
+                  <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
                   <span className="capitalize">{format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })}</span>
                 </Button>
               </PopoverTrigger>
@@ -430,20 +430,20 @@ export default function Reports() {
                   className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
-            <Button variant="outline" size="icon"
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               disabled={endOfMonth(monthRef) >= endOfMonth(new Date())}
               onClick={() => setMonthRef(addMonths(monthRef, 1))}>›</Button>
           </div>
         ) : mode === "year" ? (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => setYearRef(subYears(yearRef, 1))}>‹</Button>
             <Select
               value={String(getYear(yearRef))}
               onValueChange={(v) => setYearRef(startOfYear(new Date(Number(v), 0, 1)))}
             >
-              <SelectTrigger className="flex-1 justify-center font-normal [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
+              <SelectTrigger className="flex-1 justify-center border-0 bg-transparent font-medium text-foreground hover:bg-foreground/[0.04] [&>span]:flex [&>span]:items-center [&>span]:justify-center [&>span]:gap-2 [&>span]:flex-1">
                 <SelectValue>
-                  <CalendarIcon className="h-4 w-4" />
+                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                   <span>{format(yearRef, "yyyy")}</span>
                 </SelectValue>
               </SelectTrigger>
@@ -453,20 +453,20 @@ export default function Reports() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" size="icon"
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground disabled:opacity-30"
               disabled={getYear(yearRef) >= getYear(new Date())}
               onClick={() => setYearRef(addYears(yearRef, 1))}>›</Button>
           </div>
         ) : (
           <Button
-            variant="outline"
-            className="w-full justify-center font-normal"
+            variant="ghost"
+            className="w-full justify-center font-medium text-foreground hover:bg-foreground/[0.04]"
             onClick={() => {
               setCalDraft({ from, to });
               setCalOpen(true);
             }}
           >
-            <CalendarRange className="mr-2 h-4 w-4 text-success" />
+            <CalendarRange className="mr-2 h-4 w-4 text-muted-foreground" />
             {format(from, "dd/MM/yy")} – {format(to, "dd/MM/yy")}
           </Button>
         )}
