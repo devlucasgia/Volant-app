@@ -339,35 +339,24 @@ export default function Reports() {
       padding: "8px 12px",
     };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
-    const count = dailySeries.length;
-    // Adaptive bar sizing: fewer points → wider, more points → slimmer
-    const barSize = Math.max(10, Math.min(46, Math.round(220 / Math.max(count, 1))));
-    const showLabels = count <= 12;
-    const tickInterval = count > 24 ? Math.ceil(count / 12) : "preserveStartEnd";
     return (
-      <BarChart data={dailySeries} margin={{ top: 24, right: 12, bottom: 4, left: -12 }} barCategoryGap="22%">
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+      <AreaChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+        <defs>
+          <linearGradient id="reportAreaFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          </linearGradient>
+        </defs>
         <XAxis
           dataKey="name"
           tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-          interval={tickInterval as any}
           tickMargin={6}
           axisLine={false}
           tickLine={false}
         />
-        <YAxis
-          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-          axisLine={false}
-          tickLine={false}
-          width={42}
-        />
-        <Tooltip cursor={{ fill: "hsl(var(--muted) / 0.3)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Bar dataKey={dataKey} fill={chartMeta.color} radius={[8, 8, 0, 0]} maxBarSize={barSize}>
-          {showLabels && (
-            <LabelList dataKey={dataKey} position="top" formatter={(v: number) => v ? fmt(v) : ""} style={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-          )}
-        </Bar>
-      </BarChart>
+        <Tooltip cursor={{ stroke: "hsl(var(--success) / 0.4)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--success))" strokeWidth={2} fill="url(#reportAreaFill)" dot={false} />
+      </AreaChart>
     );
   };
 
