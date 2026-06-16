@@ -966,7 +966,9 @@ function PeriodBar({
     { key: "week", label: "Semana" },
     { key: "month", label: "Mês" },
   ];
-  const accentBg = tone === "gross" ? "bg-[hsl(var(--goal-gross))]/70" : "bg-success/80";
+  const accentAfter = tone === "gross"
+    ? "after:bg-[hsl(var(--goal-gross))]/70"
+    : "after:bg-success/80";
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
@@ -981,11 +983,13 @@ function PeriodBar({
             onClick={() => onSelect(o.key)}
             className={cn(
               "relative flex-1 py-2 text-sm font-medium transition-all duration-300",
-              active ? activeText : inactiveClass,
-              active && cn(
-                "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full",
-                `after:${accentBg}`,
-              ),
+              active
+                ? cn(
+                    activeText,
+                    "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full",
+                    accentAfter,
+                  )
+                : inactiveClass,
             )}
           >
             {o.label}
@@ -1000,11 +1004,13 @@ function PeriodBar({
         onClick={onCalendarClick}
         className={cn(
           "relative flex w-11 shrink-0 items-center justify-center py-2 transition-all duration-300",
-          period === "custom" ? activeText : inactiveClass,
-          period === "custom" && cn(
-            "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-6 after:rounded-full",
-            `after:${accentBg}`,
-          ),
+          period === "custom"
+            ? cn(
+                activeText,
+                "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-6 after:rounded-full",
+                accentAfter,
+              )
+            : inactiveClass,
         )}
       >
         <CalendarRange className="h-4 w-4" />
