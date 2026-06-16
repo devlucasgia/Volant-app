@@ -379,15 +379,16 @@ export default function Reports() {
             value={mode}
             onChange={setMode}
             size="sm"
+            tone="flat"
             className="flex-1"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 aria-label="Exportar relatório"
-                className="h-9 w-9 shrink-0 rounded-xl"
+                className="h-9 w-9 shrink-0 rounded-xl text-muted-foreground hover:text-foreground"
               >
                 <Download className="h-4 w-4" />
               </Button>
@@ -408,6 +409,7 @@ export default function Reports() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
 
 
         {mode === "month" ? (
