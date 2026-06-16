@@ -966,12 +966,11 @@ function PeriodBar({
     { key: "week", label: "Semana" },
     { key: "month", label: "Mês" },
   ];
-  const activeClass = tone === "gross"
-    ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_10px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-[hsl(var(--goal-gross))]/40"
-    : "bg-gradient-to-b from-success to-success/85 text-success-foreground shadow-[0_2px_10px_-2px_hsl(var(--success)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] ring-1 ring-success/40";
-  const inactiveClass = "text-muted-foreground hover:text-foreground";
+  const accentBg = tone === "gross" ? "bg-[hsl(var(--goal-gross))]/70" : "bg-success/80";
+  const activeText = "text-foreground";
+  const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-1 rounded-xl border border-border/60 bg-muted/60 p-1">
+    <div role="tablist" className="flex w-full items-stretch gap-1 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
@@ -981,8 +980,12 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-300",
-              active ? activeClass : inactiveClass
+              "relative flex-1 py-2 text-sm font-medium transition-all duration-300",
+              active ? activeText : inactiveClass,
+              active && cn(
+                "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full",
+                `after:${accentBg}`,
+              ),
             )}
           >
             {o.label}
@@ -996,8 +999,12 @@ function PeriodBar({
         aria-selected={period === "custom"}
         onClick={onCalendarClick}
         className={cn(
-          "flex w-11 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
-          period === "custom" ? activeClass : inactiveClass
+          "relative flex w-11 shrink-0 items-center justify-center py-2 transition-all duration-300",
+          period === "custom" ? activeText : inactiveClass,
+          period === "custom" && cn(
+            "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-6 after:rounded-full",
+            `after:${accentBg}`,
+          ),
         )}
       >
         <CalendarRange className="h-4 w-4" />
