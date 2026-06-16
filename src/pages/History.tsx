@@ -224,7 +224,7 @@ export default function History() {
           </div>
         )}
 
-        <Segmented<Filter> options={FILTERS} value={filter} onChange={setFilter} />
+        <Segmented<Filter> options={FILTERS} value={filter} onChange={setFilter} tone="flat" size="sm" />
 
         {filtered.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
