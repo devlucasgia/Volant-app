@@ -130,6 +130,11 @@ export default {
           "0%, 100%": { opacity: "0.55" },
           "50%": { opacity: "1" },
         },
+        "insight-pulse": {
+          "0%":   { transform: "scale(1)" },
+          "50%":  { transform: "scale(1.06)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
