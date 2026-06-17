@@ -65,8 +65,33 @@ export default function Reports() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
+  const [insightChip, setInsightChip] = useState<ChartKey | null>(null);
+  const insightTimerRef = useRef<number | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+
+  // Reset insight back to auto when period changes or on unmount.
+  useEffect(() => {
+    setInsightChip(null);
+    if (insightTimerRef.current != null) {
+      window.clearTimeout(insightTimerRef.current);
+      insightTimerRef.current = null;
+    }
+  }, [mode, monthRef, yearRef, from, to]);
+
+  useEffect(() => () => {
+    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
+  }, []);
+
+  const handleChartChange = (k: ChartKey) => {
+    setChart(k);
+    setInsightChip(k);
+    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
+    insightTimerRef.current = window.setTimeout(() => {
+      setInsightChip(null);
+      insightTimerRef.current = null;
+    }, 10_000);
+  };
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
