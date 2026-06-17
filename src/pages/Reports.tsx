@@ -357,6 +357,7 @@ export default function Reports() {
   const isMoney = chart === "net" || chart === "expenses";
 
   const renderChart = () => {
+    const color = chartMeta.color;
     const tooltipStyle = {
       background: "hsl(var(--card))",
       border: "1px solid hsl(var(--border))",
@@ -366,12 +367,13 @@ export default function Reports() {
       padding: "8px 12px",
     };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
+    const gradientId = `reportAreaFill-${chart}`;
     return (
       <AreaChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="reportAreaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -381,8 +383,8 @@ export default function Reports() {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ stroke: "hsl(var(--success) / 0.4)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--success))" strokeWidth={2} fill="url(#reportAreaFill)" dot={false} />
+        <Tooltip cursor={{ stroke: color, strokeOpacity: 0.4 }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} dot={false} />
       </AreaChart>
     );
   };
