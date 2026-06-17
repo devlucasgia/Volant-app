@@ -1016,6 +1016,14 @@ export default function Reports() {
               blocks.push(renderChartBlock());
               return;
             }
+            if (k === "insights") {
+              const node = renderInsightBlock();
+              if (node) {
+                flushRowGroup();
+                blocks.push(node);
+              }
+              return;
+            }
             rowGroup.push({ key: k, rows: rowsFor(k) });
           });
           flushRowGroup();
