@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { Entry, EarningEntry } from "@/types";
 import { summarize } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
+import { useCountUp } from "@/hooks/useCountUp";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,7 +22,8 @@ import {
 } from "recharts";
 import {
   CalendarIcon, CalendarRange,
-  Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
+  Wallet, Receipt, CalendarDays, Route, Flag, Gauge, Sparkles,
+  TrendingUp, TrendingDown,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,11 +47,11 @@ import { toast } from "sonner";
 type RangeMode = "range" | "month" | "year";
 type ChartKey = "net" | "expenses" | "km" | "hours";
 
-const CHARTS: { key: ChartKey; label: string; color: string }[] = [
-  { key: "net",      label: "Lucro líquido",      color: "hsl(var(--success))" },
-  { key: "expenses", label: "Gastos",             color: "hsl(var(--destructive))" },
-  { key: "km",       label: "KM rodados",         color: "hsl(var(--info))" },
-  { key: "hours",    label: "Horas trabalhadas",  color: "hsl(var(--success))" },
+const CHARTS: { key: ChartKey; label: string; shortLabel: string; fullLabel: string; color: string }[] = [
+  { key: "net",      label: "Lucro líquido",     shortLabel: "Lucro",  fullLabel: "Lucro líquido",     color: "hsl(var(--success))" },
+  { key: "expenses", label: "Gastos",            shortLabel: "Gastos", fullLabel: "Gastos",            color: "hsl(var(--destructive))" },
+  { key: "km",       label: "KM rodados",        shortLabel: "KM",     fullLabel: "KM rodados",        color: "hsl(var(--info))" },
+  { key: "hours",    label: "Horas trabalhadas", shortLabel: "Horas",  fullLabel: "Horas trabalhadas", color: "hsl(265 85% 70%)" },
 ];
 
 export default function Reports() {
