@@ -53,6 +53,20 @@ const CHARTS: { key: ChartKey; label: string; shortLabel: string; fullLabel: str
   { key: "km",       label: "KM rodados",        shortLabel: "KM",     fullLabel: "KM rodados",        color: "hsl(var(--info))" },
   { key: "hours",    label: "Horas trabalhadas", shortLabel: "Horas",  fullLabel: "Horas trabalhadas", color: "hsl(265 85% 70%)" },
 ];
+/**
+ * Number-key for the Insights card: count-up animation (0 → target, 0.6s)
+ * with a subtle pulse on settle. Respects prefers-reduced-motion (snaps).
+ */
+function InsightValue({ target, suffix, sign }: { target: number; suffix: string; sign: "+" | "-" | "" }) {
+  const animated = useCountUp(Math.abs(target), 600);
+  const display = `${sign}${suffix === "h" ? num(animated, 1) : Math.round(animated)}${suffix}`;
+  return (
+    <span className="inline-block animate-fade-in motion-reduce:animate-none">
+      <span className="inline-block animate-insight-pulse motion-reduce:animate-none">{display}</span>
+    </span>
+  );
+}
+
 
 export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
