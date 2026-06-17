@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
  */
 export interface ReportWidgets {
   net: boolean;             // Lucro líquido (hero)
+  insights: boolean;        // Card de Insights Inteligentes
   perHour: boolean;         // Média por hora (hero)
   grossExpenses: boolean;   // Bruto + Gastos (lado a lado)
   daysGroup: boolean;       // Dias ativos + Média / dia
@@ -25,6 +26,7 @@ const LEGACY_KEYS = ["volant.reportWidgets", "volant.reportWidgets.v2", "volant.
 
 const DEFAULTS: ReportWidgets = {
   net: true,
+  insights: true,
   perHour: true,
   grossExpenses: true,
   daysGroup: true,

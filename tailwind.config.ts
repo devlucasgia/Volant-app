@@ -130,6 +130,11 @@ export default {
           "0%, 100%": { opacity: "0.55" },
           "50%": { opacity: "1" },
         },
+        "insight-pulse": {
+          "0%":   { transform: "scale(1)" },
+          "50%":  { transform: "scale(1.06)" },
+          "100%": { transform: "scale(1)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -141,6 +146,7 @@ export default {
         "premium-glow": "premium-glow 4s ease-in-out infinite",
         "premium-shine": "premium-shine 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite",
         "premium-breath": "premium-breath 3.2s ease-in-out infinite",
+        "insight-pulse": "insight-pulse 0.45s ease-out 0.6s 1",
       },
       transitionTimingFunction: {
         "premium": "cubic-bezier(0.22, 1, 0.36, 1)",

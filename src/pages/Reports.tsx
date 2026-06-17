@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
 import { Entry, EarningEntry } from "@/types";
 import { summarize } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
+import { useCountUp } from "@/hooks/useCountUp";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -21,7 +22,8 @@ import {
 } from "recharts";
 import {
   CalendarIcon, CalendarRange,
-  Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
+  Wallet, Receipt, CalendarDays, Route, Flag, Gauge, Sparkles,
+  TrendingUp, TrendingDown,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -45,12 +47,26 @@ import { toast } from "sonner";
 type RangeMode = "range" | "month" | "year";
 type ChartKey = "net" | "expenses" | "km" | "hours";
 
-const CHARTS: { key: ChartKey; label: string; color: string }[] = [
-  { key: "net",      label: "Lucro líquido",      color: "hsl(var(--success))" },
-  { key: "expenses", label: "Gastos",             color: "hsl(var(--destructive))" },
-  { key: "km",       label: "KM rodados",         color: "hsl(var(--info))" },
-  { key: "hours",    label: "Horas trabalhadas",  color: "hsl(var(--success))" },
+const CHARTS: { key: ChartKey; label: string; shortLabel: string; fullLabel: string; color: string }[] = [
+  { key: "net",      label: "Lucro líquido",     shortLabel: "Lucro",  fullLabel: "Lucro líquido",     color: "hsl(var(--success))" },
+  { key: "expenses", label: "Gastos",            shortLabel: "Gastos", fullLabel: "Gastos",            color: "hsl(var(--destructive))" },
+  { key: "km",       label: "KM rodados",        shortLabel: "KM",     fullLabel: "KM rodados",        color: "hsl(var(--info))" },
+  { key: "hours",    label: "Horas trabalhadas", shortLabel: "Horas",  fullLabel: "Horas trabalhadas", color: "hsl(265 85% 70%)" },
 ];
+/**
+ * Number-key for the Insights card: count-up animation (0 → target, 0.6s)
+ * with a subtle pulse on settle. Respects prefers-reduced-motion (snaps).
+ */
+function InsightValue({ target, suffix, sign }: { target: number; suffix: string; sign: "+" | "-" | "" }) {
+  const animated = useCountUp(Math.abs(target), 600);
+  const display = `${sign}${suffix === "h" ? num(animated, 1) : Math.round(animated)}${suffix}`;
+  return (
+    <span className="inline-block animate-fade-in motion-reduce:animate-none">
+      <span className="inline-block animate-insight-pulse motion-reduce:animate-none">{display}</span>
+    </span>
+  );
+}
+
 
 export default function Reports() {
   const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
@@ -63,8 +79,33 @@ export default function Reports() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
+  const [insightChip, setInsightChip] = useState<ChartKey | null>(null);
+  const insightTimerRef = useRef<number | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+
+  // Reset insight back to auto when period changes or on unmount.
+  useEffect(() => {
+    setInsightChip(null);
+    if (insightTimerRef.current != null) {
+      window.clearTimeout(insightTimerRef.current);
+      insightTimerRef.current = null;
+    }
+  }, [mode, monthRef, yearRef, from, to]);
+
+  useEffect(() => () => {
+    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
+  }, []);
+
+  const handleChartChange = (k: ChartKey) => {
+    setChart(k);
+    setInsightChip(k);
+    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
+    insightTimerRef.current = window.setTimeout(() => {
+      setInsightChip(null);
+      insightTimerRef.current = null;
+    }, 10_000);
+  };
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
@@ -330,6 +371,7 @@ export default function Reports() {
   const isMoney = chart === "net" || chart === "expenses";
 
   const renderChart = () => {
+    const color = chartMeta.color;
     const tooltipStyle = {
       background: "hsl(var(--card))",
       border: "1px solid hsl(var(--border))",
@@ -339,12 +381,13 @@ export default function Reports() {
       padding: "8px 12px",
     };
     const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
+    const gradientId = `reportAreaFill-${chart}`;
     return (
       <AreaChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
         <defs>
-          <linearGradient id="reportAreaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="hsl(var(--success))" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity={0} />
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+            <stop offset="100%" stopColor={color} stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -354,11 +397,286 @@ export default function Reports() {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ stroke: "hsl(var(--success) / 0.4)" }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
-        <Area type="monotone" dataKey={dataKey} stroke="hsl(var(--success))" strokeWidth={2} fill="url(#reportAreaFill)" dot={false} />
+        <Tooltip cursor={{ stroke: color, strokeOpacity: 0.4 }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} dot={false} />
       </AreaChart>
     );
   };
+
+  // -------- Contextual chart title (Bloco 2) --------
+  const chartTitle = mode === "month"
+    ? "Evolução diária"
+    : mode === "year"
+      ? "Evolução mensal"
+      : "Evolução no período";
+
+  // -------- Insights Inteligentes (Blocos 4–6 + correções) --------
+  type InsightKey = "net" | "expenses" | "km" | "hours" | "perHour" | "perDay";
+  type InsightNumeric = {
+    kind: "numeric";
+    key: InsightKey;
+    chartChip: ChartKey | null;
+    pct: number;
+    absPct: number;
+    direction: "up" | "down";
+    phrase: string;
+    suffix: string;
+    target: number;
+    sign: "+" | "-";
+    color: string;
+  };
+  type InsightQualitative = {
+    kind: "qualitative";
+    key: InsightKey;
+    chartChip: ChartKey | null;
+    direction: "up" | "down";
+    phrase: string;
+    color: string;
+  };
+  type InsightResult =
+    | InsightNumeric
+    | InsightQualitative
+    | { kind: "none"; key: InsightKey; chartChip: ChartKey | null };
+
+  const previousInterval = useMemo(() => {
+    if (mode === "month") {
+      const ref = subMonths(monthRef, 1);
+      return {
+        start: startOfDay(startOfMonth(ref)),
+        end: endOfDay(endOfMonth(ref)),
+        label: format(ref, "MMMM", { locale: ptBR }),
+      };
+    }
+    if (mode === "year") {
+      const ref = subYears(yearRef, 1);
+      return {
+        start: startOfDay(startOfYear(ref)),
+        end: endOfDay(endOfYear(ref)),
+        label: format(ref, "yyyy"),
+      };
+    }
+    return null;
+  }, [mode, monthRef, yearRef]);
+
+  const prevSummary = useMemo(() => {
+    if (!previousInterval) return null;
+    const prevEntries = entries.filter((e) =>
+      isWithinInterval(new Date(e.date), { start: previousInterval.start, end: previousInterval.end })
+    );
+    if (prevEntries.length === 0) return null;
+    const ps = summarize(prevEntries, isSimplePlatform);
+    const prevWorkedDays = (() => {
+      const set = new Set<string>();
+      prevEntries.forEach((e) => { if (e.type === "earning") set.add(format(new Date(e.date), "yyyy-MM-dd")); });
+      return set.size;
+    })();
+    const prevAvgPerDay = prevWorkedDays > 0 ? ps.net / prevWorkedDays : 0;
+    return { ...ps, prevWorkedDays, prevAvgPerDay };
+  }, [previousInterval, entries, isSimplePlatform]);
+
+  const insights = useMemo<InsightResult[]>(() => {
+    if (!previousInterval) return [];
+    const label = previousInterval.label;
+    const MIN_BASE_MONEY = 1;
+    const MIN_BASE_HOURS = 1;
+    const MAX_PCT = 999;
+
+    const buildMoney = (
+      key: InsightKey,
+      chartChip: ChartKey | null,
+      cur: number,
+      prev: number | null,
+      verbUp: string,
+      verbDown: string,
+      qualUp: string,
+      qualDown: string,
+      colorUp: string,
+      colorDown: string,
+    ): InsightResult => {
+      if (prev == null || prev <= 0) return { kind: "none", key, chartChip };
+      const direction: "up" | "down" = cur >= prev ? "up" : "down";
+      const color = direction === "up" ? colorUp : colorDown;
+      if (prev < MIN_BASE_MONEY) {
+        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
+      }
+      const pct = ((cur - prev) / prev) * 100;
+      if (Math.abs(pct) > MAX_PCT) {
+        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
+      }
+      return {
+        kind: "numeric",
+        key, chartChip, direction, color,
+        pct, absPct: Math.abs(pct),
+        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
+        phrase: `${direction === "up" ? verbUp : verbDown} vs ${label}`,
+      };
+    };
+
+    const list: InsightResult[] = [];
+
+    list.push(buildMoney(
+      "net", "net", s.net, prevSummary?.net ?? null,
+      "Seu lucro subiu", "Seu lucro caiu",
+      `Seu lucro cresceu bastante vs ${label}`,
+      `Seu lucro caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "expenses", "expenses", s.totalExpenses, prevSummary?.totalExpenses ?? null,
+      "Seus gastos subiram", "Seus gastos caíram",
+      `Seus gastos aumentaram bastante vs ${label}`,
+      `Seus gastos caíram bastante vs ${label}`,
+      "hsl(var(--destructive))", "hsl(var(--success))",
+    ));
+    list.push(buildMoney(
+      "km", "km", s.perKm, prevSummary?.perKm ?? null,
+      "Seu R$/km melhorou", "Seu R$/km piorou",
+      `Seu R$/km melhorou bastante vs ${label}`,
+      `Seu R$/km piorou bastante vs ${label}`,
+      "hsl(var(--info))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "perDay", null, avgPerDay, prevSummary?.prevAvgPerDay ?? null,
+      "Sua média por dia subiu", "Sua média por dia caiu",
+      `Sua média por dia cresceu bastante vs ${label}`,
+      `Sua média por dia caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "perHour", null, s.perHour, prevSummary?.perHour ?? null,
+      "Sua média por hora subiu", "Sua média por hora caiu",
+      `Sua média por hora cresceu bastante vs ${label}`,
+      `Sua média por hora caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    (() => {
+      const cur = s.totalHours;
+      const prev = prevSummary?.totalHours ?? null;
+      if (prev == null || prev <= 0) {
+        list.push({ kind: "none", key: "hours", chartChip: "hours" });
+        return;
+      }
+      const direction: "up" | "down" = cur >= prev ? "up" : "down";
+      const color = "hsl(265 85% 70%)";
+      if (prev < MIN_BASE_HOURS) {
+        list.push({
+          kind: "qualitative", key: "hours", chartChip: "hours", direction, color,
+          phrase: direction === "up"
+            ? `Você trabalhou bastante a mais vs ${label}`
+            : `Você trabalhou bastante a menos vs ${label}`,
+        });
+        return;
+      }
+      const diff = Math.abs(cur - prev);
+      list.push({
+        kind: "numeric", key: "hours", chartChip: "hours", direction, color,
+        pct: cur - prev, absPct: diff,
+        target: diff, suffix: "h", sign: direction === "up" ? "+" : "-",
+        phrase: direction === "up"
+          ? `Você trabalhou a mais vs ${label}`
+          : `Você trabalhou a menos vs ${label}`,
+      });
+    })();
+
+    return list;
+  }, [previousInterval, prevSummary, s, avgPerDay]);
+
+  const insightMetricLabel = (key: InsightKey): string => {
+    switch (key) {
+      case "net": return "lucro";
+      case "expenses": return "gastos";
+      case "km": return "R$/km";
+      case "perDay": return "média/dia";
+      case "perHour": return "média/hora";
+      case "hours": return "horas";
+    }
+  };
+
+  const insightToShow = useMemo<InsightResult | null>(() => {
+    if (!previousInterval) return null;
+    if (insightChip) {
+      const bound = insights.find((i) => i.chartChip === insightChip);
+      if (bound) return bound;
+    }
+    const numerics = insights.filter((i): i is InsightNumeric => i.kind === "numeric");
+    if (numerics.length > 0) {
+      numerics.sort((a, b) => b.absPct - a.absPct);
+      return numerics[0];
+    }
+    const quals = insights.filter((i): i is InsightQualitative => i.kind === "qualitative");
+    if (quals.length > 0) return quals[0];
+    return null;
+  }, [previousInterval, insights, insightChip]);
+
+  const renderInsightBlock = (): React.ReactNode => {
+    if (mode === "range") return null;
+    if (!previousInterval) {
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            Sem histórico para comparar ainda
+          </div>
+        </div>
+      );
+    }
+    if (!insightToShow) {
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            Sem histórico para comparar ainda
+          </div>
+        </div>
+      );
+    }
+    if (insightToShow.kind === "none") {
+      const metric = insightMetricLabel(insightToShow.key);
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            {`Sem histórico de ${metric} para comparar ainda`}
+          </div>
+        </div>
+      );
+    }
+    const Icon = insightToShow.direction === "up" ? TrendingUp : TrendingDown;
+    return (
+      <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40"
+          style={{ color: insightToShow.color }}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1 text-sm text-foreground">
+          {insightToShow.phrase}
+        </div>
+        {insightToShow.kind === "numeric" && (
+          <div
+            className="text-base font-semibold tabular-nums shrink-0"
+            style={{ color: insightToShow.color }}
+          >
+            <InsightValue
+              key={`${insightToShow.key}-${insightToShow.target}-${insightToShow.sign}`}
+              target={insightToShow.target}
+              suffix={insightToShow.suffix}
+              sign={insightToShow.sign}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
 
   return (
     <>
@@ -611,25 +929,32 @@ export default function Reports() {
           const renderChartBlock = () => (
             <div key="chart" className="pt-1">
               <div className="mb-3 flex flex-col gap-0.5 px-1">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-                <div className="text-sm font-semibold text-foreground">{chartMeta.label}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {chartTitle}
+                </div>
+                <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>
+                  {chartMeta.fullLabel}
+                </div>
               </div>
-              <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="mb-3 grid grid-cols-4 gap-1.5">
                 {CHARTS.map((c) => {
                   const active = c.key === chart;
                   return (
                     <button
                       key={c.key}
                       type="button"
-                      onClick={() => setChart(c.key)}
+                      onClick={() => handleChartChange(c.key)}
                       className={cn(
-                        "shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
-                        active
-                          ? "bg-success/15 text-success ring-1 ring-success/30"
-                          : "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
+                        "rounded-full px-2 py-1.5 text-xs font-medium text-center transition-colors",
+                        !active && "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
                       )}
+                      style={active ? {
+                        backgroundColor: `color-mix(in srgb, ${c.color} 15%, transparent)`,
+                        color: c.color,
+                        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${c.color} 30%, transparent)`,
+                      } : undefined}
                     >
-                      {c.label}
+                      {c.shortLabel}
                     </button>
                   );
                 })}
@@ -689,6 +1014,14 @@ export default function Reports() {
             if (k === "chart") {
               flushRowGroup();
               blocks.push(renderChartBlock());
+              return;
+            }
+            if (k === "insights") {
+              const node = renderInsightBlock();
+              if (node) {
+                flushRowGroup();
+                blocks.push(node);
+              }
               return;
             }
             rowGroup.push({ key: k, rows: rowsFor(k) });
