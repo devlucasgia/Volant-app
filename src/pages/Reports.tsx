@@ -929,25 +929,32 @@ export default function Reports() {
           const renderChartBlock = () => (
             <div key="chart" className="pt-1">
               <div className="mb-3 flex flex-col gap-0.5 px-1">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Visualização</div>
-                <div className="text-sm font-semibold text-foreground">{chartMeta.label}</div>
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {chartTitle}
+                </div>
+                <div className="text-sm font-semibold" style={{ color: chartMeta.color }}>
+                  {chartMeta.fullLabel}
+                </div>
               </div>
-              <div className="-mx-1 mb-3 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="mb-3 grid grid-cols-4 gap-1.5">
                 {CHARTS.map((c) => {
                   const active = c.key === chart;
                   return (
                     <button
                       key={c.key}
                       type="button"
-                      onClick={() => setChart(c.key)}
+                      onClick={() => handleChartChange(c.key)}
                       className={cn(
-                        "shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
-                        active
-                          ? "bg-success/15 text-success ring-1 ring-success/30"
-                          : "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
+                        "rounded-full px-2 py-1.5 text-xs font-medium text-center transition-colors",
+                        !active && "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
                       )}
+                      style={active ? {
+                        backgroundColor: `color-mix(in srgb, ${c.color} 15%, transparent)`,
+                        color: c.color,
+                        boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${c.color} 30%, transparent)`,
+                      } : undefined}
                     >
-                      {c.label}
+                      {c.shortLabel}
                     </button>
                   );
                 })}
