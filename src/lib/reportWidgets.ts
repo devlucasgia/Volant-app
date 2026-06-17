@@ -26,6 +26,7 @@ const LEGACY_KEYS = ["volant.reportWidgets", "volant.reportWidgets.v2", "volant.
 
 const DEFAULTS: ReportWidgets = {
   net: true,
+  insights: true,
   perHour: true,
   grossExpenses: true,
   daysGroup: true,
