@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft, LayoutGrid, Target, Brain, Gauge, BarChart3, Receipt, Timer as TimerIcon,
-  Wallet, CalendarDays, Route, Flag, Clock, LineChart,
+  Wallet, CalendarDays, Route, Flag, Clock, LineChart, Sparkles,
   Check, GripVertical, ArrowUp, ArrowDown,
 } from "lucide-react";
 import {
