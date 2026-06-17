@@ -403,6 +403,281 @@ export default function Reports() {
     );
   };
 
+  // -------- Contextual chart title (Bloco 2) --------
+  const chartTitle = mode === "month"
+    ? "Evolução diária"
+    : mode === "year"
+      ? "Evolução mensal"
+      : "Evolução no período";
+
+  // -------- Insights Inteligentes (Blocos 4–6 + correções) --------
+  type InsightKey = "net" | "expenses" | "km" | "hours" | "perHour" | "perDay";
+  type InsightNumeric = {
+    kind: "numeric";
+    key: InsightKey;
+    chartChip: ChartKey | null;
+    pct: number;
+    absPct: number;
+    direction: "up" | "down";
+    phrase: string;
+    suffix: string;
+    target: number;
+    sign: "+" | "-";
+    color: string;
+  };
+  type InsightQualitative = {
+    kind: "qualitative";
+    key: InsightKey;
+    chartChip: ChartKey | null;
+    direction: "up" | "down";
+    phrase: string;
+    color: string;
+  };
+  type InsightResult =
+    | InsightNumeric
+    | InsightQualitative
+    | { kind: "none"; key: InsightKey; chartChip: ChartKey | null };
+
+  const previousInterval = useMemo(() => {
+    if (mode === "month") {
+      const ref = subMonths(monthRef, 1);
+      return {
+        start: startOfDay(startOfMonth(ref)),
+        end: endOfDay(endOfMonth(ref)),
+        label: format(ref, "MMMM", { locale: ptBR }),
+      };
+    }
+    if (mode === "year") {
+      const ref = subYears(yearRef, 1);
+      return {
+        start: startOfDay(startOfYear(ref)),
+        end: endOfDay(endOfYear(ref)),
+        label: format(ref, "yyyy"),
+      };
+    }
+    return null;
+  }, [mode, monthRef, yearRef]);
+
+  const prevSummary = useMemo(() => {
+    if (!previousInterval) return null;
+    const prevEntries = entries.filter((e) =>
+      isWithinInterval(new Date(e.date), { start: previousInterval.start, end: previousInterval.end })
+    );
+    if (prevEntries.length === 0) return null;
+    const ps = summarize(prevEntries, isSimplePlatform);
+    const prevWorkedDays = (() => {
+      const set = new Set<string>();
+      prevEntries.forEach((e) => { if (e.type === "earning") set.add(format(new Date(e.date), "yyyy-MM-dd")); });
+      return set.size;
+    })();
+    const prevAvgPerDay = prevWorkedDays > 0 ? ps.net / prevWorkedDays : 0;
+    return { ...ps, prevWorkedDays, prevAvgPerDay };
+  }, [previousInterval, entries, isSimplePlatform]);
+
+  const insights = useMemo<InsightResult[]>(() => {
+    if (!previousInterval) return [];
+    const label = previousInterval.label;
+    const MIN_BASE_MONEY = 1;
+    const MIN_BASE_HOURS = 1;
+    const MAX_PCT = 999;
+
+    const buildMoney = (
+      key: InsightKey,
+      chartChip: ChartKey | null,
+      cur: number,
+      prev: number | null,
+      verbUp: string,
+      verbDown: string,
+      qualUp: string,
+      qualDown: string,
+      colorUp: string,
+      colorDown: string,
+    ): InsightResult => {
+      if (prev == null || prev <= 0) return { kind: "none", key, chartChip };
+      const direction: "up" | "down" = cur >= prev ? "up" : "down";
+      const color = direction === "up" ? colorUp : colorDown;
+      if (prev < MIN_BASE_MONEY) {
+        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
+      }
+      const pct = ((cur - prev) / prev) * 100;
+      if (Math.abs(pct) > MAX_PCT) {
+        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
+      }
+      return {
+        kind: "numeric",
+        key, chartChip, direction, color,
+        pct, absPct: Math.abs(pct),
+        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
+        phrase: `${direction === "up" ? verbUp : verbDown} vs ${label}`,
+      };
+    };
+
+    const list: InsightResult[] = [];
+
+    list.push(buildMoney(
+      "net", "net", s.net, prevSummary?.net ?? null,
+      "Seu lucro subiu", "Seu lucro caiu",
+      `Seu lucro cresceu bastante vs ${label}`,
+      `Seu lucro caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "expenses", "expenses", s.totalExpenses, prevSummary?.totalExpenses ?? null,
+      "Seus gastos subiram", "Seus gastos caíram",
+      `Seus gastos aumentaram bastante vs ${label}`,
+      `Seus gastos caíram bastante vs ${label}`,
+      "hsl(var(--destructive))", "hsl(var(--success))",
+    ));
+    list.push(buildMoney(
+      "km", "km", s.perKm, prevSummary?.perKm ?? null,
+      "Seu R$/km melhorou", "Seu R$/km piorou",
+      `Seu R$/km melhorou bastante vs ${label}`,
+      `Seu R$/km piorou bastante vs ${label}`,
+      "hsl(var(--info))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "perDay", null, avgPerDay, prevSummary?.prevAvgPerDay ?? null,
+      "Sua média por dia subiu", "Sua média por dia caiu",
+      `Sua média por dia cresceu bastante vs ${label}`,
+      `Sua média por dia caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    list.push(buildMoney(
+      "perHour", null, s.perHour, prevSummary?.perHour ?? null,
+      "Sua média por hora subiu", "Sua média por hora caiu",
+      `Sua média por hora cresceu bastante vs ${label}`,
+      `Sua média por hora caiu bastante vs ${label}`,
+      "hsl(var(--success))", "hsl(var(--destructive))",
+    ));
+    (() => {
+      const cur = s.totalHours;
+      const prev = prevSummary?.totalHours ?? null;
+      if (prev == null || prev <= 0) {
+        list.push({ kind: "none", key: "hours", chartChip: "hours" });
+        return;
+      }
+      const direction: "up" | "down" = cur >= prev ? "up" : "down";
+      const color = "hsl(265 85% 70%)";
+      if (prev < MIN_BASE_HOURS) {
+        list.push({
+          kind: "qualitative", key: "hours", chartChip: "hours", direction, color,
+          phrase: direction === "up"
+            ? `Você trabalhou bastante a mais vs ${label}`
+            : `Você trabalhou bastante a menos vs ${label}`,
+        });
+        return;
+      }
+      const diff = Math.abs(cur - prev);
+      list.push({
+        kind: "numeric", key: "hours", chartChip: "hours", direction, color,
+        pct: cur - prev, absPct: diff,
+        target: diff, suffix: "h", sign: direction === "up" ? "+" : "-",
+        phrase: direction === "up"
+          ? `Você trabalhou a mais vs ${label}`
+          : `Você trabalhou a menos vs ${label}`,
+      });
+    })();
+
+    return list;
+  }, [previousInterval, prevSummary, s, avgPerDay]);
+
+  const insightMetricLabel = (key: InsightKey): string => {
+    switch (key) {
+      case "net": return "lucro";
+      case "expenses": return "gastos";
+      case "km": return "R$/km";
+      case "perDay": return "média/dia";
+      case "perHour": return "média/hora";
+      case "hours": return "horas";
+    }
+  };
+
+  const insightToShow = useMemo<InsightResult | null>(() => {
+    if (!previousInterval) return null;
+    if (insightChip) {
+      const bound = insights.find((i) => i.chartChip === insightChip);
+      if (bound) return bound;
+    }
+    const numerics = insights.filter((i): i is InsightNumeric => i.kind === "numeric");
+    if (numerics.length > 0) {
+      numerics.sort((a, b) => b.absPct - a.absPct);
+      return numerics[0];
+    }
+    const quals = insights.filter((i): i is InsightQualitative => i.kind === "qualitative");
+    if (quals.length > 0) return quals[0];
+    return null;
+  }, [previousInterval, insights, insightChip]);
+
+  const renderInsightBlock = (): React.ReactNode => {
+    if (mode === "range") return null;
+    if (!previousInterval) {
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            Sem histórico para comparar ainda
+          </div>
+        </div>
+      );
+    }
+    if (!insightToShow) {
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            Sem histórico para comparar ainda
+          </div>
+        </div>
+      );
+    }
+    if (insightToShow.kind === "none") {
+      const metric = insightMetricLabel(insightToShow.key);
+      return (
+        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+            <Sparkles className="h-4 w-4 text-muted-foreground" />
+          </span>
+          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
+            {`Sem histórico de ${metric} para comparar ainda`}
+          </div>
+        </div>
+      );
+    }
+    const Icon = insightToShow.direction === "up" ? TrendingUp : TrendingDown;
+    return (
+      <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
+        <span
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40"
+          style={{ color: insightToShow.color }}
+        >
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1 text-sm text-foreground">
+          {insightToShow.phrase}
+        </div>
+        {insightToShow.kind === "numeric" && (
+          <div
+            className="text-base font-semibold tabular-nums shrink-0"
+            style={{ color: insightToShow.color }}
+          >
+            <InsightValue
+              key={`${insightToShow.key}-${insightToShow.target}-${insightToShow.sign}`}
+              target={insightToShow.target}
+              suffix={insightToShow.suffix}
+              sign={insightToShow.sign}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
+
   return (
     <>
       <PageHeader
