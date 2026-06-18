@@ -415,7 +415,23 @@ export default function Reports() {
           axisLine={false}
           tickLine={false}
         />
-        <Tooltip cursor={{ stroke: color, strokeOpacity: 0.4 }} contentStyle={tooltipStyle} formatter={(v: number) => fmt(v)} />
+        <Tooltip
+          cursor={{ stroke: color, strokeOpacity: 0.4 }}
+          contentStyle={tooltipStyle}
+          formatter={(v: number) => {
+            const labelPt = CHARTS_LABEL_PT[chart];
+            if (chart === "net" || chart === "expenses") return [brl(v), labelPt];
+            if (chart === "km") return [`${num(v, 0)} km`, labelPt];
+            return [`${num(v, 1)}h`, labelPt];
+          }}
+          labelFormatter={(label, payload) => {
+            if (useMonthly) {
+              const raw = (payload?.[0] as unknown as { payload?: { d?: Date } })?.payload?.d;
+              if (raw) return format(new Date(raw), "MMM/yy", { locale: ptBR });
+            }
+            return String(label);
+          }}
+        />
         <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2} fill={`url(#${gradientId})`} dot={false} />
       </AreaChart>
     );
