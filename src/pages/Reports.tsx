@@ -53,6 +53,14 @@ const CHARTS: { key: ChartKey; label: string; shortLabel: string; fullLabel: str
   { key: "km",       label: "KM rodados",        shortLabel: "KM",     fullLabel: "KM rodados",        color: "hsl(var(--info))" },
   { key: "hours",    label: "Horas trabalhadas", shortLabel: "Horas",  fullLabel: "Horas trabalhadas", color: "hsl(265 85% 70%)" },
 ];
+
+const CHARTS_LABEL_PT: Record<ChartKey, string> = {
+  net: "Lucro",
+  expenses: "Gastos",
+  km: "KM",
+  hours: "Horas",
+};
+
 /**
  * Number-key for the Insights card: count-up animation (0 → target, 0.6s)
  * with a subtle pulse on settle. Respects prefers-reduced-motion (snaps).
@@ -66,6 +74,16 @@ function InsightValue({ target, suffix, sign }: { target: number; suffix: string
     </span>
   );
 }
+
+/**
+ * Smooth number transition for hero / list values when the selected period changes.
+ * Respects prefers-reduced-motion via useCountUp.
+ */
+function AnimatedNumber({ value, format, duration = 500 }: { value: number; format: (n: number) => string; duration?: number }) {
+  const animated = useCountUp(value, duration);
+  return <span className="tabular-nums">{format(animated)}</span>;
+}
+
 
 
 export default function Reports() {
