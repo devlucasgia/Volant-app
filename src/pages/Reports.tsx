@@ -398,7 +398,6 @@ export default function Reports() {
       boxShadow: "0 10px 30px -12px hsl(var(--background) / 0.6)",
       padding: "8px 12px",
     };
-    const fmt = (v: number) => isMoney ? brl(v) : num(v, chart === "hours" ? 1 : 0);
     const gradientId = `reportAreaFill-${chart}`;
     return (
       <AreaChart data={dailySeries} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
