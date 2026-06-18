@@ -444,59 +444,81 @@ export default function Reports() {
       ? "Evolução mensal"
       : "Evolução no período";
 
-  // -------- Insights Inteligentes (Blocos 4–6 + correções) --------
-  type InsightKey = "net" | "expenses" | "km" | "hours" | "perHour" | "perDay";
-  type InsightNumeric = {
-    kind: "numeric";
-    key: InsightKey;
+  // -------- Insights Inteligentes — comparação MTD/YTD + categorias --------
+  type InsightItem = {
+    id: string;
+    kind: "numeric" | "qualitative" | "category-new" | "category-delta";
+    metric: ChartKey | "perHour" | "perDay" | "category";
     chartChip: ChartKey | null;
-    pct: number;
-    absPct: number;
-    direction: "up" | "down";
-    phrase: string;
-    suffix: string;
-    target: number;
-    sign: "+" | "-";
-    color: string;
-  };
-  type InsightQualitative = {
-    kind: "qualitative";
-    key: InsightKey;
-    chartChip: ChartKey | null;
-    direction: "up" | "down";
     phrase: string;
     color: string;
+    direction: "up" | "down";
+    target?: number;
+    suffix?: string;
+    sign?: "+" | "-";
+    absPct?: number;
+    absDelta?: number;
   };
-  type InsightResult =
-    | InsightNumeric
-    | InsightQualitative
-    | { kind: "none"; key: InsightKey; chartChip: ChartKey | null };
 
-  const previousInterval = useMemo(() => {
+  // 1.2 — same-period (MTD / YTD) comparison intervals. Only insights use these;
+  // the on-screen totals/chart/list keep using the user-selected `interval`.
+  const compare = useMemo(() => {
+    if (mode === "range") return null;
+    const today = new Date();
     if (mode === "month") {
-      const ref = subMonths(monthRef, 1);
+      const sameMonth =
+        monthRef.getFullYear() === today.getFullYear() &&
+        monthRef.getMonth() === today.getMonth();
+      if (sameMonth) {
+        const prevRef = subMonths(monthRef, 1);
+        const lastDayPrev = endOfMonth(prevRef).getDate();
+        const day = Math.min(today.getDate(), lastDayPrev);
+        return {
+          curInterval: { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(today) },
+          prevInterval: {
+            start: startOfDay(startOfMonth(prevRef)),
+            end: endOfDay(new Date(prevRef.getFullYear(), prevRef.getMonth(), day)),
+          },
+          label: format(prevRef, "MMMM", { locale: ptBR }),
+          isPartial: true,
+        };
+      }
+      const prevRef = subMonths(monthRef, 1);
       return {
-        start: startOfDay(startOfMonth(ref)),
-        end: endOfDay(endOfMonth(ref)),
-        label: format(ref, "MMMM", { locale: ptBR }),
+        curInterval: { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) },
+        prevInterval: { start: startOfDay(startOfMonth(prevRef)), end: endOfDay(endOfMonth(prevRef)) },
+        label: format(prevRef, "MMMM", { locale: ptBR }),
+        isPartial: false,
       };
     }
-    if (mode === "year") {
-      const ref = subYears(yearRef, 1);
+    // year
+    const sameYear = getYear(yearRef) === getYear(today);
+    if (sameYear) {
+      const prevYear = getYear(yearRef) - 1;
+      // clamp Feb 29 → Feb 28 of previous non-leap year
+      let prevEndDate = new Date(prevYear, today.getMonth(), today.getDate());
+      if (prevEndDate.getMonth() !== today.getMonth()) {
+        prevEndDate = new Date(prevYear, today.getMonth() + 1, 0);
+      }
       return {
-        start: startOfDay(startOfYear(ref)),
-        end: endOfDay(endOfYear(ref)),
-        label: format(ref, "yyyy"),
+        curInterval: { start: startOfDay(startOfYear(yearRef)), end: endOfDay(today) },
+        prevInterval: { start: startOfDay(new Date(prevYear, 0, 1)), end: endOfDay(prevEndDate) },
+        label: String(prevYear),
+        isPartial: true,
       };
     }
-    return null;
+    const prevRef = subYears(yearRef, 1);
+    return {
+      curInterval: { start: startOfDay(startOfYear(yearRef)), end: endOfDay(endOfYear(yearRef)) },
+      prevInterval: { start: startOfDay(startOfYear(prevRef)), end: endOfDay(endOfYear(prevRef)) },
+      label: format(prevRef, "yyyy"),
+      isPartial: false,
+    };
   }, [mode, monthRef, yearRef]);
 
   const prevSummary = useMemo(() => {
-    if (!previousInterval) return null;
-    const prevEntries = entries.filter((e) =>
-      isWithinInterval(new Date(e.date), { start: previousInterval.start, end: previousInterval.end })
-    );
+    if (!compare) return null;
+    const prevEntries = entries.filter((e) => isWithinInterval(new Date(e.date), compare.prevInterval));
     if (prevEntries.length === 0) return null;
     const ps = summarize(prevEntries, isSimplePlatform);
     const prevWorkedDays = (() => {
@@ -504,211 +526,302 @@ export default function Reports() {
       prevEntries.forEach((e) => { if (e.type === "earning") set.add(format(new Date(e.date), "yyyy-MM-dd")); });
       return set.size;
     })();
-    const prevAvgPerDay = prevWorkedDays > 0 ? ps.net / prevWorkedDays : 0;
-    return { ...ps, prevWorkedDays, prevAvgPerDay };
-  }, [previousInterval, entries, isSimplePlatform]);
+    return { ...ps, prevWorkedDays, prevAvgPerDay: prevWorkedDays > 0 ? ps.net / prevWorkedDays : 0 };
+  }, [compare, entries, isSimplePlatform]);
 
-  const insights = useMemo<InsightResult[]>(() => {
-    if (!previousInterval) return [];
-    const label = previousInterval.label;
+  // Snapshot of the current period constrained to compare.curInterval (MTD-safe).
+  const curForInsights = useMemo(() => {
+    if (!compare) return null;
+    const curEntries = entries.filter((e) => isWithinInterval(new Date(e.date), compare.curInterval));
+    const cs = summarize(curEntries, isSimplePlatform);
+    const curWorkedDays = (() => {
+      const set = new Set<string>();
+      curEntries.forEach((e) => { if (e.type === "earning") set.add(format(new Date(e.date), "yyyy-MM-dd")); });
+      return set.size;
+    })();
+    return { ...cs, curWorkedDays, curAvgPerDay: curWorkedDays > 0 ? cs.net / curWorkedDays : 0 };
+  }, [compare, entries, isSimplePlatform]);
+
+  // Expense aggregation by category for both intervals.
+  const expenseByCategoryDiff = useMemo(() => {
+    if (!compare) return [] as { category: string; label: string; cur: number; prev: number }[];
+    const sumByCat = (interval: { start: Date; end: Date }) => {
+      const map = new Map<string, number>();
+      entries.forEach((e) => {
+        if (e.type !== "expense") return;
+        if (!isWithinInterval(new Date(e.date), interval)) return;
+        const cat = e.expense.category;
+        const amt = e.expense.amount || 0;
+        map.set(cat, (map.get(cat) ?? 0) + amt);
+      });
+      return map;
+    };
+    const cur = sumByCat(compare.curInterval);
+    const prev = sumByCat(compare.prevInterval);
+    const keys = new Set<string>([...cur.keys(), ...prev.keys()]);
+    return Array.from(keys).map((cat) => ({
+      category: cat,
+      label: expenseMetaFor(cat).label,
+      cur: cur.get(cat) ?? 0,
+      prev: prev.get(cat) ?? 0,
+    }));
+  }, [compare, entries, expenseMetaFor]);
+
+  // G1 — single coherent queue structure: { N (numerics by |pct|), C (categories by absDelta) }
+  const queue = useMemo(() => {
+    const empty = { N: [] as InsightItem[], C: [] as InsightItem[] };
+    if (!compare || !prevSummary || !curForInsights) return empty;
+    const label = compare.label;
+    const labelText = compare.isPartial ? `mesmo período de ${label}` : label;
     const MIN_BASE_MONEY = 1;
     const MIN_BASE_HOURS = 1;
     const MAX_PCT = 999;
+    const MIN_REL_PCT = 15;
 
-    const buildMoney = (
-      key: InsightKey,
-      chartChip: ChartKey | null,
-      cur: number,
-      prev: number | null,
-      verbUp: string,
-      verbDown: string,
-      qualUp: string,
-      qualDown: string,
-      colorUp: string,
-      colorDown: string,
-    ): InsightResult => {
-      if (prev == null || prev <= 0) return { kind: "none", key, chartChip };
+    const N: InsightItem[] = [];
+
+    const pushMoney = (
+      metric: InsightItem["metric"], chip: ChartKey | null,
+      cur: number, prev: number,
+      verbUp: string, verbDown: string,
+      qualUp: string, qualDown: string,
+      colorUp: string, colorDown: string,
+    ) => {
+      if (prev == null || prev <= 0) return;
       const direction: "up" | "down" = cur >= prev ? "up" : "down";
       const color = direction === "up" ? colorUp : colorDown;
       if (prev < MIN_BASE_MONEY) {
-        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
-      }
-      const pct = ((cur - prev) / prev) * 100;
-      if (Math.abs(pct) > MAX_PCT) {
-        return { kind: "qualitative", key, chartChip, direction, color, phrase: direction === "up" ? qualUp : qualDown };
-      }
-      return {
-        kind: "numeric",
-        key, chartChip, direction, color,
-        pct, absPct: Math.abs(pct),
-        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
-        phrase: `${direction === "up" ? verbUp : verbDown} vs ${label}`,
-      };
-    };
-
-    const list: InsightResult[] = [];
-
-    list.push(buildMoney(
-      "net", "net", s.net, prevSummary?.net ?? null,
-      "Seu lucro subiu", "Seu lucro caiu",
-      `Seu lucro cresceu bastante vs ${label}`,
-      `Seu lucro caiu bastante vs ${label}`,
-      "hsl(var(--success))", "hsl(var(--destructive))",
-    ));
-    list.push(buildMoney(
-      "expenses", "expenses", s.totalExpenses, prevSummary?.totalExpenses ?? null,
-      "Seus gastos subiram", "Seus gastos caíram",
-      `Seus gastos aumentaram bastante vs ${label}`,
-      `Seus gastos caíram bastante vs ${label}`,
-      "hsl(var(--destructive))", "hsl(var(--success))",
-    ));
-    list.push(buildMoney(
-      "km", "km", s.perKm, prevSummary?.perKm ?? null,
-      "Seu R$/km melhorou", "Seu R$/km piorou",
-      `Seu R$/km melhorou bastante vs ${label}`,
-      `Seu R$/km piorou bastante vs ${label}`,
-      "hsl(var(--info))", "hsl(var(--destructive))",
-    ));
-    list.push(buildMoney(
-      "perDay", null, avgPerDay, prevSummary?.prevAvgPerDay ?? null,
-      "Sua média por dia subiu", "Sua média por dia caiu",
-      `Sua média por dia cresceu bastante vs ${label}`,
-      `Sua média por dia caiu bastante vs ${label}`,
-      "hsl(var(--success))", "hsl(var(--destructive))",
-    ));
-    list.push(buildMoney(
-      "perHour", null, s.perHour, prevSummary?.perHour ?? null,
-      "Sua média por hora subiu", "Sua média por hora caiu",
-      `Sua média por hora cresceu bastante vs ${label}`,
-      `Sua média por hora caiu bastante vs ${label}`,
-      "hsl(var(--success))", "hsl(var(--destructive))",
-    ));
-    (() => {
-      const cur = s.totalHours;
-      const prev = prevSummary?.totalHours ?? null;
-      if (prev == null || prev <= 0) {
-        list.push({ kind: "none", key: "hours", chartChip: "hours" });
-        return;
-      }
-      const direction: "up" | "down" = cur >= prev ? "up" : "down";
-      const color = "hsl(265 85% 70%)";
-      if (prev < MIN_BASE_HOURS) {
-        list.push({
-          kind: "qualitative", key: "hours", chartChip: "hours", direction, color,
-          phrase: direction === "up"
-            ? `Você trabalhou bastante a mais vs ${label}`
-            : `Você trabalhou bastante a menos vs ${label}`,
+        N.push({
+          id: `q-${metric}`, kind: "qualitative", metric, chartChip: chip, direction, color,
+          phrase: `${direction === "up" ? qualUp : qualDown} vs ${labelText}`,
+          absPct: 0,
         });
         return;
       }
+      const pct = ((cur - prev) / prev) * 100;
+      if (Math.abs(pct) > MAX_PCT) {
+        N.push({
+          id: `q-${metric}`, kind: "qualitative", metric, chartChip: chip, direction, color,
+          phrase: `${direction === "up" ? qualUp : qualDown} vs ${labelText}`,
+          absPct: MAX_PCT,
+        });
+        return;
+      }
+      if (Math.abs(pct) < MIN_REL_PCT) return;
+      N.push({
+        id: `n-${metric}`, kind: "numeric", metric, chartChip: chip, direction, color,
+        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
+        absPct: Math.abs(pct),
+        phrase: `${direction === "up" ? verbUp : verbDown} vs ${labelText}`,
+      });
+    };
+
+    pushMoney("net", "net", curForInsights.net, prevSummary.net,
+      "Seu lucro subiu", "Seu lucro caiu",
+      "Seu lucro cresceu bastante", "Seu lucro caiu bastante",
+      "hsl(var(--success))", "hsl(var(--destructive))");
+    pushMoney("expenses", "expenses", curForInsights.totalExpenses, prevSummary.totalExpenses,
+      "Seus gastos subiram", "Seus gastos caíram",
+      "Seus gastos aumentaram bastante", "Seus gastos caíram bastante",
+      "hsl(var(--destructive))", "hsl(var(--success))");
+    pushMoney("km", "km", curForInsights.perKm, prevSummary.perKm,
+      "Seu R$/km melhorou", "Seu R$/km piorou",
+      "Seu R$/km melhorou bastante", "Seu R$/km piorou bastante",
+      "hsl(var(--info))", "hsl(var(--destructive))");
+    pushMoney("perDay", null, curForInsights.curAvgPerDay, prevSummary.prevAvgPerDay,
+      "Sua média por dia subiu", "Sua média por dia caiu",
+      "Sua média por dia cresceu bastante", "Sua média por dia caiu bastante",
+      "hsl(var(--success))", "hsl(var(--destructive))");
+    pushMoney("perHour", null, curForInsights.perHour, prevSummary.perHour,
+      "Sua média por hora subiu", "Sua média por hora caiu",
+      "Sua média por hora cresceu bastante", "Sua média por hora caiu bastante",
+      "hsl(var(--success))", "hsl(var(--destructive))");
+
+    // hours — absolute delta in hours instead of %
+    (() => {
+      const cur = curForInsights.totalHours;
+      const prev = prevSummary.totalHours;
+      if (prev == null || prev <= 0) return;
+      const direction: "up" | "down" = cur >= prev ? "up" : "down";
+      const color = "hsl(265 85% 70%)";
       const diff = Math.abs(cur - prev);
-      list.push({
-        kind: "numeric", key: "hours", chartChip: "hours", direction, color,
-        pct: cur - prev, absPct: diff,
+      if (prev < MIN_BASE_HOURS) {
+        N.push({
+          id: "q-hours", kind: "qualitative", metric: "hours", chartChip: "hours", direction, color,
+          phrase: `${direction === "up" ? "Você trabalhou bastante a mais" : "Você trabalhou bastante a menos"} vs ${labelText}`,
+          absPct: 0,
+        });
+        return;
+      }
+      if (diff < 1) return;
+      N.push({
+        id: "n-hours", kind: "numeric", metric: "hours", chartChip: "hours", direction, color,
         target: diff, suffix: "h", sign: direction === "up" ? "+" : "-",
-        phrase: direction === "up"
-          ? `Você trabalhou a mais vs ${label}`
-          : `Você trabalhou a menos vs ${label}`,
+        absPct: (diff / prev) * 100,
+        phrase: `${direction === "up" ? "Você trabalhou a mais" : "Você trabalhou a menos"} vs ${labelText}`,
       });
     })();
 
-    return list;
-  }, [previousInterval, prevSummary, s, avgPerDay]);
+    N.sort((a, b) => (b.absPct ?? 0) - (a.absPct ?? 0));
 
-  const insightMetricLabel = (key: InsightKey): string => {
-    switch (key) {
-      case "net": return "lucro";
-      case "expenses": return "gastos";
-      case "km": return "R$/km";
-      case "perDay": return "média/dia";
-      case "perHour": return "média/hora";
-      case "hours": return "horas";
+    // Categories — Ajuste 3 (base mínima também nas categorias)
+    const C: InsightItem[] = [];
+    for (const it of expenseByCategoryDiff) {
+      const { cur, prev, label: catLabel } = it;
+      const delta = cur - prev;
+      const absDelta = Math.abs(delta);
+      const direction: "up" | "down" = delta >= 0 ? "up" : "down";
+      const color = direction === "up" ? "hsl(var(--destructive))" : "hsl(var(--success))";
+      if (prev < MIN_BASE_MONEY) {
+        if (cur < 30) continue;
+        C.push({
+          id: `cat-new-${it.category}`, kind: "category-new", metric: "category", chartChip: "expenses",
+          direction: "up", color: "hsl(var(--destructive))",
+          phrase: `Você gastou ${brl(cur)} com ${catLabel} — categoria nova vs ${labelText}`,
+          absDelta: cur,
+        });
+        continue;
+      }
+      const pct = (delta / prev) * 100;
+      if (absDelta < 30 || Math.abs(pct) < MIN_REL_PCT) continue;
+      if (Math.abs(pct) > MAX_PCT) {
+        C.push({
+          id: `cat-q-${it.category}`, kind: "qualitative", metric: "category", chartChip: "expenses", direction, color,
+          phrase: `${catLabel} ${direction === "up" ? "subiu bastante" : "caiu bastante"} vs ${labelText}`,
+          absDelta,
+        });
+        continue;
+      }
+      C.push({
+        id: `cat-d-${it.category}`, kind: "category-delta", metric: "category", chartChip: "expenses", direction, color,
+        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
+        absDelta,
+        phrase: `${catLabel} ${direction === "up" ? "subiu" : "caiu"} vs ${labelText}`,
+      });
     }
-  };
+    C.sort((a, b) => (b.absDelta ?? 0) - (a.absDelta ?? 0));
 
-  const insightToShow = useMemo<InsightResult | null>(() => {
-    if (!previousInterval) return null;
-    if (insightChip) {
-      const bound = insights.find((i) => i.chartChip === insightChip);
-      if (bound) return bound;
+    return { N, C };
+  }, [compare, curForInsights, prevSummary, expenseByCategoryDiff]);
+
+  // G1 — total positions in the rotation (numerics + at most 1 category slot per cycle).
+  const insightTotal = queue.N.length + (queue.C.length > 0 ? 1 : 0);
+
+  // ---------- Rotation state ----------
+  const [rotationIdx, setRotationIdx] = useState(0);
+  const cIdxRef = useRef(0);
+  const resumedRef = useRef(false);
+
+  // Reset rotation on period change.
+  useEffect(() => {
+    setRotationIdx(0);
+    cIdxRef.current = 0;
+    resumedRef.current = false;
+  }, [mode, monthRef, yearRef]);
+
+  // Keep rotation in bounds if the queue shrinks.
+  useEffect(() => {
+    if (insightTotal > 0 && rotationIdx >= insightTotal) setRotationIdx(0);
+  }, [insightTotal, rotationIdx]);
+
+  // Mark pause whenever a chip becomes active (so the next resume advances).
+  useEffect(() => {
+    if (insightChip != null) resumedRef.current = true;
+  }, [insightChip]);
+
+  // Auto-rotation (9s) + Ajuste 2 (resume from next, not from index 0).
+  useEffect(() => {
+    if (insightChip != null) return;
+    if (insightTotal <= 1) return;
+    const reduced = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    if (resumedRef.current) {
+      resumedRef.current = false;
+      setRotationIdx((prev) => {
+        const next = (prev + 1) % insightTotal;
+        if (next === 0) cIdxRef.current += 1;
+        return next;
+      });
     }
-    const numerics = insights.filter((i): i is InsightNumeric => i.kind === "numeric");
-    if (numerics.length > 0) {
-      numerics.sort((a, b) => b.absPct - a.absPct);
-      return numerics[0];
+    const id = window.setInterval(() => {
+      setRotationIdx((prev) => {
+        const next = (prev + 1) % insightTotal;
+        if (next === 0) cIdxRef.current += 1;
+        return next;
+      });
+    }, 9000);
+    return () => window.clearInterval(id);
+  }, [insightChip, insightTotal]);
+
+  // G3 — chip-pause override: shown insight always matches the active chip.
+  const insightToShow: InsightItem | null = useMemo(() => {
+    if (insightTotal === 0) return null;
+    if (insightChip != null) {
+      if (insightChip === "expenses" && queue.C.length > 0) {
+        return queue.C[cIdxRef.current % queue.C.length];
+      }
+      const match = queue.N.find((n) => n.chartChip === insightChip);
+      if (match) return match;
+      // Fallback to current rotation slot if no metric-specific insight.
+      if (rotationIdx < queue.N.length) return queue.N[rotationIdx];
+      if (queue.C.length > 0) return queue.C[cIdxRef.current % queue.C.length];
+      return null;
     }
-    const quals = insights.filter((i): i is InsightQualitative => i.kind === "qualitative");
-    if (quals.length > 0) return quals[0];
+    if (rotationIdx < queue.N.length) return queue.N[rotationIdx];
+    if (queue.C.length > 0) return queue.C[cIdxRef.current % queue.C.length];
     return null;
-  }, [previousInterval, insights, insightChip]);
+  }, [insightChip, insightTotal, queue, rotationIdx]);
 
   const renderInsightBlock = (): React.ReactNode => {
+    // 2.2 + G2 — hide card whenever there is nothing meaningful to show.
     if (mode === "range") return null;
-    if (!previousInterval) {
-      return (
-        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
-            Sem histórico para comparar ainda
-          </div>
-        </div>
-      );
-    }
-    if (!insightToShow) {
-      return (
-        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
-            Sem histórico para comparar ainda
-          </div>
-        </div>
-      );
-    }
-    if (insightToShow.kind === "none") {
-      const metric = insightMetricLabel(insightToShow.key);
-      return (
-        <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-          </span>
-          <div className="min-w-0 flex-1 text-sm text-muted-foreground">
-            {`Sem histórico de ${metric} para comparar ainda`}
-          </div>
-        </div>
-      );
-    }
+    if (!compare || !prevSummary) return null;
+    if (!insightToShow) return null;
+
     const Icon = insightToShow.direction === "up" ? TrendingUp : TrendingDown;
+    const showNumber =
+      (insightToShow.kind === "numeric" || insightToShow.kind === "category-delta")
+      && insightToShow.target != null
+      && insightToShow.suffix != null
+      && insightToShow.sign != null;
+
     return (
-      <div key="insights" className="rounded-2xl bg-card/40 px-4 py-3.5 flex items-center gap-3 animate-fade-in-up">
-        <span
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40"
-          style={{ color: insightToShow.color }}
-        >
-          <Icon className="h-4 w-4" />
-        </span>
-        <div className="min-w-0 flex-1 text-sm text-foreground">
-          {insightToShow.phrase}
+      <div key="insights" className="space-y-1.5 animate-fade-in-up">
+        <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Insights inteligentes
         </div>
-        {insightToShow.kind === "numeric" && (
-          <div
-            className="text-base font-semibold tabular-nums shrink-0"
+        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-3.5 flex items-center gap-3">
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40"
             style={{ color: insightToShow.color }}
           >
-            <InsightValue
-              key={`${insightToShow.key}-${insightToShow.target}-${insightToShow.sign}`}
-              target={insightToShow.target}
-              suffix={insightToShow.suffix}
-              sign={insightToShow.sign}
-            />
+            <Icon className="h-4 w-4" />
+          </span>
+          <div
+            key={insightToShow.id}
+            className="min-w-0 flex-1 text-sm text-foreground animate-fade-in motion-reduce:animate-none"
+          >
+            {insightToShow.phrase}
           </div>
-        )}
+          {showNumber && (
+            <div
+              className="text-base font-semibold tabular-nums shrink-0"
+              style={{ color: insightToShow.color }}
+            >
+              <InsightValue
+                key={`${insightToShow.id}-${insightToShow.target}-${insightToShow.sign}`}
+                target={insightToShow.target as number}
+                suffix={insightToShow.suffix as string}
+                sign={insightToShow.sign as "+" | "-"}
+              />
+            </div>
+          )}
+        </div>
       </div>
     );
   };
+
 
 
 
