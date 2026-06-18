@@ -386,7 +386,7 @@ export default function Reports() {
 
   const chartMeta = CHARTS.find((c) => c.key === chart)!;
   const dataKey = chart === "net" ? "net" : chart === "expenses" ? "expense" : chart === "km" ? "km" : "hours";
-  const isMoney = chart === "net" || chart === "expenses";
+  
 
   const renderChart = () => {
     const color = chartMeta.color;
