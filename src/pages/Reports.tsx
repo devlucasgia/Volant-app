@@ -998,26 +998,25 @@ export default function Reports() {
                     Lucro líquido
                   </div>
                   <div className="mt-2 text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-success leading-none">
-                    {brl(s.net)}
+                    <AnimatedNumber value={s.net} format={brl} />
                   </div>
                   <div className="mt-3 text-xs text-muted-foreground tabular-nums">
-                    Bruto {brl(s.gross)} · Gastos {brl(s.totalExpenses)}
+                    Bruto <span className="text-info">{brl(s.gross)}</span> · Gastos <span className="text-destructive">{brl(s.totalExpenses)}</span>
                   </div>
                 </div>
               );
             }
-            // grossExpenses hero
-            const saldo = s.gross - s.totalExpenses;
+            // grossExpenses hero — Ganho bruto destacado em azul
             return (
               <div key="hero-grossExpenses" className="py-5 text-center">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Saldo do período
+                  Ganho bruto
                 </div>
-                <div className="mt-2 text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-foreground leading-none">
-                  {brl(saldo)}
+                <div className="mt-2 text-5xl sm:text-6xl font-bold tabular-nums tracking-tight text-info leading-none">
+                  <AnimatedNumber value={s.gross} format={brl} />
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground tabular-nums">
-                  Bruto <span className="text-info">{brl(s.gross)}</span> · Gastos <span className="text-destructive">{brl(s.totalExpenses)}</span>
+                  Gastos <span className="text-destructive">{brl(s.totalExpenses)}</span> · Líquido <span className="text-success">{brl(s.net)}</span>
                 </div>
               </div>
             );
@@ -1026,49 +1025,54 @@ export default function Reports() {
           // Each non-hero, non-chart key produces one or more rows.
           // Icons are monochromatic (success/70) to keep the list calm.
           const iconCls = "h-4 w-4 text-success/70";
-          const rowsFor = (k: ReportCardKey): { icon: React.ReactNode; label: string; value: string; sub?: string }[] => {
+          const moneyVal = (n: number): React.ReactNode => <AnimatedNumber value={n} format={brl} />;
+          type Row = { icon: React.ReactNode; label: string; value: React.ReactNode; sub?: string };
+          const rowsFor = (k: ReportCardKey): Row[] => {
             switch (k) {
               case "net":
-                return [{ icon: <Wallet className={iconCls} />, label: "Lucro líquido", value: brl(s.net) }];
+                // Absorvido pelo herói "Ganho bruto".
+                if (heroKey === "grossExpenses") return [];
+                return [{ icon: <Wallet className={iconCls} />, label: "Lucro líquido", value: moneyVal(s.net) }];
               case "grossExpenses":
                 // Absorvido pelo herói "Lucro líquido".
                 if (heroKey === "net") return [];
                 return [
-                  { icon: <Wallet className={iconCls} />, label: "Bruto", value: brl(s.gross) },
-                  { icon: <Receipt className={iconCls} />, label: "Gastos", value: brl(s.totalExpenses) },
+                  { icon: <Wallet className={iconCls} />, label: "Bruto", value: moneyVal(s.gross) },
+                  { icon: <Receipt className={iconCls} />, label: "Gastos", value: moneyVal(s.totalExpenses) },
                 ];
               case "perHour":
                 return [{
                   icon: <Gauge className={iconCls} />,
                   label: "Média por hora",
-                  value: brl(s.perHour),
+                  value: moneyVal(s.perHour),
                   sub: s.totalHours > 0 ? `${num(s.totalHours, 1)}h trabalhadas` : undefined,
                 }];
               case "daysGroup":
                 return [{
                   icon: <CalendarDays className={iconCls} />,
                   label: "Média / dia",
-                  value: brl(avgPerDay),
+                  value: moneyVal(avgPerDay),
                   sub: workedDays > 0 ? `${workedDays} ${workedDays === 1 ? "ativo" : "ativos"}` : undefined,
                 }];
               case "kmGroup":
                 return [{
                   icon: <Route className={iconCls} />,
                   label: "R$ / km",
-                  value: brl(s.perKm),
+                  value: moneyVal(s.perKm),
                   sub: s.totalKm > 0 ? `${num(s.totalKm, 0)} km rodados` : undefined,
                 }];
               case "tripsGroup":
                 return [{
                   icon: <Flag className={iconCls} />,
                   label: "R$ / corrida",
-                  value: brl(s.perRide),
+                  value: moneyVal(s.perRide),
                   sub: s.totalRides > 0 ? `${s.totalRides} ${s.totalRides === 1 ? "corrida" : "corridas"}` : undefined,
                 }];
               default:
                 return [];
             }
           };
+
 
           const hasChartData = dailySeries.length > 0
             && dailySeries.some((d) => Number((d as unknown as Record<string, number>)[dataKey]) > 0);
