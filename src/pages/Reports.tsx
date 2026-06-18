@@ -22,7 +22,7 @@ import {
 } from "recharts";
 import {
   CalendarIcon, CalendarRange,
-  Wallet, Receipt, CalendarDays, Route, Flag, Gauge, Sparkles,
+  Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
   TrendingUp, TrendingDown,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
