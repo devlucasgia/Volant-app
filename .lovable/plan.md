@@ -1,119 +1,140 @@
-# Refatoração visual — Relatórios + Seletores globais
 
-Mudanças exclusivamente de apresentação. Nenhuma query, contexto, lógica de drag-and-drop, persistência (`useReportOrder`/`useReportWidgets`) ou cálculo (`summarize`) é alterada.
+# Sprint Final — Relatórios (consolidado + 3 ajustes + 4 garantias)
 
-## Bloco 1 — Segmented Control flat global
+Mudanças **somente** em `src/pages/Reports.tsx` (reusa `src/hooks/useCountUp.ts`). Não toca `summarize`, `DataContext`, queries Supabase, `useReportOrder`/`useReportWidgets`, nem outras telas.
 
-Arquivo: `src/components/Segmented.tsx`.
+---
 
-- Adicionar uma terceira variante `tone="flat"` (mantém `default` e `contextual` intactas para não impactar outras telas que dependem do verde, ex: hero da Home).
-- `flat`:
-  - Track: sem fundo, sem borda (`bg-transparent border-0 p-0 gap-1`).
-  - Item inativo: `text-muted-foreground/60`, sem fundo.
-  - Item ativo: `text-foreground` sólido + indicador sutil — `after:` underline de 2px com cor `bg-foreground/70` largura ~60% centralizada, e leve `bg-foreground/[0.04]` no item para evidenciar toque.
-  - Sem ring, sem shadow, sem gradiente.
-- Aplicar `tone="flat"` em todos os usos de navegação/filtro:
-  - `src/pages/Reports.tsx` — Por mês / Por ano / Personalizado.
-  - `src/pages/History.tsx` — Todos / Ganhos / Gastos e Hoje / Semana / Mês (todos os Segmented da tela).
-  - `src/pages/Dashboard.tsx` — período (Hoje / Semana / Mês) e qualquer outro Segmented da Home.
-  - `src/pages/OrganizacaoCards.tsx` — Tela inicial / Relatórios.
-  - `src/components/vehicle/VehicleCostsSection.tsx` — caso seja seletor de filtro/categoria.
-- Não tocar: botão "Iniciar" da Jornada, FABs, CTAs primários.
+## PARTE 1 — Correções críticas
 
-## Bloco 2 — Seletor de data do Relatório
+### 1.1 Posição estável do Insights
+Walker respeita `visibleKeys`. `renderInsightBlock()` retornando `null` apenas omite o slot — sem reordenar nem depender de `chart`.
 
-Arquivo: `src/pages/Reports.tsx` (linhas 424–481).
+### 1.2 Comparação mesmo período (MTD / YTD)
+Helper local `getCompareIntervals(mode, monthRef, yearRef, today)`:
+- `month`: mês corrente → atual `01..hoje`, anterior `01..min(hoje.dia, último dia mês anterior)`. Encerrado → ambos cheios.
+- `year`: análogo (clamp 29/Fev).
+- Retorna `{ curInterval, prevInterval, label, isPartial }`.
 
-- Trocar `variant="outline"` (que aplica borda) por uma classe flat nos botões "‹", "›", trigger do mês, trigger do ano (`SelectTrigger`) e botão de período personalizado:
-  - `border-0 bg-transparent hover:bg-foreground/[0.04] text-foreground rounded-xl`.
-  - Setas em `text-muted-foreground`.
-  - Trigger central com label em `font-medium text-foreground` e ícone em `text-muted-foreground`.
-- Garantir que o `SelectTrigger` do ano use override `border-0 bg-transparent` (a classe base do componente vem com `border border-input bg-background`).
+**Apenas Insights usa esses intervalos** — o `interval` que alimenta `s` (totais, gráfico, lista) não muda.
 
-## Bloco 3 — Herói do Relatório
+Texto: `isPartial` → `"vs mesmo período de {label}"`; encerrado → `"vs {label}"`.
 
-`src/pages/Reports.tsx` — função `renderHero` (linhas 537–581).
+### 1.3 Herói bidirecional
+- `case "net":` → `[]` se `heroKey === "grossExpenses"`.
+- `case "grossExpenses":` → `[]` se `heroKey === "net"`.
 
-- Remover o bloco do mini AreaChart (linhas 550–562) e os imports `Area, AreaChart, ResponsiveContainer` se ficarem sem uso após Bloco 4 (manter se ainda referenciados pelo gráfico principal).
-- Hero permanece: eyebrow "LUCRO LÍQUIDO", valor `text-5xl/6xl`, linha "Bruto {valor} · Gastos {valor}".
-- Para `grossExpenses`, manter como está (não tem sparkline).
+### 1.4 Herói com cores semânticas
+Tokens: `text-info` (azul), `text-destructive` (vermelho), `text-success` (verde).
+- `grossExpenses`: eyebrow `"GANHO BRUTO"`, número grande `text-info`, subtítulo `Gastos {destructive} · Líquido {success}`.
+- `net`: eyebrow `"LUCRO LÍQUIDO"`, número `text-success`, subtítulo `Bruto {info} · Gastos {destructive}`.
 
-## Bloco 4 — Gráfico interativo
+### 1.5 Tooltip em PT
+`formatter` via `CHARTS_LABEL_PT`: `net`→"Lucro" (R$), `expenses`→"Gastos" (R$), `km`→"KM" (`${num(v,0)} km`), `hours`→"Horas" (`${num(v,1)}h`). `labelFormatter`: `"dd/MM"` diário, `"MMM/yy"` anual.
 
-`src/pages/Reports.tsx` — `renderChartBlock` (620–644) e `renderChart` (332–372).
+---
 
-- **Posição preservada**: continua sendo renderizado pela ordem do usuário (`reportOrder`), sem mudanças no walker (677–690).
-- Substituir o `Select` (627–636) por uma linha horizontal de chips:
-  - `div` com `flex gap-2 overflow-x-auto no-scrollbar -mx-1 px-1 snap-x` contendo botões para cada `CHARTS[i]`.
-  - Chip: `rounded-full px-3.5 py-1.5 text-xs font-medium whitespace-nowrap snap-start`.
-    - Ativo: `bg-success/15 text-success ring-1 ring-success/30`.
-    - Inativo: `bg-foreground/[0.04] text-muted-foreground hover:text-foreground`.
-  - Default `chart = "net"` (já é o estado inicial — `useState<ChartKey>("net")`).
-- Reescrever `renderChart()` para AreaChart:
-  - `AreaChart` com `margin={{ top: 8, right: 8, bottom: 0, left: 0 }}`.
-  - `<defs>` com `linearGradient id="reportAreaFill"` de `hsl(var(--success))` 0.35 → 0.
-  - `<Area type="monotone" dataKey={dataKey} stroke="hsl(var(--success))" strokeWidth={2} fill="url(#reportAreaFill)" dot={false} />`.
-  - `XAxis dataKey="name"` com tick `fontSize: 10`, `axisLine={false}`, `tickLine={false}`, sem alterar formatos do `dailySeries` (já usa "dd/MM").
-  - **Sem** `CartesianGrid` e **sem** `YAxis`.
-  - `Tooltip` mantido com `tooltipStyle` e `formatter` por tipo (R$ para net/expenses, número para km/horas).
-- Header do bloco: manter eyebrow "Visualização" + label `chartMeta.label`, com chips abaixo. Cor da label segue a métrica ativa (mantém comportamento).
-- **Estado vazio**: se `dailySeries.every(d => !d[dataKey])` ou `dailySeries.length === 0`, renderizar no lugar do gráfico:
-  - `<div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Sem dados para este período.</div>`.
+## PARTE 2 — Comportamento dos Insights
 
-## Bloco 5 — Consolidação da lista (camada de apresentação)
+### 2.1 Rotação inteligente (9s) com pausa e retomada dinâmica
+Estado: `rotationIdx`, `lastShownIdx`.
+- `setInterval(9000)` ativo quando `queue` tem >1 item **e** `insightChip == null`.
+- Toque em chip pausa por 10s. Ao retomar: NÃO reseta `rotationIdx`. Recalcula `queue` por relevância atual e continua de `(lastShownIdx + 1) % total`. Loop natural.
+- Primeira montagem: começa do índice 0.
+- Frase: `<span key={insight.id}>` com `animate-fade-in motion-reduce:animate-none`.
 
-`src/pages/Reports.tsx` — apenas dentro do IIFE de render (527–693). O array `reportOrder` e `widgets` permanece intacto na persistência.
+### 2.2 Ocultar card sem comparação **e G2 (estado vazio)**
+`renderInsightBlock` → `null` quando:
+- `mode === "range"`, ou
+- `prevSummary == null`, ou
+- `mode === "year"` sem ano anterior com dados, ou
+- **Fila final vazia** (nenhum numérico relevante + nenhuma categoria relevante após todas as travas).
 
-Construir um set de chaves "absorvidas" para esconder cards autônomos quando duplicados em subtítulos:
+Sem fallback "Sem histórico" / sem placeholder.
 
+---
+
+## PARTE 3 — Insights por categoria (Ajustes 1 e 3)
+
+Agrega `expenseByCategory` em `curInterval` e `prevInterval` (Parte 1.2). Para cada categoria:
+- `cur`, `prev`, `delta`, `absDelta`.
+- **Ajuste 3 — trava de base pequena:**
+  - `prev < MIN_BASE_MONEY`: sem `%`. Só entra se `cur >= 30`. Frase: `"Você gastou R$ X com {categoria} — categoria nova vs {label}"`.
+  - Caso contrário: calcula `pct`; `> MAX_PCT (999)` → variante qualitativa ("subiu/caiu bastante"), sem número.
+- **Relevância (numérico/normal):** `absDelta >= 30 && |pct| >= 15`.
+- Cor: subiu → `destructive`; caiu → `success`. Ícone `TrendingUp/Down`. `chartChip: "expenses"`.
+
+### G1 — Estrutura única `buildQueue` (final, coerente)
+**Único formato em todo o código** — nunca array plano:
 ```
-const absorbed = new Set<ReportCardKey>();
-if (heroKey === "net") absorbed.add("grossExpenses");
-// kmGroup absorve "KM total" no sub de "R$ / km" — mas hoje KM total e R$/km estão
-// dentro do mesmo kmGroup; o ajuste é apenas reescrever as labels/subtítulos:
-//   - linha "R$ / km": sub = `${num(s.totalKm,0)} km rodados` e remover a linha "KM total".
-//   - linha "R$ / corrida": sub = `${s.totalRides} corridas` e remover a linha "Corridas".
-//   - linha "Média / dia": sub = `${workedDays} ativos` e remover a linha "Dias ativos".
+buildQueue(numerics, categories): { numerics: N, categories: C, cIdx }
+  N = [...numerics].sort((a,b) => b.absPct - a.absPct)
+  C = [...categories].sort((a,b) => b.absDelta - a.absDelta)
+  cIdx = 0 (estado externo, persistido entre ciclos)
+
+getCurrent(rotationIdx, queue):
+  if rotationIdx < N.length: return N[rotationIdx]
+  if rotationIdx === N.length && C.length > 0: return C[cIdx % C.length]
+  return null
+
+total = N.length + (C.length > 0 ? 1 : 0)
+advance: rotationIdx = (rotationIdx + 1) % total
+  if rotationIdx === 0: cIdx++
 ```
+Resultado: cada ciclo completo mostra todos os numéricos + 1 categoria (rotativa). Sem categorias → fila puramente numérica. Sem numéricos mas com categorias → ciclo de 1 (a categoria atual, rotacionando entre ciclos).
 
-Reescrever `rowsFor`:
+`insightMetricLabel` ganha case `"category"`.
 
-- `net` → mantém uma linha "Lucro líquido" (usada quando `net` aparece mas NÃO é o herói).
-- `grossExpenses` → se `heroKey === "net"`, retorna `[]` (não renderiza). Caso contrário, mantém duas linhas.
-- `perHour` → mantém com sub `${num(s.totalHours,1)}h trabalhadas`.
-- `kmGroup` → **uma única linha** "R$ / km", value `brl(s.perKm)`, sub `${num(s.totalKm,0)} km rodados` (omitir sub quando `s.totalKm === 0`).
-- `tripsGroup` → **uma única linha** "R$ / corrida", value `brl(s.perRide)`, sub `${s.totalRides} corridas` (omitir sub quando `s.totalRides === 0`).
-- `daysGroup` → **uma única linha** "Média / dia", value `brl(avgPerDay)`, sub `${workedDays} ativos` (omitir quando `workedDays === 0`).
+### G3 — Coerência chip ↔ insight
+Quando `insightChip != null` (pausa 10s):
+- `getByChip(chip)`: busca em `N ∪ C` o insight cuja `metric === chip` (para `"expenses"`, prioriza maior `absDelta` entre categorias; senão, o numérico de gastos).
+- Render usa esse insight diretamente, **ignorando `rotationIdx`** durante a pausa.
+- Ao fim dos 10s: `insightChip = null` → retoma rotação dinâmica (2.1).
 
-Tratamento defensivo:
+---
 
-- Se um grupo retorna `[]`, o item é ignorado no walker (sem push em `rowGroup`).
-- Keys do `.map()` derivadas de `r._key` (já é único por `${groupKey}-${idx}`), preservando estabilidade após o filtro.
-- `flushRowGroup` ignora grupos vazios (já implícito pelo `flat.length === 0` que torna o container vazio — adicionar early return se `flat.length === 0`).
+## PARTE 4 — Destaque e animação
 
-## Bloco 6 — Ícones monocromáticos
+- Eyebrow `"INSIGHTS INTELIGENTES"` (`text-[10px] uppercase tracking-[0.18em] text-muted-foreground`).
+- Container: `bg-card/60 ring-1 ring-border/50`.
+- Frase: `animate-fade-in` por `key`.
+- Número: `InsightValue` existente (count-up + pulse, respeita reduced-motion).
 
-`rowsFor` em `src/pages/Reports.tsx`.
+---
 
-- Padronizar todos os ícones (`Wallet`, `Receipt`, `Gauge`, `Route`, `Flag`, `Clock`, `CalendarDays`) para `className="h-4 w-4 text-success/70"`.
-- Pílula contêiner (`bg-muted/40`) pode permanecer ou ser ajustada para `bg-success/10` — manter `bg-muted/40` para neutralidade.
-- Remover quaisquer cores específicas (`text-info`, `text-destructive`, `text-[hsl(265_85%_70%)]`) dos ícones da lista. O Hero mantém suas cores (verde/foreground) — não é afetado.
+## PARTE 5 — Count-up na troca de período
 
-## Não alterar
+`<AnimatedNumber value format duration={500} />` usando `useCountUp` (ease-out, `prefers-reduced-motion`), wrapper `tabular-nums`.
 
-- `useReportOrder`, `useReportWidgets`, `localStorage`, persistência.
-- `OrganizacaoCards.tsx` (apenas o Segmented muda para `tone="flat"`).
-- Cálculos em `src/lib/stats.ts`.
-- Botão "Iniciar" (`JourneyModule`), FABs, CTAs.
-- Posição do gráfico (continua respeitando `reportOrder`).
+Aplica em:
+- Herói (`s.net` / `s.gross` / saldo / subs financeiros).
+- `rowsFor`: `value` vira `{ amount, format }`; row renderiza com `<AnimatedNumber>`.
 
-## Critérios de aceite
+Subtítulos textuais (`{workedDays} ativos`, `${num(s.totalKm,0)} km rodados`) **não animam**.
 
-1. Todos os Segmented de navegação/filtro do app aparecem sem fundo/borda; o ativo tem só texto + underline sutil.
-2. Seletor de data em Relatórios sem bordas; navegação ‹/› e label central com toque suave.
-3. Hero sem mini-gráfico.
-4. Gráfico exibe chips horizontais com scroll; AreaChart verde com gradiente, sem grid/YAxis; tooltip ativo; mensagem "Sem dados para este período." quando vazio; posição respeita Ajustes.
-5. Quando o herói for "Lucro líquido", cards "Bruto" e "Gastos" não aparecem na lista.
-6. Linhas "R$/km", "R$/corrida" e "Média/dia" exibem o subtítulo correto e os cards autônomos correspondentes não aparecem duplicados; se o usuário desativar o grupo, nada quebra.
-7. Ícones da lista todos em verde com opacidade reduzida.
-8. Reordenar/ocultar cards em Ajustes continua funcionando.
+---
+
+## G4 — Não regredir (confirmação explícita)
+Mantém intactos:
+- Cores/gradientes do gráfico por métrica (verde/vermelho/azul/roxo) — **só o tooltip vira PT**.
+- Chips do gráfico em grid 4 colunas sem scroll.
+- Título contextual "Evolução diária/mensal/no período".
+- Consolidação da lista (subtítulos absorvendo totais).
+- Integração do card "insights" no sistema de Organização (toggle + DnD).
+
+---
+
+## CHECKLIST DE TESTE MANUAL
+1. Promover Bruto+Gastos → herói azul grande, eyebrow correto, subtítulo bicolor, Líquido some da lista.
+2. Mês corrente: insight "vs mesmo período de maio" (MTD vs MTD).
+3. Mês encerrado: "vs {mês}" (cheio vs cheio).
+4. "Por ano" sem ano anterior → card oculto.
+5. ~30s parado → rotação 9s, máx 1 categoria por ciclo, sem repetir/travar.
+6. Tocar "Gastos" → insight de gastos/categoria; após 10s avança no fluxo (não reseta).
+7. Categoria nova ≥ R$ 30 → sem `%`, frase "categoria nova"; nunca "+9999%".
+8. Trocar mês/ano → count-up ~500ms; subtítulos trocam direto.
+9. `prefers-reduced-motion` → sem rotação automática, sem count-up.
+10. Sem nenhum insight relevante (G2) → card oculto, sem placeholder.
+
+## NÃO ALTERA
+Queries Supabase, `DataContext`, `summarize`, DnD, cores/chips/título do gráfico (só tooltip), botões "Iniciar"/FAB, outras telas.
