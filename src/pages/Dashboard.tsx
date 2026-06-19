@@ -482,8 +482,21 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
+      const isJourneyActive = timerState === "running" || timerState === "resting" || timerState === "ended";
+      // Dia de folga sem jornada iniciada — mensagem discreta.
+      if (isFolgaToday && !isJourneyActive) {
+        return (
+          <div key="smartKm" className="flex flex-col items-center">
+            <span aria-hidden className="h-0.5 w-px bg-gradient-to-b from-success/35 to-transparent" />
+            <div className="mx-auto flex w-[88%] items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+              <p className="text-center text-[12px] text-muted-foreground">
+                Hoje é dia de descanso. Nenhuma meta de km calculada.
+              </p>
+            </div>
+          </div>
+        );
+      }
       // Caso "KM planejado atingido" — plano configurado, mas remainingPlannedKm <= 0.
-      // Mantém o slot na home com um aviso acionável em vez de sumir.
       if (plan.isPlanningConfigured && plan.remainingPlannedKm <= 0 && smartKmValue === null) {
         return (
           <div key="smartKm" className="flex flex-col items-center">
@@ -515,63 +528,32 @@ export default function Dashboard() {
       if (smartKmValue === null) return null;
       const showGross = showGrossView;
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
-      const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
       const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
       const connectorClass = showGross
         ? "bg-gradient-to-b from-[hsl(var(--goal-gross))]/35 to-transparent"
         : "bg-gradient-to-b from-success/35 to-transparent";
-      const hasFooter = plan.plannedKmTotal > 0;
-      const statusTone =
-        plan.status === "ahead" ? "text-success/90"
-        : plan.status === "behind" ? "text-amber-400/90"
-        : plan.status === "needs_adjustment" ? "text-rose-400/90"
-        : "text-muted-foreground/75";
       return (
         <div key="smartKm" className="flex flex-col items-center">
-          {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
-          <div
+          <button
+            type="button"
+            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             className={cn(
-              "mx-auto w-[88%] overflow-hidden rounded-2xl border bg-card shadow-sm",
+              "group mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder,
             )}
           >
-            <button
-              type="button"
-              onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-              aria-label="Ver cálculo"
-              className="group relative flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-            >
-              <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
-                <Gauge className="h-5 w-5" />
-              </span>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
-                  R$/km inteligente
-                </div>
-                <div className="mt-1 flex items-center justify-center gap-1 text-[17px] font-bold tabular-nums text-foreground leading-tight">
-                  {brl(smartKmValue)}
-                  <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
-                </div>
+            <span className={cn("shrink-0", themeIcon)}>
+              <Gauge className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-semibold text-foreground">R$/km mínimo</span>
+                <span className="text-sm font-bold tabular-nums text-foreground">{brl(smartKmValue)} <span className="text-[12px] font-normal text-muted-foreground">/ km</span></span>
               </div>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-end">
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
-              </span>
-            </button>
-            {hasFooter && (
-              <div className="border-t border-border/40 bg-muted/20 px-4 py-2">
-                <div className="flex items-center justify-center gap-2 text-[10.5px] tabular-nums">
-                  <span className="text-muted-foreground/80">
-                    Alvo <span className="font-medium text-foreground/85">{brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)}</span>
-                  </span>
-                  <span aria-hidden className="text-muted-foreground/50">•</span>
-                  <span className={cn("font-medium", statusTone)}>
-                    {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")} km restantes
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+          </button>
         </div>
       );
     })() : null,
