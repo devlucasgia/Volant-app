@@ -943,11 +943,44 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Reorderable / hideable cards (excluding greeting which renders above) */}
-        {homeOrder
-          .filter((k) => k !== "greeting")
-          .map((k, index, arr) => {
-            const block = blocks[k];
+        {/* Reorderable / hideable cards (excluding greeting which renders above).
+            Item 6: quando byApp e byExpense estão visíveis, são unificados num
+            único card "Ganhos e gastos" renderizado no slot do primeiro deles
+            na ordem do usuário. O outro slot é suprimido. */}
+        {(() => {
+          const orderedKeys = homeOrder.filter((k) => k !== "greeting");
+          const bothVisible = Boolean(widgets.byApp && widgets.byExpense);
+          const appsIdx = orderedKeys.indexOf("byApp");
+          const expIdx = orderedKeys.indexOf("byExpense");
+          const unifiedSlotKey: HomeCardKey | null = bothVisible
+            ? (appsIdx >= 0 && expIdx >= 0
+                ? (appsIdx < expIdx ? "byApp" : "byExpense")
+                : "byApp")
+            : null;
+          const suppressedKey: HomeCardKey | null = bothVisible
+            ? (unifiedSlotKey === "byApp" ? "byExpense" : "byApp")
+            : null;
+
+          return orderedKeys.map((k, index, arr) => {
+            if (k === suppressedKey) return null;
+
+            let block: React.ReactNode = blocks[k];
+
+            if (k === unifiedSlotKey) {
+              block = (
+                <section key="appsExpenses">
+                  <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
+                  </div>
+                  <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
+                    {blocks.byApp}
+                    <div className="border-t border-border/30" />
+                    {blocks.byExpense}
+                  </div>
+                </section>
+              );
+            }
+
             if (!block) return null;
 
             const prev = index > 0 ? arr[index - 1] : null;
@@ -963,8 +996,8 @@ export default function Dashboard() {
                 {block}
               </div>
             );
-          })
-          .filter(Boolean)}
+          }).filter(Boolean);
+        })()}
       </div>
     </>
   );
