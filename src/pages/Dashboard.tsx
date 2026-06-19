@@ -546,17 +546,17 @@ export default function Dashboard() {
             <span className={cn("shrink-0", themeIcon)}>
               <Gauge className="h-4 w-4" />
             </span>
-            <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="shrink-0 text-[12px] text-muted-foreground">R$/km mínimo</span>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+              <span className="shrink-0 text-[12px] text-muted-foreground">R$/km</span>
               <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
-              <span className="shrink-0 text-[17px] font-bold tabular-nums text-foreground leading-none">
+              <span className="shrink-0 whitespace-nowrap text-[15px] font-bold tabular-nums text-foreground leading-none">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
               {plan.remainingPlannedKm > 0 && (
                 <>
                   <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
-                  <span className="truncate text-[12px] tabular-nums text-muted-foreground">
+                  <span className="shrink-0 whitespace-nowrap text-[12px] tabular-nums text-muted-foreground">
                     {num(plan.remainingPlannedKm, 0)} km restantes
                   </span>
                 </>
