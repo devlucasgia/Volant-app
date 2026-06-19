@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
+import { useTimer } from "@/context/TimerContext";
 import { supabase } from "@/integrations/supabase/client";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime, goalForPeriod, type CustomRange } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
