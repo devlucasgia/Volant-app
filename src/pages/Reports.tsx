@@ -1070,12 +1070,13 @@ export default function Reports() {
           // Walk visibleKeys, grouping contiguous row-friendly items into a single container.
           const blocks: React.ReactNode[] = [];
           let rowGroup: { key: ReportCardKey; rows: ReturnType<typeof rowsFor> }[] = [];
+          let insightsRendered = false;
           let overviewEyebrowRendered = false;
           const flushRowGroup = () => {
             if (rowGroup.length === 0) return;
             const flat = rowGroup.flatMap((g) => g.rows.map((r, idx) => ({ ...r, _key: `${g.key}-${idx}` })));
-            const showEyebrow = !overviewEyebrowRendered;
-            overviewEyebrowRendered = true;
+            const showEyebrow = insightsRendered && !overviewEyebrowRendered;
+            if (showEyebrow) overviewEyebrowRendered = true;
             blocks.push(
               <div key={`group-${blocks.length}`} className="space-y-1.5">
                 {showEyebrow && (
@@ -1124,6 +1125,7 @@ export default function Reports() {
               if (node) {
                 flushRowGroup();
                 blocks.push(node);
+                insightsRendered = true;
               }
               return;
             }
