@@ -23,9 +23,13 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
-  TrendingUp, TrendingDown,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
+import { PlatformLogo } from "@/components/PlatformLogo";
+import {
+  TONE, TONE_CLASS, INSIGHT_ICON, pickPhrase, fillPhrase,
+  type PhraseKey,
+} from "@/lib/insightPhrases";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
@@ -61,19 +65,6 @@ const CHARTS_LABEL_PT: Record<ChartKey, string> = {
   hours: "Horas",
 };
 
-/**
- * Number-key for the Insights card: count-up animation (0 → target, 0.6s)
- * with a subtle pulse on settle. Respects prefers-reduced-motion (snaps).
- */
-function InsightValue({ target, suffix, sign }: { target: number; suffix: string; sign: "+" | "-" | "" }) {
-  const animated = useCountUp(Math.abs(target), 600);
-  const display = `${sign}${suffix === "h" ? num(animated, 1) : Math.round(animated)}${suffix}`;
-  return (
-    <span className="inline-block animate-fade-in motion-reduce:animate-none">
-      <span className="inline-block animate-insight-pulse motion-reduce:animate-none">{display}</span>
-    </span>
-  );
-}
 
 /**
  * Smooth number transition for hero / list values when the selected period changes.
@@ -97,33 +88,8 @@ export default function Reports() {
   const [from, setFrom] = useState<Date>(startOfMonth(new Date()));
   const [to, setTo] = useState<Date>(endOfMonth(new Date()));
   const [chart, setChart] = useState<ChartKey>("net");
-  const [insightChip, setInsightChip] = useState<ChartKey | null>(null);
-  const insightTimerRef = useRef<number | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
-
-  // Reset insight back to auto when period changes or on unmount.
-  useEffect(() => {
-    setInsightChip(null);
-    if (insightTimerRef.current != null) {
-      window.clearTimeout(insightTimerRef.current);
-      insightTimerRef.current = null;
-    }
-  }, [mode, monthRef, yearRef, from, to]);
-
-  useEffect(() => () => {
-    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
-  }, []);
-
-  const handleChartChange = (k: ChartKey) => {
-    setChart(k);
-    setInsightChip(k);
-    if (insightTimerRef.current != null) window.clearTimeout(insightTimerRef.current);
-    insightTimerRef.current = window.setTimeout(() => {
-      setInsightChip(null);
-      insightTimerRef.current = null;
-    }, 10_000);
-  };
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
@@ -443,20 +409,14 @@ export default function Reports() {
       ? "Evolução mensal"
       : "Evolução no período";
 
-  // -------- Insights Inteligentes — comparação MTD/YTD + categorias --------
+  // -------- Insights Inteligentes — comparação MTD/YTD + categorias + plataformas --------
   type InsightItem = {
     id: string;
-    kind: "numeric" | "qualitative" | "category-new" | "category-delta";
-    metric: ChartKey | "perHour" | "perDay" | "category";
-    chartChip: ChartKey | null;
-    phrase: string;
-    color: string;
-    direction: "up" | "down";
-    target?: number;
-    suffix?: string;
-    sign?: "+" | "-";
-    absPct?: number;
-    absDelta?: number;
+    phraseKey: PhraseKey;
+    vars: Record<string, string>;
+    relevance: number; // higher = more relevant (for sorting)
+    kind: "numeric" | "category" | "platform";
+    platformKey?: string; // for platform.* insights — render PlatformLogo badge
   };
 
   // 1.2 — same-period (MTD / YTD) comparison intervals. Only insights use these;
@@ -494,7 +454,6 @@ export default function Reports() {
     const sameYear = getYear(yearRef) === getYear(today);
     if (sameYear) {
       const prevYear = getYear(yearRef) - 1;
-      // clamp Feb 29 → Feb 28 of previous non-leap year
       let prevEndDate = new Date(prevYear, today.getMonth(), today.getDate());
       if (prevEndDate.getMonth() !== today.getMonth()) {
         prevEndDate = new Date(prevYear, today.getMonth() + 1, 0);
@@ -528,7 +487,6 @@ export default function Reports() {
     return { ...ps, prevWorkedDays, prevAvgPerDay: prevWorkedDays > 0 ? ps.net / prevWorkedDays : 0 };
   }, [compare, entries, isSimplePlatform]);
 
-  // Snapshot of the current period constrained to compare.curInterval (MTD-safe).
   const curForInsights = useMemo(() => {
     if (!compare) return null;
     const curEntries = entries.filter((e) => isWithinInterval(new Date(e.date), compare.curInterval));
@@ -541,9 +499,9 @@ export default function Reports() {
     return { ...cs, curWorkedDays, curAvgPerDay: curWorkedDays > 0 ? cs.net / curWorkedDays : 0 };
   }, [compare, entries, isSimplePlatform]);
 
-  // Expense aggregation by category for both intervals.
+  // Expense by category for both intervals (with emoji + label from expenseMetaFor).
   const expenseByCategoryDiff = useMemo(() => {
-    if (!compare) return [] as { category: string; label: string; cur: number; prev: number }[];
+    if (!compare) return [] as { category: string; label: string; emoji: string; cur: number; prev: number }[];
     const sumByCat = (interval: { start: Date; end: Date }) => {
       const map = new Map<string, number>();
       entries.forEach((e) => {
@@ -558,164 +516,229 @@ export default function Reports() {
     const cur = sumByCat(compare.curInterval);
     const prev = sumByCat(compare.prevInterval);
     const keys = new Set<string>([...cur.keys(), ...prev.keys()]);
-    return Array.from(keys).map((cat) => ({
-      category: cat,
-      label: expenseMetaFor(cat).label,
-      cur: cur.get(cat) ?? 0,
-      prev: prev.get(cat) ?? 0,
-    }));
+    return Array.from(keys).map((cat) => {
+      const meta = expenseMetaFor(cat);
+      return {
+        category: cat,
+        label: meta.label,
+        emoji: meta.emoji ?? "",
+        cur: cur.get(cat) ?? 0,
+        prev: prev.get(cat) ?? 0,
+      };
+    });
   }, [compare, entries, expenseMetaFor]);
 
-  // G1 — single coherent queue structure: { N (numerics by |pct|), C (categories by absDelta) }
+  // BLOCO 6.1 — Earnings by platform for both intervals.
+  const platformDiff = useMemo(() => {
+    if (!compare) return [] as { key: string; label: string; cur: number; prev: number }[];
+    const sumByPlat = (interval: { start: Date; end: Date }) => {
+      const map = new Map<string, number>();
+      entries.forEach((e) => {
+        if (e.type !== "earning") return;
+        if (!isWithinInterval(new Date(e.date), interval)) return;
+        const k = e.app;
+        map.set(k, (map.get(k) ?? 0) + (e.gross || 0));
+      });
+      return map;
+    };
+    const cur = sumByPlat(compare.curInterval);
+    const prev = sumByPlat(compare.prevInterval);
+    const keys = new Set<string>([...cur.keys(), ...prev.keys()]);
+    return Array.from(keys).map((k) => ({
+      key: k,
+      label: platformMetaFor(k).label,
+      cur: cur.get(k) ?? 0,
+      prev: prev.get(k) ?? 0,
+    }));
+  }, [compare, entries, platformMetaFor]);
+
+  // Build the rotation queue.
   const queue = useMemo(() => {
-    const empty = { N: [] as InsightItem[], C: [] as InsightItem[] };
+    const empty = { N: [] as InsightItem[], C: [] as InsightItem[], P: [] as InsightItem[] };
     if (!compare || !prevSummary || !curForInsights) return empty;
     const label = compare.label;
     const labelText = compare.isPartial ? `mesmo período de ${label}` : label;
     const MIN_BASE_MONEY = 1;
     const MIN_BASE_HOURS = 1;
-    const MAX_PCT = 999;
-    const MIN_REL_PCT = 15;
+    const MIN_DELTA_MONEY = 10;
+    const MIN_DELTA_HOURS = 1;
+    const MIN_DELTA_PLAT_COMPARE = 50;
+    const MIN_DELTA_CATEGORY = 30;
+    const MIN_DELTA_PLATFORM = 50;
+
+    const vBase = { mês: labelText };
 
     const N: InsightItem[] = [];
 
-    const pushMoney = (
-      metric: InsightItem["metric"], chip: ChartKey | null,
-      cur: number, prev: number,
-      verbUp: string, verbDown: string,
-      qualUp: string, qualDown: string,
-      colorUp: string, colorDown: string,
-    ) => {
-      if (prev == null || prev <= 0) return;
-      const direction: "up" | "down" = cur >= prev ? "up" : "down";
-      const color = direction === "up" ? colorUp : colorDown;
-      if (prev < MIN_BASE_MONEY) {
+    // net (lucro líquido) — absolute R$ delta
+    {
+      const cur = curForInsights.net;
+      const prev = prevSummary.net;
+      const diff = cur - prev;
+      const abs = Math.abs(diff);
+      if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
+        const key: PhraseKey = diff >= 0 ? "net.up" : "net.down";
         N.push({
-          id: `q-${metric}`, kind: "qualitative", metric, chartChip: chip, direction, color,
-          phrase: `${direction === "up" ? qualUp : qualDown} vs ${labelText}`,
-          absPct: 0,
+          id: "n-net", kind: "numeric", phraseKey: key, relevance: abs,
+          vars: { ...vBase, valor: brl(abs) },
         });
-        return;
       }
-      const pct = ((cur - prev) / prev) * 100;
-      if (Math.abs(pct) > MAX_PCT) {
+    }
+
+    // expenses — absolute R$ delta
+    {
+      const cur = curForInsights.totalExpenses;
+      const prev = prevSummary.totalExpenses;
+      const diff = cur - prev;
+      const abs = Math.abs(diff);
+      if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
+        const key: PhraseKey = diff >= 0 ? "expenses.up" : "expenses.down";
         N.push({
-          id: `q-${metric}`, kind: "qualitative", metric, chartChip: chip, direction, color,
-          phrase: `${direction === "up" ? qualUp : qualDown} vs ${labelText}`,
-          absPct: MAX_PCT,
+          id: "n-exp", kind: "numeric", phraseKey: key, relevance: abs,
+          vars: { ...vBase, valor: brl(abs) },
         });
-        return;
       }
-      if (Math.abs(pct) < MIN_REL_PCT) return;
-      N.push({
-        id: `n-${metric}`, kind: "numeric", metric, chartChip: chip, direction, color,
-        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
-        absPct: Math.abs(pct),
-        phrase: `${direction === "up" ? verbUp : verbDown} vs ${labelText}`,
-      });
-    };
+    }
 
-    pushMoney("net", "net", curForInsights.net, prevSummary.net,
-      "Seu lucro subiu", "Seu lucro caiu",
-      "Seu lucro cresceu bastante", "Seu lucro caiu bastante",
-      "hsl(var(--success))", "hsl(var(--destructive))");
-    pushMoney("expenses", "expenses", curForInsights.totalExpenses, prevSummary.totalExpenses,
-      "Seus gastos subiram", "Seus gastos caíram",
-      "Seus gastos aumentaram bastante", "Seus gastos caíram bastante",
-      "hsl(var(--destructive))", "hsl(var(--success))");
-    pushMoney("km", "km", curForInsights.perKm, prevSummary.perKm,
-      "Seu R$/km melhorou", "Seu R$/km piorou",
-      "Seu R$/km melhorou bastante", "Seu R$/km piorou bastante",
-      "hsl(var(--info))", "hsl(var(--destructive))");
-    pushMoney("perDay", null, curForInsights.curAvgPerDay, prevSummary.prevAvgPerDay,
-      "Sua média por dia subiu", "Sua média por dia caiu",
-      "Sua média por dia cresceu bastante", "Sua média por dia caiu bastante",
-      "hsl(var(--success))", "hsl(var(--destructive))");
-    pushMoney("perHour", null, curForInsights.perHour, prevSummary.perHour,
-      "Sua média por hora subiu", "Sua média por hora caiu",
-      "Sua média por hora cresceu bastante", "Sua média por hora caiu bastante",
-      "hsl(var(--success))", "hsl(var(--destructive))");
+    // R$/hora
+    {
+      const cur = curForInsights.perHour;
+      const prev = prevSummary.perHour;
+      const diff = cur - prev;
+      const abs = Math.abs(diff);
+      if (prev >= 1 && abs >= 1) {
+        const key: PhraseKey = diff >= 0 ? "rph.up" : "rph.down";
+        N.push({
+          id: "n-rph", kind: "numeric", phraseKey: key, relevance: abs * 50,
+          vars: { ...vBase, valor: brl(cur) },
+        });
+      }
+    }
 
-    // hours — absolute delta in hours instead of %
-    (() => {
+    // R$/km
+    {
+      const cur = curForInsights.perKm;
+      const prev = prevSummary.perKm;
+      const diff = cur - prev;
+      const abs = Math.abs(diff);
+      if (prev >= 0.5 && abs >= 0.2) {
+        const key: PhraseKey = diff >= 0 ? "rpkm.up" : "rpkm.down";
+        N.push({
+          id: "n-rpkm", kind: "numeric", phraseKey: key, relevance: abs * 100,
+          vars: { ...vBase, valor: brl(cur) },
+        });
+      }
+    }
+
+    // Horas
+    {
       const cur = curForInsights.totalHours;
       const prev = prevSummary.totalHours;
-      if (prev == null || prev <= 0) return;
-      const direction: "up" | "down" = cur >= prev ? "up" : "down";
-      const color = "hsl(265 85% 70%)";
-      const diff = Math.abs(cur - prev);
-      if (prev < MIN_BASE_HOURS) {
+      const diff = cur - prev;
+      const abs = Math.abs(diff);
+      if (prev >= MIN_BASE_HOURS && abs >= MIN_DELTA_HOURS) {
+        const key: PhraseKey = diff >= 0 ? "hours.more" : "hours.less";
         N.push({
-          id: "q-hours", kind: "qualitative", metric: "hours", chartChip: "hours", direction, color,
-          phrase: `${direction === "up" ? "Você trabalhou bastante a mais" : "Você trabalhou bastante a menos"} vs ${labelText}`,
-          absPct: 0,
+          id: "n-hours", kind: "numeric", phraseKey: key, relevance: abs * 5,
+          vars: { ...vBase, valor: `${num(abs, 1)}h` },
         });
-        return;
       }
-      if (diff < 1) return;
-      N.push({
-        id: "n-hours", kind: "numeric", metric: "hours", chartChip: "hours", direction, color,
-        target: diff, suffix: "h", sign: direction === "up" ? "+" : "-",
-        absPct: (diff / prev) * 100,
-        phrase: `${direction === "up" ? "Você trabalhou a mais" : "Você trabalhou a menos"} vs ${labelText}`,
-      });
-    })();
+    }
 
-    N.sort((a, b) => (b.absPct ?? 0) - (a.absPct ?? 0));
+    N.sort((a, b) => b.relevance - a.relevance);
 
-    // Categories — Ajuste 3 (base mínima também nas categorias)
+    // Categorias
     const C: InsightItem[] = [];
     for (const it of expenseByCategoryDiff) {
-      const { cur, prev, label: catLabel } = it;
+      const { cur, prev, label: catLabel, emoji, category } = it;
+      const base = { mês: labelText, categoria: catLabel, emoji };
+
+      if (prev < MIN_BASE_MONEY) {
+        if (cur >= MIN_DELTA_CATEGORY) {
+          C.push({
+            id: `cat-new-${category}`, kind: "category", phraseKey: "category.new", relevance: cur,
+            vars: { ...base, valor: brl(cur) },
+          });
+        }
+        continue;
+      }
+      if (prev >= MIN_BASE_MONEY && cur === 0) {
+        C.push({
+          id: `cat-zero-${category}`, kind: "category", phraseKey: "category.zero", relevance: prev * 0.5,
+          vars: base,
+        });
+        continue;
+      }
       const delta = cur - prev;
       const absDelta = Math.abs(delta);
-      const direction: "up" | "down" = delta >= 0 ? "up" : "down";
-      const color = direction === "up" ? "hsl(var(--destructive))" : "hsl(var(--success))";
-      if (prev < MIN_BASE_MONEY) {
-        if (cur < 30) continue;
-        C.push({
-          id: `cat-new-${it.category}`, kind: "category-new", metric: "category", chartChip: "expenses",
-          direction: "up", color: "hsl(var(--destructive))",
-          phrase: `Você gastou ${brl(cur)} com ${catLabel} — categoria nova vs ${labelText}`,
-          absDelta: cur,
-        });
-        continue;
-      }
-      const pct = (delta / prev) * 100;
-      if (absDelta < 30 || Math.abs(pct) < MIN_REL_PCT) continue;
-      if (Math.abs(pct) > MAX_PCT) {
-        C.push({
-          id: `cat-q-${it.category}`, kind: "qualitative", metric: "category", chartChip: "expenses", direction, color,
-          phrase: `${catLabel} ${direction === "up" ? "subiu bastante" : "caiu bastante"} vs ${labelText}`,
-          absDelta,
-        });
-        continue;
-      }
+      if (absDelta < MIN_DELTA_CATEGORY) continue;
+      const key: PhraseKey = delta >= 0 ? "category.up" : "category.down";
       C.push({
-        id: `cat-d-${it.category}`, kind: "category-delta", metric: "category", chartChip: "expenses", direction, color,
-        target: Math.abs(pct), suffix: "%", sign: direction === "up" ? "+" : "-",
-        absDelta,
-        phrase: `${catLabel} ${direction === "up" ? "subiu" : "caiu"} vs ${labelText}`,
+        id: `cat-${key}-${category}`, kind: "category", phraseKey: key, relevance: absDelta,
+        vars: { ...base, valor: brl(absDelta) },
       });
     }
-    C.sort((a, b) => (b.absDelta ?? 0) - (a.absDelta ?? 0));
+    C.sort((a, b) => b.relevance - a.relevance);
 
-    return { N, C };
-  }, [compare, curForInsights, prevSummary, expenseByCategoryDiff]);
+    // Plataformas
+    const P: InsightItem[] = [];
+    // 1) comparação top1 vs top2 do período atual
+    const curSorted = [...platformDiff].sort((a, b) => b.cur - a.cur).filter((p) => p.cur > 0);
+    if (curSorted.length >= 2) {
+      const [p1, p2] = curSorted;
+      if (p1.cur - p2.cur >= MIN_DELTA_PLAT_COMPARE) {
+        P.push({
+          id: `plat-compare-${p1.key}-${p2.key}`, kind: "platform", phraseKey: "platform.compare",
+          platformKey: p1.key,
+          relevance: p1.cur - p2.cur,
+          vars: { ...vBase, plat1: p1.label, plat2: p2.label },
+        });
+      }
+    }
+    // 2) up/down por plataforma
+    for (const p of platformDiff) {
+      const delta = p.cur - p.prev;
+      const abs = Math.abs(delta);
+      if (p.prev < MIN_BASE_MONEY || abs < MIN_DELTA_PLATFORM) continue;
+      const key: PhraseKey = delta >= 0 ? "platform.up" : "platform.down";
+      P.push({
+        id: `plat-${key}-${p.key}`, kind: "platform", phraseKey: key, platformKey: p.key,
+        relevance: abs,
+        vars: { ...vBase, plat: p.label, valor: brl(abs) },
+      });
+    }
+    // 3) participação (qualquer plataforma >= 50%)
+    const totalCur = curSorted.reduce((a, b) => a + b.cur, 0);
+    if (totalCur > 0) {
+      const dominant = curSorted.find((p) => p.cur / totalCur >= 0.5);
+      if (dominant) {
+        const share = Math.round((dominant.cur / totalCur) * 100);
+        P.push({
+          id: `plat-share-${dominant.key}`, kind: "platform", phraseKey: "platform.share",
+          platformKey: dominant.key,
+          relevance: share,
+          vars: { ...vBase, plat: dominant.label, valor: String(share) },
+        });
+      }
+    }
+    P.sort((a, b) => b.relevance - a.relevance);
 
-  // G1 — total positions in the rotation (numerics + at most 1 category slot per cycle).
-  const insightTotal = queue.N.length + (queue.C.length > 0 ? 1 : 0);
+    return { N, C, P };
+  }, [compare, curForInsights, prevSummary, expenseByCategoryDiff, platformDiff]);
 
-  // ---------- Rotation state ----------
+  // Total positions: numerics + 1 category slot (if any) + 1 platform slot (if any).
+  const insightTotal = queue.N.length + (queue.C.length > 0 ? 1 : 0) + (queue.P.length > 0 ? 1 : 0);
+
+  // ---------- Rotation state (12s) ----------
   const [rotationIdx, setRotationIdx] = useState(0);
   const cIdxRef = useRef(0);
-  const resumedRef = useRef(false);
+  const pIdxRef = useRef(0);
 
   // Reset rotation on period change.
   useEffect(() => {
     setRotationIdx(0);
     cIdxRef.current = 0;
-    resumedRef.current = false;
+    pIdxRef.current = 0;
   }, [mode, monthRef, yearRef]);
 
   // Keep rotation in bounds if the queue shrinks.
@@ -723,103 +746,99 @@ export default function Reports() {
     if (insightTotal > 0 && rotationIdx >= insightTotal) setRotationIdx(0);
   }, [insightTotal, rotationIdx]);
 
-  // Mark pause whenever a chip becomes active (so the next resume advances).
+  // BLOCO 3 — Auto-rotation (12s). prefers-reduced-motion → estático (sem timer).
   useEffect(() => {
-    if (insightChip != null) resumedRef.current = true;
-  }, [insightChip]);
-
-  // Auto-rotation (9s) + Ajuste 2 (resume from next, not from index 0).
-  useEffect(() => {
-    if (insightChip != null) return;
     if (insightTotal <= 1) return;
     const reduced = typeof window !== "undefined"
       && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
-    if (resumedRef.current) {
-      resumedRef.current = false;
-      setRotationIdx((prev) => {
-        const next = (prev + 1) % insightTotal;
-        if (next === 0) cIdxRef.current += 1;
-        return next;
-      });
-    }
     const id = window.setInterval(() => {
       setRotationIdx((prev) => {
         const next = (prev + 1) % insightTotal;
-        if (next === 0) cIdxRef.current += 1;
+        if (next === 0) {
+          if (queue.C.length > 0) cIdxRef.current += 1;
+          if (queue.P.length > 0) pIdxRef.current += 1;
+        }
         return next;
       });
-    }, 9000);
+    }, 12000);
     return () => window.clearInterval(id);
-  }, [insightChip, insightTotal]);
+  }, [insightTotal, queue.C.length, queue.P.length]);
 
-  // G3 — chip-pause override: shown insight always matches the active chip.
+  // Resolve which insight to show based on the rotation index.
   const insightToShow: InsightItem | null = useMemo(() => {
     if (insightTotal === 0) return null;
-    if (insightChip != null) {
-      if (insightChip === "expenses" && queue.C.length > 0) {
-        return queue.C[cIdxRef.current % queue.C.length];
-      }
-      const match = queue.N.find((n) => n.chartChip === insightChip);
-      if (match) return match;
-      // Fallback to current rotation slot if no metric-specific insight.
-      if (rotationIdx < queue.N.length) return queue.N[rotationIdx];
-      if (queue.C.length > 0) return queue.C[cIdxRef.current % queue.C.length];
-      return null;
-    }
     if (rotationIdx < queue.N.length) return queue.N[rotationIdx];
-    if (queue.C.length > 0) return queue.C[cIdxRef.current % queue.C.length];
+    let i = rotationIdx - queue.N.length;
+    if (queue.C.length > 0) {
+      if (i === 0) return queue.C[cIdxRef.current % queue.C.length];
+      i -= 1;
+    }
+    if (queue.P.length > 0 && i === 0) {
+      return queue.P[pIdxRef.current % queue.P.length];
+    }
     return null;
-  }, [insightChip, insightTotal, queue, rotationIdx]);
+  }, [insightTotal, queue, rotationIdx]);
+
+  // BLOCO 4 — pick phrase variation when the shown insight changes.
+  const lastPhraseRef = useRef<{ id: string | null; phrase: string }>({ id: null, phrase: "" });
+  const phraseShown = useMemo(() => {
+    if (!insightToShow) return "";
+    if (lastPhraseRef.current.id === insightToShow.id) return lastPhraseRef.current.phrase;
+    const tpl = pickPhrase(insightToShow.phraseKey);
+    const filled = fillPhrase(tpl, insightToShow.vars);
+    lastPhraseRef.current = { id: insightToShow.id, phrase: filled };
+    return filled;
+  }, [insightToShow]);
 
   const renderInsightBlock = (): React.ReactNode => {
-    // 2.2 + G2 — hide card whenever there is nothing meaningful to show.
+    // G2 — hide card whenever there is nothing meaningful to show.
     if (mode === "range") return null;
     if (!compare || !prevSummary) return null;
     if (!insightToShow) return null;
 
-    const Icon = insightToShow.direction === "up" ? TrendingUp : TrendingDown;
-    const showNumber =
-      (insightToShow.kind === "numeric" || insightToShow.kind === "category-delta")
-      && insightToShow.target != null
-      && insightToShow.suffix != null
-      && insightToShow.sign != null;
+    const tone = TONE[insightToShow.phraseKey];
+    const toneCls = TONE_CLASS[tone];
+    const Icon = INSIGHT_ICON[insightToShow.phraseKey];
+    const isPlatform = insightToShow.kind === "platform" && insightToShow.platformKey;
+    const platMeta = isPlatform ? platformMetaFor(insightToShow.platformKey as string) : null;
 
     return (
       <div key="insights" className="space-y-1.5 animate-fade-in-up">
         <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Insights inteligentes
         </div>
-        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-3.5 flex items-center gap-3">
-          <span
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40"
-            style={{ color: insightToShow.color }}
-          >
-            <Icon className="h-4 w-4" />
-          </span>
+        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-4 min-h-[96px] h-auto flex items-start gap-3">
+          {isPlatform && platMeta ? (
+            <PlatformLogo
+              platformKey={insightToShow.platformKey as string}
+              label={platMeta.label}
+              hex={platMeta.hex}
+              size="sm"
+              imageUrl={platMeta.imageUrl ?? null}
+              className="mt-0.5"
+            />
+          ) : (
+            <span
+              className={cn(
+                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40",
+                toneCls,
+              )}
+            >
+              <Icon className="h-4 w-4" />
+            </span>
+          )}
           <div
             key={insightToShow.id}
-            className="min-w-0 flex-1 text-sm text-foreground animate-fade-in motion-reduce:animate-none"
+            className="min-w-0 flex-1 self-center text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
           >
-            {insightToShow.phrase}
+            {phraseShown}
           </div>
-          {showNumber && (
-            <div
-              className="text-base font-semibold tabular-nums shrink-0"
-              style={{ color: insightToShow.color }}
-            >
-              <InsightValue
-                key={`${insightToShow.id}-${insightToShow.target}-${insightToShow.sign}`}
-                target={insightToShow.target as number}
-                suffix={insightToShow.suffix as string}
-                sign={insightToShow.sign as "+" | "-"}
-              />
-            </div>
-          )}
         </div>
       </div>
     );
   };
+
 
 
 
@@ -1093,7 +1112,7 @@ export default function Reports() {
                     <button
                       key={c.key}
                       type="button"
-                      onClick={() => handleChartChange(c.key)}
+                      onClick={() => setChart(c.key)}
                       className={cn(
                         "rounded-full px-2 py-1.5 text-xs font-medium text-center transition-colors",
                         !active && "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
@@ -1131,25 +1150,30 @@ export default function Reports() {
             if (rowGroup.length === 0) return;
             const flat = rowGroup.flatMap((g) => g.rows.map((r, idx) => ({ ...r, _key: `${g.key}-${idx}` })));
             blocks.push(
-              <div key={`group-${blocks.length}`} className="rounded-2xl bg-card/40">
-                {flat.map((r, i) => (
-                  <div
-                    key={r._key}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3.5",
-                      i < flat.length - 1 && "border-b border-border/40",
-                    )}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                      {r.icon}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm text-foreground">{r.label}</div>
-                      {r.sub && <div className="text-[11px] text-muted-foreground">{r.sub}</div>}
+              <div key={`group-${blocks.length}`} className="space-y-1.5">
+                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Métricas
+                </div>
+                <div className="rounded-2xl bg-card/40">
+                  {flat.map((r, i) => (
+                    <div
+                      key={r._key}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3.5",
+                        i < flat.length - 1 && "border-b border-border/40",
+                      )}
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                        {r.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-foreground">{r.label}</div>
+                        {r.sub && <div className="text-[11px] text-muted-foreground">{r.sub}</div>}
+                      </div>
+                      <div className="text-base font-semibold tabular-nums text-foreground">{r.value}</div>
                     </div>
-                    <div className="text-base font-semibold tabular-nums text-foreground">{r.value}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             );
             rowGroup = [];
