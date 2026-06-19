@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import {
-  PHRASES, TONE, TONE_CLASS, INSIGHT_ICON, pickPhrase, fillPhrase,
+  TONE, TONE_CLASS, INSIGHT_ICON, pickPhrase, fillPhrase,
   type PhraseKey,
 } from "@/lib/insightPhrases";
 import { cn } from "@/lib/utils";
