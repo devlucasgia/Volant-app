@@ -566,7 +566,8 @@ export default function Reports() {
     const MIN_DELTA_CATEGORY = 30;
     const MIN_DELTA_PLATFORM = 50;
 
-    const vBase = { mês: labelText };
+    const vBase = { mês: label };
+    const suffix = compare.isPartial ? ".partial" : ".closed";
 
     const N: InsightItem[] = [];
 
@@ -577,7 +578,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
-        const key: PhraseKey = diff >= 0 ? "net.up" : "net.down";
+        const key = (diff >= 0 ? `net.up${suffix}` : `net.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-net", kind: "numeric", phraseKey: key, relevance: abs,
           vars: { ...vBase, valor: brl(abs) },
@@ -592,7 +593,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
-        const key: PhraseKey = diff >= 0 ? "expenses.up" : "expenses.down";
+        const key = (diff >= 0 ? `expenses.up${suffix}` : `expenses.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-exp", kind: "numeric", phraseKey: key, relevance: abs,
           vars: { ...vBase, valor: brl(abs) },
@@ -607,7 +608,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= 1 && abs >= 1) {
-        const key: PhraseKey = diff >= 0 ? "rph.up" : "rph.down";
+        const key = (diff >= 0 ? `rph.up${suffix}` : `rph.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-rph", kind: "numeric", phraseKey: key, relevance: abs * 50,
           vars: { ...vBase, valor: brl(cur) },
@@ -622,7 +623,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= 0.5 && abs >= 0.2) {
-        const key: PhraseKey = diff >= 0 ? "rpkm.up" : "rpkm.down";
+        const key = (diff >= 0 ? `rpkm.up${suffix}` : `rpkm.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-rpkm", kind: "numeric", phraseKey: key, relevance: abs * 100,
           vars: { ...vBase, valor: brl(cur) },
@@ -637,7 +638,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= MIN_BASE_HOURS && abs >= MIN_DELTA_HOURS) {
-        const key: PhraseKey = diff >= 0 ? "hours.more" : "hours.less";
+        const key = (diff >= 0 ? `hours.more${suffix}` : `hours.less${suffix}`) as PhraseKey;
         N.push({
           id: "n-hours", kind: "numeric", phraseKey: key, relevance: abs * 5,
           vars: { ...vBase, valor: `${num(abs, 1)}h` },
@@ -651,7 +652,7 @@ export default function Reports() {
     const C: InsightItem[] = [];
     for (const it of expenseByCategoryDiff) {
       const { cur, prev, label: catLabel, emoji, category } = it;
-      const base = { mês: labelText, categoria: catLabel, emoji };
+      const base = { mês: label, categoria: catLabel, emoji: emoji || "" };
 
       if (prev < MIN_BASE_MONEY) {
         if (cur >= MIN_DELTA_CATEGORY) {
@@ -672,7 +673,7 @@ export default function Reports() {
       const delta = cur - prev;
       const absDelta = Math.abs(delta);
       if (absDelta < MIN_DELTA_CATEGORY) continue;
-      const key: PhraseKey = delta >= 0 ? "category.up" : "category.down";
+      const key = (delta >= 0 ? `category.up${suffix}` : `category.down${suffix}`) as PhraseKey;
       C.push({
         id: `cat-${key}-${category}`, kind: "category", phraseKey: key, relevance: absDelta,
         vars: { ...base, valor: brl(absDelta) },
@@ -687,8 +688,9 @@ export default function Reports() {
     if (curSorted.length >= 2) {
       const [p1, p2] = curSorted;
       if (p1.cur - p2.cur >= MIN_DELTA_PLAT_COMPARE) {
+        const key = `platform.compare${suffix}` as PhraseKey;
         P.push({
-          id: `plat-compare-${p1.key}-${p2.key}`, kind: "platform", phraseKey: "platform.compare",
+          id: `plat-compare-${p1.key}-${p2.key}`, kind: "platform", phraseKey: key,
           platformKey: p1.key,
           relevance: p1.cur - p2.cur,
           vars: { ...vBase, plat1: p1.label, plat2: p2.label },
@@ -700,7 +702,7 @@ export default function Reports() {
       const delta = p.cur - p.prev;
       const abs = Math.abs(delta);
       if (p.prev < MIN_BASE_MONEY || abs < MIN_DELTA_PLATFORM) continue;
-      const key: PhraseKey = delta >= 0 ? "platform.up" : "platform.down";
+      const key = (delta >= 0 ? `platform.up${suffix}` : `platform.down${suffix}`) as PhraseKey;
       P.push({
         id: `plat-${key}-${p.key}`, kind: "platform", phraseKey: key, platformKey: p.key,
         relevance: abs,
