@@ -227,6 +227,27 @@ export default function Dashboard() {
   }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates]);
   const isFolgaToday = isFolga && activeDayIso === todayIsoStr;
 
+  // Item 4 — flag de sessão: motorista decidiu trabalhar num dia de folga.
+  // Combina localStorage (clique no card de Jornada) com o estado do timer
+  // (se a jornada já estiver rodando, mesmo sem flag local, trata como trabalho).
+  const [folgaWorkedTick, setFolgaWorkedTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setFolgaWorkedTick((t) => t + 1);
+    window.addEventListener("volant:folgaWorkedChanged", handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("volant:folgaWorkedChanged", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
+  const folgaWorkedToday = useMemo(() => {
+    try { return localStorage.getItem(`volant_folga_worked_${todayIsoStr}`) === "1"; }
+    catch { return false; }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayIsoStr, folgaWorkedTick]);
+  const isFolgaTodayEffective =
+    isFolgaToday && !folgaWorkedToday && timerState === "idle";
+
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
     if (period !== "month") return null;
