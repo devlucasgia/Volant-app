@@ -1,140 +1,82 @@
+## Parte 1 — Corrigir posição do eyebrow "VISÃO GERAL"
 
-# Sprint Final — Relatórios (consolidado + 3 ajustes + 4 garantias)
+**Arquivo:** `src/pages/Reports.tsx` (função `flushRowGroup`, ~linhas 1070-1132).
 
-Mudanças **somente** em `src/pages/Reports.tsx` (reusa `src/hooks/useCountUp.ts`). Não toca `summarize`, `DataContext`, queries Supabase, `useReportOrder`/`useReportWidgets`, nem outras telas.
+**Causa:** `overviewEyebrowRendered` libera o eyebrow no primeiro `flushRowGroup`, que costuma ocorrer ANTES do bloco de Insights (quando há qualquer métrica antes de `insights` em `visibleKeys`). Resultado: o título aparece acima do card de Insights.
 
----
+**Correção mínima:**
+- Renomear a flag para `insightsRendered` (inicialmente `false`).
+- Setar `insightsRendered = true` dentro do branch `k === "insights"`, somente quando o `node` existe e é empurrado em `blocks`.
+- Em `flushRowGroup`, condicionar o eyebrow a `insightsRendered && !overviewEyebrowRendered` (manter `overviewEyebrowRendered` para garantir unicidade quando o walker quebrar o grupo em pedaços após Insights).
+- Nenhuma outra mudança em hero, chart, insights, frases, cálculos.
 
-## PARTE 1 — Correções críticas
-
-### 1.1 Posição estável do Insights
-Walker respeita `visibleKeys`. `renderInsightBlock()` retornando `null` apenas omite o slot — sem reordenar nem depender de `chart`.
-
-### 1.2 Comparação mesmo período (MTD / YTD)
-Helper local `getCompareIntervals(mode, monthRef, yearRef, today)`:
-- `month`: mês corrente → atual `01..hoje`, anterior `01..min(hoje.dia, último dia mês anterior)`. Encerrado → ambos cheios.
-- `year`: análogo (clamp 29/Fev).
-- Retorna `{ curInterval, prevInterval, label, isPartial }`.
-
-**Apenas Insights usa esses intervalos** — o `interval` que alimenta `s` (totais, gráfico, lista) não muda.
-
-Texto: `isPartial` → `"vs mesmo período de {label}"`; encerrado → `"vs {label}"`.
-
-### 1.3 Herói bidirecional
-- `case "net":` → `[]` se `heroKey === "grossExpenses"`.
-- `case "grossExpenses":` → `[]` se `heroKey === "net"`.
-
-### 1.4 Herói com cores semânticas
-Tokens: `text-info` (azul), `text-destructive` (vermelho), `text-success` (verde).
-- `grossExpenses`: eyebrow `"GANHO BRUTO"`, número grande `text-info`, subtítulo `Gastos {destructive} · Líquido {success}`.
-- `net`: eyebrow `"LUCRO LÍQUIDO"`, número `text-success`, subtítulo `Bruto {info} · Gastos {destructive}`.
-
-### 1.5 Tooltip em PT
-`formatter` via `CHARTS_LABEL_PT`: `net`→"Lucro" (R$), `expenses`→"Gastos" (R$), `km`→"KM" (`${num(v,0)} km`), `hours`→"Horas" (`${num(v,1)}h`). `labelFormatter`: `"dd/MM"` diário, `"MMM/yy"` anual.
+**Aceite:** Ordem na tela = Herói → INSIGHTS INTELIGENTES → card → VISÃO GERAL → lista de métricas. Apenas um eyebrow.
 
 ---
 
-## PARTE 2 — Comportamento dos Insights
+## Parte 2 — Exports com identidade Volant
 
-### 2.1 Rotação inteligente (9s) com pausa e retomada dinâmica
-Estado: `rotationIdx`, `lastShownIdx`.
-- `setInterval(9000)` ativo quando `queue` tem >1 item **e** `insightChip == null`.
-- Toque em chip pausa por 10s. Ao retomar: NÃO reseta `rotationIdx`. Recalcula `queue` por relevância atual e continua de `(lastShownIdx + 1) % total`. Loop natural.
-- Primeira montagem: começa do índice 0.
-- Frase: `<span key={insight.id}>` com `animate-fade-in motion-reduce:animate-none`.
+**Arquivo:** `src/pages/Reports.tsx` (funções `exportPDF`, `exportXLSX`, `exportCSV`, ~linhas 176-275). Sem mexer em queries, DataContext, `summarize`, cálculos da tela. Dados continuam vindo de `filtered`, `s`, `workedDays`, `avgPerDay` (já usa `s.gross / workedDays`).
 
-### 2.2 Ocultar card sem comparação **e G2 (estado vazio)**
-`renderInsightBlock` → `null` quando:
-- `mode === "range"`, ou
-- `prevSummary == null`, ou
-- `mode === "year"` sem ano anterior com dados, ou
-- **Fila final vazia** (nenhum numérico relevante + nenhuma categoria relevante após todas as travas).
+### PDF — `jsPDF` + `jspdf-autotable` (já instalados)
 
-Sem fallback "Sem histórico" / sem placeholder.
+Estrutura nova (substitui `exportPDF` inteira):
 
----
+1. **Cabeçalho escuro** (faixa ~28mm no topo):
+   - `doc.setFillColor` com tom dark (`#0F172A`), retângulo da largura da página.
+   - Logo: importar `volant-symbol-header.png` como base64 (via `import logoUrl from "@/assets/volant-symbol-header.png"` + `fetch` → `FileReader` → `dataURL`) e desenhar com `doc.addImage` à esquerda. Fallback: texto "V" estilizado se carregamento falhar (try/catch).
+   - Texto branco: "Volant" (bold, ~16pt) e subtítulo "Relatório de ganhos" (10pt) ao lado do logo.
+   - À direita: `periodLabel` (10pt) e "Gerado em DD/MM/AAAA HH:MM" (8pt).
+2. **Faixa verde** (#22c55e), altura ~2mm, logo abaixo do cabeçalho.
+3. **Bloco de destaque** (corpo branco):
+   - Label cinza "Lucro líquido" (9pt).
+   - Valor `brl(s.net)` em verde #16A34A, ~28pt bold.
+   - Subtítulo cinza: `Bruto ${brl(s.gross)} · Gastos ${brl(s.totalExpenses)}`.
+4. **Grade de métricas** (3 colunas × 2 linhas) usando `autoTable` com `theme: 'plain'`, células com label pequeno em cinza + valor bold:
+   - R$/hora, R$/dia (= `avgPerDay`, já bruto), R$/km, R$/corrida, Dias ativos, KM total.
+5. **Tabela de lançamentos** (`autoTable`):
+   - Colunas: Data · Tipo · App/Categoria · KM · Horas · Valor.
+   - `headStyles`: fundo dark `#0F172A`, texto branco, bold.
+   - `alternateRowStyles`: fundo `#F8FAFC`.
+   - `didParseCell` para colorir Tipo+Valor: verde `#16A34A` para Ganho, vermelho `#DC2626` para Gasto.
+   - `columnStyles`: KM, Horas, Valor alinhados à direita; Valor com `halign: 'right'`.
+6. **Rodapé** via `didDrawPage`:
+   - Fina faixa verde acima do rodapé.
+   - Linha 1 centralizada (8pt, cinza): "Gestão Financeira Inteligente para motoristas de app".
+   - Linha 2 centralizada (7pt, cinza): `Gerado pelo Volant em DD/MM/AAAA · usevolant.app`.
 
-## PARTE 3 — Insights por categoria (Ajustes 1 e 3)
+### Excel — `xlsx` (SheetJS, já em uso via import dinâmico)
 
-Agrega `expenseByCategory` em `curInterval` e `prevInterval` (Parte 1.2). Para cada categoria:
-- `cur`, `prev`, `delta`, `absDelta`.
-- **Ajuste 3 — trava de base pequena:**
-  - `prev < MIN_BASE_MONEY`: sem `%`. Só entra se `cur >= 30`. Frase: `"Você gastou R$ X com {categoria} — categoria nova vs {label}"`.
-  - Caso contrário: calcula `pct`; `> MAX_PCT (999)` → variante qualitativa ("subiu/caiu bastante"), sem número.
-- **Relevância (numérico/normal):** `absDelta >= 30 && |pct| >= 15`.
-- Cor: subiu → `destructive`; caiu → `success`. Ícone `TrendingUp/Down`. `chartChip: "expenses"`.
+Substitui `exportXLSX`. SheetJS community NÃO suporta estilos (`!fill`, `!font`) de forma garantida — vamos:
+- Aplicar estilos opcionais via propriedade `s` em cada célula (funciona se o build for `xlsx-js-style`; se não, ignorado silenciosamente). **Para garantir as cores**, trocar dependência: usar `xlsx-js-style` (drop-in compatível com a mesma API; instalar como nova dep). Importar dinamicamente `xlsx-js-style` em vez de `xlsx`.
 
-### G1 — Estrutura única `buildQueue` (final, coerente)
-**Único formato em todo o código** — nunca array plano:
-```
-buildQueue(numerics, categories): { numerics: N, categories: C, cIdx }
-  N = [...numerics].sort((a,b) => b.absPct - a.absPct)
-  C = [...categories].sort((a,b) => b.absDelta - a.absDelta)
-  cIdx = 0 (estado externo, persistido entre ciclos)
+**Aba "Resumo":**
+- Linhas 1-3: "Volant — Relatório", `Período: …`, `Gerado em: …` com fundo verde `#22C55E`, texto branco, bold, fonte Calibri 12.
+- Linha em branco.
+- Bloco indicadores (Indicador / Valor) com cabeçalho em negrito. Valores monetários com `z: 'R$ #,##0.00'` (números nativos, não string). Métricas: Lucro líquido, Bruto, Gastos, Dias, KM total, Corridas, R$/hora, R$/dia (bruto), R$/km, R$/corrida.
+- `!cols` ajustado (label ~28, valor ~18).
 
-getCurrent(rotationIdx, queue):
-  if rotationIdx < N.length: return N[rotationIdx]
-  if rotationIdx === N.length && C.length > 0: return C[cIdx % C.length]
-  return null
+**Aba "Lançamentos":**
+- Cabeçalho: Data · Tipo · App/Categoria · KM · Horas · Corridas · Valor · Observações. Fundo `#0F172A`, texto branco, bold.
+- `!freeze`/`!views`: `[{ ySplit: 1 }]` para freeze panes na linha 1.
+- Datas como `Date` real com `z: 'DD/MM/YYYY HH:MM'`.
+- Valor como número com `z: 'R$ #,##0.00'`.
+- Cor por célula (Tipo + Valor): verde `#16A34A` (Ganho), vermelho `#DC2626` (Gasto).
+- `!cols` autoajuste baseado no maior conteúdo por coluna.
+- Linha final "Total": `SUM` (fórmula `=SUM(G2:Gn)`) com cor neutra bold; uma linha para Total Ganhos e outra Total Gastos (filtragem manual ou somas separadas usando SUMIF).
 
-total = N.length + (C.length > 0 ? 1 : 0)
-advance: rotationIdx = (rotationIdx + 1) % total
-  if rotationIdx === 0: cIdx++
-```
-Resultado: cada ciclo completo mostra todos os numéricos + 1 categoria (rotativa). Sem categorias → fila puramente numérica. Sem numéricos mas com categorias → ciclo de 1 (a categoria atual, rotacionando entre ciclos).
+### CSV — sem alteração funcional
 
-`insightMetricLabel` ganha case `"category"`.
+Já está em UTF-8 com BOM (`\uFEFF`) e separador `,`. Apenas confirmar que cabeçalho contém acentos (já contém "Observações"). Nenhuma mudança.
 
-### G3 — Coerência chip ↔ insight
-Quando `insightChip != null` (pausa 10s):
-- `getByChip(chip)`: busca em `N ∪ C` o insight cuja `metric === chip` (para `"expenses"`, prioriza maior `absDelta` entre categorias; senão, o numérico de gastos).
-- Render usa esse insight diretamente, **ignorando `rotationIdx`** durante a pausa.
-- Ao fim dos 10s: `insightChip = null` → retoma rotação dinâmica (2.1).
-
----
-
-## PARTE 4 — Destaque e animação
-
-- Eyebrow `"INSIGHTS INTELIGENTES"` (`text-[10px] uppercase tracking-[0.18em] text-muted-foreground`).
-- Container: `bg-card/60 ring-1 ring-border/50`.
-- Frase: `animate-fade-in` por `key`.
-- Número: `InsightValue` existente (count-up + pulse, respeita reduced-motion).
+### Nova dependência
+- `xlsx-js-style` (drop-in para `xlsx`, mesma API + suporte a estilos). Substitui o `await import("xlsx")` por `await import("xlsx-js-style")`.
 
 ---
 
-## PARTE 5 — Count-up na troca de período
+## Não-alvos (não mexer)
+Queries Supabase, `DataContext`, `summarize`, DnD, gráfico, insights, frases, cálculos, herói, FAB, demais telas, eyebrow "INSIGHTS INTELIGENTES" (permanece).
 
-`<AnimatedNumber value format duration={500} />` usando `useCountUp` (ease-out, `prefers-reduced-motion`), wrapper `tabular-nums`.
-
-Aplica em:
-- Herói (`s.net` / `s.gross` / saldo / subs financeiros).
-- `rowsFor`: `value` vira `{ amount, format }`; row renderiza com `<AnimatedNumber>`.
-
-Subtítulos textuais (`{workedDays} ativos`, `${num(s.totalKm,0)} km rodados`) **não animam**.
-
----
-
-## G4 — Não regredir (confirmação explícita)
-Mantém intactos:
-- Cores/gradientes do gráfico por métrica (verde/vermelho/azul/roxo) — **só o tooltip vira PT**.
-- Chips do gráfico em grid 4 colunas sem scroll.
-- Título contextual "Evolução diária/mensal/no período".
-- Consolidação da lista (subtítulos absorvendo totais).
-- Integração do card "insights" no sistema de Organização (toggle + DnD).
-
----
-
-## CHECKLIST DE TESTE MANUAL
-1. Promover Bruto+Gastos → herói azul grande, eyebrow correto, subtítulo bicolor, Líquido some da lista.
-2. Mês corrente: insight "vs mesmo período de maio" (MTD vs MTD).
-3. Mês encerrado: "vs {mês}" (cheio vs cheio).
-4. "Por ano" sem ano anterior → card oculto.
-5. ~30s parado → rotação 9s, máx 1 categoria por ciclo, sem repetir/travar.
-6. Tocar "Gastos" → insight de gastos/categoria; após 10s avança no fluxo (não reseta).
-7. Categoria nova ≥ R$ 30 → sem `%`, frase "categoria nova"; nunca "+9999%".
-8. Trocar mês/ano → count-up ~500ms; subtítulos trocam direto.
-9. `prefers-reduced-motion` → sem rotação automática, sem count-up.
-10. Sem nenhum insight relevante (G2) → card oculto, sem placeholder.
-
-## NÃO ALTERA
-Queries Supabase, `DataContext`, `summarize`, DnD, cores/chips/título do gráfico (só tooltip), botões "Iniciar"/FAB, outras telas.
+## Arquivos editados
+- `src/pages/Reports.tsx` (Parte 1 + reescrita de `exportPDF` e `exportXLSX`).
+- `package.json` (adicionar `xlsx-js-style`).
