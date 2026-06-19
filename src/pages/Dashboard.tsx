@@ -536,8 +536,6 @@ export default function Dashboard() {
         <div key="smartKm" className="flex flex-col items-center">
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
-            type="button"
-          <button
             className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
             onClick={() => navigate('/ajustes/planejamento')}
           >
