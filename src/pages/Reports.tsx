@@ -810,7 +810,7 @@ export default function Reports() {
         <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Insights inteligentes
         </div>
-        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-4 min-h-[96px] h-auto flex items-start gap-3">
+        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-4 min-h-[96px] h-auto flex items-center gap-3">
           {isPlatform && platMeta ? (
             <PlatformLogo
               platformKey={insightToShow.platformKey as string}
@@ -818,12 +818,11 @@ export default function Reports() {
               hex={platMeta.hex}
               size="sm"
               imageUrl={platMeta.imageUrl ?? null}
-              className="mt-0.5"
             />
           ) : (
             <span
               className={cn(
-                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40",
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40",
                 toneCls,
               )}
             >
@@ -832,7 +831,7 @@ export default function Reports() {
           )}
           <div
             key={insightToShow.id}
-            className="min-w-0 flex-1 self-center text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
+            className="min-w-0 flex-1 text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
           >
             {phraseShown}
           </div>
