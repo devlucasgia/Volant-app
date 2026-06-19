@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useTimer, formatHMS } from "@/context/TimerContext";
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
-import { Play, RotateCcw, Coffee, StopCircle, CheckCircle2, Target } from "lucide-react";
+import { Play, RotateCcw, Coffee, Square, CheckCircle2, Target, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deriveGoals } from "@/lib/stats";
 import { useHeroMetric } from "@/lib/heroMetric";
@@ -20,46 +20,28 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } f
 const todayKey = () => format(new Date(), "yyyy-MM-dd");
 const goalStorageKey = (view: "gross" | "net") =>
   `volant_day_goal_${view}_${todayKey()}`;
+const folgaWorkedKey = () => `volant_folga_worked_${todayKey()}`;
 
-const readDayGoal = (view: "gross" | "net"): number | null => {
-  try {
-    // 1) Chave nova por visão
-    const raw = localStorage.getItem(goalStorageKey(view));
-    if (raw) {
-      const n = Number(raw);
-      if (n > 0) return n;
-    }
-    // 2) Migração leve: chave antiga sem visão — usa para a visão ativa e remove.
-    const legacy = localStorage.getItem(`volant_day_goal_${todayKey()}`);
-    if (legacy) {
-      const n = Number(legacy);
-      if (n > 0) {
-        localStorage.setItem(goalStorageKey(view), String(n));
-        localStorage.removeItem(`volant_day_goal_${todayKey()}`);
-        return n;
-      }
-    }
-    return null;
-  } catch {
-    return null;
-  }
-};
+interface JourneyModuleProps {
+  isFolgaToday?: boolean;
+}
 
-export function JourneyModule() {
+export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
   const { state, workMs, restMs, start, pauseRest, resumeWork, endJourney, reset } = useTimer();
   const { settings, entries } = useData();
   const { openDrawer } = useUI();
 
-  // Visually mirrors the Home Líquido/Bruto mode (heroView), não mais o settings.goalType.
   const [heroView] = useHeroMetric();
   const isGross = heroView === "gross";
   const journeyAccentBtn = isGross
     ? "bg-gradient-to-b from-[hsl(var(--goal-gross))] to-[hsl(var(--goal-gross))]/85 text-white shadow-[0_2px_12px_-2px_hsl(var(--goal-gross)/0.55),inset_0_1px_0_hsl(0_0%_100%/0.12)] hover:from-[hsl(var(--goal-gross))]/95 hover:to-[hsl(var(--goal-gross))]/80"
     : "gradient-success text-primary-foreground";
 
-  // Sugestão inteligente: prioriza o motor do Planejamento Inteligente
-  // (mesma fonte usada pela Home). Cai para deriveGoals quando o planejamento
-  // ainda não foi configurado.
+  // Cor da borda pulsante por modo
+  const pulseBorder = isGross
+    ? "border-[hsl(var(--goal-gross))]/70"
+    : "border-success/70";
+
   const plan = usePlanningSnapshot();
   const suggestedDaily = useMemo(() => {
     const fromPlan = isGross ? plan.homeDailyGross : plan.homeDailyNet;
@@ -75,12 +57,10 @@ export function JourneyModule() {
   const view: "gross" | "net" = isGross ? "gross" : "net";
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [goalOpen, setGoalOpen] = useState(false);
-  const [goalValue, setGoalValue] = useState<number | null>(readDayGoal(view) ?? suggestedDaily ?? null);
+  const [goalValue, setGoalValue] = useState<number | null>(null);
   const [pendingResetThenStart, setPendingResetThenStart] = useState(false);
 
-  const totalMs = workMs + restMs;
   const isEnded = state === "ended";
-  const isActive = state === "running" || state === "resting";
 
   const statusLabel =
     state === "running" ? "Trabalhando" :
@@ -93,18 +73,26 @@ export function JourneyModule() {
     state === "ended" ? "bg-success" : "bg-muted-foreground/40";
 
   const openGoal = (resetFirst: boolean) => {
-    setGoalValue(readDayGoal(view) ?? suggestedDaily ?? null);
+    // Item 3: campo inicia vazio. Sem pré-preenchimento.
+    setGoalValue(null);
     setPendingResetThenStart(resetFirst);
     setGoalOpen(true);
   };
 
-  const confirmGoalAndStart = async () => {
+  const confirmGoalAndStart = () => {
     const v = goalValue ?? 0;
     try {
       const key = goalStorageKey(view);
       if (v > 0) localStorage.setItem(key, String(v));
       else localStorage.removeItem(key);
       window.dispatchEvent(new CustomEvent("volant:dayGoalChanged"));
+
+      // Item 4: se hoje é folga e o motorista decidiu trabalhar, marca a flag
+      // de sessão para a Home transicionar para o estado normal de trabalho.
+      if (isFolgaToday) {
+        localStorage.setItem(folgaWorkedKey(), "1");
+        window.dispatchEvent(new CustomEvent("volant:folgaWorkedChanged"));
+      }
     } catch { /* noop */ }
     setGoalOpen(false);
     if (pendingResetThenStart) reset();
@@ -119,29 +107,133 @@ export function JourneyModule() {
     }, 200);
   };
 
-  const hasTime = workMs > 0 || restMs > 0;
-
   const accentText =
     state === "running" ? (isGross ? "text-[hsl(var(--goal-gross))]" : "text-success") :
     state === "resting" ? "text-warning" :
     "text-foreground";
 
+  // Feedback condicional no modal (Item 3)
+  const feedback = useMemo(() => {
+    if (!goalValue || goalValue <= 0 || !suggestedDaily) return null;
+    if (goalValue > suggestedDaily) {
+      return { text: "Boa! Os próximos dias ficam mais tranquilos.", cls: "text-success" };
+    }
+    if (goalValue < suggestedDaily) {
+      return { text: "Os próximos dias vão precisar compensar.", cls: "text-warning" };
+    }
+    return null;
+  }, [goalValue, suggestedDaily]);
+
+  // ===== Estado IDLE — card inteiro clicável (Item 1 e 4b) =====
+  if (state === "idle") {
+    const isFolga = isFolgaToday;
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => openGoal(false)}
+          aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
+          className={cn(
+            "group relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            isFolga
+              ? "border-border bg-muted/20"
+              : cn("bg-card animate-breath", pulseBorder),
+          )}
+        >
+          {/* Spacer esquerdo (mesma largura do chevron) para centralizar conteúdo */}
+          <span aria-hidden className="h-4 w-4 shrink-0" />
+
+          <div className="flex flex-1 items-center justify-center gap-3">
+            <span
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                isFolga
+                  ? "bg-muted/60 text-muted-foreground"
+                  : isGross
+                    ? "bg-[hsl(var(--goal-gross))]/15 text-[hsl(var(--goal-gross))]"
+                    : "bg-success/15 text-success",
+              )}
+            >
+              {isFolga ? <Coffee className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </span>
+            <div className="min-w-0 text-center">
+              <div className={cn("text-sm font-semibold leading-tight", isFolga ? "text-muted-foreground" : "text-foreground")}>
+                {isFolga ? "Dia de folga" : "Iniciar jornada"}
+              </div>
+              <div className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+                {isFolga ? "Se quiser rodar hoje mesmo assim, toque aqui" : "Toque no card para iniciar"}
+              </div>
+            </div>
+          </div>
+
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
+        </button>
+
+        {renderGoalDrawer()}
+      </>
+    );
+  }
+
+  function renderGoalDrawer() {
+    return (
+      <Drawer open={goalOpen} onOpenChange={setGoalOpen}>
+        <DrawerContent>
+          <div className="mx-auto w-full max-w-md">
+            <DrawerHeader className="items-center text-center pb-2">
+              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
+                <Target className="h-5 w-5 text-primary" />
+              </div>
+              <DrawerTitle className="text-center text-lg">Meta da jornada</DrawerTitle>
+              <DrawerDescription className="text-center text-[13px] leading-snug">
+                Sua meta sugerida é calculada pelo Volant com base no que ainda falta pro mês. Você pode ajustar para hoje — se passar da sugestão, os próximos dias ficam mais leves. Se ficar abaixo, eles compensam.
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="space-y-2 px-5 pb-1">
+              {isFolgaToday && (
+                <div className="mb-3 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] leading-snug text-warning">
+                  Hoje é dia de folga no seu planejamento. Se trabalhar, o que você ganhar vai aliviar as metas dos próximos dias.
+                </div>
+              )}
+              <Label className="text-xs text-muted-foreground">Meta (R$)</Label>
+              <NumberField
+                currency
+                value={goalValue}
+                onChange={setGoalValue}
+                autoFocus
+              />
+              {suggestedDaily > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setGoalValue(suggestedDaily)}
+                  className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-[12px] font-semibold text-success transition-colors hover:bg-success/15 active:scale-[0.98]"
+                >
+                  <span aria-hidden>💡</span>
+                  Sugestão do Volant: R$ {suggestedDaily.toLocaleString("pt-BR")} — toque para usar
+                </button>
+              )}
+              <div className={cn("min-h-[16px] text-[11.5px] leading-tight", feedback?.cls)}>
+                {feedback?.text}
+              </div>
+            </div>
+            <div className="flex gap-2 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+              <Button variant="outline" className="h-11 flex-1" onClick={() => setGoalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button className={cn("h-11 flex-1", journeyAccentBtn)} onClick={confirmGoalAndStart}>
+                <Play className="mr-2 h-4 w-4" /> Iniciar jornada
+              </Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // ===== Estados ativo / em descanso / encerrado =====
   return (
     <section className="flex min-h-[72px] items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
-      {/* Left: status + cronômetro */}
+      {/* Esquerda: cronômetro + label compactos */}
       <div className="flex min-w-0 items-center gap-3">
-        {state === "idle" && (
-          <>
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/40 text-muted-foreground">
-              <Play className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-foreground leading-tight">Jornada de hoje</div>
-              <div className="text-[11px] text-muted-foreground leading-tight">Toque para iniciar</div>
-            </div>
-          </>
-        )}
-
         {(state === "running" || state === "resting") && (
           <>
             <span className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />
@@ -171,14 +263,8 @@ export function JourneyModule() {
         )}
       </div>
 
-      {/* Right: controls */}
-      <div className="flex shrink-0 items-center gap-1.5">
-        {state === "idle" && (
-          <Button onClick={() => openGoal(false)} className={cn("h-9 px-4 transition-colors duration-500", journeyAccentBtn)}>
-            <Play className="mr-1.5 h-3.5 w-3.5" /> Iniciar
-          </Button>
-        )}
-
+      {/* Direita: botões agrupados com peso visual equivalente */}
+      <div className="flex shrink-0 items-center gap-2">
         {state === "running" && (
           <>
             <Button onClick={pauseRest} variant="outline" size="sm" className="h-9">
@@ -186,11 +272,11 @@ export function JourneyModule() {
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              size="icon"
-              className="h-9 w-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              size="sm"
+              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
-              <StopCircle className="h-4 w-4" />
+              <Square className="mr-1.5 h-3.5 w-3.5" fill="currentColor" /> Encerrar
             </Button>
           </>
         )}
@@ -202,11 +288,11 @@ export function JourneyModule() {
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              size="icon"
-              className="h-9 w-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              size="sm"
+              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
-              <StopCircle className="h-4 w-4" />
+              <Square className="mr-1.5 h-3.5 w-3.5" fill="currentColor" /> Encerrar
             </Button>
           </>
         )}
@@ -222,14 +308,13 @@ export function JourneyModule() {
           </>
         )}
       </div>
-      {/* statusLabel reservado para acessibilidade futura */}
       <span className="sr-only">{statusLabel}</span>
 
       {/* End confirmation */}
       <AlertDialog open={confirmEnd} onOpenChange={setConfirmEnd}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deseja encerrar a jornada?</AlertDialogTitle>
+            <AlertDialogTitle>Encerrar a jornada de hoje?</AlertDialogTitle>
             <AlertDialogDescription>
               Após encerrar, não será possível continuar esta mesma jornada.
             </AlertDialogDescription>
@@ -240,50 +325,13 @@ export function JourneyModule() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleEndConfirmed}
             >
-              Encerrar jornada
+              Encerrar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Goal modal */}
-      <Drawer open={goalOpen} onOpenChange={setGoalOpen}>
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-md">
-            <DrawerHeader className="items-center text-center pb-2">
-              <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
-                <Target className="h-5 w-5 text-primary" />
-              </div>
-              <DrawerTitle className="text-center text-lg">Meta da jornada</DrawerTitle>
-              <DrawerDescription className="text-center text-[13px] leading-snug">
-                Defina quanto você quer ganhar hoje. Esta meta vale apenas para o dia de hoje.
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="space-y-2 px-5 pb-1">
-              <Label className="text-xs text-muted-foreground">Meta (R$)</Label>
-              <NumberField
-                currency
-                value={goalValue}
-                onChange={setGoalValue}
-                autoFocus
-              />
-              {suggestedDaily > 0 && (
-                <p className="text-[11px] text-muted-foreground">
-                  Sugestão inteligente: R$ {suggestedDaily.toLocaleString("pt-BR")}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
-              <Button variant="outline" className="h-11 flex-1" onClick={() => setGoalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button className="h-11 flex-1 gradient-success text-primary-foreground" onClick={confirmGoalAndStart}>
-                <Play className="mr-2 h-4 w-4" /> Iniciar jornada
-              </Button>
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      {renderGoalDrawer()}
     </section>
   );
 }
