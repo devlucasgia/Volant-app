@@ -134,16 +134,13 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           onClick={() => openGoal(false)}
           aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
           className={cn(
-            "group relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "group relative flex w-full items-center justify-center gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             isFolga
               ? "border-border bg-muted/20"
               : cn("bg-card animate-breath", pulseBorder),
           )}
         >
-          {/* Spacer esquerdo (mesma largura do chevron) para centralizar conteúdo */}
-          <span aria-hidden className="h-4 w-4 shrink-0" />
-
-          <div className="flex flex-1 items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <span
               className={cn(
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
@@ -166,7 +163,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
             </div>
           </div>
 
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
+          <ChevronRight className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
         </button>
 
         {renderGoalDrawer()}
