@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { NumberField } from "@/components/NumberField";
 import { Label } from "@/components/ui/label";
 import { useTimer, formatHMS } from "@/context/TimerContext";
+
+function formatCompactDuration(ms: number): string {
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  if (totalSec < 60) return `${totalSec}s`;
+  const totalMin = Math.floor(totalSec / 60);
+  if (totalMin < 60) return `${totalMin}m`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m > 0 ? `${h}h${m}m` : `${h}h`;
+}
 import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { Play, RotateCcw, Coffee, Square, CheckCircle2, Target, ChevronRight } from "lucide-react";
