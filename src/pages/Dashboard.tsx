@@ -559,12 +559,9 @@ export default function Dashboard() {
     })() : null,
 
 
-    byApp: widgets.byApp ? (
-      <section key="byApp">
-        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
+    byApp: widgets.byApp ? (() => {
+      const block = (
+        <div className={widgets.byExpense ? "" : "rounded-2xl border border-border bg-card p-4"}>
           {activeApps.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum ganho registrado neste período.
@@ -591,15 +588,24 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </section>
-    ) : null,
+      );
+      // Quando só "Por aplicativo" está visível, renderiza isolado com eyebrow próprio.
+      if (!widgets.byExpense) {
+        return (
+          <section key="byApp">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
+            </div>
+            {block}
+          </section>
+        );
+      }
+      return block;
+    })() : null,
 
-    byExpense: widgets.byExpense ? (
-      <section key="byExpense">
-        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Receipt className="h-3.5 w-3.5" /> Por gastos
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
+    byExpense: widgets.byExpense ? (() => {
+      const block = (
+        <div className={widgets.byApp ? "" : "rounded-2xl border border-border bg-card p-4"}>
           {activeExp.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum gasto registrado neste período.
@@ -633,8 +639,19 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </section>
-    ) : null,
+      );
+      if (!widgets.byApp) {
+        return (
+          <section key="byExpense">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <Receipt className="h-3.5 w-3.5" /> Por gastos
+            </div>
+            {block}
+          </section>
+        );
+      }
+      return block;
+    })() : null,
 
     journey: widgets.journey ? (
       <section key="journey">
