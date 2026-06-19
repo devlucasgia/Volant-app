@@ -247,6 +247,8 @@ export default function Dashboard() {
   }, [todayIsoStr, folgaWorkedTick]);
   const isFolgaTodayEffective =
     isFolgaToday && !folgaWorkedToday && timerState === "idle";
+  // Para dias passados isFolga permanece. Para hoje só conta se ainda não trabalhou.
+  const isFolgaEffective = isFolga && (!isFolgaToday || isFolgaTodayEffective);
 
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
