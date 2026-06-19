@@ -1163,25 +1163,30 @@ export default function Reports() {
             if (rowGroup.length === 0) return;
             const flat = rowGroup.flatMap((g) => g.rows.map((r, idx) => ({ ...r, _key: `${g.key}-${idx}` })));
             blocks.push(
-              <div key={`group-${blocks.length}`} className="rounded-2xl bg-card/40">
-                {flat.map((r, i) => (
-                  <div
-                    key={r._key}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-3.5",
-                      i < flat.length - 1 && "border-b border-border/40",
-                    )}
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
-                      {r.icon}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm text-foreground">{r.label}</div>
-                      {r.sub && <div className="text-[11px] text-muted-foreground">{r.sub}</div>}
+              <div key={`group-${blocks.length}`} className="space-y-1.5">
+                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Métricas
+                </div>
+                <div className="rounded-2xl bg-card/40">
+                  {flat.map((r, i) => (
+                    <div
+                      key={r._key}
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3.5",
+                        i < flat.length - 1 && "border-b border-border/40",
+                      )}
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/40">
+                        {r.icon}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm text-foreground">{r.label}</div>
+                        {r.sub && <div className="text-[11px] text-muted-foreground">{r.sub}</div>}
+                      </div>
+                      <div className="text-base font-semibold tabular-nums text-foreground">{r.value}</div>
                     </div>
-                    <div className="text-base font-semibold tabular-nums text-foreground">{r.value}</div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             );
             rowGroup = [];
