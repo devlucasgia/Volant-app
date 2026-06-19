@@ -124,9 +124,10 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
     return null;
   }, [goalValue, suggestedDaily]);
 
-  // ===== Estado IDLE — card inteiro clicável (Item 1 e 4b) =====
+  // ===== Estado IDLE — card inteiro clicável, apenas ícone Play centralizado =====
   if (state === "idle") {
     const isFolga = isFolgaToday;
+    const playColor = isGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
     return (
       <>
         <button
@@ -134,34 +135,27 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           onClick={() => openGoal(false)}
           aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
           className={cn(
-            "group relative flex w-full items-center justify-center gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "group relative flex w-full items-center justify-center rounded-2xl border px-4 py-6 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             isFolga
               ? "border-border bg-muted/20"
               : cn("bg-card animate-breath", pulseBorder),
           )}
         >
-          <div className="flex items-center justify-center gap-3">
-            <span
-              className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-                isFolga
-                  ? "bg-muted/60 text-muted-foreground"
-                  : isGross
-                    ? "bg-[hsl(var(--goal-gross))]/15 text-[hsl(var(--goal-gross))]"
-                    : "bg-success/15 text-success",
-              )}
-            >
-              {isFolga ? <Coffee className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            </span>
-            <div className="min-w-0 text-center">
-              <div className={cn("text-sm font-semibold leading-tight", isFolga ? "text-muted-foreground" : "text-foreground")}>
-                {isFolga ? "Dia de folga" : "Iniciar jornada"}
-              </div>
-              <div className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
-                {isFolga ? "Se quiser rodar hoje mesmo assim, toque aqui" : "Toque no card para iniciar"}
+          {isFolga ? (
+            <div className="flex items-center justify-center gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+                <Coffee className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 text-center">
+                <div className="text-sm font-semibold leading-tight text-muted-foreground">Dia de folga</div>
+                <div className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+                  Se quiser rodar hoje mesmo assim, toque aqui
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <Play className={cn("h-10 w-10", playColor)} fill="currentColor" />
+          )}
 
           <ChevronRight className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
         </button>
