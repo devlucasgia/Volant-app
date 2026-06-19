@@ -570,8 +570,12 @@ export default function Dashboard() {
 
 
     byApp: widgets.byApp ? (() => {
+      const insideUnified = Boolean(widgets.byExpense);
       const block = (
-        <div className={widgets.byExpense ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+          {insideUnified && (
+            <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por app</div>
+          )}
           {activeApps.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum ganho registrado neste período.
@@ -614,8 +618,12 @@ export default function Dashboard() {
     })() : null,
 
     byExpense: widgets.byExpense ? (() => {
+      const insideUnified = Boolean(widgets.byApp);
       const block = (
-        <div className={widgets.byApp ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+          {insideUnified && (
+            <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por gastos</div>
+          )}
           {activeExp.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum gasto registrado neste período.
