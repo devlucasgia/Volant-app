@@ -674,7 +674,13 @@ export default function Dashboard() {
     journey: widgets.journey ? (
       <section key="journey">
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          <TimerIcon className="h-3.5 w-3.5" /> Jornada
+          <TimerIcon className="h-3.5 w-3.5" />
+          <span>
+            Jornada
+            {timerState === "idle" && (
+              <span className="ml-1 font-medium normal-case tracking-normal text-muted-foreground/70">· Toque para iniciar</span>
+            )}
+          </span>
         </div>
         <JourneyModule isFolgaToday={isFolgaTodayEffective} />
       </section>
