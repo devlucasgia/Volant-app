@@ -23,7 +23,7 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
-  Download, FileSpreadsheet, FileText, FileDown, FileType2,
+  Download, FileSpreadsheet, FileText, FileDown,
 } from "lucide-react";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import {
@@ -171,7 +171,7 @@ export default function Reports() {
     return set.size;
   }, [filtered]);
 
-  const avgPerDay = workedDays > 0 ? s.net / workedDays : 0;
+  const avgPerDay = workedDays > 0 ? s.gross / workedDays : 0;
 
   const exportCSV = () => {
     const rows = [
@@ -274,80 +274,6 @@ export default function Reports() {
     }
   };
 
-  const exportDOCX = async () => {
-    try {
-      const docx = await import("docx");
-      const {
-        Document, Packer, Paragraph, HeadingLevel, AlignmentType,
-        Table, TableRow, TableCell, WidthType, TextRun, BorderStyle,
-      } = docx;
-
-      const border = { style: BorderStyle.SINGLE, size: 4, color: "DDDDDD" };
-      const cellBorders = { top: border, bottom: border, left: border, right: border };
-
-      const headerCell = (text: string) =>
-        new TableCell({
-          borders: cellBorders,
-          children: [new Paragraph({ children: [new TextRun({ text, bold: true })] })],
-        });
-      const cell = (text: string) =>
-        new TableCell({ borders: cellBorders, children: [new Paragraph(text)] });
-
-      const summaryTable = new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-          new TableRow({ children: [headerCell("Indicador"), headerCell("Valor")] }),
-          ...summaryRows.map(([k, v]) => new TableRow({ children: [cell(k), cell(v)] })),
-        ],
-      });
-
-      const entriesHeader = ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor"];
-      const entryRows = filtered.map((e) =>
-        e.type === "earning"
-          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), brl(e.gross)]
-          : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
-      );
-      const entriesTable = new Table({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-          new TableRow({ children: entriesHeader.map(headerCell) }),
-          ...entryRows.map((r) => new TableRow({ children: r.map(cell) })),
-        ],
-      });
-
-      const wordDoc = new Document({
-        sections: [{
-          children: [
-            new Paragraph({
-              heading: HeadingLevel.HEADING_1,
-              alignment: AlignmentType.LEFT,
-              children: [new TextRun({ text: "Volant — Relatório", bold: true })],
-            }),
-            new Paragraph({ children: [new TextRun({ text: `Período: ${periodLabel}` })] }),
-            new Paragraph({ children: [new TextRun({ text: `Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}` })] }),
-            new Paragraph(""),
-            new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Resumo", bold: true })] }),
-            summaryTable,
-            new Paragraph(""),
-            new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: "Lançamentos", bold: true })] }),
-            entriesTable,
-          ],
-        }],
-      });
-
-      const blob = await Packer.toBlob(wordDoc);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `volant-${format(new Date(), "yyyyMMdd")}.docx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Word exportado!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Não foi possível exportar Word agora.");
-    }
-  };
 
 
   const chartMeta = CHARTS.find((c) => c.key === chart)!;
@@ -557,7 +483,7 @@ export default function Reports() {
     const empty = { N: [] as InsightItem[], C: [] as InsightItem[], P: [] as InsightItem[] };
     if (!compare || !prevSummary || !curForInsights) return empty;
     const label = compare.label;
-    const labelText = compare.isPartial ? `mesmo período de ${label}` : label;
+    
     const MIN_BASE_MONEY = 1;
     const MIN_BASE_HOURS = 1;
     const MIN_DELTA_MONEY = 10;
@@ -566,7 +492,8 @@ export default function Reports() {
     const MIN_DELTA_CATEGORY = 30;
     const MIN_DELTA_PLATFORM = 50;
 
-    const vBase = { mês: labelText };
+    const vBase = { mês: label };
+    const suffix = compare.isPartial ? ".partial" : ".closed";
 
     const N: InsightItem[] = [];
 
@@ -577,7 +504,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
-        const key: PhraseKey = diff >= 0 ? "net.up" : "net.down";
+        const key = (diff >= 0 ? `net.up${suffix}` : `net.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-net", kind: "numeric", phraseKey: key, relevance: abs,
           vars: { ...vBase, valor: brl(abs) },
@@ -592,7 +519,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (Math.abs(prev) >= MIN_BASE_MONEY && abs >= MIN_DELTA_MONEY) {
-        const key: PhraseKey = diff >= 0 ? "expenses.up" : "expenses.down";
+        const key = (diff >= 0 ? `expenses.up${suffix}` : `expenses.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-exp", kind: "numeric", phraseKey: key, relevance: abs,
           vars: { ...vBase, valor: brl(abs) },
@@ -607,7 +534,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= 1 && abs >= 1) {
-        const key: PhraseKey = diff >= 0 ? "rph.up" : "rph.down";
+        const key = (diff >= 0 ? `rph.up${suffix}` : `rph.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-rph", kind: "numeric", phraseKey: key, relevance: abs * 50,
           vars: { ...vBase, valor: brl(cur) },
@@ -622,7 +549,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= 0.5 && abs >= 0.2) {
-        const key: PhraseKey = diff >= 0 ? "rpkm.up" : "rpkm.down";
+        const key = (diff >= 0 ? `rpkm.up${suffix}` : `rpkm.down${suffix}`) as PhraseKey;
         N.push({
           id: "n-rpkm", kind: "numeric", phraseKey: key, relevance: abs * 100,
           vars: { ...vBase, valor: brl(cur) },
@@ -637,7 +564,7 @@ export default function Reports() {
       const diff = cur - prev;
       const abs = Math.abs(diff);
       if (prev >= MIN_BASE_HOURS && abs >= MIN_DELTA_HOURS) {
-        const key: PhraseKey = diff >= 0 ? "hours.more" : "hours.less";
+        const key = (diff >= 0 ? `hours.more${suffix}` : `hours.less${suffix}`) as PhraseKey;
         N.push({
           id: "n-hours", kind: "numeric", phraseKey: key, relevance: abs * 5,
           vars: { ...vBase, valor: `${num(abs, 1)}h` },
@@ -651,7 +578,7 @@ export default function Reports() {
     const C: InsightItem[] = [];
     for (const it of expenseByCategoryDiff) {
       const { cur, prev, label: catLabel, emoji, category } = it;
-      const base = { mês: labelText, categoria: catLabel, emoji };
+      const base = { mês: label, categoria: catLabel, emoji: emoji || "" };
 
       if (prev < MIN_BASE_MONEY) {
         if (cur >= MIN_DELTA_CATEGORY) {
@@ -672,7 +599,7 @@ export default function Reports() {
       const delta = cur - prev;
       const absDelta = Math.abs(delta);
       if (absDelta < MIN_DELTA_CATEGORY) continue;
-      const key: PhraseKey = delta >= 0 ? "category.up" : "category.down";
+      const key = (delta >= 0 ? `category.up${suffix}` : `category.down${suffix}`) as PhraseKey;
       C.push({
         id: `cat-${key}-${category}`, kind: "category", phraseKey: key, relevance: absDelta,
         vars: { ...base, valor: brl(absDelta) },
@@ -687,8 +614,9 @@ export default function Reports() {
     if (curSorted.length >= 2) {
       const [p1, p2] = curSorted;
       if (p1.cur - p2.cur >= MIN_DELTA_PLAT_COMPARE) {
+        const key = `platform.compare${suffix}` as PhraseKey;
         P.push({
-          id: `plat-compare-${p1.key}-${p2.key}`, kind: "platform", phraseKey: "platform.compare",
+          id: `plat-compare-${p1.key}-${p2.key}`, kind: "platform", phraseKey: key,
           platformKey: p1.key,
           relevance: p1.cur - p2.cur,
           vars: { ...vBase, plat1: p1.label, plat2: p2.label },
@@ -700,7 +628,7 @@ export default function Reports() {
       const delta = p.cur - p.prev;
       const abs = Math.abs(delta);
       if (p.prev < MIN_BASE_MONEY || abs < MIN_DELTA_PLATFORM) continue;
-      const key: PhraseKey = delta >= 0 ? "platform.up" : "platform.down";
+      const key = (delta >= 0 ? `platform.up${suffix}` : `platform.down${suffix}`) as PhraseKey;
       P.push({
         id: `plat-${key}-${p.key}`, kind: "platform", phraseKey: key, platformKey: p.key,
         relevance: abs,
@@ -808,7 +736,7 @@ export default function Reports() {
         <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Insights inteligentes
         </div>
-        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-4 min-h-[96px] h-auto flex items-start gap-3">
+        <div className="rounded-2xl bg-card/60 ring-1 ring-border/50 px-4 py-4 min-h-[96px] h-auto flex items-center gap-3">
           {isPlatform && platMeta ? (
             <PlatformLogo
               platformKey={insightToShow.platformKey as string}
@@ -816,12 +744,11 @@ export default function Reports() {
               hex={platMeta.hex}
               size="sm"
               imageUrl={platMeta.imageUrl ?? null}
-              className="mt-0.5"
             />
           ) : (
             <span
               className={cn(
-                "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40",
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/40",
                 toneCls,
               )}
             >
@@ -830,7 +757,7 @@ export default function Reports() {
           )}
           <div
             key={insightToShow.id}
-            className="min-w-0 flex-1 self-center text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
+            className="min-w-0 flex-1 text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
           >
             {phraseShown}
           </div>
@@ -879,9 +806,6 @@ export default function Reports() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={exportXLSX}>
                 <FileSpreadsheet className="mr-2 h-4 w-4 text-success" /> Exportar Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportDOCX}>
-                <FileType2 className="mr-2 h-4 w-4 text-info" /> Exportar Word
               </DropdownMenuItem>
               <DropdownMenuItem onClick={exportPDF}>
                 <FileText className="mr-2 h-4 w-4 text-destructive" /> Exportar PDF
@@ -1146,14 +1070,19 @@ export default function Reports() {
           // Walk visibleKeys, grouping contiguous row-friendly items into a single container.
           const blocks: React.ReactNode[] = [];
           let rowGroup: { key: ReportCardKey; rows: ReturnType<typeof rowsFor> }[] = [];
+          let overviewEyebrowRendered = false;
           const flushRowGroup = () => {
             if (rowGroup.length === 0) return;
             const flat = rowGroup.flatMap((g) => g.rows.map((r, idx) => ({ ...r, _key: `${g.key}-${idx}` })));
+            const showEyebrow = !overviewEyebrowRendered;
+            overviewEyebrowRendered = true;
             blocks.push(
               <div key={`group-${blocks.length}`} className="space-y-1.5">
-                <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Métricas
-                </div>
+                {showEyebrow && (
+                  <div className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Visão geral
+                  </div>
+                )}
                 <div className="rounded-2xl bg-card/40">
                   {flat.map((r, i) => (
                     <div
