@@ -985,6 +985,7 @@ export default function Dashboard() {
             let block: React.ReactNode = blocks[k];
 
             if (k === unifiedSlotKey) {
+              const bothEmpty = activeApps.length === 0 && activeExp.length === 0;
               block = (
                 <section key="appsExpenses">
                   <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -992,7 +993,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                     {blocks.byApp}
-                    <div className="border-t border-border/30" />
+                    {!bothEmpty && <div className="border-t border-border/30" />}
                     {blocks.byExpense}
                   </div>
                 </section>
