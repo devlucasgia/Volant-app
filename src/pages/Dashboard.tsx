@@ -560,34 +560,38 @@ export default function Dashboard() {
 
 
     byApp: widgets.byApp ? (
-      <div key="byApp" className="rounded-2xl border border-border bg-card p-4">
-        <div className="mb-3 text-sm font-semibold">Por aplicativo</div>
-        {activeApps.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-            Nenhum ganho registrado neste período.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {activeApps.map((k) => {
-              const v = apps[k];
-              const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
-              const meta = platformMetaFor(k);
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <div className="flex min-w-[120px] items-center gap-2">
-                    <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
-                    <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+      <section key="byApp">
+        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {activeApps.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+              Nenhum ganho registrado neste período.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeApps.map((k) => {
+                const v = apps[k];
+                const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
+                const meta = platformMetaFor(k);
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <div className="flex min-w-[120px] items-center gap-2">
+                      <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
+                      <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+                    </div>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
-                  </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     ) : null,
 
     byExpense: widgets.byExpense ? (
