@@ -595,37 +595,45 @@ export default function Dashboard() {
     ) : null,
 
     byExpense: widgets.byExpense ? (
-      <div key="byExpense" className="rounded-2xl border border-border bg-card p-4">
-        <div className="mb-3 text-sm font-semibold">Por gastos</div>
-        {activeExp.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-            Nenhum gasto registrado neste período.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {activeExp.map((k) => {
-              const v = expCats[k];
-              const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
-              const Meta = expenseMetaFor(k);
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <span
-                    className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                    style={{ backgroundColor: Meta.hex }}
-                  >
-                    <span className="text-base leading-none">{Meta.emoji}</span>
-                    {Meta.label}
-                  </span>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
+      <section key="byExpense">
+        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <Receipt className="h-3.5 w-3.5" /> Por gastos
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {activeExp.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+              Nenhum gasto registrado neste período.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeExp.map((k) => {
+                const v = expCats[k];
+                const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+                const Meta = expenseMetaFor(k);
+                const badgeContent = Meta.emoji || Meta.label.charAt(0).toUpperCase();
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <div className="flex min-w-[120px] items-center gap-2">
+                      <span
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+                        style={{ backgroundColor: `${Meta.hex}22`, color: Meta.hex }}
+                        aria-label={Meta.label}
+                      >
+                        {badgeContent}
+                      </span>
+                      <span className="truncate text-xs font-semibold text-foreground">{Meta.label}</span>
+                    </div>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     ) : null,
 
     journey: widgets.journey ? (
