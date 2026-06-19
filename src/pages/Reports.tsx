@@ -192,41 +192,182 @@ export default function Reports() {
     toast.success("CSV exportado!");
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Volant · Relatório", 14, 18);
-    doc.setFontSize(10);
-    doc.text(`Período: ${periodLabel} · Gerado em ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 25);
-    autoTable(doc, {
-      startY: 32,
-      head: [["Indicador", "Valor"]],
-      body: [
-        ["Lucro líquido", brl(s.net)],
-        ["Bruto", brl(s.gross)],
-        ["Gastos", brl(s.totalExpenses)],
-        ["Dias trabalhados", String(workedDays)],
-        ["KM total", s.totalKm.toFixed(1)],
-        ["Corridas total", String(s.totalRides)],
+  const loadLogoDataUrl = async (): Promise<string | null> => {
+    try {
+      const mod = await import("@/assets/volant-symbol-header.png");
+      const res = await fetch((mod as { default: string }).default);
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  };
+
+  const exportPDF = async () => {
+    try {
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const pageH = doc.internal.pageSize.getHeight();
+      const logoDataUrl = await loadLogoDataUrl();
+      const genAt = format(new Date(), "dd/MM/yyyy HH:mm");
+      const genDate = format(new Date(), "dd/MM/yyyy");
+
+      // 1) Header dark band
+      doc.setFillColor(15, 23, 42); // #0F172A
+      doc.rect(0, 0, pageW, 28, "F");
+      if (logoDataUrl) {
+        try { doc.addImage(logoDataUrl, "PNG", 14, 8, 12, 12); } catch { /* noop */ }
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Volant", logoDataUrl ? 30 : 14, 15);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(220, 230, 240);
+      doc.text("Relatório de ganhos", logoDataUrl ? 30 : 14, 21);
+      // Right side: period + generated
+      doc.setFontSize(10);
+      doc.setTextColor(255, 255, 255);
+      doc.text(periodLabel, pageW - 14, 14, { align: "right" });
+      doc.setFontSize(8);
+      doc.setTextColor(200, 210, 220);
+      doc.text(`Gerado em ${genAt}`, pageW - 14, 20, { align: "right" });
+      // 2) Faixa verde
+      doc.setFillColor(34, 197, 94); // #22c55e
+      doc.rect(0, 28, pageW, 1.6, "F");
+
+      // 3) Bloco destaque (líquido)
+      let y = 42;
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text("LUCRO LÍQUIDO", 14, y);
+      y += 9;
+      doc.setTextColor(22, 163, 74); // #16A34A
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(26);
+      doc.text(brl(s.net), 14, y);
+      y += 6;
+      doc.setTextColor(100, 116, 139);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Bruto ${brl(s.gross)}  ·  Gastos ${brl(s.totalExpenses)}`, 14, y);
+      y += 6;
+
+      // 4) Grade de métricas (3x2)
+      const metrics: [string, string][] = [
         ["R$ / hora", brl(s.perHour)],
         ["R$ / dia", brl(avgPerDay)],
         ["R$ / km", brl(s.perKm)],
         ["R$ / corrida", brl(s.perRide)],
-      ],
-      theme: "striped",
-    });
-    autoTable(doc, {
-      head: [["Data", "Tipo", "App/Categoria", "Km", "Horas", "Valor"]],
-      body: filtered.map((e) =>
+        ["Dias ativos", String(workedDays)],
+        ["KM total", num(s.totalKm, 1)],
+      ];
+      const cellW = (pageW - 28) / 3;
+      const cellH = 16;
+      metrics.forEach((m, idx) => {
+        const col = idx % 3;
+        const row = Math.floor(idx / 3);
+        const x = 14 + col * cellW;
+        const cy = y + row * (cellH + 2);
+        doc.setDrawColor(226, 232, 240);
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(x, cy, cellW - 3, cellH, 1.5, 1.5, "FD");
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.text(m[0], x + 3, cy + 5.5);
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text(m[1], x + 3, cy + 12);
+      });
+      y += 2 * (cellH + 2) + 4;
+
+      // 5) Tabela de lançamentos
+      const tableBody = filtered.map((e) =>
         e.type === "earning"
-          ? [format(new Date(e.date), "dd/MM HH:mm"), "Ganho", platformMetaFor(e.app).label, String(e.km), String(e.hours), brl(e.gross)]
-          : [format(new Date(e.date), "dd/MM HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "-", "-", brl(e.expense.amount)]
-      ),
-      theme: "grid",
-      styles: { fontSize: 9 },
-    });
-    doc.save(`volant-${format(new Date(), "yyyyMMdd")}.pdf`);
-    toast.success("PDF exportado!");
+          ? [
+              format(new Date(e.date), "dd/MM HH:mm"),
+              "Ganho",
+              platformMetaFor(e.app).label,
+              num(e.km, 1),
+              num(e.hours, 2),
+              brl(e.gross),
+            ]
+          : [
+              format(new Date(e.date), "dd/MM HH:mm"),
+              "Gasto",
+              expenseMetaFor(e.expense.category).label,
+              "—",
+              "—",
+              brl(e.expense.amount),
+            ]
+      );
+
+      autoTable(doc, {
+        startY: y,
+        head: [["Data", "Tipo", "App/Categoria", "KM", "Horas", "Valor"]],
+        body: tableBody,
+        theme: "striped",
+        styles: { fontSize: 9, cellPadding: 2.2, textColor: [30, 41, 59] },
+        headStyles: {
+          fillColor: [15, 23, 42],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "left",
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          3: { halign: "right" },
+          4: { halign: "right" },
+          5: { halign: "right", fontStyle: "bold" },
+        },
+        didParseCell: (data) => {
+          if (data.section !== "body") return;
+          const tipo = String(data.row.raw?.[1] ?? "");
+          if (data.column.index === 1 || data.column.index === 5) {
+            if (tipo === "Ganho") data.cell.styles.textColor = [22, 163, 74];
+            else if (tipo === "Gasto") data.cell.styles.textColor = [220, 38, 38];
+          }
+        },
+        margin: { left: 14, right: 14, bottom: 20 },
+        didDrawPage: () => {
+          // Rodapé
+          doc.setFillColor(34, 197, 94);
+          doc.rect(0, pageH - 14, pageW, 0.8, "F");
+          doc.setTextColor(100, 116, 139);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.text(
+            "Gestão Financeira Inteligente para motoristas de app",
+            pageW / 2,
+            pageH - 9,
+            { align: "center" }
+          );
+          doc.setFontSize(7);
+          doc.setTextColor(148, 163, 184);
+          doc.text(
+            `Gerado pelo Volant em ${genDate} · usevolant.app`,
+            pageW / 2,
+            pageH - 5,
+            { align: "center" }
+          );
+        },
+      });
+
+      doc.save(`volant-${format(new Date(), "yyyyMMdd")}.pdf`);
+      toast.success("PDF exportado!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Não foi possível exportar PDF agora.");
+    }
   };
 
   const summaryRows: [string, string][] = [
@@ -244,27 +385,164 @@ export default function Reports() {
 
   const exportXLSX = async () => {
     try {
-      const XLSX = await import("xlsx");
+      const XLSX: typeof import("xlsx-js-style") = await import("xlsx-js-style");
       const wb = XLSX.utils.book_new();
 
-      const resumo = XLSX.utils.aoa_to_sheet([
-        ["Volant — Relatório"],
-        [`Período: ${periodLabel}`],
-        [`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`],
-        [],
-        ["Indicador", "Valor"],
-        ...summaryRows,
-      ]);
-      XLSX.utils.book_append_sheet(wb, resumo, "Resumo");
+      const FONT = { name: "Calibri", sz: 11 };
+      const GREEN = "22C55E";
+      const DARK = "0F172A";
+      const RED_TXT = "DC2626";
+      const GREEN_TXT = "16A34A";
+      const CURRENCY_FMT = '"R$" #,##0.00';
+      const DATE_FMT = "dd/mm/yyyy hh:mm";
 
-      const lancHeader = ["Data", "Tipo", "App/Categoria", "Km", "Horas", "Corridas", "Valor (R$)", "Observações"];
-      const lancRows = filtered.map((e) =>
-        e.type === "earning"
-          ? [format(new Date(e.date), "dd/MM/yyyy HH:mm"), "Ganho", platformMetaFor(e.app).label, e.km, e.hours, e.rides ?? "", Number(e.gross.toFixed(2)), e.notes || ""]
-          : [format(new Date(e.date), "dd/MM/yyyy HH:mm"), "Gasto", expenseMetaFor(e.expense.category).label, "", "", "", Number(e.expense.amount.toFixed(2)), e.expense.description || ""]
-      );
-      const lanc = XLSX.utils.aoa_to_sheet([lancHeader, ...lancRows]);
-      XLSX.utils.book_append_sheet(wb, lanc, "Lançamentos");
+      const headerStyle = (bg: string) => ({
+        font: { ...FONT, bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+        fill: { patternType: "solid", fgColor: { rgb: bg } },
+        alignment: { vertical: "center", horizontal: "left" },
+      });
+
+      // ===== Aba Resumo =====
+      const resumo: Record<string, unknown> = {};
+      const setCell = (
+        ws: Record<string, unknown>,
+        addr: string,
+        value: unknown,
+        style?: Record<string, unknown>,
+        z?: string,
+        t?: string,
+      ) => {
+        const cell: Record<string, unknown> = { v: value };
+        if (t) cell.t = t;
+        else if (typeof value === "number") cell.t = "n";
+        else if (value instanceof Date) cell.t = "d";
+        else cell.t = "s";
+        if (z) cell.z = z;
+        if (style) cell.s = style;
+        ws[addr] = cell;
+      };
+
+      setCell(resumo, "A1", "Volant — Relatório", headerStyle(GREEN));
+      setCell(resumo, "B1", "", headerStyle(GREEN));
+      setCell(resumo, "A2", `Período: ${periodLabel}`, headerStyle(GREEN));
+      setCell(resumo, "B2", "", headerStyle(GREEN));
+      setCell(resumo, "A3", `Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, headerStyle(GREEN));
+      setCell(resumo, "B3", "", headerStyle(GREEN));
+
+      setCell(resumo, "A5", "Indicador", {
+        font: { ...FONT, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { patternType: "solid", fgColor: { rgb: DARK } },
+      });
+      setCell(resumo, "B5", "Valor", {
+        font: { ...FONT, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { patternType: "solid", fgColor: { rgb: DARK } },
+        alignment: { horizontal: "right" },
+      });
+
+      const numericMap: Record<string, { v: number; z?: string }> = {
+        "Lucro líquido": { v: s.net, z: CURRENCY_FMT },
+        Bruto: { v: s.gross, z: CURRENCY_FMT },
+        Gastos: { v: s.totalExpenses, z: CURRENCY_FMT },
+        "Dias trabalhados": { v: workedDays },
+        "KM total": { v: s.totalKm, z: "#,##0.0" },
+        "Corridas total": { v: s.totalRides },
+        "R$ / hora": { v: s.perHour, z: CURRENCY_FMT },
+        "R$ / dia": { v: avgPerDay, z: CURRENCY_FMT },
+        "R$ / km": { v: s.perKm, z: CURRENCY_FMT },
+        "R$ / corrida": { v: s.perRide, z: CURRENCY_FMT },
+      };
+      summaryRows.forEach((row, idx) => {
+        const r = 6 + idx;
+        setCell(resumo, `A${r}`, row[0], { font: FONT });
+        const m = numericMap[row[0]];
+        if (m) {
+          setCell(resumo, `B${r}`, m.v, { font: { ...FONT, bold: true }, alignment: { horizontal: "right" } }, m.z, "n");
+        } else {
+          setCell(resumo, `B${r}`, row[1], { font: { ...FONT, bold: true }, alignment: { horizontal: "right" } });
+        }
+      });
+
+      (resumo as { "!ref"?: string })["!ref"] = `A1:B${5 + summaryRows.length}`;
+      (resumo as { "!cols"?: unknown[] })["!cols"] = [{ wch: 28 }, { wch: 20 }];
+      (resumo as { "!merges"?: unknown[] })["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+      ];
+      XLSX.utils.book_append_sheet(wb, resumo as never, "Resumo");
+
+      // ===== Aba Lançamentos =====
+      const lanc: Record<string, unknown> = {};
+      const headers = ["Data", "Tipo", "App/Categoria", "KM", "Horas", "Corridas", "Valor", "Observações"];
+      const headerCellStyle = {
+        font: { ...FONT, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { patternType: "solid", fgColor: { rgb: DARK } },
+        alignment: { horizontal: "left", vertical: "center" },
+      };
+      headers.forEach((h, c) => {
+        const addr = XLSX.utils.encode_cell({ r: 0, c });
+        setCell(lanc, addr, h, headerCellStyle);
+      });
+
+      const totals = { ganhos: 0, gastos: 0 };
+      filtered.forEach((e, i) => {
+        const r = i + 1;
+        const isEarn = e.type === "earning";
+        const tipo = isEarn ? "Ganho" : "Gasto";
+        const color = isEarn ? GREEN_TXT : RED_TXT;
+        const tipoStyle = { font: { ...FONT, bold: true, color: { rgb: color } } };
+        const valStyle = { font: { ...FONT, bold: true, color: { rgb: color } }, alignment: { horizontal: "right" } };
+
+        const dateVal = new Date(e.date);
+        setCell(lanc, XLSX.utils.encode_cell({ r, c: 0 }), dateVal, { font: FONT }, DATE_FMT, "d");
+        setCell(lanc, XLSX.utils.encode_cell({ r, c: 1 }), tipo, tipoStyle);
+        if (isEarn) {
+          totals.ganhos += e.gross;
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 2 }), platformMetaFor(e.app).label, { font: FONT });
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 3 }), e.km, { font: FONT, alignment: { horizontal: "right" } }, "#,##0.0", "n");
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 4 }), e.hours, { font: FONT, alignment: { horizontal: "right" } }, "#,##0.00", "n");
+          if (e.rides != null) {
+            setCell(lanc, XLSX.utils.encode_cell({ r, c: 5 }), e.rides, { font: FONT, alignment: { horizontal: "right" } }, "0", "n");
+          }
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 6 }), Number(e.gross.toFixed(2)), valStyle, CURRENCY_FMT, "n");
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 7 }), e.notes || "", { font: FONT });
+        } else {
+          totals.gastos += e.expense.amount;
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 2 }), expenseMetaFor(e.expense.category).label, { font: FONT });
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 6 }), Number(e.expense.amount.toFixed(2)), valStyle, CURRENCY_FMT, "n");
+          setCell(lanc, XLSX.utils.encode_cell({ r, c: 7 }), e.expense.description || "", { font: FONT });
+        }
+      });
+
+      const totalsStart = filtered.length + 2;
+      const totalRowStyle = { font: { ...FONT, bold: true }, fill: { patternType: "solid", fgColor: { rgb: "F1F5F9" } } };
+      const totalGreen = { font: { ...FONT, bold: true, color: { rgb: GREEN_TXT } }, fill: { patternType: "solid", fgColor: { rgb: "F1F5F9" } }, alignment: { horizontal: "right" } };
+      const totalRed = { font: { ...FONT, bold: true, color: { rgb: RED_TXT } }, fill: { patternType: "solid", fgColor: { rgb: "F1F5F9" } }, alignment: { horizontal: "right" } };
+
+      setCell(lanc, `A${totalsStart}`, "Total Ganhos", totalRowStyle);
+      setCell(lanc, `G${totalsStart}`, Number(totals.ganhos.toFixed(2)), totalGreen, CURRENCY_FMT, "n");
+      setCell(lanc, `A${totalsStart + 1}`, "Total Gastos", totalRowStyle);
+      setCell(lanc, `G${totalsStart + 1}`, Number(totals.gastos.toFixed(2)), totalRed, CURRENCY_FMT, "n");
+      setCell(lanc, `A${totalsStart + 2}`, "Líquido", totalRowStyle);
+      setCell(lanc, `G${totalsStart + 2}`, Number((totals.ganhos - totals.gastos).toFixed(2)), { font: { ...FONT, bold: true }, fill: { patternType: "solid", fgColor: { rgb: "E2E8F0" } }, alignment: { horizontal: "right" } }, CURRENCY_FMT, "n");
+
+      const lastRow = totalsStart + 2;
+      (lanc as { "!ref"?: string })["!ref"] = `A1:H${lastRow}`;
+      (lanc as { "!freeze"?: unknown; "!views"?: unknown[] })["!views"] = [{ state: "frozen", ySplit: 1 }];
+
+      // Column widths
+      const colWidths = headers.map((h) => Math.max(h.length + 2, 10));
+      filtered.forEach((e) => {
+        const label = e.type === "earning" ? platformMetaFor(e.app).label : expenseMetaFor(e.expense.category).label;
+        colWidths[2] = Math.max(colWidths[2], label.length + 2);
+        const notes = e.type === "earning" ? (e.notes || "") : (e.expense.description || "");
+        colWidths[7] = Math.max(colWidths[7], Math.min(notes.length + 2, 40));
+      });
+      colWidths[0] = 18; // date
+      colWidths[6] = 16; // value
+      (lanc as { "!cols"?: unknown[] })["!cols"] = colWidths.map((w) => ({ wch: w }));
+
+      XLSX.utils.book_append_sheet(wb, lanc as never, "Lançamentos");
 
       XLSX.writeFile(wb, `volant-${format(new Date(), "yyyyMMdd")}.xlsx`);
       toast.success("Excel exportado!");
