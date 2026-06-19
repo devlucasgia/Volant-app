@@ -23,9 +23,13 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
-  TrendingUp, TrendingDown,
   Download, FileSpreadsheet, FileText, FileDown, FileType2,
 } from "lucide-react";
+import { PlatformLogo } from "@/components/PlatformLogo";
+import {
+  PHRASES, TONE, TONE_CLASS, INSIGHT_ICON, pickPhrase, fillPhrase,
+  type PhraseKey,
+} from "@/lib/insightPhrases";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
