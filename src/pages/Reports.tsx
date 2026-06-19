@@ -65,19 +65,6 @@ const CHARTS_LABEL_PT: Record<ChartKey, string> = {
   hours: "Horas",
 };
 
-/**
- * Number-key for the Insights card: count-up animation (0 → target, 0.6s)
- * with a subtle pulse on settle. Respects prefers-reduced-motion (snaps).
- */
-function InsightValue({ target, suffix, sign }: { target: number; suffix: string; sign: "+" | "-" | "" }) {
-  const animated = useCountUp(Math.abs(target), 600);
-  const display = `${sign}${suffix === "h" ? num(animated, 1) : Math.round(animated)}${suffix}`;
-  return (
-    <span className="inline-block animate-fade-in motion-reduce:animate-none">
-      <span className="inline-block animate-insight-pulse motion-reduce:animate-none">{display}</span>
-    </span>
-  );
-}
 
 /**
  * Smooth number transition for hero / list values when the selected period changes.
