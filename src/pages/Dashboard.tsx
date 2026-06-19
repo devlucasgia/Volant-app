@@ -453,22 +453,30 @@ export default function Dashboard() {
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <Gauge className="h-3.5 w-3.5" /> Performance
         </div>
-        <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
-          <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
-              <Clock className="h-3 w-3" /> R$ / hora
-            </div>
-            <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
-            <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
+        {s.gross === 0 && s.totalExpenses === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card px-4 py-6 shadow-sm">
+            <p className="text-center text-[13px] text-muted-foreground">
+              Registre ganhos ou gastos para ver sua performance
+            </p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
-              <Route className="h-3 w-3" /> R$ / km
+        ) : (
+          <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+                <Clock className="h-3 w-3" /> R$ / hora
+              </div>
+              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
+              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
             </div>
-            <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
-            <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+            <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+                <Route className="h-3 w-3" /> R$ / km
+              </div>
+              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
+              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     ) : null,
 
