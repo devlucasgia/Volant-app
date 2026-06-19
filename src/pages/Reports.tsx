@@ -171,7 +171,7 @@ export default function Reports() {
     return set.size;
   }, [filtered]);
 
-  const avgPerDay = workedDays > 0 ? s.net / workedDays : 0;
+  const avgPerDay = workedDays > 0 ? s.gross / workedDays : 0;
 
   const exportCSV = () => {
     const rows = [
