@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { useUI } from "@/context/UIContext";
+import { useTimer } from "@/context/TimerContext";
 import { supabase } from "@/integrations/supabase/client";
 import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAllTime, goalForPeriod, type CustomRange } from "@/lib/stats";
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight, Coffee } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight, Coffee, BarChart3, Receipt } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -40,6 +41,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { isPaidPremium } = useSubscription(user?.id);
   const { openDrawer } = useUI();
+  const { state: timerState } = useTimer();
   const [period, setPeriod] = useState<Period>("day");
   const navigate = useNavigate();
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
@@ -452,28 +454,49 @@ export default function Dashboard() {
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <Gauge className="h-3.5 w-3.5" /> Performance
         </div>
-        <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
-          <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
-              <Clock className="h-3 w-3" /> R$ / hora
-            </div>
-            <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
-            <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
+        {s.gross === 0 && s.totalExpenses === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card px-4 py-6 shadow-sm">
+            <p className="text-center text-[13px] text-muted-foreground">
+              Registre ganhos ou gastos para ver sua performance
+            </p>
           </div>
-          <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
-              <Route className="h-3 w-3" /> R$ / km
+        ) : (
+          <div className="grid grid-cols-2 divide-x divide-border rounded-2xl border border-border bg-card p-1 shadow-sm">
+            <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-success">
+                <Clock className="h-3 w-3" /> R$ / hora
+              </div>
+              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perHour)}</div>
+              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
             </div>
-            <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
-            <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+            <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+                <Route className="h-3 w-3" /> R$ / km
+              </div>
+              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
+              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+            </div>
           </div>
-        </div>
+        )}
       </section>
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
+      const isJourneyActive = timerState === "running" || timerState === "resting" || timerState === "ended";
+      // Dia de folga sem jornada iniciada — mensagem discreta.
+      if (isFolgaToday && !isJourneyActive) {
+        return (
+          <div key="smartKm" className="flex flex-col items-center">
+            <span aria-hidden className="h-0.5 w-px bg-gradient-to-b from-success/35 to-transparent" />
+            <div className="mx-auto flex w-[88%] items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+              <p className="text-center text-[12px] text-muted-foreground">
+                Hoje é dia de descanso. Nenhuma meta de km calculada.
+              </p>
+            </div>
+          </div>
+        );
+      }
       // Caso "KM planejado atingido" — plano configurado, mas remainingPlannedKm <= 0.
-      // Mantém o slot na home com um aviso acionável em vez de sumir.
       if (plan.isPlanningConfigured && plan.remainingPlannedKm <= 0 && smartKmValue === null) {
         return (
           <div key="smartKm" className="flex flex-col items-center">
@@ -505,131 +528,112 @@ export default function Dashboard() {
       if (smartKmValue === null) return null;
       const showGross = showGrossView;
       const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
-      const themeBg = showGross ? "bg-[hsl(var(--goal-gross))]/10" : "bg-success/10";
       const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
       const connectorClass = showGross
         ? "bg-gradient-to-b from-[hsl(var(--goal-gross))]/35 to-transparent"
         : "bg-gradient-to-b from-success/35 to-transparent";
-      const hasFooter = plan.plannedKmTotal > 0;
-      const statusTone =
-        plan.status === "ahead" ? "text-success/90"
-        : plan.status === "behind" ? "text-amber-400/90"
-        : plan.status === "needs_adjustment" ? "text-rose-400/90"
-        : "text-muted-foreground/75";
       return (
         <div key="smartKm" className="flex flex-col items-center">
-          {/* Ultra-subtle vertical connector — premium, almost invisible */}
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
-          <div
+          <button
+            type="button"
+            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             className={cn(
-              "mx-auto w-[88%] overflow-hidden rounded-2xl border bg-card shadow-sm",
+              "group mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder,
             )}
           >
-            <button
-              type="button"
-              onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-              aria-label="Ver cálculo"
-              className="group relative flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-2.5 transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-            >
-              <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", themeBg, themeIcon)}>
-                <Gauge className="h-5 w-5" />
-              </span>
-              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                <div className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground leading-tight">
-                  R$/km inteligente
-                </div>
-                <div className="mt-1 flex items-center justify-center gap-1 text-[17px] font-bold tabular-nums text-foreground leading-tight">
-                  {brl(smartKmValue)}
-                  <span className="text-[12px] font-normal text-muted-foreground">/ km</span>
-                </div>
+            <span className={cn("shrink-0", themeIcon)}>
+              <Gauge className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-semibold text-foreground">R$/km mínimo</span>
+                <span className="text-sm font-bold tabular-nums text-foreground">{brl(smartKmValue)} <span className="text-[12px] font-normal text-muted-foreground">/ km</span></span>
               </div>
-              <span className="flex h-10 w-10 shrink-0 items-center justify-end">
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
-              </span>
-            </button>
-            {hasFooter && (
-              <div className="border-t border-border/40 bg-muted/20 px-4 py-2">
-                <div className="flex items-center justify-center gap-2 text-[10.5px] tabular-nums">
-                  <span className="text-muted-foreground/80">
-                    Alvo <span className="font-medium text-foreground/85">{brl(showGross ? plan.homeGrossTarget : plan.homeNetTarget)}</span>
-                  </span>
-                  <span aria-hidden className="text-muted-foreground/50">•</span>
-                  <span className={cn("font-medium", statusTone)}>
-                    {Math.round(plan.remainingPlannedKm).toLocaleString("pt-BR")} km restantes
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+          </button>
         </div>
       );
     })() : null,
 
 
     byApp: widgets.byApp ? (
-      <div key="byApp" className="rounded-2xl border border-border bg-card p-4">
-        <div className="mb-3 text-sm font-semibold">Por aplicativo</div>
-        {activeApps.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-            Nenhum ganho registrado neste período.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {activeApps.map((k) => {
-              const v = apps[k];
-              const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
-              const meta = platformMetaFor(k);
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <div className="flex min-w-[120px] items-center gap-2">
-                    <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
-                    <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+      <section key="byApp">
+        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {activeApps.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+              Nenhum ganho registrado neste período.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeApps.map((k) => {
+                const v = apps[k];
+                const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
+                const meta = platformMetaFor(k);
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <div className="flex min-w-[120px] items-center gap-2">
+                      <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
+                      <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
+                    </div>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
-                  </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     ) : null,
 
     byExpense: widgets.byExpense ? (
-      <div key="byExpense" className="rounded-2xl border border-border bg-card p-4">
-        <div className="mb-3 text-sm font-semibold">Por gastos</div>
-        {activeExp.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
-            Nenhum gasto registrado neste período.
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {activeExp.map((k) => {
-              const v = expCats[k];
-              const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
-              const Meta = expenseMetaFor(k);
-              return (
-                <div key={k} className="flex items-center gap-3">
-                  <span
-                    className="inline-flex h-7 min-w-[120px] items-center gap-1.5 rounded-md px-2 text-xs font-bold text-white"
-                    style={{ backgroundColor: Meta.hex }}
-                  >
-                    <span className="text-base leading-none">{Meta.emoji}</span>
-                    {Meta.label}
-                  </span>
-                  <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                    <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
+      <section key="byExpense">
+        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <Receipt className="h-3.5 w-3.5" /> Por gastos
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-4">
+          {activeExp.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
+              Nenhum gasto registrado neste período.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeExp.map((k) => {
+                const v = expCats[k];
+                const pct = s.totalExpenses > 0 ? (v / s.totalExpenses) * 100 : 0;
+                const Meta = expenseMetaFor(k);
+                const badgeContent = Meta.emoji || Meta.label.charAt(0).toUpperCase();
+                return (
+                  <div key={k} className="flex items-center gap-3">
+                    <div className="flex min-w-[120px] items-center gap-2">
+                      <span
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+                        style={{ backgroundColor: `${Meta.hex}22`, color: Meta.hex }}
+                        aria-label={Meta.label}
+                      >
+                        {badgeContent}
+                      </span>
+                      <span className="truncate text-xs font-semibold text-foreground">{Meta.label}</span>
+                    </div>
+                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                      <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
                   </div>
-                  <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
     ) : null,
 
     journey: widgets.journey ? (
