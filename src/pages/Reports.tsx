@@ -1125,7 +1125,7 @@ export default function Reports() {
                     <button
                       key={c.key}
                       type="button"
-                      onClick={() => handleChartChange(c.key)}
+                      onClick={() => setChart(c.key)}
                       className={cn(
                         "rounded-full px-2 py-1.5 text-xs font-medium text-center transition-colors",
                         !active && "bg-foreground/[0.04] text-muted-foreground hover:text-foreground",
