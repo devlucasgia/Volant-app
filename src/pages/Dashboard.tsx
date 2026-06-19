@@ -481,13 +481,12 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
-      const isJourneyActive = timerState === "running" || timerState === "resting" || timerState === "ended";
-      // Dia de folga sem jornada iniciada — mensagem discreta.
-      if (isFolgaToday && !isJourneyActive) {
+      // Dia de folga sem jornada/decisão de trabalhar — mensagem discreta.
+      if (isFolgaTodayEffective) {
         return (
           <div key="smartKm" className="flex flex-col items-center">
             <span aria-hidden className="h-0.5 w-px bg-gradient-to-b from-success/35 to-transparent" />
-            <div className="mx-auto flex w-[88%] items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+            <div className="flex w-full items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
               <p className="text-center text-[12px] text-muted-foreground">
                 Hoje é dia de descanso. Nenhuma meta de km calculada.
               </p>
@@ -503,7 +502,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-              className="group mx-auto flex w-[88%] items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-left shadow-sm transition-all hover:bg-amber-400/[0.08] active:scale-[0.99]"
+              className="group flex w-full items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-left shadow-sm transition-all hover:bg-amber-400/[0.08] active:scale-[0.99]"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-400">
                 <Gauge className="h-5 w-5" />
@@ -538,18 +537,20 @@ export default function Dashboard() {
             type="button"
             onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             className={cn(
-              "group mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+              "group flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder,
             )}
           >
             <span className={cn("shrink-0", themeIcon)}>
               <Gauge className="h-4 w-4" />
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-sm font-semibold text-foreground">R$/km mínimo</span>
-                <span className="text-sm font-bold tabular-nums text-foreground">{brl(smartKmValue)} <span className="text-[12px] font-normal text-muted-foreground">/ km</span></span>
-              </div>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="text-[12px] text-muted-foreground">R$/km mínimo</span>
+              <span aria-hidden className="text-muted-foreground/40">·</span>
+              <span className="text-[17px] font-bold tabular-nums text-foreground leading-none">
+                {brl(smartKmValue)}
+                <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
+              </span>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
           </button>
