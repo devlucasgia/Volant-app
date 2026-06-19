@@ -481,6 +481,8 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
+      // Folga passada: não faz sentido exibir cálculo de R$/km para um dia não trabalhado.
+      if (isFolga && !isFolgaToday) return null;
       // Dia de folga sem jornada/decisão de trabalhar — mensagem discreta.
       if (isFolgaTodayEffective) {
         return (
@@ -545,12 +547,20 @@ export default function Dashboard() {
               <Gauge className="h-4 w-4" />
             </span>
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="text-[12px] text-muted-foreground">R$/km mínimo</span>
-              <span aria-hidden className="text-muted-foreground/40">·</span>
-              <span className="text-[17px] font-bold tabular-nums text-foreground leading-none">
+              <span className="shrink-0 text-[12px] text-muted-foreground">R$/km mínimo</span>
+              <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
+              <span className="shrink-0 text-[17px] font-bold tabular-nums text-foreground leading-none">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
+              {plan.remainingPlannedKm > 0 && (
+                <>
+                  <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
+                  <span className="truncate text-[12px] tabular-nums text-muted-foreground">
+                    {num(plan.remainingPlannedKm, 0)} km restantes
+                  </span>
+                </>
+              )}
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
           </button>
@@ -560,8 +570,12 @@ export default function Dashboard() {
 
 
     byApp: widgets.byApp ? (() => {
+      const insideUnified = Boolean(widgets.byExpense);
       const block = (
-        <div className={widgets.byExpense ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+          {insideUnified && (
+            <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por app</div>
+          )}
           {activeApps.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum ganho registrado neste período.
@@ -604,8 +618,12 @@ export default function Dashboard() {
     })() : null,
 
     byExpense: widgets.byExpense ? (() => {
+      const insideUnified = Boolean(widgets.byApp);
       const block = (
-        <div className={widgets.byApp ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+          {insideUnified && (
+            <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por gastos</div>
+          )}
           {activeExp.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum gasto registrado neste período.
@@ -967,6 +985,7 @@ export default function Dashboard() {
             let block: React.ReactNode = blocks[k];
 
             if (k === unifiedSlotKey) {
+              const bothEmpty = activeApps.length === 0 && activeExp.length === 0;
               block = (
                 <section key="appsExpenses">
                   <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -974,7 +993,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
                     {blocks.byApp}
-                    <div className="border-t border-border/30" />
+                    {!bothEmpty && <div className="border-t border-border/30" />}
                     {blocks.byExpense}
                   </div>
                 </section>

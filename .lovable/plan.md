@@ -1,149 +1,110 @@
-# Sprint A — Jornada + Correções Visuais (v2)
+## Sprint — Correções Pós Sprint A + Fix Relatórios
 
-Escopo: `src/components/JourneyModule.tsx`, `src/pages/Dashboard.tsx`, `src/index.css`. Sem mexer em queries, DataContext, planningEngine, useHomeOrder, AuthContext ou outras telas.
+Alterações pontuais em três arquivos: `src/pages/Dashboard.tsx`, `src/components/JourneyModule.tsx` e `src/pages/Reports.tsx`. Sem mexer em queries, contextos, planningEngine, useHomeOrder, cálculos ou demais telas.
 
-## Item 1 — Card Jornada "não iniciada"
+---
 
-Em `JourneyModule.tsx`, no ramo `state === "idle"`:
-- Trocar o `<section>` raiz por `<button type="button">` full-width clicável que chama `openGoal(false)`.
-- Remover o botão "Iniciar" da direita.
-- Conteúdo centralizado: ícone `Play` + "Iniciar jornada" / "Toque no card para iniciar".
-- Chevron `›` discreto no canto direito.
-- Borda animada por modo (`heroView`):
-  - Líquido → `border-success/70`
-  - Bruto → `border-[hsl(var(--goal-gross))]/70`
-- Animação "breathing" via utilitário novo em `src/index.css`:
-  ```css
-  @keyframes breath { 0%,100% { opacity: 1 } 50% { opacity: .45 } }
-  .animate-breath { animation: breath 2s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) { .animate-breath { animation: none; } }
-  ```
-- `aria-label="Iniciar jornada"`.
+### Item 1 — KM Inteligente: linha única com km restantes
 
-## Item 2 — Estados "ativo" e "em descanso"
+**Arquivo:** `src/pages/Dashboard.tsx` (bloco `smartKm`, ~linhas 547-553)
 
-- Botão encerrar com ícone `Square` (lucide), `aria-label`, mantendo `AlertDialog` existente. Título: "Encerrar a jornada de hoje?" / botões "Cancelar" e "Encerrar".
-- Reequilibrar layout: esquerda com dot + cronômetro + label compactos; direita agrupa Pausar/Retornar e Encerrar com `size="sm"` (mesma altura `h-9`) e `gap-2`. Trocar o `size="icon"` do encerrar por `size="sm"` para igualar peso visual.
+Adicionar terceiro elemento na linha, lendo `plan.remainingPlannedKm` (mesmo dado já calculado pelo planningEngine, sem novo cálculo):
 
-## Item 3 — Modal Meta da Jornada (redesign)
-
-- `goalValue` inicia `null` ao abrir (sem pré-preenchimento). Placeholder `R$ 0,00`.
-- Chip clicável abaixo do campo:
-  ```
-  💡 Sugestão do Volant: R$ {suggestedDaily} — toque para usar
-  ```
-  Visual: `inline-flex rounded-full border border-success/40 bg-success/10 px-3 py-1.5 text-[12px] font-semibold text-success`. `onClick={() => setGoalValue(suggestedDaily)}`.
-- Feedback condicional (com `min-h-[16px]` para evitar layout shift):
-  - `> sugestão` → "Boa! Os próximos dias ficam mais tranquilos." (`text-success`).
-  - `0 < valor < sugestão` → "Os próximos dias vão precisar compensar." (`text-warning`).
-  - igual / vazio / zero → nada.
-- Substituir `DrawerDescription`:
-  > "Sua meta sugerida é calculada pelo Volant com base no que ainda falta pro mês. Você pode ajustar para hoje — se passar da sugestão, os próximos dias ficam mais leves. Se ficar abaixo, eles compensam."
-
-## Item 4 — Lógica de dia de folga
-
-### 4a. Override de sessão (sem mexer no planningEngine)
-
-Flag local: `localStorage` chave `volant_folga_worked_${todayIso}` + custom event `volant:folgaWorkedChanged` (mesmo padrão de `volant:dayGoalChanged`).
-
-Em `Dashboard.tsx`:
-```ts
-// Apontamento 1 — duas condições: flag local OU jornada já em andamento
-const isFolgaTodayEffective =
-  isFolgaToday && !folgaWorkedToday && timerState === "idle";
 ```
-Substituir os usos de `isFolgaToday` que controlam UI da Home (card Meta, card KM Inteligente, card Jornada) por `isFolgaTodayEffective`. `isFolga` para dias passados permanece intacto.
+⚡ R$/km mínimo  ·  R$ 1,46 /km  ·  2.985 km restantes  ›
+```
 
-### 4b. Card Jornada — visual de folga
+Estrutura:
+- "R$/km mínimo" → `text-[12px] text-muted-foreground` (mantido)
+- `·` separador → `text-muted-foreground/40`
+- "R$ 1,46 /km" → `text-[17px] font-bold tabular-nums` (mantido)
+- `·` separador → `text-muted-foreground/40`
+- "X km restantes" → `text-[12px] text-muted-foreground tabular-nums` (formato `num(remainingPlannedKm, 0)`)
+- `›` à direita (mantido)
 
-Passar `isFolgaToday` como prop ao `JourneyModule`. Quando `isFolgaToday && state === "idle"`:
-- Card clicável (mesmo padrão Item 1), sem borda pulsante e sem cor de modo.
-- Borda `border-border`, bg `bg-muted/20`.
-- Ícone `Coffee` no lugar do `Play`.
-- "Dia de folga" / "Se quiser rodar hoje mesmo assim, toque aqui".
+Renderiza o terceiro elemento somente quando `plan.remainingPlannedKm > 0`. Em telas estreitas o flex já gerencia overflow do bloco central.
 
-### 4c. Modal em dia de folga
+---
 
-Aviso no topo do drawer (antes do label "Meta (R$)"):
+### Item 2 — KM Inteligente: ocultar em folga passada
+
+**Arquivo:** `src/pages/Dashboard.tsx` (bloco `smartKm`, início ~linha 483)
+
+Adicionar guarda no topo do bloco `smartKm`: se `isFolga && !isFolgaToday`, retornar `null` (mesmo critério já usado no card de Meta para folga passada). Não altera o comportamento de folga de hoje (`isFolgaTodayEffective`) já existente.
+
+---
+
+### Item 3 — Card Jornada idle: centralizar conteúdo
+
+**Arquivo:** `src/components/JourneyModule.tsx` (botão idle)
+
+Hoje o botão usa um `<span>` spacer de 16px à esquerda + bloco central `flex-1 justify-center` + chevron de 16px à direita. A simetria de spacers deveria centralizar, mas o conteúdo parece deslocado. Corrigir trocando para layout absoluto:
+
+- Botão: `relative flex items-center justify-center` (sem `justify-between`)
+- Remover o spacer esquerdo
+- Bloco central: `flex items-center gap-3` (sem `flex-1`, conteúdo se centraliza naturalmente no flex parent)
+- Chevron: `absolute right-4 top-1/2 -translate-y-1/2`
+
+Garante centralização horizontal real do ícone + textos; chevron permanece ancorado à direita sem afetar o cálculo de centro.
+
+---
+
+### Item 4 — Modal Meta da Jornada: estabilizar abertura
+
+**Arquivo:** `src/components/JourneyModule.tsx` (`renderGoalDrawer`)
+
+Adicionar altura mínima e scroll no `DrawerContent`:
+- `DrawerContent className="min-h-[60vh] max-h-[92vh]"`
+- Wrapper interno `mx-auto w-full max-w-md` → adicionar `flex flex-col` e `overflow-y-auto` no bloco do conteúdo (entre header e footer), garantindo que o chip de sugestão e os botões "Cancelar" / "Iniciar jornada" fiquem sempre visíveis mesmo com teclado virtual aberto.
+
+Sem alterar conteúdo, textos ou lógica do modal.
+
+---
+
+### Item 5 — Ganhos e Gastos: micro-labels por bloco
+
+**Arquivo:** `src/pages/Dashboard.tsx` (~linhas 562-654 — blocos `byApp` e `byExpense`)
+
+Quando os blocos renderizam dentro do card unificado (`widgets.byApp && widgets.byExpense`), adicionar no topo de cada `block` (antes do conteúdo) um micro-label:
+
 ```tsx
-<div className="mb-3 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] leading-snug text-warning">
-  Hoje é dia de folga no seu planejamento. Se trabalhar, o que você ganhar vai aliviar as metas dos próximos dias.
-</div>
+<div className="mb-2 text-[10px] font-medium text-muted-foreground">Por app</div>
 ```
 
-Em `confirmGoalAndStart`, se `isFolgaToday`: setar `localStorage` e disparar `volant:folgaWorkedChanged` antes de `start()`.
+e equivalente "Por gastos" no bloco de gastos. Renderizar somente quando estiverem dentro do unificado (i.e. quando o outro também está visível) — quando isolados, o eyebrow externo já identifica.
 
-### 4d. Card Meta — folga passada
+---
 
-Quando `isFolga && !isFolgaToday`: manter label "Dia de folga" + chip "Descanso" + texto "Este dia não está no seu planejamento." Ocultar `Progress` e linha de valor/total.
+### Item 6 — Ganhos e Gastos: divisória no estado vazio
 
-### 4e. Limpeza
+**Arquivo:** `src/pages/Dashboard.tsx` (~linha 977, render do card unificado)
 
-Remover o chip antigo "Trabalhar hoje mesmo assim" do card de Meta (linhas 401-428 de Dashboard.tsx) — substituído integralmente pelo card de Jornada.
+A divisória `<div className="border-t border-border/30" />` deve aparecer somente quando pelo menos um bloco tem dados. Quando `activeApps.length === 0 && activeExp.length === 0`, omitir a divisória — os dois textos "Nenhum registro" ficam empilhados sem separador.
 
-## Item 5 — KM Inteligente ajustes
+Calcular `bothEmpty = activeApps.length === 0 && activeExp.length === 0` e renderizar a divisória condicionalmente.
 
-No bloco `smartKm`:
-- Remover `w-[88%] mx-auto` (em todos os três sub-estados); usar `w-full`.
-- Layout label/valor:
-  ```tsx
-  <span className="text-[12px] text-muted-foreground">R$/km mínimo</span>
-  <span className="text-muted-foreground/40">·</span>
-  <span className="text-[17px] font-bold tabular-nums text-foreground">
-    {brl(smartKmValue)}<span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
-  </span>
-  ```
-- Não alterar lógica, navegação, nem tela de detalhe.
+---
 
-## Item 6 — Unificar "Por aplicativo" e "Por gastos"
+### Item 7 — Relatórios: corrigir capitalização da data
 
-Criar um node renderizado uma única vez no slot do **primeiro** entre `byApp` e `byExpense` na ordem do usuário (Apontamento 2):
+**Arquivo:** `src/pages/Reports.tsx` (linha 1107)
 
-```ts
-const appsIdx = orderedKeys.indexOf("byApp");
-const expIdx  = orderedKeys.indexOf("byExpense");
-const bothVisible = widgets.byApp && widgets.byExpense;
-const unifiedSlotKey =
-  bothVisible
-    ? (appsIdx >= 0 && expIdx >= 0
-        ? (appsIdx < expIdx ? "byApp" : "byExpense")
-        : "byApp")
-    : null;
-```
+`format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })` retorna "junho de 2026" em minúsculo. A classe `capitalize` do Tailwind está forçando "Junho De 2026" (Title Case word-by-word).
 
-Render:
-- Quando `bothVisible`: no slot `unifiedSlotKey` renderizar o card unificado; no slot do outro retornar `null`.
-- Quando apenas um estiver visível: render isolado com o eyebrow original (comportamento atual).
+Solução: remover a classe `capitalize` do `<span>` na linha 1107. Resultado: "junho de 2026". As demais formatações da tela (`yyyy`, `dd/MM/yy`) não exibem mês textual, então não precisam de ajuste.
 
-Card unificado:
-```tsx
-<section key="appsExpenses">
-  <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-    <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
-  </div>
-  <div className="rounded-2xl border border-border bg-card p-4 space-y-4">
-    {/* bloco apps — listagem atual intacta */}
-    <div className="border-t border-border/30" />
-    {/* bloco gastos — listagem atual intacta */}
-  </div>
-</section>
-```
+---
 
-Sem mexer em `useHomeOrder`. Cálculos de barra/percentuais inalterados.
+### Critérios de aceite
 
-## Critérios de aceite
+1. KM Inteligente exibe `R$/km mínimo · R$ X,XX /km · N km restantes ›`.
+2. KM Inteligente não renderiza em dia de folga passado.
+3. Conteúdo do card Jornada idle visualmente centralizado; chevron à direita.
+4. Modal de Meta abre com `min-h-[60vh]`; botões sempre acessíveis com teclado aberto.
+5. Micro-labels "Por app" e "Por gastos" presentes dentro do card unificado.
+6. Divisória interna some quando ambos blocos vazios.
+7. Cabeçalho mensal dos Relatórios em minúsculo: "junho de 2026".
 
-1. Card jornada idle: card inteiro clicável, conteúdo centralizado, sem botão separado, chevron à direita.
-2. Borda pulsante respeita `prefers-reduced-motion`.
-3. Encerrar com ícone `Square` + diálogo.
-4. Modal: campo vazio, chip clicável, feedback condicional, texto reescrito.
-5. Folga hoje: card neutro com ícone `Coffee`.
-6. Modal em folga: aviso no topo.
-7. Após iniciar em folga: Home volta ao estado de trabalho via flag local **ou** se a jornada já estiver rodando, sem alterar `planningSelectedDates`.
-8. Folga passada: só label/texto, sem barra/valor.
-9. KM Inteligente: largura full, separador `·`, número médio bold.
-10. Card "Ganhos e gastos" unificado, posicionado no primeiro slot entre `byApp` e `byExpense` da ordem do usuário.
+### Não altera
 
-## Não altera
-
-Queries Supabase, DataContext, summarize, useHomeOrder, planningEngine (cálculos), AuthContext, Performance, Relatórios, Histórico, Ajustes, Admin, tela de detalhe do KM Inteligente.
+Queries Supabase, DataContext, summarize, useHomeOrder, planningEngine (cálculos), AuthContext, lógica de folga (Sprint A), JourneyModule em estados ativo/descanso/encerrado, cálculos do smartRpk, tela de detalhe do KM Inteligente, Histórico, Ajustes, Admin.

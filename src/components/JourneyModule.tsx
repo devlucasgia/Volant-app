@@ -134,16 +134,13 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           onClick={() => openGoal(false)}
           aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
           className={cn(
-            "group relative flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "group relative flex w-full items-center justify-center gap-3 rounded-2xl border px-4 py-4 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             isFolga
               ? "border-border bg-muted/20"
               : cn("bg-card animate-breath", pulseBorder),
           )}
         >
-          {/* Spacer esquerdo (mesma largura do chevron) para centralizar conteúdo */}
-          <span aria-hidden className="h-4 w-4 shrink-0" />
-
-          <div className="flex flex-1 items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-3">
             <span
               className={cn(
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
@@ -166,7 +163,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
             </div>
           </div>
 
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
+          <ChevronRight className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
         </button>
 
         {renderGoalDrawer()}
@@ -177,8 +174,8 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
   function renderGoalDrawer() {
     return (
       <Drawer open={goalOpen} onOpenChange={setGoalOpen}>
-        <DrawerContent>
-          <div className="mx-auto w-full max-w-md">
+        <DrawerContent className="min-h-[60vh] max-h-[92vh]">
+          <div className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-hidden">
             <DrawerHeader className="items-center text-center pb-2">
               <div className="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10">
                 <Target className="h-5 w-5 text-primary" />
@@ -188,7 +185,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
                 Sua meta sugerida é calculada pelo Volant com base no que ainda falta pro mês. Você pode ajustar para hoje — se passar da sugestão, os próximos dias ficam mais leves. Se ficar abaixo, eles compensam.
               </DrawerDescription>
             </DrawerHeader>
-            <div className="space-y-2 px-5 pb-1">
+            <div className="flex-1 space-y-2 overflow-y-auto px-5 pb-1">
               {isFolgaToday && (
                 <div className="mb-3 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-[12px] leading-snug text-warning">
                   Hoje é dia de folga no seu planejamento. Se trabalhar, o que você ganhar vai aliviar as metas dos próximos dias.
@@ -215,7 +212,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
                 {feedback?.text}
               </div>
             </div>
-            <div className="flex gap-2 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+            <div className="flex shrink-0 gap-2 border-t border-border/40 px-5 py-4 pb-[calc(env(safe-area-inset-bottom)+16px)]">
               <Button variant="outline" className="h-11 flex-1" onClick={() => setGoalOpen(false)}>
                 Cancelar
               </Button>
