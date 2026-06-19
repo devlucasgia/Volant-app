@@ -380,31 +380,35 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{isFolga ? (isFolgaToday ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
-                {isFolga && (
+                <span className="truncate">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
+                {isFolgaEffective && (
                   <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     <Coffee className="h-2.5 w-2.5" /> Descanso
                   </span>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
-                  <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
-                  <span className="mx-1 text-muted-foreground/60">/</span>
-                  <span>{brl(periodGoal.value)}</span>
+              {!isFolgaEffective && (
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
+                    <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
+                    <span className="mx-1 text-muted-foreground/60">/</span>
+                    <span>{brl(periodGoal.value)}</span>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
-              </div>
+              )}
             </div>
 
-            <Progress
-              value={goalPct}
-              className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
-            />
-            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            {!isFolgaEffective && (
+              <Progress
+                value={goalPct}
+                className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
+              />
+            )}
+            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-2" : "mt-1.5")}>
               <span className="tabular-nums truncate">
-                {isFolga
-                  ? (isFolgaToday
+                {isFolgaEffective
+                  ? (isFolgaTodayEffective
                       ? "Hoje é seu dia de descanso. Não conta para sua meta."
                       : "Este dia não está no seu planejamento.")
                   : periodGoal.value > 0
@@ -415,38 +419,10 @@ export default function Dashboard() {
                       : `Faltam ${brl(goalRemaining)}`
                     : "Defina sua meta mensal em Ajustes"}
               </span>
-              {periodGoal.value > 0 && !isFolga && (
+              {periodGoal.value > 0 && !isFolgaEffective && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
               )}
             </div>
-            {isFolgaToday && (
-              <div className="mt-2">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const dates = settings.planningSelectedDates ?? [];
-                    if (dates.includes(todayIsoStr)) return;
-                    const next = [...dates, todayIsoStr].sort();
-                    void updateSettings({ planningSelectedDates: next });
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const dates = settings.planningSelectedDates ?? [];
-                      if (dates.includes(todayIsoStr)) return;
-                      const next = [...dates, todayIsoStr].sort();
-                      void updateSettings({ planningSelectedDates: next });
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 cursor-pointer"
-                >
-                  Trabalhar hoje mesmo assim
-                </span>
-              </div>
-            )}
             {overAmount > 0 && (
               <div className="mt-1.5">
                 <span className={cn(
