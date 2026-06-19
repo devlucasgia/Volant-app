@@ -557,7 +557,7 @@ export default function Reports() {
     const empty = { N: [] as InsightItem[], C: [] as InsightItem[], P: [] as InsightItem[] };
     if (!compare || !prevSummary || !curForInsights) return empty;
     const label = compare.label;
-    const labelText = compare.isPartial ? `mesmo período de ${label}` : label;
+    
     const MIN_BASE_MONEY = 1;
     const MIN_BASE_HOURS = 1;
     const MIN_DELTA_MONEY = 10;
