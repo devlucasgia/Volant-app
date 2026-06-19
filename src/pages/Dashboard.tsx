@@ -536,12 +536,11 @@ export default function Dashboard() {
         <div key="smartKm" className="flex flex-col items-center">
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
-            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
             onClick={() => navigate('/ajustes/planejamento')}
           >
-            {/* Grupo esquerdo — ícone + conteúdo */}
-            <div className="flex items-center gap-2 min-w-0">
-              <Gauge className="h-4 w-4 shrink-0 text-success" />
+            <Gauge className="h-4 w-4 shrink-0 text-success" />
+            <div className="flex flex-1 items-center justify-center gap-2 min-w-0">
               <span className="text-[12px] text-muted-foreground shrink-0">R$/km</span>
               <span className="text-muted-foreground/40 shrink-0">·</span>
               <span className="text-[17px] font-bold tabular-nums text-foreground shrink-0">
@@ -553,7 +552,6 @@ export default function Dashboard() {
                 {num(plan.remainingPlannedKm, 0)} km restantes
               </span>
             </div>
-            {/* Seta à direita */}
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
           </button>
         </div>
