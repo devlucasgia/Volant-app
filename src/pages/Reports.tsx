@@ -23,7 +23,7 @@ import {
 import {
   CalendarIcon, CalendarRange,
   Wallet, Receipt, CalendarDays, Route, Flag, Gauge,
-  Download, FileSpreadsheet, FileText, FileDown, FileType2,
+  Download, FileSpreadsheet, FileText, FileDown,
 } from "lucide-react";
 import { PlatformLogo } from "@/components/PlatformLogo";
 import {
