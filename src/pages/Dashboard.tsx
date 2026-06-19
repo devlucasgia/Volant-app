@@ -41,6 +41,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { isPaidPremium } = useSubscription(user?.id);
   const { openDrawer } = useUI();
+  const { state: timerState } = useTimer();
   const [period, setPeriod] = useState<Period>("day");
   const navigate = useNavigate();
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
