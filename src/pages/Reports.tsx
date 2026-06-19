@@ -1104,7 +1104,7 @@ export default function Reports() {
               <PopoverTrigger asChild>
                 <Button variant="ghost" className="flex-1 justify-center font-medium text-foreground hover:bg-foreground/[0.04]">
                   <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <span className="capitalize">{format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })}</span>
+                  <span>{format(monthRef, "MMMM 'de' yyyy", { locale: ptBR })}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">

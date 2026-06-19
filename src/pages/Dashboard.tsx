@@ -481,6 +481,8 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
+      // Folga passada: não faz sentido exibir cálculo de R$/km para um dia não trabalhado.
+      if (isFolga && !isFolgaToday) return null;
       // Dia de folga sem jornada/decisão de trabalhar — mensagem discreta.
       if (isFolgaTodayEffective) {
         return (
@@ -545,12 +547,20 @@ export default function Dashboard() {
               <Gauge className="h-4 w-4" />
             </span>
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <span className="text-[12px] text-muted-foreground">R$/km mínimo</span>
-              <span aria-hidden className="text-muted-foreground/40">·</span>
-              <span className="text-[17px] font-bold tabular-nums text-foreground leading-none">
+              <span className="shrink-0 text-[12px] text-muted-foreground">R$/km mínimo</span>
+              <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
+              <span className="shrink-0 text-[17px] font-bold tabular-nums text-foreground leading-none">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
+              {plan.remainingPlannedKm > 0 && (
+                <>
+                  <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
+                  <span className="truncate text-[12px] tabular-nums text-muted-foreground">
+                    {num(plan.remainingPlannedKm, 0)} km restantes
+                  </span>
+                </>
+              )}
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
           </button>
