@@ -1035,7 +1035,7 @@ export default function Reports() {
           )}
           <div
             key={insightToShow.id}
-            className="min-w-0 flex-1 text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none line-clamp-2"
+            className="min-w-0 flex-1 text-sm leading-snug text-foreground animate-fade-in motion-reduce:animate-none"
           >
             {phraseShown}
           </div>
