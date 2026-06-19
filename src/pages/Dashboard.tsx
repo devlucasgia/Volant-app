@@ -9,7 +9,7 @@ import { byApp, byExpenseCategory, filterByPeriod, Period, summarize, totalKmAll
 import { brl, num } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight, Coffee, BarChart3, Receipt } from "lucide-react";
+import { Wrench, Target, Clock, Route, Gauge, Timer as TimerIcon, CalendarRange, Check, TrendingUp, Eye, EyeOff, Bell, ChevronRight, Coffee, BarChart3, Receipt, ArrowLeftRight } from "lucide-react";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -227,6 +227,29 @@ export default function Dashboard() {
   }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates]);
   const isFolgaToday = isFolga && activeDayIso === todayIsoStr;
 
+  // Item 4 — flag de sessão: motorista decidiu trabalhar num dia de folga.
+  // Combina localStorage (clique no card de Jornada) com o estado do timer
+  // (se a jornada já estiver rodando, mesmo sem flag local, trata como trabalho).
+  const [folgaWorkedTick, setFolgaWorkedTick] = useState(0);
+  useEffect(() => {
+    const handler = () => setFolgaWorkedTick((t) => t + 1);
+    window.addEventListener("volant:folgaWorkedChanged", handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("volant:folgaWorkedChanged", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
+  const folgaWorkedToday = useMemo(() => {
+    try { return localStorage.getItem(`volant_folga_worked_${todayIsoStr}`) === "1"; }
+    catch { return false; }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayIsoStr, folgaWorkedTick]);
+  const isFolgaTodayEffective =
+    isFolgaToday && !folgaWorkedToday && timerState === "idle";
+  // Para dias passados isFolga permanece. Para hoje só conta se ainda não trabalhou.
+  const isFolgaEffective = isFolga && (!isFolgaToday || isFolgaTodayEffective);
+
   // Monthly projection — only when viewing the month. Uses net pace so far.
   const monthlyProjection = useMemo(() => {
     if (period !== "month") return null;
@@ -359,31 +382,35 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{isFolga ? (isFolgaToday ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
-                {isFolga && (
+                <span className="truncate">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
+                {isFolgaEffective && (
                   <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     <Coffee className="h-2.5 w-2.5" /> Descanso
                   </span>
                 )}
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
-                  <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
-                  <span className="mx-1 text-muted-foreground/60">/</span>
-                  <span>{brl(periodGoal.value)}</span>
+              {!isFolgaEffective && (
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <div className="text-right tabular-nums text-[13px] leading-tight text-muted-foreground">
+                    <span className="font-bold text-foreground">{brl(goalProgressValue)}</span>
+                    <span className="mx-1 text-muted-foreground/60">/</span>
+                    <span>{brl(periodGoal.value)}</span>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
-              </div>
+              )}
             </div>
 
-            <Progress
-              value={goalPct}
-              className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
-            />
-            <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+            {!isFolgaEffective && (
+              <Progress
+                value={goalPct}
+                className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
+              />
+            )}
+            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-2" : "mt-1.5")}>
               <span className="tabular-nums truncate">
-                {isFolga
-                  ? (isFolgaToday
+                {isFolgaEffective
+                  ? (isFolgaTodayEffective
                       ? "Hoje é seu dia de descanso. Não conta para sua meta."
                       : "Este dia não está no seu planejamento.")
                   : periodGoal.value > 0
@@ -394,38 +421,10 @@ export default function Dashboard() {
                       : `Faltam ${brl(goalRemaining)}`
                     : "Defina sua meta mensal em Ajustes"}
               </span>
-              {periodGoal.value > 0 && !isFolga && (
+              {periodGoal.value > 0 && !isFolgaEffective && (
                 <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
               )}
             </div>
-            {isFolgaToday && (
-              <div className="mt-2">
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const dates = settings.planningSelectedDates ?? [];
-                    if (dates.includes(todayIsoStr)) return;
-                    const next = [...dates, todayIsoStr].sort();
-                    void updateSettings({ planningSelectedDates: next });
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const dates = settings.planningSelectedDates ?? [];
-                      if (dates.includes(todayIsoStr)) return;
-                      const next = [...dates, todayIsoStr].sort();
-                      void updateSettings({ planningSelectedDates: next });
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/15 cursor-pointer"
-                >
-                  Trabalhar hoje mesmo assim
-                </span>
-              </div>
-            )}
             {overAmount > 0 && (
               <div className="mt-1.5">
                 <span className={cn(
@@ -482,13 +481,12 @@ export default function Dashboard() {
     ) : null,
 
     smartKm: widgets.smartKm ? (() => {
-      const isJourneyActive = timerState === "running" || timerState === "resting" || timerState === "ended";
-      // Dia de folga sem jornada iniciada — mensagem discreta.
-      if (isFolgaToday && !isJourneyActive) {
+      // Dia de folga sem jornada/decisão de trabalhar — mensagem discreta.
+      if (isFolgaTodayEffective) {
         return (
           <div key="smartKm" className="flex flex-col items-center">
             <span aria-hidden className="h-0.5 w-px bg-gradient-to-b from-success/35 to-transparent" />
-            <div className="mx-auto flex w-[88%] items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
+            <div className="flex w-full items-center justify-center rounded-2xl border border-border bg-card px-4 py-3 shadow-sm">
               <p className="text-center text-[12px] text-muted-foreground">
                 Hoje é dia de descanso. Nenhuma meta de km calculada.
               </p>
@@ -504,7 +502,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-              className="group mx-auto flex w-[88%] items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-left shadow-sm transition-all hover:bg-amber-400/[0.08] active:scale-[0.99]"
+              className="group flex w-full items-center gap-3 rounded-2xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-left shadow-sm transition-all hover:bg-amber-400/[0.08] active:scale-[0.99]"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/15 text-amber-400">
                 <Gauge className="h-5 w-5" />
@@ -539,18 +537,20 @@ export default function Dashboard() {
             type="button"
             onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
             className={cn(
-              "group mx-auto flex w-[88%] items-center justify-between gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+              "group flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
               themeBorder,
             )}
           >
             <span className={cn("shrink-0", themeIcon)}>
               <Gauge className="h-4 w-4" />
             </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
-                <span className="text-sm font-semibold text-foreground">R$/km mínimo</span>
-                <span className="text-sm font-bold tabular-nums text-foreground">{brl(smartKmValue)} <span className="text-[12px] font-normal text-muted-foreground">/ km</span></span>
-              </div>
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <span className="text-[12px] text-muted-foreground">R$/km mínimo</span>
+              <span aria-hidden className="text-muted-foreground/40">·</span>
+              <span className="text-[17px] font-bold tabular-nums text-foreground leading-none">
+                {brl(smartKmValue)}
+                <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
+              </span>
             </div>
             <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
           </button>
@@ -559,12 +559,9 @@ export default function Dashboard() {
     })() : null,
 
 
-    byApp: widgets.byApp ? (
-      <section key="byApp">
-        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
+    byApp: widgets.byApp ? (() => {
+      const block = (
+        <div className={widgets.byExpense ? "" : "rounded-2xl border border-border bg-card p-4"}>
           {activeApps.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum ganho registrado neste período.
@@ -591,15 +588,24 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </section>
-    ) : null,
+      );
+      // Quando só "Por aplicativo" está visível, renderiza isolado com eyebrow próprio.
+      if (!widgets.byExpense) {
+        return (
+          <section key="byApp">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <BarChart3 className="h-3.5 w-3.5" /> Por aplicativo
+            </div>
+            {block}
+          </section>
+        );
+      }
+      return block;
+    })() : null,
 
-    byExpense: widgets.byExpense ? (
-      <section key="byExpense">
-        <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Receipt className="h-3.5 w-3.5" /> Por gastos
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
+    byExpense: widgets.byExpense ? (() => {
+      const block = (
+        <div className={widgets.byApp ? "" : "rounded-2xl border border-border bg-card p-4"}>
           {activeExp.length === 0 ? (
             <div className="rounded-lg border border-dashed border-border/60 p-4 text-center text-xs text-muted-foreground">
               Nenhum gasto registrado neste período.
@@ -633,15 +639,26 @@ export default function Dashboard() {
             </div>
           )}
         </div>
-      </section>
-    ) : null,
+      );
+      if (!widgets.byApp) {
+        return (
+          <section key="byExpense">
+            <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <Receipt className="h-3.5 w-3.5" /> Por gastos
+            </div>
+            {block}
+          </section>
+        );
+      }
+      return block;
+    })() : null,
 
     journey: widgets.journey ? (
       <section key="journey">
         <div className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           <TimerIcon className="h-3.5 w-3.5" /> Jornada
         </div>
-        <JourneyModule />
+        <JourneyModule isFolgaToday={isFolgaTodayEffective} />
       </section>
     ) : null,
   };
@@ -926,11 +943,44 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Reorderable / hideable cards (excluding greeting which renders above) */}
-        {homeOrder
-          .filter((k) => k !== "greeting")
-          .map((k, index, arr) => {
-            const block = blocks[k];
+        {/* Reorderable / hideable cards (excluding greeting which renders above).
+            Item 6: quando byApp e byExpense estão visíveis, são unificados num
+            único card "Ganhos e gastos" renderizado no slot do primeiro deles
+            na ordem do usuário. O outro slot é suprimido. */}
+        {(() => {
+          const orderedKeys = homeOrder.filter((k) => k !== "greeting");
+          const bothVisible = Boolean(widgets.byApp && widgets.byExpense);
+          const appsIdx = orderedKeys.indexOf("byApp");
+          const expIdx = orderedKeys.indexOf("byExpense");
+          const unifiedSlotKey: HomeCardKey | null = bothVisible
+            ? (appsIdx >= 0 && expIdx >= 0
+                ? (appsIdx < expIdx ? "byApp" : "byExpense")
+                : "byApp")
+            : null;
+          const suppressedKey: HomeCardKey | null = bothVisible
+            ? (unifiedSlotKey === "byApp" ? "byExpense" : "byApp")
+            : null;
+
+          return orderedKeys.map((k, index, arr) => {
+            if (k === suppressedKey) return null;
+
+            let block: React.ReactNode = blocks[k];
+
+            if (k === unifiedSlotKey) {
+              block = (
+                <section key="appsExpenses">
+                  <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
+                  </div>
+                  <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
+                    {blocks.byApp}
+                    <div className="border-t border-border/30" />
+                    {blocks.byExpense}
+                  </div>
+                </section>
+              );
+            }
+
             if (!block) return null;
 
             const prev = index > 0 ? arr[index - 1] : null;
@@ -946,8 +996,8 @@ export default function Dashboard() {
                 {block}
               </div>
             );
-          })
-          .filter(Boolean)}
+          }).filter(Boolean);
+        })()}
       </div>
     </>
   );
