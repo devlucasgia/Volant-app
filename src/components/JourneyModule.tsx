@@ -246,8 +246,10 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
             </span>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-foreground leading-tight">Jornada encerrada</div>
-              <div className="text-[11px] text-muted-foreground leading-tight tabular-nums">
-                Trab. {formatHMS(workMs)} · Pausa {formatHMS(restMs)}
+              <div className="whitespace-nowrap text-[11px] text-muted-foreground leading-tight tabular-nums">
+                {restMs > 0
+                  ? `${formatCompactDuration(workMs)} trab. · ${formatCompactDuration(restMs)} pausa`
+                  : `${formatCompactDuration(workMs)} trabalhados`}
               </div>
             </div>
           </>
@@ -258,43 +260,40 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
       <div className="flex shrink-0 items-center gap-2">
         {state === "running" && (
           <>
-            <Button onClick={pauseRest} variant="outline" size="sm" className="h-9">
-              <Coffee className="mr-1.5 h-3.5 w-3.5" /> Pausar
+            <Button onClick={pauseRest} variant="outline" size="icon" className="h-10 w-10 text-warning" aria-label="Pausar jornada">
+              <Coffee className="h-5 w-5" />
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              size="sm"
-              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              size="icon"
+              className="h-10 w-10 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
-              <Square className="mr-1.5 h-3.5 w-3.5" fill="currentColor" /> Encerrar
+              <Square className="h-5 w-5" fill="currentColor" />
             </Button>
           </>
         )}
 
         {state === "resting" && (
           <>
-            <Button onClick={resumeWork} size="sm" className={cn("h-9 transition-colors duration-500", journeyAccentBtn)}>
-              <Play className="mr-1.5 h-3.5 w-3.5" /> Retornar
+            <Button onClick={resumeWork} size="icon" className={cn("h-10 w-10 transition-colors duration-500", journeyAccentBtn)} aria-label="Retornar à jornada">
+              <Play className="h-5 w-5" fill="currentColor" />
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
-              size="sm"
-              className="h-9 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              size="icon"
+              className="h-10 w-10 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               aria-label="Encerrar jornada"
             >
-              <Square className="mr-1.5 h-3.5 w-3.5" fill="currentColor" /> Encerrar
+              <Square className="h-5 w-5" fill="currentColor" />
             </Button>
           </>
         )}
 
         {isEnded && (
           <>
-            <Button onClick={() => openGoal(true)} size="sm" className={cn("h-9 transition-colors duration-500", journeyAccentBtn)}>
-              <Play className="mr-1.5 h-3.5 w-3.5" /> Nova
-            </Button>
-            <Button onClick={reset} variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground" aria-label="Limpar tempos">
-              <RotateCcw className="h-4 w-4" />
+            <Button onClick={() => openGoal(true)} size="icon" className={cn("h-10 w-10 transition-colors duration-500", journeyAccentBtn)} aria-label="Nova jornada">
+              <RotateCcw className="h-5 w-5" />
             </Button>
           </>
         )}
