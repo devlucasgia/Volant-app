@@ -536,33 +536,25 @@ export default function Dashboard() {
         <div key="smartKm" className="flex flex-col items-center">
           <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
           <button
-            type="button"
-            onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
-            className={cn(
-              "group flex w-full items-center gap-3 rounded-2xl border bg-card px-4 py-3 shadow-sm transition-all duration-200 hover:bg-card/80 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-              themeBorder,
-            )}
+            className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
+            onClick={() => navigate('/ajustes/planejamento')}
           >
-            <span className={cn("shrink-0", themeIcon)}>
-              <Gauge className="h-4 w-4" />
-            </span>
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-              <span className="shrink-0 text-[12px] text-muted-foreground">R$/km</span>
-              <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
-              <span className="shrink-0 whitespace-nowrap text-[15px] font-bold tabular-nums text-foreground leading-none">
+            {/* Grupo esquerdo — ícone + conteúdo */}
+            <div className="flex items-center gap-2 min-w-0">
+              <Gauge className="h-4 w-4 shrink-0 text-success" />
+              <span className="text-[12px] text-muted-foreground shrink-0">R$/km</span>
+              <span className="text-muted-foreground/40 shrink-0">·</span>
+              <span className="text-[17px] font-bold tabular-nums text-foreground shrink-0">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              {plan.remainingPlannedKm > 0 && (
-                <>
-                  <span aria-hidden className="shrink-0 text-muted-foreground/40">·</span>
-                  <span className="shrink-0 whitespace-nowrap text-[12px] tabular-nums text-muted-foreground">
-                    {num(plan.remainingPlannedKm, 0)} km restantes
-                  </span>
-                </>
-              )}
+              <span className="text-muted-foreground/40 shrink-0">·</span>
+              <span className="text-[12px] text-muted-foreground tabular-nums shrink-0">
+                {num(plan.remainingPlannedKm, 0)} km restantes
+              </span>
             </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-hover:text-foreground group-active:translate-x-1" />
+            {/* Seta à direita */}
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
           </button>
         </div>
       );

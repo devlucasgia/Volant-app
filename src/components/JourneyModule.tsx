@@ -302,7 +302,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
 
         {isEnded && (
           <>
-            <Button onClick={() => openGoal(true)} size="icon" className={cn("h-10 w-10 transition-colors duration-500", journeyAccentBtn)} aria-label="Nova jornada">
+            <Button onClick={() => reset()} size="icon" className={cn("h-10 w-10 transition-colors duration-500", journeyAccentBtn)} aria-label="Nova jornada">
               <RotateCcw className="h-5 w-5" />
             </Button>
           </>
