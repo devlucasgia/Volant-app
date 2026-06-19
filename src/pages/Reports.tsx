@@ -881,9 +881,6 @@ export default function Reports() {
               <DropdownMenuItem onClick={exportXLSX}>
                 <FileSpreadsheet className="mr-2 h-4 w-4 text-success" /> Exportar Excel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportDOCX}>
-                <FileType2 className="mr-2 h-4 w-4 text-info" /> Exportar Word
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={exportPDF}>
                 <FileText className="mr-2 h-4 w-4 text-destructive" /> Exportar PDF
               </DropdownMenuItem>
