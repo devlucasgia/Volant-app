@@ -448,7 +448,7 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
         title={isLiquido ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
         subtitle={
           isLiquido
-            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar todos os custos do carro (fixos + variáveis)."
+            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar os custos fixos do carro."
             : "Seu objetivo total de faturamento no mês."
         }
       />
@@ -639,7 +639,7 @@ function Step5({
         <StepHeader
           icon={CarIcon}
           title="Você tem um veículo cadastrado?"
-          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos e variáveis."
+          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos. Variáveis (combustível/alimentação) viram só referência."
         />
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-3">
@@ -666,14 +666,14 @@ function Step5({
   }
 
   const carName = `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "Veículo";
-  const grandTotal = costsTotal + variableTotal;
+  const grandTotal = costsTotal;
 
   return (
     <div>
       <StepHeader
         icon={CarIcon}
         title="Custos considerados"
-        subtitle="Fixos e variáveis usados no cálculo do plano."
+        subtitle="Custos fixos entram na meta. Variáveis ficam apenas como referência."
       />
 
       {/* Chip de destaque do veículo */}
@@ -724,7 +724,7 @@ function Step5({
         <div className="border-t border-border/40 pt-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-              Custos variáveis
+              Variáveis · referência (não entra na meta)
             </span>
             {variableItems.length > 0 && (
               <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
@@ -761,7 +761,7 @@ function Step5({
         {grandTotal > 0 && (
           <div className="flex items-center justify-between border-t border-border/40 pt-3">
             <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
-              Total mensal
+              Total mensal na meta
             </span>
             <span className="text-[16px] font-bold tabular-nums text-foreground">
               {fmtBRL(grandTotal)}
@@ -876,7 +876,7 @@ function Step6({
           {variableItems.length > 0 && (
             <div className="border-t border-border/40 pt-3">
               <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-                Custos variáveis estimados
+                Variáveis · referência (não entra na meta)
               </div>
               <ul className="space-y-1.5">
                 {variableItems.map((it, i) => (

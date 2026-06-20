@@ -1,135 +1,77 @@
+## Sprint 2 — Plano
 
-# Plano — 4 otimizações de consumo (respostas + execução)
-
-Antes da execução, respondo ponto a ponto. Nenhuma linha de código é tocada nesta resposta.
-
----
-
-## Respostas às perguntas
-
-### 1. O cron de email é sensível a tempo?
-
-Sim, parcialmente. A cron `process-email-queue` (id=1) processa **duas filas** em ordem:
-
-- `auth_emails` — **time-sensitive**: signup, magic link, **redefinição de senha**, troca de email, reauth.
-- `transactional_emails` — não-urgente: trial-ending-soon, trial-ended, weekly-summary, maintenance-alert, welcome, etc. (todas confirmadas como transacionais, **nada de marketing puro**).
-
-A arquitetura atual (Lovable Emails) **usa uma única cron para as duas filas**, com `auth_emails` tendo prioridade dentro de cada execução. Trocar para 30s afetaria reset de senha (até 30s de latência), o que é perceptível.
-
-**Maior intervalo seguro recomendado: 15 segundos.**
-- Reduz volume de 17.280/dia → 5.760/dia (–66%, ≈ 213k/mês a menos).
-- Latência máxima de reset de senha: 15s (aceitável, padrão de mercado).
-- Sem mexer na infraestrutura de fila (não dá pra separar em duas crons distintas sem reescrever `process-email-queue` e a setup de email — esforço desproporcional ao ganho marginal de 15s→5s).
-
-**Não separamos em fila rápida própria** porque a infra de Lovable Emails é compartilhada e gerenciada — fragmentar quebraria o reset/refresh idempotente da `setup_email_infra`. 15s atende o requisito.
-
-### 2. Limite de 1.000 entries quebra algo?
-
-**Sim, quebra cenários reais.** Mapeei todos os consumidores de `entries` do `DataContext`:
-
-| Consumidor | Risco se cortar a 1000 |
-|---|---|
-| `History.tsx` | mostra **todos** os registros — usuário antigo perderia visualização de meses passados |
-| `Reports.tsx` | filtra por período, mas inclui exports PDF/Excel — exportação de 12 meses ficaria incompleta |
-| `carKm.realCurrentKm` | soma **KM dirigido desde sempre** para calcular KM atual do veículo — corte → KM do carro fica errado para veterano |
-| `planningEngine` / `smartKm` | usa só o mês corrente — OK |
-
-**Decisão revisada:** em vez de `range(0, 999)` fixo, vou usar **janela por data: últimos 18 meses** (`entry_date >= now() - interval '18 months'`). Cobre 100% dos relatórios mensais/anuais, exportações típicas, KM do veículo (carros raramente excedem isso de histórico relevante), e ainda assim corta payload pesado de usuários veteranos. Para acessar registros mais antigos no Histórico, adiciono um botão **"Carregar histórico completo"** que faz refetch sem limite.
-
-Se preferir simplesmente manter o `range(0, 9999)` atual (que hoje cobre todos os usuários ativos, já que o maior usuário tem ~80 entries), posso **pular esse item** — o ganho atual é pequeno e o risco de regressão existe. Marco esse item como **opcional**, decisão sua.
-
-### 3. Consolidação `useSubscription` → `AccessContext`
-
-Já existe o `AccessContext` mas ele só expõe `isFull`. **7 lugares chamam `useSubscription` hoje:**
-
-`RequirePremium` (raiz), `Dashboard`, `Settings`, `NotificationsSheet`, `TrialEndingModal`, `SubscriptionSheet`, `Settings`.
-
-Plano:
-1. `RequirePremium` continua sendo o **único caller** de `useSubscription`. Já roda 1x na raiz.
-2. Expandir `AccessProvider` para receber o `SubscriptionState` inteiro (não só `isFull`) e expor via `useAccess()`.
-3. Trocar as 6 chamadas extras de `useSubscription(user?.id)` por `useAccess()` (mantendo nomes dos campos: `isPaidPremium`, `internalTrialActive`, `internalTrialEndsAt`, `refetch`).
-4. `useSubscription.ts` **permanece** como hook único do `RequirePremium` (não deletar — é o coração do fail-closed).
-
-**Teste explícito de 3 cenários** (sandbox antes de marcar como feito):
-
-| Cenário | Setup no banco | Comportamento esperado |
-|---|---|---|
-| **Trial ativo** | `profiles.trial_access_granted=true`, `trial_ends_at = now()+5d`, sem subscription | `isActive=true`, `isPaidPremium=false`, `internalTrialActive=true`, app navegável, sem paywall, modal de fim de trial não aparece |
-| **Pago ativo** | subscription com `status='active'`, `current_period_end` futuro, environment correto | `isActive=true`, `isPaidPremium=true`, sem paywall, NotificationsSheet mostra estado premium |
-| **Trial expirado, sem pagamento** | `trial_access_granted=true`, `trial_ends_at = now()-1d`, sem subscription | `isActive=false`, `internalTrialExpired=true`, app entra em modo limited, paywall abre nos gates |
-
-Vou rodar esses testes via Playwright (login com usuário real de cada cenário) ou inspeção SQL do estado renderizado. Se algum cenário não bater, **reverto a consolidação** antes de mergear.
-
-### 4. `email_send_log` e LGPD
-
-**Sim, é registro de comprovação de envio**, usado tanto para análise operacional quanto evidência de que comunicações transacionais foram enviadas (relevante para LGPD/SAC). Não é registro de consentimento (esse fica em `email_unsubscribe_tokens` e `suppressed_emails`).
-
-**Ajuste:** em vez de purgar a 90 dias, **retenção de 180 dias** com purge mensal. Isso:
-- Cobre janela razoável de auditoria/SAC (6 meses).
-- Mantém logs além do ciclo de cobrança/trial (que é mensal/anual).
-- Reduz crescimento da tabela sem destruir histórico útil.
-- `suppressed_emails` e `email_unsubscribe_tokens` **não são tocados** (são o registro permanente que LGPD exige).
-
-Volume atual: 337 linhas em 30 dias → projeção: ~2k/ano. Mesmo com 180 dias, tabela fica em ~1.000 linhas. Custo é mínimo, mas a rotina previne crescimento descontrolado.
-
-### 5. Algo toca em `/admin`?
-
-Verifiquei `src/pages/Admin*.tsx`, `src/components/admin/` e `RequireAdmin.tsx`:
-
-- **Nenhum** componente do admin usa `useSubscription` ou `useAccess`.
-- `RequireAdmin` faz sua própria checagem direto em `user_roles`.
-- Admin não monta `AppLayout` nem `RequirePremium`.
-- Cron de email é backend puro — admin não chama.
-- `DataContext` é montado na raiz, mas admin não consome `useData()`.
-
-**Nada deste plano afeta o /admin.**
+Sprint puramente visual/apresentação. Nada do `planningEngine`, queries Supabase, DataContext, summarize, useHomeOrder, AuthContext, hero, Performance, Ganhos, Gastos, header, saudação, filtros, Relatórios, Histórico ou Admin é tocado.
 
 ---
 
-## Execução proposta (na sua ordem de prioridade)
+### Item 1 — Card KM Inteligente como irmão da Meta (`src/pages/Dashboard.tsx`, ramo `smartKm`)
 
-### Item 1 — Cron de email: 5s → 15s
+Reescrever **apenas** o JSX do branch `smartKm` (linhas ~528-557) espelhando a anatomia do card de Meta:
 
-- Atualizar `cron.job` id=1: `schedule := '15 seconds'`.
-- Não recriar a job; apenas `cron.alter_job` (via insert tool, dado é específico do projeto).
-- Sem alteração em código de aplicação. Sem deploy de edge function.
-- **Validação:** após mudança, verificar via `cron.job_run_details` que dispara a cada 15s e que e-mails pendentes ainda processam.
+- **Linha superior**: ícone `Gauge` azul (`text-info`) + label "R$/km mínimo" à esquerda; `R$ X,XX /km` à direita; chevron `›`.
+- **Barra de progresso** (`<Progress>`) no meio, **azul** (`[&>div]:bg-info` ou classe equivalente já existente para info). Representa km rodados no período / km necessários do período. Trava em 100% e, ao ultrapassar, mostra badge "+X%" igual ao da meta.
+- **Linha inferior**: `Faltam {km} km` à esquerda; micro-texto cinza `pra cobrir todos os custos` ao lado (ou abaixo, conforme caber em mobile).
+- Card neutro (`border-border bg-card`), sem fundo azul, sem variantes verde/dourado.
+- Remove o conector vertical colorido (linha gradiente) — fica neutro.
 
-### Item 2 — DataContext: janela de 18 meses (opcional)
+**Sempre bruto** (independe do toggle Líquido/Bruto):
+- Em `smartKmValue` (linhas 267-272): trocar `showGrossView ? plan.homeSmartRpkGross : plan.homeSmartRpkNet` por `plan.homeSmartRpkGross` direto. Remove `showGrossView` das deps.
+- Remover variáveis `themeIcon`/`themeBorder`/`connectorClass` do branch.
 
-- `DataContext.useEffect`: trocar `.range(0, 9999)` por `.gte('entry_date', new Date(now - 18 months).toISOString())`.
-- Adicionar estado `hasMoreHistory: boolean` + função `loadFullHistory()` exposta no Context.
-- `History.tsx`: se filtro/busca não acha nada e `hasMoreHistory`, mostrar botão "Carregar histórico completo".
-- `Reports.tsx`: se usuário escolher período "todos" ou export anual e dados parecerem truncados, chamar `loadFullHistory()` antes de calcular.
-- **Validação:** verificar `carKm.realCurrentKm` retorna mesmo valor de antes para todos os carros de teste.
-- **Decisão sua:** executar ou pular. Recomendo **pular** dado o volume atual (maior usuário tem ~80 entries) — não vale o risco de regressão sutil.
+**KM por período (camada de exibição)**: o `plan.remainingPlannedKm` e `plan.plannedKmTotal` são mensais. Criar helper local `kmForPeriod(period, plannedKmTotal, remainingPlannedKm, customRange, planDaily, plannedDates)` em `src/lib/stats.ts`, copiando a mesma mecânica de `goalForPeriod`:
+- `day` → `plannedKmTotal / diasPlanejadosNoMês` (ou `kmDiárioPlanejado` se já disponível em `plan`).
+- `week` → `diário × diasPlanejadosNaSemana` (fallback 7).
+- `month` → valor cheio.
+- `custom` → `diário × diasPlanejadosNoIntervalo` (fallback dias calendário).
+- Retorna `{ required, remaining }` para o período. `remaining = max(0, required - kmJáRodadosNoMesmoPeríodo)`. O km já rodado no período já é calculável via `s.totalKm` (summarize do mesmo `period`).
+- Usar `plan.plannedKmTotal` como base mensal e `s.totalKm` para descontar.
 
-### Item 3 — Consolidação useSubscription → AccessContext
+Resultado: ao trocar filtro na Home, o card de KM muda na mesma proporção que a meta financeira.
 
-- `AccessContext.tsx`: trocar prop `isFull: boolean` por prop `subscription: SubscriptionState`. Expor todos os campos via `useAccess()`.
-- `RequirePremium.tsx`: passa `sub` inteiro pro provider.
-- 6 arquivos: trocar `useSubscription(user?.id)` por `useAccess()` mantendo desestruturação idêntica.
-- Manter `useSubscription.ts` intacto.
-- **Testes**: rodar os 3 cenários acima via Playwright + inspeção UI.
-- **Ganho estimado**: leituras de `profiles` (#5 da tabela: 7.236 chamadas) caem para ~1 por sessão.
-
-### Item 4 — Retenção `email_send_log`: 180 dias, purge mensal
-
-- Migration: criar função `public.purge_old_email_send_log()` que faz `DELETE FROM email_send_log WHERE created_at < now() - interval '180 days'`.
-- Insert tool: criar cron job mensal `0 3 1 * *` (dia 1 às 03:00) chamando essa função via `SELECT public.purge_old_email_send_log();`.
-- Não toca em `suppressed_emails` nem `email_unsubscribe_tokens`.
+**Estado "KM planejado atingido"** (linhas 500-527) permanece igual.
 
 ---
 
-## Resumo de risco
+### Item 2 — Reorganização visual dos custos variáveis
 
-| Item | Risco | Reversível? |
-|---|---|---|
-| 1. Cron 5→15s | Baixo (latência aceitável em reset) | Sim, 1 SQL |
-| 2. Janela 18m | **Médio** (sugiro pular) | Sim, 1 edit |
-| 3. AccessContext consolidado | Baixo se os 3 testes passarem | Sim, revert do PR |
-| 4. Purge 180d | Mínimo (não toca consentimento) | Sim, cancelar job |
+**2a. `src/components/planejamento/PainelResumo.tsx` — "Como chega no bruto" (linhas ~361-400)**
+- Remover a linha `"+ Custos variáveis (estimados)"` de dentro do bloco de soma.
+- A soma visível passa a fechar: `Meta líquida (sobra) + Custos fixos = Faturamento bruto necessário`.
+- Abaixo do total, adicionar bloco apartado em `text-muted-foreground`: `Combustível e alimentação (estimativa, não entra na meta): R$ {valor}`.
+- Bloco "Como chega no líquido" (mesma região) recebe tratamento equivalente: variáveis fora da soma, listadas como referência apartada.
 
-**Aguardando sua aprovação.** Confirme:
-- Item 2: **executar** ou **pular**?
-- Itens 1, 3, 4: prosseguir?
+**2b. `src/components/vehicle/VehicleCostsSection.tsx` — seção "Custos variáveis" (linha ~205)**
+- Atualizar subtítulo da seção para: *"Estimativa de quanto você gasta rodando. Serve de referência — não entra na sua meta, porque você já registra esses gastos no dia a dia."*
+
+**2c. `src/components/planejamento/GuidedFlow.tsx` — etapa 4 e "Custos considerados" (linhas ~675-880)**
+- Em "Custos considerados" e na etapa 4 do fluxo: o "Total mensal" passa a somar **apenas custos fixos**.
+- Custos variáveis continuam listados, mas em bloco visualmente apartado (separador + tom `text-muted-foreground`), com rótulo explícito tipo *"Estimativa — não entra na meta"*.
+- Ajustar copy correlato: o subtítulo "Fixos e variáveis usados no cálculo do plano" (linha 676) vira *"Custos fixos entram na meta. Variáveis são apenas referência."*
+- Também ajustar copy do passo 2 (linha 451) e da introdução do passo de veículo (linha 642) para não dizer "fixos + variáveis" como se ambos entrassem na meta.
+
+Nenhum cálculo é alterado — só rótulos, layout e o que entra no `total` exibido (já que Sprint 1 fez os variáveis saírem do cálculo real, o "Total" exibido só precisa refletir a mesma decisão).
+
+---
+
+### Item 3 — Card de Meta: compactar estado "meta batida" (`src/pages/Dashboard.tsx`, linhas ~410-440)
+
+Hoje a badge `+X%` está num bloco separado (`<div className="mt-1.5">`) abaixo da linha "X acima da meta / 100%".
+
+Mudança: mover a badge para dentro da mesma flex row do "acima da meta / 100%" (linha 410), entre o texto e a percentagem (ou logo após a percentagem). Remover o `<div className="mt-1.5">` wrapper. Mantém o mesmo visual da badge (cor, ícone `TrendingUp`, pílula), só elimina a linha extra.
+
+Resultado: card de meta batida fica uma linha mais curto, sem mexer em padding global nem em outros cards. Hero + meta + topo da Performance permanecem visíveis sem scroll em ~360px de altura.
+
+---
+
+### Critérios de aceite
+
+- KM Inteligente: anatomia espelhada da Meta, ícone/barra azul, número neutro, sempre bruto nas duas visões, barra de consumo trava em 100% com badge "+X%", km do período acompanha filtro, micro-texto "pra cobrir todos os custos".
+- "Como chega no bruto/líquido": variáveis fora da soma, conta fecha sem eles, variáveis aparecem como referência apartada.
+- Central de Veículos e Planejamento: textos e total atualizados.
+- Card de Meta batida: badge `+X%` na mesma linha do "acima da meta / 100%".
+- Em ~360px com meta batida na visão Hoje: hero + meta + topo da Performance sem scroll.
+- `planningEngine` intacto. Header, saudação, filtros, hero, Performance, Ganhos, Gastos, Relatórios, Histórico, Admin intactos.
+
+### Verificação
+
+Após implementar, abro a Home via Playwright em viewport 360×800, restauro a sessão do Supabase, navego em visão Hoje (meta batida se houver) e capturo screenshot para confirmar que hero + meta + topo de Performance cabem sem scroll, e que o card KM espelha a Meta com cores corretas em ambas as visões.

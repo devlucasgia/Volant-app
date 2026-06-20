@@ -248,7 +248,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   Custos considerados
                 </div>
                 <div className="text-[11px] text-muted-foreground">
-                  {fmtBRL(s.consideredCosts + s.variableCosts)}/mês
+                  {fmtBRL(s.consideredCosts)}/mês na meta
                 </div>
               </div>
             </div>
@@ -284,7 +284,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               {s.variableCostItems.length > 0 && (
                 <div className="border-t border-border/40 pt-3">
                   <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-                    Variáveis (estimados)
+                    Variáveis · referência (não entra na meta)
                   </div>
                   <ul className="space-y-1.5">
                     {s.variableCostItems.map((it, i) => (
@@ -362,55 +362,58 @@ function CompositionCard({
       </div>
 
       {isGross ? (
-        <ul className="space-y-1.5">
-          <CompLine label="Meta líquida (sobra)" value={fmtBRL(liquido)} />
-          <CompLine
-            label="Custos fixos"
-            value={fmtBRL(fixos)}
-            sign="+"
-            muted
-          />
-          <CompLine
-            label="Custos variáveis (estimados)"
-            value={fmtBRL(variaveis)}
-            sign="+"
-            muted
-          />
-          <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
-            <span className="text-[12px] font-semibold text-foreground/90">
-              = Faturamento bruto necessário
-            </span>
-            <span className="text-[14px] font-bold tabular-nums text-primary">
-              {fmtBRL(bruto)}
-            </span>
-          </li>
-        </ul>
+        <>
+          <ul className="space-y-1.5">
+            <CompLine label="Meta líquida (sobra)" value={fmtBRL(liquido)} />
+            <CompLine
+              label="Custos fixos"
+              value={fmtBRL(fixos)}
+              sign="+"
+              muted
+            />
+            <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
+              <span className="text-[12px] font-semibold text-foreground/90">
+                = Faturamento bruto necessário
+              </span>
+              <span className="text-[14px] font-bold tabular-nums text-primary">
+                {fmtBRL(bruto)}
+              </span>
+            </li>
+          </ul>
+          {variaveis > 0 && (
+            <div className="mt-2.5 rounded-lg border border-dashed border-border/50 bg-muted/20 px-2.5 py-2 text-[11.5px] leading-snug text-muted-foreground">
+              Combustível e alimentação (estimativa, não entra na meta):{" "}
+              <span className="font-semibold tabular-nums text-foreground/80">{fmtBRL(variaveis)}</span>
+            </div>
+          )}
+        </>
       ) : (
-        <ul className="space-y-1.5">
-          <CompLine label="Faturamento bruto previsto" value={fmtBRL(bruto)} />
-          <CompLine
-            label="Custos fixos"
-            value={fmtBRL(fixos)}
-            sign="-"
-            muted
-            negative
-          />
-          <CompLine
-            label="Custos variáveis (estimados)"
-            value={fmtBRL(variaveis)}
-            sign="-"
-            muted
-            negative
-          />
-          <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
-            <span className="text-[12px] font-semibold text-foreground/90">
-              = Sobra líquida
-            </span>
-            <span className="text-[14px] font-bold tabular-nums text-primary">
-              {fmtBRL(liquido)}
-            </span>
-          </li>
-        </ul>
+        <>
+          <ul className="space-y-1.5">
+            <CompLine label="Faturamento bruto previsto" value={fmtBRL(bruto)} />
+            <CompLine
+              label="Custos fixos"
+              value={fmtBRL(fixos)}
+              sign="-"
+              muted
+              negative
+            />
+            <li className="mt-1.5 flex items-center justify-between border-t border-border/40 pt-2.5">
+              <span className="text-[12px] font-semibold text-foreground/90">
+                = Sobra líquida
+              </span>
+              <span className="text-[14px] font-bold tabular-nums text-primary">
+                {fmtBRL(liquido)}
+              </span>
+            </li>
+          </ul>
+          {variaveis > 0 && (
+            <div className="mt-2.5 rounded-lg border border-dashed border-border/50 bg-muted/20 px-2.5 py-2 text-[11.5px] leading-snug text-muted-foreground">
+              Combustível e alimentação (estimativa, não entra na meta):{" "}
+              <span className="font-semibold tabular-nums text-foreground/80">{fmtBRL(variaveis)}</span>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
