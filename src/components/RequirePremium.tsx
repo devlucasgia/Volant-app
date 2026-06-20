@@ -10,6 +10,10 @@ import { SplashScreen } from "./SplashScreen";
  * - Limited (trial expired, sem assinatura, ou erro): app continua navegável;
  *   recursos premium ficam com overlay de cadeado + CTA via PremiumLockOverlay
  *   e gates já existentes (EntryDrawer, Histórico, Relatórios, Planejamento).
+ *
+ * Este é o ÚNICO ponto da árvore que chama `useSubscription`. Demais telas
+ * leem o estado via `useAccess()` para evitar leituras redundantes em
+ * `profiles`/`subscriptions` a cada navegação.
  */
 export function RequirePremium({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -18,6 +22,5 @@ export function RequirePremium({ children }: { children: React.ReactNode }) {
   if (!user) return <>{children}</>;
   if (sub.loading) return <SplashScreen />;
 
-  return <AccessProvider isFull={sub.isActive}>{children}</AccessProvider>;
+  return <AccessProvider subscription={sub}>{children}</AccessProvider>;
 }
-

@@ -30,7 +30,7 @@ import {
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccess } from "@/context/AccessContext";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { useGreetingStyle, greetingStyleClass, type GreetingStyle } from "@/lib/greetingStyle";
 import {
@@ -202,7 +202,7 @@ function SubscriptionCard({
     internalTrialActive,
     internalTrialExpired,
     internalTrialEndsAt,
-  } = useSubscription(user?.id);
+  } = useAccess();
 
   const isYearly = subscription?.price_id === "volant_premium_yearly";
   const isMonthly = subscription?.price_id === "volant_premium_monthly";

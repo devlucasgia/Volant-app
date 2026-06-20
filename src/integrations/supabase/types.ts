@@ -659,6 +659,7 @@ export type Database = {
         }
         Returns: number
       }
+      purge_old_email_send_log: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

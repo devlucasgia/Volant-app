@@ -21,7 +21,7 @@ import { BellOff, ChevronLeft, ChevronRight, ExternalLink, Crown, Brain, Wallet,
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccess } from "@/context/AccessContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { CATEGORY_LABEL, type AppNotification, type NotificationIcon, type NotificationTone } from "@/lib/notifications";
@@ -47,7 +47,7 @@ export function NotificationsSheet({
 }) {
   const { user } = useAuth();
   const { settings, cars, loading } = useData();
-  const { isPaidPremium } = useSubscription(user?.id);
+  const { isPaidPremium } = useAccess();
   const location = useLocation();
 
   const planning = useMemo(

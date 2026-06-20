@@ -4,7 +4,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Clock, AlertTriangle, Tag } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
 import { useAccess } from "@/context/AccessContext";
 import { TRIAL_PROMO, isPromoActive } from "@/config/promo";
 
@@ -27,8 +26,8 @@ function daysUntil(iso: string | null): number | null {
 
 export function TrialEndingModal() {
   const { user } = useAuth();
-  const sub = useSubscription(user?.id);
-  const { openPaywall } = useAccess();
+  const sub = useAccess();
+  const { openPaywall } = sub;
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
