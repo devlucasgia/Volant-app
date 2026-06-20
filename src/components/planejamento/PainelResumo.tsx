@@ -248,7 +248,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   Custos considerados
                 </div>
                 <div className="text-[11px] text-muted-foreground">
-                  {fmtBRL(s.consideredCosts + s.variableCosts)}/mês
+                  {fmtBRL(s.consideredCosts)}/mês na meta
                 </div>
               </div>
             </div>
