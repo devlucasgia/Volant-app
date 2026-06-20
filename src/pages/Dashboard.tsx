@@ -555,33 +555,54 @@ export default function Dashboard() {
         );
       }
       if (smartKmValue === null) return null;
-      const showGross = showGrossView;
-      const themeIcon = showGross ? "text-[hsl(var(--goal-gross))]" : "text-success";
-      const themeBorder = showGross ? "border-[hsl(var(--goal-gross))]/25" : "border-success/25";
-      const connectorClass = showGross
-        ? "bg-gradient-to-b from-[hsl(var(--goal-gross))]/35 to-transparent"
-        : "bg-gradient-to-b from-success/35 to-transparent";
+      const kmRequired = kmPlannedForPeriod;
+      const kmDriven = s.totalKm;
+      const kmRemaining = Math.max(0, kmRequired - kmDriven);
+      const kmPct = kmRequired > 0 ? Math.min(100, (kmDriven / kmRequired) * 100) : 0;
+      const kmOver = kmRequired > 0 && kmDriven > kmRequired ? kmDriven - kmRequired : 0;
+      const kmOverPct = kmOver > 0 ? (kmOver / kmRequired) * 100 : 0;
       return (
         <div key="smartKm" className="flex flex-col items-center">
-          <span aria-hidden className={cn("h-0.5 w-px", connectorClass)} />
+          <span aria-hidden className="h-0.5 w-px bg-border/40" />
           <button
-            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-sm"
+            type="button"
             onClick={() => navigate('/ajustes/planejamento')}
+            className="block w-full rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
           >
-            <Gauge className="h-4 w-4 shrink-0 text-success" />
-            <div className="flex flex-1 items-center justify-center gap-2 min-w-0">
-              <span className="text-[12px] text-muted-foreground shrink-0">R$/km</span>
-              <span className="text-muted-foreground/40 shrink-0">·</span>
-              <span className="text-[17px] font-bold tabular-nums text-foreground shrink-0">
+            <div className="flex items-center gap-2">
+              <Gauge className="h-4 w-4 shrink-0 text-info" />
+              <span className="text-[13px] font-semibold text-foreground">R$/km mínimo</span>
+              <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              <span className="text-muted-foreground/40 shrink-0">·</span>
-              <span className="text-[12px] text-muted-foreground tabular-nums shrink-0">
-                {num(plan.remainingPlannedKm, 0)} km restantes
-              </span>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
             </div>
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+            {kmRequired > 0 && (
+              <>
+                <Progress
+                  value={kmPct}
+                  className="mt-2.5 h-2 [&>div]:bg-info transition-all duration-700"
+                />
+                <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="tabular-nums truncate">
+                    {kmOver > 0
+                      ? `${num(kmOver, 0)} km acima do plano`
+                      : `Faltam ${num(kmRemaining, 0)} km`}
+                    <span className="ml-1 text-muted-foreground/70">· pra cobrir todos os custos</span>
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {kmOver > 0 && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-info/40 bg-info/10 px-1.5 py-0.5 text-[10px] font-semibold text-info animate-fade-in">
+                        <TrendingUp className="h-2.5 w-2.5" />
+                        {kmOverPct >= 1 ? `+${num(kmOverPct, 0)}%` : `+${num(kmOver, 0)} km`}
+                      </span>
+                    )}
+                    <span className="tabular-nums font-semibold text-info">{num(kmPct, 0)}%</span>
+                  </div>
+                </div>
+              </>
+            )}
           </button>
         </div>
       );
