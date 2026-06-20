@@ -761,7 +761,7 @@ function Step5({
         {grandTotal > 0 && (
           <div className="flex items-center justify-between border-t border-border/40 pt-3">
             <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
-              Total mensal
+              Total mensal na meta
             </span>
             <span className="text-[16px] font-bold tabular-nums text-foreground">
               {fmtBRL(grandTotal)}
