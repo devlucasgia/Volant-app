@@ -448,7 +448,7 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
         title={isLiquido ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
         subtitle={
           isLiquido
-            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar todos os custos do carro (fixos + variáveis)."
+            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar os custos fixos do carro."
             : "Seu objetivo total de faturamento no mês."
         }
       />
