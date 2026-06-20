@@ -262,14 +262,43 @@ export default function Dashboard() {
     return Math.round((s.net / elapsed) * total);
   }, [period, s.net]);
 
-  // KM Inteligente — discrete display under the R$/km cell when valid.
-  // R$/KM Inteligente — vem do motor central do Planejamento Inteligente.
+  // KM Inteligente — sempre exibido em BRUTO (R$/km piso que cobre todos os custos),
+  // independente do toggle Líquido/Bruto. É o faturamento mínimo por km.
   const smartKmValue = useMemo(() => {
     if (!isFull) return null;
     if (!plan.isPlanningConfigured) return null;
-    const v = showGrossView ? plan.homeSmartRpkGross : plan.homeSmartRpkNet;
+    const v = plan.homeSmartRpkGross;
     return v > 0 ? v : null;
-  }, [isFull, plan.isPlanningConfigured, plan.homeSmartRpkGross, plan.homeSmartRpkNet, showGrossView]);
+  }, [isFull, plan.isPlanningConfigured, plan.homeSmartRpkGross]);
+
+  // KM planejado fatiado pelo período ativo — replica a mesma mecânica de goalForPeriod.
+  // Base: averageKmPerDay × dias planejados no recorte (semana/custom contam planningSelectedDates).
+  const kmPlannedForPeriod = useMemo(() => {
+    if (!plan.isPlanningConfigured || plan.averageKmPerDay <= 0) return 0;
+    const dailyKm = plan.averageKmPerDay;
+    const plannedDates = settings.planningSelectedDates ?? [];
+    const countInRange = (from: Date, to: Date) => {
+      if (!plannedDates.length) return 0;
+      const f = format(from, "yyyy-MM-dd");
+      const t = format(to, "yyyy-MM-dd");
+      return plannedDates.filter((d) => d >= f && d <= t).length;
+    };
+    if (period === "day") return dailyKm;
+    if (period === "week") {
+      const now = new Date();
+      const ws = startOfWeek(now, { weekStartsOn: 1 });
+      const we = endOfWeek(now, { weekStartsOn: 1 });
+      const n = countInRange(ws, we);
+      return dailyKm * (n > 0 ? n : 7);
+    }
+    if (period === "month") return plan.plannedKmTotal;
+    if (period === "custom" && customRange) {
+      const n = countInRange(customRange.from, customRange.to);
+      const days = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
+      return dailyKm * (n > 0 ? n : days);
+    }
+    return plan.plannedKmTotal;
+  }, [plan.isPlanningConfigured, plan.averageKmPerDay, plan.plannedKmTotal, settings.planningSelectedDates, period, customRange]);
 
 
   const totalKmDriven = totalKmAllTime(entries);
