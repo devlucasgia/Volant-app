@@ -161,20 +161,21 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   let requiredGrossRevenue: number;
   let estimatedNetProfit: number;
 
-  // Custos totais (fixos + variáveis) entram no faturamento necessário.
-  // Bruto = Líquido + custos fixos + custos variáveis — mesma fonte da Home.
-  const totalCosts = consideredCosts + variable.total;
+  // Apenas custos FIXOS compõem o faturamento necessário e a meta bruta.
+  // Custos variáveis (combustível + alimentação) permanecem expostos como
+  // informativo, mas não entram na meta — evita dupla contagem com os gastos
+  // reais lançados pelo motorista no dia a dia.
 
   if (mainGoalType === "bruto") {
-    // Legacy: meta cadastrada é o faturamento; líquido = bruto - todos os custos.
+    // Legacy: meta cadastrada é o faturamento; líquido = bruto - custos fixos.
     grossTarget = monthlyGoal;
     requiredGrossRevenue = monthlyGoal;
-    estimatedNetProfit = monthlyGoal - totalCosts;
+    estimatedNetProfit = monthlyGoal - consideredCosts;
     netTarget = estimatedNetProfit;
   } else {
     // Novo modelo: meta cadastrada é a sobra desejada (líquido).
     netTarget = monthlyGoal;
-    requiredGrossRevenue = monthlyGoal + totalCosts;
+    requiredGrossRevenue = monthlyGoal + consideredCosts;
     grossTarget = requiredGrossRevenue;
     estimatedNetProfit = monthlyGoal;
   }
