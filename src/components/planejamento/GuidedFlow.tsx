@@ -876,7 +876,7 @@ function Step6({
           {variableItems.length > 0 && (
             <div className="border-t border-border/40 pt-3">
               <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-                Custos variáveis estimados
+                Variáveis · referência (não entra na meta)
               </div>
               <ul className="space-y-1.5">
                 {variableItems.map((it, i) => (
