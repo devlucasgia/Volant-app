@@ -28,6 +28,7 @@ import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
+import { PlanningChangeNoticeBanner } from "@/components/PlanningChangeNoticeBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ensureMaintenanceNotifications } from "@/lib/notifications";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -196,9 +197,9 @@ export default function Dashboard() {
     () => goalForPeriod(period, monthlyTargetForView, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
     [period, monthlyTargetForView, entries, customRange, journeyDailyOverride, goalOpts]
   );
-  // Progresso sempre baseado no bruto faturado (em ambas as visões),
-  // comparado ao alvo da lente ativa.
-  const goalProgressValue = s.gross;
+  // Progresso usa bruto na visão Bruto e líquido real (bruto - gastos) na visão Líquido,
+  // espelhando o card de Lucro Líquido do herói e o alvo da lente ativa.
+  const goalProgressValue = showGrossView ? s.gross : s.net;
 
   const goalPct = periodGoal.value > 0 ? Math.min(100, (goalProgressValue / periodGoal.value) * 100) : 0;
   const goalReached = periodGoal.value > 0 && goalProgressValue >= periodGoal.value;
@@ -805,6 +806,8 @@ export default function Dashboard() {
             </div>
           </DrawerContent>
         </Drawer>
+
+        <PlanningChangeNoticeBanner enabled={plan.isPlanningConfigured} className="mt-4" />
 
         {/* Hero highlight — user can switch between Lucro líquido (default) and Bruto */}
         <div className="mt-5">
