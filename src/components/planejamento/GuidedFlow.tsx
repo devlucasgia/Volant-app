@@ -724,7 +724,7 @@ function Step5({
         <div className="border-t border-border/40 pt-3">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-              Custos variáveis
+              Variáveis · referência (não entra na meta)
             </span>
             {variableItems.length > 0 && (
               <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
