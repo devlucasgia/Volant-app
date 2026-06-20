@@ -31,16 +31,15 @@ import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { PlanningChangeNoticeBanner } from "@/components/PlanningChangeNoticeBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ensureMaintenanceNotifications } from "@/lib/notifications";
-import { useSubscription } from "@/hooks/useSubscription";
+
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 
 
 export default function Dashboard() {
   const { entries, settings, updateSettings, carInitialKm, activeCar, cars, expenseMetaFor, platformMetaFor, isSimplePlatform, loading: dataLoading } = useData();
-  const { isFull } = useAccess();
+  const { isFull, isPaidPremium } = useAccess();
   const { user } = useAuth();
-  const { isPaidPremium } = useSubscription(user?.id);
   const { openDrawer } = useUI();
   const { state: timerState } = useTimer();
   const [period, setPeriod] = useState<Period>("day");

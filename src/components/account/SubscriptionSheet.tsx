@@ -6,7 +6,7 @@ import { Check, Crown, Loader2, ShieldCheck, ArrowUpRight, Sparkles, Clock } fro
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { useSubscription } from "@/hooks/useSubscription";
+import { useAccess } from "@/context/AccessContext";
 import { StripeEmbeddedCheckout } from "@/components/StripeEmbeddedCheckout";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripeEnvironment } from "@/lib/stripe";
@@ -63,7 +63,7 @@ export function SubscriptionSheet({ open, onOpenChange, initialView = "auto" }: 
     internalTrialActive,
     internalTrialExpired,
     internalTrialEndsAt,
-  } = useSubscription(user?.id);
+  } = useAccess();
   const isTestMode = getStripeEnvironment() === "sandbox";
 
   const isYearly = subscription?.price_id === "volant_premium_yearly";
