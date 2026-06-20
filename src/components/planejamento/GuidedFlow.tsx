@@ -639,7 +639,7 @@ function Step5({
         <StepHeader
           icon={CarIcon}
           title="Você tem um veículo cadastrado?"
-          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos e variáveis."
+          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos. Variáveis (combustível/alimentação) viram só referência."
         />
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
           <div className="flex items-start gap-3">
