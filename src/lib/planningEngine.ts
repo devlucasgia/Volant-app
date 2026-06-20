@@ -212,10 +212,10 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     remainingPlannedKm > 0 ? remainingGrossToTarget / remainingPlannedKm : 0;
 
   // Home lens — semântica financeira correta:
-  // BRUTO  = faturamento necessário = meta cadastrada (sobra) + custos fixos + variáveis.
-  // LÍQUIDO = meta cadastrada (sobra desejada após custos).
-  // Progresso usa sempre currentGross (faturado), comparado ao alvo da lente ativa.
-  const homeGrossTarget = monthlyGoal + consideredCosts + variable.total;
+  // BRUTO   = faturamento necessário = meta cadastrada (sobra) + custos fixos.
+  // LÍQUIDO = meta cadastrada (sobra desejada após custos fixos).
+  // Variáveis ficam fora da meta (informativo) para não dobrar com gastos reais.
+  const homeGrossTarget = monthlyGoal + consideredCosts;
   const homeNetTarget = monthlyGoal;
   const homeRemainingGross = clampPos(homeGrossTarget - currentGross);
   const homeRemainingNet = clampPos(homeNetTarget - currentGross);
