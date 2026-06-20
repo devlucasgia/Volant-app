@@ -673,7 +673,7 @@ function Step5({
       <StepHeader
         icon={CarIcon}
         title="Custos considerados"
-        subtitle="Fixos e variáveis usados no cálculo do plano."
+        subtitle="Custos fixos entram na meta. Variáveis ficam apenas como referência."
       />
 
       {/* Chip de destaque do veículo */}
