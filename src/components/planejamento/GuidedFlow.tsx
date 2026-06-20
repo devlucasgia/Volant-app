@@ -666,7 +666,7 @@ function Step5({
   }
 
   const carName = `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "Veículo";
-  const grandTotal = costsTotal + variableTotal;
+  const grandTotal = costsTotal;
 
   return (
     <div>
