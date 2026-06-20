@@ -1,8 +1,9 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Paywall } from "@/components/Paywall";
+import type { SubscriptionState } from "@/hooks/useSubscription";
 
-interface AccessCtx {
+interface AccessCtx extends SubscriptionState {
   isFull: boolean;
   isLimited: boolean;
   /** Returns true if the user has full access; otherwise opens the paywall and returns false. */
@@ -13,13 +14,15 @@ interface AccessCtx {
 const Ctx = createContext<AccessCtx | null>(null);
 
 interface ProviderProps {
-  isFull: boolean;
+  subscription: SubscriptionState;
   children: ReactNode;
 }
 
-export function AccessProvider({ isFull, children }: ProviderProps) {
+export function AccessProvider({ subscription, children }: ProviderProps) {
   const [open, setOpen] = useState(false);
   const lastOpenedRef = useRef(0);
+
+  const isFull = subscription.isActive;
 
   const openPaywall = useCallback(() => {
     const now = Date.now();
@@ -37,8 +40,14 @@ export function AccessProvider({ isFull, children }: ProviderProps) {
   }, [isFull, openPaywall]);
 
   const value = useMemo<AccessCtx>(
-    () => ({ isFull, isLimited: !isFull, requirePremium, openPaywall }),
-    [isFull, requirePremium, openPaywall],
+    () => ({
+      ...subscription,
+      isFull,
+      isLimited: !isFull,
+      requirePremium,
+      openPaywall,
+    }),
+    [subscription, isFull, requirePremium, openPaywall],
   );
 
   return (
@@ -53,13 +62,29 @@ export function AccessProvider({ isFull, children }: ProviderProps) {
   );
 }
 
+const FALLBACK_SUBSCRIPTION: SubscriptionState = {
+  loading: false,
+  isActive: true,
+  isPaidPremium: false,
+  isGrandfathered: false,
+  internalTrialActive: false,
+  internalTrialExpired: false,
+  internalTrialEndsAt: null,
+  subscription: null,
+  refetch: async () => {},
+};
+
 export function useAccess(): AccessCtx {
   const ctx = useContext(Ctx);
   if (!ctx) {
     // Safe fallback for any tree rendered outside the provider
-    // (e.g. unauthenticated routes). Treat as full access — the provider
-    // is what gates premium behavior; absence means no gating applies.
+    // (e.g. unauthenticated routes like /, /auth, /admin). Treat as full
+    // access — the provider is what gates premium behavior; absence means
+    // no gating applies. All subscription flags default to "not premium"
+    // so consumers reading isPaidPremium etc. don't accidentally render
+    // premium-only state.
     return {
+      ...FALLBACK_SUBSCRIPTION,
       isFull: true,
       isLimited: false,
       requirePremium: () => true,
