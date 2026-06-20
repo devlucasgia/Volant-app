@@ -284,7 +284,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               {s.variableCostItems.length > 0 && (
                 <div className="border-t border-border/40 pt-3">
                   <div className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-                    Variáveis (estimados)
+                    Variáveis · referência (não entra na meta)
                   </div>
                   <ul className="space-y-1.5">
                     {s.variableCostItems.map((it, i) => (
