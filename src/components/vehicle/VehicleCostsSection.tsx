@@ -205,7 +205,7 @@ export function VehicleCostsSection({ value, onChange }: Props) {
           Custos variáveis
         </h3>
         <p className="mt-1 px-0 text-[11px] leading-snug text-muted-foreground">
-          Usados apenas para estimar a meta bruta no Planejamento Inteligente.
+          Estimativa de quanto você gasta rodando. Serve de referência — não entra na sua meta, porque você já registra esses gastos no dia a dia.
         </p>
       </div>
 
