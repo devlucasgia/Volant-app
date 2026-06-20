@@ -451,22 +451,22 @@ export default function Dashboard() {
                     : "Defina sua meta mensal em Ajustes"}
               </span>
               {periodGoal.value > 0 && !isFolgaEffective && (
-                <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {overAmount > 0 && (
+                    <span className={cn(
+                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-semibold animate-fade-in",
+                      isLiquido
+                        ? "border-success/40 bg-success/10 text-success"
+                        : "border-[hsl(var(--goal-gross))]/45 bg-[hsl(var(--goal-gross))]/10 text-[hsl(var(--goal-gross))]",
+                    )}>
+                      <TrendingUp className="h-2.5 w-2.5" />
+                      {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+                    </span>
+                  )}
+                  <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
+                </div>
               )}
             </div>
-            {overAmount > 0 && (
-              <div className="mt-1.5">
-                <span className={cn(
-                  "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold animate-fade-in",
-                  isLiquido
-                    ? "border-success/40 bg-success/10 text-success"
-                    : "border-[hsl(var(--goal-gross))]/45 bg-[hsl(var(--goal-gross))]/10 text-[hsl(var(--goal-gross))]",
-                )}>
-                  <TrendingUp className="h-2.5 w-2.5" />
-                  {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
-                </span>
-              </div>
-            )}
             {monthlyProjection !== null && (
               <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
                 Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
