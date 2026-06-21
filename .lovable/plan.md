@@ -1,105 +1,108 @@
-## Sprint 3 — Planejamento Inteligente: Evidência, Conexão Visual e UX
+## Sprint 4 — Refino: KM Inteligente, Redundância de Período e Header/Filtros
 
-Sprint puramente de apresentação. Sem mexer em `planningEngine`, queries Supabase, DataContext, summarize, useHomeOrder, AuthContext, herói, Ganhos, Gastos, Jornada, header/filtros, Relatórios, Histórico, Ajustes, Admin. Tudo acontece em `src/pages/Dashboard.tsx` (+ pequenos auxiliares em `src/lib/stats.ts` ou inline).
+Sprint puramente visual sobre o que já foi entregue na Sprint 3. Nada de `planningEngine`, DataContext, queries, hooks de DnD, AuthContext, Admin, Ganhos, Gastos, Jornada.
 
 ---
 
-### Item 1 — Eyebrow "PLANEJAMENTO INTELIGENTE" agrupando Meta + KM
+### Item 1 — Card KM Inteligente (`src/pages/Dashboard.tsx`, linhas 595-633)
 
-Hoje cada card vive num slot independente do reorder (`useHomeOrder`). Não vou alterar a ordem nem o DnD. Em vez disso, no loop de render (linhas ~1030-1066), quando `widgets.goal` e `widgets.smartKm` estiverem ambos visíveis E `smartKm` aparecer imediatamente após `goal` na ordem efetiva (que é o default e o caso normal), o slot de `goal` passa a injetar antes do botão um eyebrow:
+**1a. Linha inferior (`lines 620-628`)**
 
-```
-◎ PLANEJAMENTO INTELIGENTE
-```
+Trocar a estrutura atual (`{num(kmDriven,0)} km rodados · pra cobrir todos os custos` + `%` solto) por padrão "atual/meta" espelhando o card de Meta:
 
-- Ícone: `Target` (mesmo já importado).
-- Classes: `text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground` — idêntico ao padrão de "Por aplicativo"/"Por gastos".
-- O margin entre `goal` e `smartKm` continua `mt-2` (já existe na regra de marginClass).
-- Performance (`stats`) mantém seu eyebrow próprio atual (linha 482-484), inalterado.
-- Fallback: se `smartKm` estiver oculto ou reordenado para longe de `goal`, o eyebrow não aparece e cada card volta a se virar sozinho (`goal` sem eyebrow, igual hoje).
+- Esquerda: `{num(kmDriven, 0)} km` em `font-bold text-foreground tabular-nums`, seguido de `<span class="mx-1 text-muted-foreground/60">/</span>` (ou `· Meta`) e `{num(kmRequired, 0)} km` em `text-muted-foreground tabular-nums`. Formato final: `320 km · Meta 150 km`.
+- Direita: percentual mantido, sem badge colorida nem texto de alerta. Quando `kmDriven > kmRequired`, o valor pode passar de 100% (ex.: `213%`) — usa a cor de status já existente (`rpkStatusTextClass`), sem mudança extra.
+- Remover por completo o trecho `· pra cobrir todos os custos`. Sem realocação — informação já está implícita no label "R$/km mínimo pra aceitar corrida".
+- Manter o `Progress` acima (linhas 616-619) e o `ring-1` discreto de excesso intactos.
 
-### Item 2 — KM Inteligente: km rodados sempre visível, sem "acima do plano"
+**1b. Alinhamento do ícone (`linha 603`)**
 
-Bloco linhas 587-603 do `Dashboard.tsx`. Substituir:
+Trocar `items-start` por `items-center` no `<div class="flex items-start gap-2">`, e remover o `mt-0.5` do `Gauge` (linha 604) e o `mt-1` do `ChevronRight` (linha 612). Resultado: ícone, label, valor e chevron na mesma baseline vertical, igual ao card de Meta (linhas 430-454).
 
-- Texto "X km acima do plano" / "Faltam X km" + sufixo "· pra cobrir todos os custos" → linha única e neutra: `{num(kmDriven, 0)} km rodados` à esquerda, com micro-texto `pra cobrir todos os custos` ao lado (ou em segunda linha curta se não couber — nunca truncar).
-- Remover o badge `+X%` / `+X km` que aparecia no excesso (Item 6 — sem alertas de excesso).
-- Manter `{num(kmPct, 0)}%` à direita como indicador discreto. Quando `kmDriven > kmRequired`, o percentual exibido pode passar de 100% (ex: `120%`) sem badge nem cor de alerta. A `<Progress>` continua travada em 100 visualmente (já tem `Math.min(100, ...)`), com uma leve borda/anel sutil no trilho indicando excesso (sem texto).
+### Item 2 — Remover período do título (`src/lib/stats.ts`)
 
-### Item 3 — R$/km mínimo: evidência de norteador
+No `goalForPeriod`, encurtar todos os títulos:
 
-Bloco linhas 572-580 do `Dashboard.tsx`.
+- `Meta {kind} — hoje` → `Meta {kind}`
+- `Meta {kind} — semana` → `Meta {kind}`
+- `Meta {kind} — mês` → `Meta {kind}`
+- `Meta {kind} — período` → `Meta {kind}`
 
-- Label: `R$/km mínimo` → `R$/km mínimo pra aceitar corrida`. Mantém numa única `<span>`; remove `whitespace-nowrap` se existir; deixa quebrar em duas linhas em telas estreitas. Classe continua `text-[13px] font-semibold text-foreground`, mas com `leading-tight` para quebra agradável.
-- Valor `{brl(smartKmValue)}/km`: subir de `text-[15px]` para `text-[17px]` (~13% maior). `tabular-nums font-bold`. Continua sempre em branco/preto (`text-foreground`) — cor de status NÃO afeta o número, só ícone/barra (Item 4).
-- Pulso suave em sincronia no `Gauge` e no `<span>` do valor: aplicar a classe utilitária já existente `animate-breath` (`src/index.css:181`) em ambos. Como o ciclo padrão pulsa demais para um número, ajustar/criar variante `animate-breath-soft` em `index.css` com keyframe `{ 0%,100%: opacity 1; 50%: opacity 0.72 }` em ciclo de ~2s. Já respeita `prefers-reduced-motion` (regra `@media` em `index.css:184`).
+Resultado: sempre `Meta líquida` ou `Meta bruta`, sem sufixo. O período fica a cargo do PeriodBar.
 
-### Item 4 — Conexão visual R$/km mínimo ↔ R$/km real
+Card de KM (`Dashboard.tsx:605-607`) já não tem sufixo de período — mantém "R$/km mínimo pra aceitar corrida" como está. Nada a fazer.
 
-Criar helper local no topo do componente (ou em `src/lib/stats.ts`):
+### Item 3 — Header e filtros de período
 
-```ts
-type RpkStatus = "none" | "ok" | "warn" | "bad";
-function rpkStatus(real: number, min: number, hasData: boolean): RpkStatus {
-  if (!hasData || min <= 0) return "none";
-  const ratio = real / min;
-  if (ratio >= 1) return "ok";
-  if (ratio >= 0.8) return "warn";
-  return "bad";
-}
-```
+**3a. Saudação compacta (`Dashboard.tsx:377-393`)**
 
-`hasData` = `s.totalKm > 0`. `min` = `plan.homeSmartRpkGross`. `real` = `s.perKm`.
+Reduzir ~15% a altura do bloco `greeting`:
 
-Mapa de cor (tokens semânticos existentes):
-- `none` → `text-muted-foreground` / `[&>div]:bg-muted-foreground/50`
-- `ok` → `text-success` / `[&>div]:bg-success`
-- `warn` → `text-warning` / `[&>div]:bg-warning`
-- `bad` → `text-destructive` / `[&>div]:bg-destructive`
+- Container: `pt-0.5 pb-1` → `pt-0 pb-0.5`.
+- Título "Olá, {nome}": `text-[22px]` → `text-[19px]`, mantém `font-bold leading-tight`.
+- Mensagem opcional: `mt-1 text-[13px]` → `mt-0.5 text-[12px]`.
+- Data contextual: `mt-0.5 text-[12px]` → `mt-0 text-[11px]`.
 
-Aplicações:
-1. **KM Inteligente** (linhas 573, 584-585): ícone `Gauge` e a `<Progress>` deixam de ser fixos `text-info`/`[&>div]:bg-info`; recebem a cor de status. O `text-foreground` do número e o `text-muted-foreground` do label permanecem.
-2. **Performance · R$/km** (linhas 500-506):
-   - Ícone `Route` e label "R$ / km": cor do status.
-   - Valor `{brl(s.perKm)}`: hoje é `text-foreground`. Vira a cor do status (substitui o azul fixo mencionado pelo usuário — hoje na verdade já é `text-foreground`, mas o label/ícone `text-info` é o "azul fixo"). Tanto faz: ícone, label e número usam a mesma cor de status.
-   - Linha de baixo hoje mostra `{num(s.totalKm, 1)} km rodados`. Trocar por mensagem comparativa:
-     - `ok`: `R$ X,XX acima do mínimo` (text-success)
-     - `warn`/`bad`: `R$ X,XX abaixo do mínimo` (text-warning/text-destructive)
-     - `none` ou `plan` não configurado: `Aguardando registros` (muted-foreground)
-     - Cálculo: `diff = s.perKm - plan.homeSmartRpkGross`; usa `Math.abs(diff)` no texto.
-   - O "km rodados" agora vive no card de KM Inteligente (Item 2), conforme pedido.
-3. Transição: adicionar `transition-colors duration-300` em ícones/valores afetados e na `<Progress>` (já tem `transition-all duration-700` — mantém).
+Específico da Home; nenhum outro arquivo afetado por este item.
 
-Se `plan.isPlanningConfigured === false`, o card de Performance/R$/km cai no estado `none` (sem comparação, sem mensagem comparativa) — preserva comportamento atual para quem não tem planejamento.
+**3b/3c/3d. Filtros de período — alinhamento, tamanho, altura e trilho**
 
-### Item 5 — Reduzir altura dos containers de Meta e KM
+Aplicar em todos os locais que usam o padrão de tabs flat (Home `PeriodBar`, Reports `Segmented tone="flat"`, History `Segmented tone="flat"`, OrganizacaoCards `Segmented`):
 
-- **Goal** (linha 390): `p-4` → `px-4 py-3`. `mt-3` da Progress (linha 436) → `mt-2.5`. `mt-1.5` da linha de status (linha 439) → `mt-1`. `mt-2 pt-2` da projeção (linha 471) → `mt-1.5 pt-1.5`.
-- **SmartKm** (linha 570): `px-4 py-3` permanece (já enxuto); `mt-2.5` da Progress (linha 585) → `mt-2`; `mt-1.5` da linha inferior (linha 587) → `mt-1`.
-- Sem alterar `rounded-2xl`, `border`, sombras ou tipografia principal — só respiro.
-- Validar em 360×800 com meta batida (visão Hoje) que herói + eyebrow + Meta + KM + topo do eyebrow de Performance cabem sem scroll.
+1. **`PeriodBar` (`Dashboard.tsx:1141-1186`)** — único caso de componente local:
+   - Wrapper: `flex w-full items-stretch gap-1 bg-transparent` → `flex w-full items-stretch justify-start gap-3 border-b border-border/30`.
+   - Tabs (`linha 1146-1163`): trocar `flex-1` por `shrink-0`; padding `py-2` → `py-1.5`; texto `text-sm` → `text-[15px]`; aumentar a área de toque com `px-1`. Resultado: tabs alinhados à esquerda (mesma margem `px-4` do container pai), maiores, ocupando largura natural sem vazio à esquerda.
+   - Underline: `after:bottom-0.5` → `after:-bottom-px` para o traço ativo se apoiar sobre o `border-b` do grupo. `after:w-8` → `after:w-full` (underline acompanha o tab inteiro, padrão de tab bar).
+   - Botão de calendário (`linha 1166-1184`): empurrar para a direita com `ml-auto`; manter `w-11`, `py-1.5`.
 
-### Item 6 — Nenhum texto truncado
+2. **`Segmented tone="flat"` (`src/components/Segmented.tsx`)** — atualização compartilhada do tone `flat`:
+   - `trackClass` flat (`linha 41-42`): `bg-transparent p-0 gap-1` → `bg-transparent p-0 gap-3 border-b border-border/30 justify-start`.
+   - Botão (`linha 84-87`): no caso flat, trocar `flex-1` por `shrink-0` e ajustar `sizeClass` md para `py-1.5 text-[15px]`; sm permanece como hoje (usado em History/Reports — tamanho já confortável).
+   - `activeClass` flat (`linha 60-61`): underline `after:bottom-0.5 after:w-8` → `after:-bottom-px after:w-full`, ancorando o underline no novo trilho.
+   - Os tones `default` e `contextual` permanecem inalterados (não usados em filtros de período).
 
-- **`periodGoal.title`** (linha 414): substitui `truncate` por `leading-tight break-words` no `<span>`. Em `src/lib/stats.ts`, encurtar os títulos longos: `Meta líquida da semana` → `Meta líquida — semana`; `Meta líquida do mês` → `Meta líquida — mês`; `Meta líquida do dia` → `Meta líquida — hoje`; equivalente para `bruta`. Mantém intenção, sem reticências.
-- **KM Inteligente — linha inferior**: redistribuir a flex row para `flex-wrap` ou estrutura em duas linhas curtas quando necessário, garantindo que `pra cobrir todos os custos` apareça por inteiro. Estratégia: micro-texto vira segunda linha discreta abaixo do "X km rodados" se a primeira linha já ocupar a largura disponível.
-- **Eyebrows**: adicionar `min-w-0` onde necessário e remover `truncate` de spans que precisam ser lidos por completo.
-- Revisão geral nos três cards desta sprint: nenhum `truncate`/`overflow-hidden` em texto informativo.
+3. **Reports (`src/pages/Reports.tsx:1061-1072`)** — já usa `tone="flat" size="sm"`; recebe automaticamente o trilho + alinhamento à esquerda da mudança no `Segmented`. Remover `className="flex-1"` (não cabe mais com `shrink-0` interno) para deixar o grupo no fluxo natural. O `Download` à direita continua via `flex items-center gap-2` no pai.
+4. **History (`src/pages/History.tsx:227`)** — recebe a mudança automaticamente do `Segmented`. Nada a editar localmente.
+5. **OrganizacaoCards (`src/pages/OrganizacaoCards.tsx:72`)** — usa `Segmented` (provável `tone="default"`). Confirmar tone; se for `flat`, herda; se for `default`, não é filtro de período/abas equivalentes e fica fora do escopo desta sprint (não foi pedido alterar tons não-flat). Verificar no momento da execução.
+
+**Observação:** `VehicleCostsSection` usa `Segmented` para tipo de custo (fixo/variável), não é filtro de período — fora do escopo.
+
+### Item 4 — Card de Jornada idle (`src/components/JourneyModule.tsx`)
+
+Estado idle (linha 138-175): reduzir altura do card sem perder área de toque.
+
+- `py-6` → `py-4` (de 24px para 16px de padding vertical). Isso reduz a altura total significativamente mantendo o ícone Play confortavelmente centralizado e a área de toque acima de 56px efetivos (considerando borda + padding + conteúdo).
+- Largura `w-full` inalterada. Borda pulsante (`animate-breath`, `pulseBorder`) e cores por modo (`playColor`, `bg-card`, `bg-muted/20` no folga) preservados.
+- `ChevronRight` posicionado igual (`absolute right-4 top-1/2 -translate-y-1/2`).
+
+### Item 5 — Card "Ganhos e Gastos" (`src/pages/Dashboard.tsx`)
+
+Ajustes de respiro na área unificada `byApp` + `byExpense` (linhas 638-724):
+
+1. Espaço entre blocos: quando `insideUnified === true`, o elemento `<span>` de separação vertical (h-px gradiente) que separa a lista de apps da lista de gastos tem `mt-4 mb-4` hoje; reduzir para `mt-2.5 mb-2.5` — respiro mais enxuto.
+2. Barras de progresso (linhas 661, 717): `h-2` → `h-[7px]` (~15% mais finas, ainda visíveis e legíveis). Manter cores, `rounded-full` e posicionamento absoluto.
+3. Micro-labels "Por app" / "Por gastos" (linhas 642, 690) inalterados. Badges de plataforma/categoria, cores, valores à direita, tudo inalterado.
 
 ---
 
 ### Arquivos tocados
 
-- `src/pages/Dashboard.tsx` — todos os itens (renderização dos blocos goal/smartKm/stats, eyebrow agrupador no loop de render, helper `rpkStatus` inline).
-- `src/index.css` — adicionar `animate-breath-soft` (ou ajustar `animate-breath` se compartilhado em outros lugares; verificar antes — se houver outros usos, criar variante nova).
-- `src/lib/stats.ts` — encurtar `periodGoal.title` para evitar truncamento.
+- `src/pages/Dashboard.tsx` — Itens 1a, 1b (card KM), 3a (greeting), 3b/3c/3d (PeriodBar), Item 5 (respiro Ganhos e Gastos + barras finas).
+- `src/components/Segmented.tsx` — Item 3b/3c/3d para tone `flat` (propagação para Reports + History).
+- `src/lib/stats.ts` — Item 2 (titles sem sufixo de período).
+- `src/components/JourneyModule.tsx` — Item 4 (padding idle reduzido).
 
-Nada em `planningEngine`, DataContext, queries, hooks, Admin ou outras telas.
+### Não tocados
+
+`planningEngine`, DataContext, queries Supabase, hooks de DnD, AuthContext, herói, Jornada (estados ativo/descanso/encerrado), Histórico (lógica de filtros/grupos), Ajustes, Admin, Sprint 3 (eyebrow, conexão de cor de status, animação, mensagem comparativa na Performance).
 
 ### Verificação
 
-Playwright em viewport 360×800 com sessão restaurada:
-1. Visão Hoje com meta batida → screenshot confirma herói + eyebrow "Planejamento Inteligente" + Meta + KM + topo de Performance sem scroll.
-2. Visão Semana → label "Meta líquida — semana" inteiro, sem reticências.
-3. Forçar cenários `ok`/`warn`/`bad`/`none` (variando entradas) → checar cores correspondentes em ícone+barra do KM e em ícone+label+valor+mensagem da Performance; checar transição suave.
-4. `prefers-reduced-motion: reduce` no contexto Playwright → confirmar que `Gauge` e número do R$/km mínimo não animam.
+Playwright em 360×800:
+1. Home com meta batida: greeting compacto, eyebrow "Planejamento Inteligente" + Meta + KM + topo de Performance sem scroll.
+2. Card KM: linha "X km · Meta Y km" + percentual, sem "pra cobrir todos os custos", ícone alinhado com label.
+3. Trocar período Hoje/Semana/Mês/Custom: título da Meta continua "Meta líquida" (sem sufixo); nenhuma quebra de linha.
+4. Filtros: tabs encostados na margem esquerda (alinhados com cards), maiores, altura menor, linha sutil border-b atravessando todo o grupo, underline ativo apoiado no trilho.
+5. Jornada idle: card mais enxuto verticalmente, ícone Play centrado, área de toque confortável.
+6. Ganhos e Gastos: respiro entre blocos reduzido, barras de progresso finas, labels e valores legíveis.
+7. Repetir verificação visual em /relatorios e /historico — mesmo trilho e alinhamento de tabs.
