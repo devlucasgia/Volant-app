@@ -1150,7 +1150,7 @@ function PeriodBar({
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-6 border-b border-border/30 bg-transparent">
+    <div role="tablist" className="flex w-full items-stretch gap-1 border-b border-border/30 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
