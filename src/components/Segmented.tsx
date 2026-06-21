@@ -39,7 +39,7 @@ export function Segmented<T extends string>({
   const isFlat = tone === "flat";
 
   const trackClass = isFlat
-    ? "bg-transparent p-0 gap-6 border-b border-border/30 justify-start"
+    ? "bg-transparent p-0 gap-1 border-b border-border/30 justify-start"
     : isContextual
       ? "rounded-full border border-white/10 bg-white/5 p-0.5 backdrop-blur-sm"
       : "rounded-xl border border-border/60 bg-muted/60 p-1";
