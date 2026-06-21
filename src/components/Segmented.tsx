@@ -52,10 +52,10 @@ export function Segmented<T extends string>({
 
         const sizeClass = isFlat
           ? (size === "xs"
-              ? "py-1 px-1 text-[12px] tracking-wide"
+              ? "py-1 px-3 text-[12px] tracking-wide"
               : size === "sm"
-                ? "py-1.5 px-1 text-[13px]"
-                : "py-1.5 px-1 text-[15px]")
+                ? "py-1.5 px-4 text-[13px]"
+                : "py-1.5 px-5 text-[15px]")
           : (size === "xs"
               ? "py-1 text-[11px] tracking-wide"
               : size === "sm"
