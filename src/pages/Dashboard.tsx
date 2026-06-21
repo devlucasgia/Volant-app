@@ -600,37 +600,31 @@ export default function Dashboard() {
             onClick={() => navigate('/ajustes/planejamento')}
             className="block w-full rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
           >
-            <div className="flex items-center gap-2">
-              <Gauge className="h-4 w-4 shrink-0 text-info" />
-              <span className="text-[13px] font-semibold text-foreground">R$/km mínimo</span>
-              <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">
+            <div className="flex items-start gap-2">
+              <Gauge className={cn("h-4 w-4 shrink-0 mt-0.5 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
+              <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-foreground">
+                R$/km mínimo pra aceitar corrida
+              </span>
+              <span className="ml-1 shrink-0 text-[17px] font-bold tabular-nums text-foreground animate-breath-soft">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground/50" />
             </div>
             {kmRequired > 0 && (
               <>
                 <Progress
                   value={kmPct}
-                  className="mt-2.5 h-2 [&>div]:bg-info transition-all duration-700"
+                  className={cn("mt-2 h-2 transition-all duration-700", rpkStatusBarClass, kmDriven > kmRequired && "ring-1 ring-inset ring-foreground/10")}
                 />
-                <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span className="tabular-nums truncate">
-                    {kmOver > 0
-                      ? `${num(kmOver, 0)} km acima do plano`
-                      : `Faltam ${num(kmRemaining, 0)} km`}
+                <div className="mt-1 flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="min-w-0 flex-1 tabular-nums leading-snug">
+                    {num(kmDriven, 0)} km rodados
                     <span className="ml-1 text-muted-foreground/70">· pra cobrir todos os custos</span>
                   </span>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {kmOver > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-info/40 bg-info/10 px-1.5 py-0.5 text-[10px] font-semibold text-info animate-fade-in">
-                        <TrendingUp className="h-2.5 w-2.5" />
-                        {kmOverPct >= 1 ? `+${num(kmOverPct, 0)}%` : `+${num(kmOver, 0)} km`}
-                      </span>
-                    )}
-                    <span className="tabular-nums font-semibold text-info">{num(kmPct, 0)}%</span>
-                  </div>
+                  <span className={cn("shrink-0 tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
+                    {num(kmRequired > 0 ? (kmDriven / kmRequired) * 100 : 0, 0)}%
+                  </span>
                 </div>
               </>
             )}
@@ -638,6 +632,7 @@ export default function Dashboard() {
         </div>
       );
     })() : null,
+
 
 
     byApp: widgets.byApp ? (() => {
