@@ -763,12 +763,12 @@ export default function Dashboard() {
     <>
       {/* Header compacto da Home — símbolo do Volant + saudação clicável + sino */}
       <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-lg">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+        <div className="flex items-center justify-between gap-3 px-4 py-1.5">
           <button
             type="button"
             onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao", { state: { from: "/app" } })}
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-3 rounded-xl py-1 pr-2 text-left transition-all duration-200",
+              "flex min-w-0 flex-1 items-center gap-3 rounded-xl py-0.5 pr-2 text-left transition-all duration-200",
               greetingHasContent && "hover:bg-muted/30 active:scale-[0.99]",
             )}
             aria-label="Editar saudação"
@@ -776,41 +776,42 @@ export default function Dashboard() {
             <img
               src={volantSymbol}
               alt="Volant"
-              width={43}
-              height={43}
+              width={37}
+              height={37}
               decoding="sync"
               loading="eager"
               fetchPriority="high"
-              className="h-[43px] w-[43px] shrink-0 self-center rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
+              className="h-[37px] w-[37px] shrink-0 self-center rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
             />
             <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
-                  <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
+                  <div className="truncate text-[14px] font-bold leading-tight tracking-tight text-foreground">
                     Olá, {greetingName}
                     {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
                   </div>
                   {greetingMessage && (
                     <div
                       className={cn(
-                        "truncate text-[10.8px] leading-snug text-muted-foreground/90",
+                        "truncate text-[10px] leading-snug text-muted-foreground/90",
                         greetingStyleClass(greetingStyle),
                       )}
                     >
                       {greetingMessage}
                     </div>
                   )}
-                  <div className="truncate text-[11px] leading-snug text-muted-foreground/70">
+                  <div className="truncate text-[10px] leading-snug text-muted-foreground/70">
                     {contextualDate}
                   </div>
                 </>
               ) : (
-                <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
+                <div className="truncate text-[14px] font-bold leading-tight tracking-tight text-foreground">
                   Volant
                 </div>
               )}
             </div>
           </button>
+
 
           <button
             type="button"
