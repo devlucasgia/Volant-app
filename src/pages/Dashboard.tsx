@@ -486,7 +486,7 @@ export default function Dashboard() {
                         : "border-[hsl(var(--goal-gross))]/45 bg-[hsl(var(--goal-gross))]/10 text-[hsl(var(--goal-gross))]",
                     )}>
                       <TrendingUp className="h-2.5 w-2.5" />
-                      {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+                      +{overPct >= 1 ? num(overPct, 0) : num(overPct, 1)}%
                     </span>
                   )}
                   <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
@@ -620,7 +620,7 @@ export default function Dashboard() {
                 />
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span className="min-w-0 flex-1 tabular-nums leading-snug">
-                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>
+                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km rodados</span>
                     <span className="mx-1 text-muted-foreground/60">·</span>
                     <span>Meta {num(kmRequired, 0)} km</span>
                   </span>
@@ -1150,7 +1150,7 @@ function PeriodBar({
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-6 border-b border-border/30 bg-transparent">
+    <div role="tablist" className="flex w-full items-stretch gap-1 border-b border-border/30 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
@@ -1160,7 +1160,7 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "relative shrink-0 px-1 py-1.5 text-[15px] font-medium transition-all duration-300",
+              "relative shrink-0 px-5 py-1.5 text-[15px] font-medium transition-all duration-300",
               active
                 ? cn(
                     activeText,

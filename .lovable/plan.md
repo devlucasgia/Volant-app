@@ -1,58 +1,67 @@
-## Sprint 5 — Alinhamento dos Filtros + Badge de Excedente do KM
+## Sprint 6 — Filtros, badge da Meta Bruta e texto do KM
 
-Refinamento visual sobre o que já está em produção. Sem mudanças em `planningEngine`, queries, DataContext, summarize, DnD, AuthContext, demais cards, Histórico, Admin.
-
----
-
-### Item 1 — Filtros de período mais equilibrados
-
-Aumentar o `gap` entre os tabs flat para o grupo "respirar" e ocupar mais largura útil, sem voltar ao `flex-1` (que esticava cada tab) e sem deixar tudo comprimido no canto esquerdo. `justify-start` e `ml-auto` do ícone à direita permanecem.
-
-**`src/components/Segmented.tsx` (tone `flat`, linha 41-42)**
-- `trackClass` flat: `gap-3` → `gap-6`.
-
-**`src/pages/Dashboard.tsx` — `PeriodBar` (linha 1145)**
-- Container: `gap-3` → `gap-6`. Resto inalterado (`shrink-0`, `border-b`, `ml-auto` no calendário).
-
-Isso cobre automaticamente Home (`PeriodBar`), Relatórios (`Segmented flat`), Histórico (`Segmented flat`) e Organização de Cards (`Segmented flat size="sm"`). Tones `default` e `contextual` ficam intactos.
+Três correções pontuais. Sem mexer em `planningEngine`, queries, DataContext, DnD, AuthContext, demais cards, Admin.
 
 ---
 
-### Item 2 — KM Inteligente: travar % em 100% + badge de excedente neutro
+### Item 1 — Filtros de período: aumentar presença dos tabs (não o gap)
 
-Espelhar o padrão do card de Meta (linhas 479-494), mas com tom **neutro** (não verde).
+Diagnóstico confirmado lendo o código: hoje cada tab tem `px-1` (Segmented flat e `PeriodBar`), então o grupo todo é dimensionado pelo conteúdo. Aumentar o `gap` (Sprint 5) só adicionou ar entre itens, sem aumentar a presença do grupo. Solução = **Abordagem A** do brief: aumentar o padding horizontal de cada tab, mantendo `shrink-0` (sem voltar a `flex-1`).
 
-**`src/pages/Dashboard.tsx` — bloco do KM (linhas 614-631)**
+**`src/components/Segmented.tsx` (tone `flat`, sizeClass linhas 56-64)**
+- `xs`: `py-1 px-1` → `py-1 px-3`
+- `sm`: `py-1.5 px-1` → `py-1.5 px-4`
+- `md`: `py-1.5 px-1` → `py-1.5 px-5`
+- Reduzir gap do track flat (linha 41-42): `gap-6` → `gap-1` (já que agora cada tab tem padding interno suficiente; evita vão duplicado).
 
-- Calcular `kmOverPct = kmRequired > 0 && kmDriven > kmRequired ? ((kmDriven / kmRequired) - 1) * 100 : 0;`
-- Linha do percentual (626-628): trocar a fórmula `(kmDriven / kmRequired) * 100` por `kmPct` (já travado em 100% na linha 593, `Math.min(100, ...)`).
-- Antes do `<span>` do percentual, inserir um badge condicional quando `kmOverPct > 0`:
+**`src/pages/Dashboard.tsx` — `PeriodBar` (linhas 1153, 1163)**
+- Track: `gap-6` → `gap-1`.
+- Cada tab: `px-1 py-1.5 text-[15px]` → `px-5 py-1.5 text-[15px]`.
+- Manter `shrink-0`, `border-b border-border/30`, e o ícone calendário/download com `ml-auto`.
 
-```tsx
-{kmOverPct > 0 && (
-  <span className="inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground animate-fade-in tabular-nums">
-    +{num(kmOverPct, 0)}%
-  </span>
-)}
+Resultado esperado: cada tab fica visualmente maior (Nubank-like), o grupo ocupa ~70% da largura útil, vão à direita encolhe, sem esticar nenhum tab individualmente.
+
+Cobertura automática: Home (`PeriodBar`), Relatórios, Histórico e Organização de Cards (`Segmented flat`/`flat size="sm"`). Tones `default` e `contextual` ficam intactos.
+
+---
+
+### Item 2 — Badge da Meta: sempre percentual em Bruto e Líquido
+
+Causa raiz em `src/pages/Dashboard.tsx` linha 489:
 ```
+{overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+```
+Quando o excedente é < 1% (caso típico da meta Bruta batida por pouco), cai no fallback monetário. Não é branch por visão — é fallback genérico que aparece sobretudo na Bruta porque o valor da meta é maior.
 
-- Envolver badge + percentual em `<div className="flex shrink-0 items-center gap-1.5">` (mesmo wrapper da Meta).
-- A `Progress` (linha 616-618) já usa `kmPct` travado — sem alteração.
-- A cor de status (`rpkStatusTextClass`, `rpkStatusBarClass`) que conecta KM↔Performance permanece intacta. O badge é elemento adicional, neutro, não substitui essa cor.
+**Correção (linha 489):**
+```
++{overPct >= 1 ? num(overPct, 0) : num(overPct, 1)}%
+```
+Sempre `%`, com 1 casa quando < 1% para evitar "+0%" enganoso. `TrendingUp` e estilos do badge intactos.
+
+---
+
+### Item 3 — KM Inteligente: incluir "rodados"
+
+**`src/pages/Dashboard.tsx` linha 623:**
+- `<span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>` → `... {num(kmDriven, 0)} km rodados</span>`
+
+Resto da linha (`·`, `Meta {kmRequired} km`, percentual, badge neutro, cor de status) inalterado.
 
 ---
 
 ### Arquivos tocados
 
-- `src/components/Segmented.tsx` — gap do tone flat.
-- `src/pages/Dashboard.tsx` — gap do `PeriodBar`, badge neutro de excedente + trava de % no card KM.
+- `src/components/Segmented.tsx` — padding dos tabs flat, gap reduzido.
+- `src/pages/Dashboard.tsx` — `PeriodBar` (padding/gap), badge da Meta (sempre %), texto KM ("rodados").
 
 ### Não tocados
 
-`planningEngine`, queries Supabase, DataContext, summarize, DnD, AuthContext, herói, Ganhos, Gastos, Jornada, Histórico, Ajustes, Admin. Cor de status do KM (verde/laranja/vermelho/cinza) e tudo das Sprints 3 e 4 ficam como estão.
+`planningEngine`, queries, DataContext, summarize, DnD, AuthContext, herói, Ganhos, Gastos, Jornada, Histórico (lógica), Ajustes, Admin. Cor de status KM↔Performance, badge neutro do KM (Sprint 5) e Sprints 3/4 inalterados.
 
 ### Verificação
 
-Playwright 360×800:
-1. Home, Relatórios, Histórico, Organização de Cards: tabs alinhados à esquerda, gap visível, sem vão excessivo entre o grupo e o ícone à direita.
-2. Forçar `kmDriven > kmRequired` (ex.: 320/150) e confirmar percentual em `100%`, badge `+113%` em cinza neutro, barra cheia sem extrapolar.
+Playwright 360×800 + screenshot:
+1. Home/Relatórios/Histórico/Organização de Cards: tabs com presença, sem vão grande à direita; comparar com prints de referência.
+2. Card Meta Bruta com meta batida por pouco (ex: R$ 1,24 acima): badge `+0.5%` (ou similar), nunca `+R$`.
+3. KM card: rodapé "X km rodados · Meta Y km".

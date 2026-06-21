@@ -39,7 +39,7 @@ export function Segmented<T extends string>({
   const isFlat = tone === "flat";
 
   const trackClass = isFlat
-    ? "bg-transparent p-0 gap-6 border-b border-border/30 justify-start"
+    ? "bg-transparent p-0 gap-1 border-b border-border/30 justify-start"
     : isContextual
       ? "rounded-full border border-white/10 bg-white/5 p-0.5 backdrop-blur-sm"
       : "rounded-xl border border-border/60 bg-muted/60 p-1";
@@ -52,10 +52,10 @@ export function Segmented<T extends string>({
 
         const sizeClass = isFlat
           ? (size === "xs"
-              ? "py-1 px-1 text-[12px] tracking-wide"
+              ? "py-1 px-3 text-[12px] tracking-wide"
               : size === "sm"
-                ? "py-1.5 px-1 text-[13px]"
-                : "py-1.5 px-1 text-[15px]")
+                ? "py-1.5 px-4 text-[13px]"
+                : "py-1.5 px-5 text-[15px]")
           : (size === "xs"
               ? "py-1 text-[11px] tracking-wide"
               : size === "sm"
