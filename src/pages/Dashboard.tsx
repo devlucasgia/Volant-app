@@ -1076,7 +1076,7 @@ export default function Dashboard() {
                   <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
                   </div>
-                  <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
+                  <div className="space-y-2.5 rounded-2xl border border-border bg-card p-4">
                     {blocks.byApp}
                     {!bothEmpty && <div className="border-t border-border/30" />}
                     {blocks.byExpense}
