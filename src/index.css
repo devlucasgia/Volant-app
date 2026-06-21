@@ -181,9 +181,18 @@
   .animate-breath {
     animation: breath 2s ease-in-out infinite;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .animate-breath { animation: none; }
+  @keyframes breath-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.72; }
   }
+  .animate-breath-soft {
+    animation: breath-soft 2s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-breath,
+    .animate-breath-soft { animation: none; }
+  }
+
 }
 
 @layer base {
