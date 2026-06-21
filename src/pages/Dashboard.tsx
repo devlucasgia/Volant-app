@@ -486,7 +486,7 @@ export default function Dashboard() {
                         : "border-[hsl(var(--goal-gross))]/45 bg-[hsl(var(--goal-gross))]/10 text-[hsl(var(--goal-gross))]",
                     )}>
                       <TrendingUp className="h-2.5 w-2.5" />
-                      {overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
+                      +{overPct >= 1 ? num(overPct, 0) : num(overPct, 1)}%
                     </span>
                   )}
                   <span className={cn("tabular-nums font-semibold", themeText)}>{num(goalPct, 0)}%</span>
