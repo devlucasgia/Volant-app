@@ -522,12 +522,19 @@ export default function Dashboard() {
               <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
             </div>
             <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+              <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300", rpkStatusTextClass)}>
                 <Route className="h-3 w-3" /> R$ / km
               </div>
-              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
-              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+              <div className={cn("text-2xl font-bold tabular-nums leading-none transition-colors duration-300", rpkStatus === "none" ? "text-foreground" : rpkStatusTextClass)}>{brl(s.perKm)}</div>
+              <div className={cn("text-[11px] tabular-nums transition-colors duration-300", rpkStatus === "none" ? "text-muted-foreground" : rpkStatusTextClass)}>
+                {rpkStatus === "none"
+                  ? (rpkMin > 0 ? "Aguardando registros" : `${num(s.totalKm, 1)} km rodados`)
+                  : rpkStatus === "ok"
+                    ? `${brl(Math.abs(rpkDiff))} acima do mínimo`
+                    : `${brl(Math.abs(rpkDiff))} abaixo do mínimo`}
+              </div>
             </div>
+
           </div>
         )}
       </section>
