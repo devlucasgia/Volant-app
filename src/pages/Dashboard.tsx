@@ -1160,7 +1160,7 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "relative shrink-0 px-1 py-1.5 text-[15px] font-medium transition-all duration-300",
+              "relative shrink-0 px-5 py-1.5 text-[15px] font-medium transition-all duration-300",
               active
                 ? cn(
                     activeText,
