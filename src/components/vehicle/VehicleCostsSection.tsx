@@ -5,7 +5,7 @@ import { Wallet, Droplet, CircleDot, Receipt, Fuel, UtensilsCrossed } from "luci
 
 export type OwnershipStatus = "quitado" | "financiado" | "alugado" | null;
 
-export type FuelType = "gasolina" | "etanol" | "diesel" | "gnv" | "flex";
+export type FuelType = "gasolina" | "etanol" | "diesel" | "gnv" | "flex" | "eletrico";
 
 export interface VehicleCosts {
   ownership_status: OwnershipStatus;
@@ -209,38 +209,60 @@ export function VehicleCostsSection({ value, onChange }: Props) {
         </p>
       </div>
 
-      <Block
-        icon={<Fuel className="h-4 w-4" />}
-        title="Combustível"
-        description="Consumo médio do veículo, tipo de combustível e preço médio do litro."
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Consumo (km/L)</Label>
-            <NumberField value={value.fuel_consumption_kml}
-              onChange={(v) => set("fuel_consumption_kml", v)} placeholder="Ex: 8.0" />
-          </div>
-          <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Preço do litro</Label>
-            <NumberField currency value={value.fuel_price}
-              onChange={(v) => set("fuel_price", v)} placeholder="Ex: 3,89" />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">Tipo de combustível</Label>
-          <Segmented
-            value={(value.fuel_type ?? "") as "" | FuelType}
-            onChange={(v) => set("fuel_type", (v || null) as FuelType | null)}
-            options={[
-              { key: "gasolina", label: "Gasolina" },
-              { key: "etanol", label: "Etanol" },
-              { key: "diesel", label: "Diesel" },
-              { key: "gnv", label: "GNV" },
-              { key: "flex", label: "Flex" },
-            ]}
-          />
-        </div>
-      </Block>
+      {(() => {
+        const isElectric = value.fuel_type === "eletrico";
+        return (
+          <Block
+            icon={<Fuel className="h-4 w-4" />}
+            title={isElectric ? "Energia" : "Combustível"}
+            description={
+              isElectric
+                ? "Consumo médio do veículo elétrico e preço médio do kWh."
+                : "Consumo médio do veículo, tipo de combustível e preço médio do litro."
+            }
+          >
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  {isElectric ? "Consumo (km/kWh)" : "Consumo (km/L)"}
+                </Label>
+                <NumberField
+                  value={value.fuel_consumption_kml}
+                  onChange={(v) => set("fuel_consumption_kml", v)}
+                  placeholder={isElectric ? "Ex: 6.5" : "Ex: 8.0"}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">
+                  {isElectric ? "Preço do kWh" : "Preço do litro"}
+                </Label>
+                <NumberField
+                  currency
+                  value={value.fuel_price}
+                  onChange={(v) => set("fuel_price", v)}
+                  placeholder={isElectric ? "Ex: 0,95" : "Ex: 3,89"}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Tipo de energia</Label>
+              <Segmented
+                value={(value.fuel_type ?? "") as "" | FuelType}
+                onChange={(v) => set("fuel_type", (v || null) as FuelType | null)}
+                size="xs"
+                options={[
+                  { key: "gasolina", label: "Gasolina" },
+                  { key: "etanol", label: "Etanol" },
+                  { key: "diesel", label: "Diesel" },
+                  { key: "gnv", label: "GNV" },
+                  { key: "flex", label: "Flex" },
+                  { key: "eletrico", label: "Elétrico" },
+                ]}
+              />
+            </div>
+          </Block>
+        );
+      })()}
 
       <Block
         icon={<UtensilsCrossed className="h-4 w-4" />}

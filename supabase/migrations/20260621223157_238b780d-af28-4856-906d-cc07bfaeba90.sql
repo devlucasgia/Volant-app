@@ -1,0 +1,2 @@
+ALTER TABLE public.cars DROP CONSTRAINT IF EXISTS cars_fuel_type_chk;
+ALTER TABLE public.cars ADD CONSTRAINT cars_fuel_type_chk CHECK (fuel_type IS NULL OR fuel_type IN ('gasolina','etanol','diesel','gnv','flex','eletrico'));

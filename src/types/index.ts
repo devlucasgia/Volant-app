@@ -74,7 +74,7 @@ export interface Car {
   insurance_monthly?: number | null;
   other_monthly_costs?: number | null;
   fuel_consumption_kml?: number | null;
-  fuel_type?: "gasolina" | "etanol" | "diesel" | "gnv" | "flex" | null;
+  fuel_type?: "gasolina" | "etanol" | "diesel" | "gnv" | "flex" | "eletrico" | null;
   fuel_price?: number | null;
   food_avg_per_day?: number | null;
 }

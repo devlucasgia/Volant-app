@@ -1150,7 +1150,7 @@ function PeriodBar({
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-1 border-b border-border/30 bg-transparent">
+    <div role="tablist" className="relative flex w-full items-stretch justify-center gap-1 border-b border-border/30 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
@@ -1160,7 +1160,7 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "relative shrink-0 px-5 py-1.5 text-[15px] font-medium transition-all duration-300",
+              "relative shrink-0 px-4 py-1.5 text-[12px] font-medium transition-all duration-300",
               active
                 ? cn(
                     activeText,
@@ -1181,11 +1181,11 @@ function PeriodBar({
         aria-selected={period === "custom"}
         onClick={onCalendarClick}
         className={cn(
-          "relative ml-auto flex w-11 shrink-0 items-center justify-center py-1.5 transition-all duration-300",
+          "absolute right-0 top-1/2 flex w-11 -translate-y-1/2 shrink-0 items-center justify-center py-1.5 transition-all duration-300",
           period === "custom"
             ? cn(
                 activeText,
-                "after:absolute after:inset-x-1 after:-bottom-px after:h-[2px] after:rounded-full",
+                "after:absolute after:inset-x-1 after:-bottom-[7px] after:h-[2px] after:rounded-full",
                 accentAfter,
               )
             : inactiveClass,
