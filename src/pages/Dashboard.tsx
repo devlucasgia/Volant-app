@@ -1055,6 +1055,14 @@ export default function Dashboard() {
             ? (unifiedSlotKey === "byApp" ? "byExpense" : "byApp")
             : null;
 
+          // Item 1: agrupa Meta + KM Inteligente sob eyebrow "Planejamento Inteligente"
+          // quando ambos estão visíveis e smartKm aparece imediatamente após goal.
+          const goalIdx = orderedKeys.indexOf("goal");
+          const smartIdx = orderedKeys.indexOf("smartKm");
+          const showPlanningEyebrow =
+            Boolean(widgets.goal && widgets.smartKm) &&
+            goalIdx >= 0 && smartIdx === goalIdx + 1;
+
           return orderedKeys.map((k, index, arr) => {
             if (k === suppressedKey) return null;
 
@@ -1086,12 +1094,24 @@ export default function Dashboard() {
                   ? "mt-3"
                   : "mt-5";
 
+            if (showPlanningEyebrow && k === "goal") {
+              return (
+                <div key={k} className={marginClass}>
+                  <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <Target className="h-3.5 w-3.5" /> Planejamento Inteligente
+                  </div>
+                  {block}
+                </div>
+              );
+            }
+
             return (
               <div key={k} className={marginClass}>
                 {block}
               </div>
             );
           }).filter(Boolean);
+
         })()}
       </div>
     </>
