@@ -591,6 +591,7 @@ export default function Dashboard() {
       const kmRequired = kmPlannedForPeriod;
       const kmDriven = s.totalKm;
       const kmPct = kmRequired > 0 ? Math.min(100, (kmDriven / kmRequired) * 100) : 0;
+      const kmOverPct = kmRequired > 0 && kmDriven > kmRequired ? ((kmDriven / kmRequired) - 1) * 100 : 0;
 
       return (
         <div key="smartKm" className="flex flex-col items-center">
@@ -623,9 +624,16 @@ export default function Dashboard() {
                     <span className="mx-1 text-muted-foreground/60">·</span>
                     <span>Meta {num(kmRequired, 0)} km</span>
                   </span>
-                  <span className={cn("shrink-0 tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
-                    {num(kmRequired > 0 ? (kmDriven / kmRequired) * 100 : 0, 0)}%
-                  </span>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {kmOverPct > 0 && (
+                      <span className="inline-flex items-center rounded-full border border-border/50 bg-muted/40 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground tabular-nums animate-fade-in">
+                        +{num(kmOverPct, 0)}%
+                      </span>
+                    )}
+                    <span className={cn("tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
+                      {num(kmPct, 0)}%
+                    </span>
+                  </div>
                 </div>
               </>
             )}
@@ -1142,7 +1150,7 @@ function PeriodBar({
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-3 border-b border-border/30 bg-transparent">
+    <div role="tablist" className="flex w-full items-stretch gap-6 border-b border-border/30 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
