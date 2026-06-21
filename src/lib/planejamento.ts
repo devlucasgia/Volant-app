@@ -89,8 +89,12 @@ export function computeVariableMonthlyCosts(
   const kmTotal = averageKmPerDay * selectedWorkdaysCount;
 
   if (consumo > 0 && preco > 0) {
-    const litros = kmTotal / consumo;
-    items.push({ label: "Combustível estimado", value: litros * preco });
+    const unidades = kmTotal / consumo;
+    const isElectric = c.fuel_type === "eletrico";
+    items.push({
+      label: isElectric ? "Energia estimada" : "Combustível estimado",
+      value: unidades * preco,
+    });
   }
   if (food > 0) {
     items.push({ label: "Alimentação estimada", value: food * selectedWorkdaysCount });
