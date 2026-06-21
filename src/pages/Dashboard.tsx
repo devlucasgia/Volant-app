@@ -620,7 +620,7 @@ export default function Dashboard() {
                 />
                 <div className="mt-1 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span className="min-w-0 flex-1 tabular-nums leading-snug">
-                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>
+                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km rodados</span>
                     <span className="mx-1 text-muted-foreground/60">·</span>
                     <span>Meta {num(kmRequired, 0)} km</span>
                   </span>
