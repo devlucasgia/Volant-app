@@ -39,7 +39,7 @@ export function Segmented<T extends string>({
   const isFlat = tone === "flat";
 
   const trackClass = isFlat
-    ? "bg-transparent p-0 gap-1"
+    ? "bg-transparent p-0 gap-3 border-b border-border/30 justify-start"
     : isContextual
       ? "rounded-full border border-white/10 bg-white/5 p-0.5 backdrop-blur-sm"
       : "rounded-xl border border-border/60 bg-muted/60 p-1";
@@ -50,15 +50,20 @@ export function Segmented<T extends string>({
         const active = o.key === value;
         const isGross = (o.key as unknown as string) === "bruto";
 
-        const sizeClass =
-          size === "xs"
-            ? "py-1 text-[11px] tracking-wide"
-            : size === "sm"
-              ? "py-1.5 text-xs"
-              : "py-2 text-sm";
+        const sizeClass = isFlat
+          ? (size === "xs"
+              ? "py-1 px-1 text-[12px] tracking-wide"
+              : size === "sm"
+                ? "py-1.5 px-1 text-[13px]"
+                : "py-1.5 px-1 text-[15px]")
+          : (size === "xs"
+              ? "py-1 text-[11px] tracking-wide"
+              : size === "sm"
+                ? "py-1.5 text-xs"
+                : "py-2 text-sm");
 
         const activeClass = isFlat
-          ? "text-foreground after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full after:bg-foreground/70"
+          ? "text-foreground after:absolute after:left-0 after:right-0 after:-bottom-px after:h-[2px] after:rounded-full after:bg-foreground/70"
           : isContextual
             ? cn(
                 "text-foreground shadow-[inset_0_1px_0_hsl(0_0%_100%/0.12)]",
@@ -81,8 +86,9 @@ export function Segmented<T extends string>({
             aria-selected={active}
             onClick={() => onChange(o.key)}
             className={cn(
-              "relative flex-1 font-medium transition-all duration-300",
-              isFlat ? "rounded-none pb-2" : isContextual ? "rounded-full" : "rounded-lg",
+              "relative font-medium transition-all duration-300",
+              isFlat ? "shrink-0 rounded-none" : "flex-1",
+              isFlat ? "" : isContextual ? "rounded-full" : "rounded-lg",
               sizeClass,
               active ? activeClass : inactiveClass,
             )}

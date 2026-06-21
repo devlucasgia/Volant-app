@@ -162,9 +162,10 @@ export function goalForPeriod(
     return n;
   };
 
+  const title = `Meta ${kind}`;
   if (period === "day") {
     const value = dailyOverride && dailyOverride > 0 ? dailyOverride : planDaily ?? g.daily;
-    return { value, title: `Meta ${kind} — hoje` };
+    return { value, title };
   }
   if (period === "week") {
     if (planDaily) {
@@ -173,21 +174,21 @@ export function goalForPeriod(
       const we = new Date(ws); we.setDate(we.getDate() + 6);
       const daysInWeek = countPlannedInRange(ws, we);
       const fallback = Math.min(7, opts.remainingWorkingDays ?? 7);
-      return { value: planDaily * (daysInWeek > 0 ? daysInWeek : fallback), title: `Meta ${kind} — semana` };
+      return { value: planDaily * (daysInWeek > 0 ? daysInWeek : fallback), title };
     }
-    return { value: g.weekly, title: `Meta ${kind} — semana` };
+    return { value: g.weekly, title };
   }
-  if (period === "month") return { value: g.monthly, title: `Meta ${kind} — mês` };
+  if (period === "month") return { value: g.monthly, title };
   if (period === "custom" && customRange) {
     if (planDaily) {
       const daysPlanned = countPlannedInRange(customRange.from, customRange.to);
       const daysCalendar = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
-      return { value: planDaily * (daysPlanned > 0 ? daysPlanned : daysCalendar), title: `Meta ${kind} — período` };
+      return { value: planDaily * (daysPlanned > 0 ? daysPlanned : daysCalendar), title };
     }
     const days = Math.max(1, differenceInCalendarDays(customRange.to, customRange.from) + 1);
-    return { value: g.daily * days, title: `Meta ${kind} — período` };
+    return { value: g.daily * days, title };
   }
-  return { value: g.monthly, title: `Meta ${kind}` };
+  return { value: g.monthly, title };
 }
 
 export function monthRange(): CustomRange {

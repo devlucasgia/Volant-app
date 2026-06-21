@@ -375,19 +375,19 @@ export default function Dashboard() {
   // Build the renderer map for each reorderable / hideable card.
   const blocks: Record<HomeCardKey, React.ReactNode> = {
     greeting: widgets.greeting ? (
-        <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
-          <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
+        <div key="greeting" className="pt-0 pb-0.5 animate-fade-in">
+          <div className="text-[19px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName}{greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
         </div>
         {greetingMessage && (
           <div className={cn(
-            "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+            "mt-0.5 text-[12px] text-muted-foreground/90 leading-snug",
             greetingStyleClass(greetingStyle),
           )}>
             {greetingMessage}
           </div>
         )}
-        <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
+        <div className="mt-0 text-[11px] text-muted-foreground/70 leading-snug">
           {contextualDate}
         </div>
       </div>
@@ -600,8 +600,8 @@ export default function Dashboard() {
             onClick={() => navigate('/ajustes/planejamento')}
             className="block w-full rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
           >
-            <div className="flex items-start gap-2">
-              <Gauge className={cn("h-4 w-4 shrink-0 mt-0.5 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
+            <div className="flex items-center gap-2">
+              <Gauge className={cn("h-4 w-4 shrink-0 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
               <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-foreground">
                 R$/km mínimo pra aceitar corrida
               </span>
@@ -609,7 +609,7 @@ export default function Dashboard() {
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground/50" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
             </div>
             {kmRequired > 0 && (
               <>
@@ -617,10 +617,11 @@ export default function Dashboard() {
                   value={kmPct}
                   className={cn("mt-2 h-2 transition-all duration-700", rpkStatusBarClass, kmDriven > kmRequired && "ring-1 ring-inset ring-foreground/10")}
                 />
-                <div className="mt-1 flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                <div className="mt-1 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span className="min-w-0 flex-1 tabular-nums leading-snug">
-                    {num(kmDriven, 0)} km rodados
-                    <span className="ml-1 text-muted-foreground/70">· pra cobrir todos os custos</span>
+                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>
+                    <span className="mx-1 text-muted-foreground/60">·</span>
+                    <span>Meta {num(kmRequired, 0)} km</span>
                   </span>
                   <span className={cn("shrink-0 tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
                     {num(kmRequired > 0 ? (kmDriven / kmRequired) * 100 : 0, 0)}%
@@ -658,7 +659,8 @@ export default function Dashboard() {
                       <PlatformLogo platformKey={k} label={meta.label} hex={meta.hex} size="sm" imageUrl={meta.imageUrl} />
                       <span className="truncate text-xs font-semibold text-foreground">{meta.label}</span>
                     </div>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="relative h-[7px] flex-1 overflow-hidden rounded-full bg-muted">
+
                       <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: meta.hex }} />
                     </div>
                     <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
@@ -713,7 +715,7 @@ export default function Dashboard() {
                       </span>
                       <span className="truncate text-xs font-semibold text-foreground">{Meta.label}</span>
                     </div>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="relative h-[7px] flex-1 overflow-hidden rounded-full bg-muted">
                       <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
                     </div>
                     <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
@@ -762,12 +764,12 @@ export default function Dashboard() {
     <>
       {/* Header compacto da Home — símbolo do Volant + saudação clicável + sino */}
       <header className="sticky top-0 z-20 border-b border-border/70 bg-background/85 backdrop-blur-lg">
-        <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+        <div className="flex items-center justify-between gap-3 px-4 py-1.5">
           <button
             type="button"
             onClick={() => greetingHasContent && navigate("/ajustes/personalizacao/saudacao", { state: { from: "/app" } })}
             className={cn(
-              "flex min-w-0 flex-1 items-center gap-3 rounded-xl py-1 pr-2 text-left transition-all duration-200",
+              "flex min-w-0 flex-1 items-center gap-3 rounded-xl py-0.5 pr-2 text-left transition-all duration-200",
               greetingHasContent && "hover:bg-muted/30 active:scale-[0.99]",
             )}
             aria-label="Editar saudação"
@@ -775,41 +777,42 @@ export default function Dashboard() {
             <img
               src={volantSymbol}
               alt="Volant"
-              width={43}
-              height={43}
+              width={37}
+              height={37}
               decoding="sync"
               loading="eager"
               fetchPriority="high"
-              className="h-[43px] w-[43px] shrink-0 self-center rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
+              className="h-[37px] w-[37px] shrink-0 self-center rounded-full shadow-[0_2px_8px_-4px_hsl(var(--success)/0.35)]"
             />
             <div className="min-w-0 flex-1 self-center">
               {greetingHasContent ? (
                 <>
-                  <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
+                  <div className="truncate text-[14px] font-bold leading-tight tracking-tight text-foreground">
                     Olá, {greetingName}
                     {greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
                   </div>
                   {greetingMessage && (
                     <div
                       className={cn(
-                        "truncate text-[10.8px] leading-snug text-muted-foreground/90",
+                        "truncate text-[10px] leading-snug text-muted-foreground/90",
                         greetingStyleClass(greetingStyle),
                       )}
                     >
                       {greetingMessage}
                     </div>
                   )}
-                  <div className="truncate text-[11px] leading-snug text-muted-foreground/70">
+                  <div className="truncate text-[10px] leading-snug text-muted-foreground/70">
                     {contextualDate}
                   </div>
                 </>
               ) : (
-                <div className="truncate text-[16.25px] font-bold leading-tight tracking-tight text-foreground">
+                <div className="truncate text-[14px] font-bold leading-tight tracking-tight text-foreground">
                   Volant
                 </div>
               )}
             </div>
           </button>
+
 
           <button
             type="button"
@@ -1073,7 +1076,7 @@ export default function Dashboard() {
                   <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
                   </div>
-                  <div className="space-y-4 rounded-2xl border border-border bg-card p-4">
+                  <div className="space-y-2.5 rounded-2xl border border-border bg-card p-4">
                     {blocks.byApp}
                     {!bothEmpty && <div className="border-t border-border/30" />}
                     {blocks.byExpense}
@@ -1139,7 +1142,7 @@ function PeriodBar({
   const activeText = "text-foreground";
   const inactiveClass = "text-muted-foreground/60 hover:text-foreground";
   return (
-    <div role="tablist" className="flex w-full items-stretch gap-1 bg-transparent">
+    <div role="tablist" className="flex w-full items-stretch gap-3 border-b border-border/30 bg-transparent">
       {items.map((o) => {
         const active = period === o.key;
         return (
@@ -1149,11 +1152,11 @@ function PeriodBar({
             aria-selected={active}
             onClick={() => onSelect(o.key)}
             className={cn(
-              "relative flex-1 py-2 text-sm font-medium transition-all duration-300",
+              "relative shrink-0 px-1 py-1.5 text-[15px] font-medium transition-all duration-300",
               active
                 ? cn(
                     activeText,
-                    "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-8 after:rounded-full",
+                    "after:absolute after:inset-x-0 after:-bottom-px after:h-[2px] after:rounded-full",
                     accentAfter,
                   )
                 : inactiveClass,
@@ -1170,11 +1173,11 @@ function PeriodBar({
         aria-selected={period === "custom"}
         onClick={onCalendarClick}
         className={cn(
-          "relative flex w-11 shrink-0 items-center justify-center py-2 transition-all duration-300",
+          "relative ml-auto flex w-11 shrink-0 items-center justify-center py-1.5 transition-all duration-300",
           period === "custom"
             ? cn(
                 activeText,
-                "after:absolute after:left-1/2 after:-translate-x-1/2 after:bottom-0.5 after:h-[2px] after:w-6 after:rounded-full",
+                "after:absolute after:inset-x-1 after:-bottom-px after:h-[2px] after:rounded-full",
                 accentAfter,
               )
             : inactiveClass,

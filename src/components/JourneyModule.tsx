@@ -145,7 +145,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           onClick={() => openGoal(false)}
           aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
           className={cn(
-            "group relative flex w-full items-center justify-center rounded-2xl border px-4 py-6 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "group relative flex w-full items-center justify-center rounded-2xl border px-4 py-3 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             isFolga
               ? "border-border bg-muted/20"
               : cn("bg-card animate-breath", pulseBorder),
@@ -164,7 +164,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
               </div>
             </div>
           ) : (
-            <Play className={cn("h-10 w-10", playColor)} fill="currentColor" />
+            <Play className={cn("h-8 w-8", playColor)} fill="currentColor" />
           )}
 
           <ChevronRight className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
