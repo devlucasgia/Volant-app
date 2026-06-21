@@ -715,7 +715,7 @@ export default function Dashboard() {
                       </span>
                       <span className="truncate text-xs font-semibold text-foreground">{Meta.label}</span>
                     </div>
-                    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className="relative h-[7px] flex-1 overflow-hidden rounded-full bg-muted">
                       <div className="absolute inset-y-0 left-0 rounded-full" style={{ width: `${pct}%`, backgroundColor: Meta.hex }} />
                     </div>
                     <span className="w-20 text-right text-sm font-semibold tabular-nums">{brl(v)}</span>
