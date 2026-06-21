@@ -411,9 +411,10 @@ export default function Dashboard() {
           onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
           aria-label="Ver meta"
             className={cn(
-              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card px-4 py-3 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
+
         >
           {goalReached && (
             <div
