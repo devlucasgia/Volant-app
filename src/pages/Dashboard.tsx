@@ -590,10 +590,8 @@ export default function Dashboard() {
       if (smartKmValue === null) return null;
       const kmRequired = kmPlannedForPeriod;
       const kmDriven = s.totalKm;
-      const kmRemaining = Math.max(0, kmRequired - kmDriven);
       const kmPct = kmRequired > 0 ? Math.min(100, (kmDriven / kmRequired) * 100) : 0;
-      const kmOver = kmRequired > 0 && kmDriven > kmRequired ? kmDriven - kmRequired : 0;
-      const kmOverPct = kmOver > 0 ? (kmOver / kmRequired) * 100 : 0;
+
       return (
         <div key="smartKm" className="flex flex-col items-center">
           <span aria-hidden className="h-0.5 w-px bg-border/40" />
