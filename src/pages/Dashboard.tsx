@@ -436,7 +436,7 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
+                <span className="min-w-0 leading-tight break-words">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
                 {isFolgaEffective && (
                   <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     <Coffee className="h-2.5 w-2.5" /> Descanso
