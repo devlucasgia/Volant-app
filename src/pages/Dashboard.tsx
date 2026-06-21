@@ -458,10 +458,11 @@ export default function Dashboard() {
             {!isFolgaEffective && (
               <Progress
                 value={goalPct}
-                className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
+                className={cn("mt-2.5 h-2 transition-all duration-700", themeBar)}
               />
             )}
-            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-2" : "mt-1.5")}>
+            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-1.5" : "mt-1")}>
+
               <span className="tabular-nums truncate">
                 {isFolgaEffective
                   ? (isFolgaTodayEffective
