@@ -164,7 +164,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
               </div>
             </div>
           ) : (
-            <Play className={cn("h-10 w-10", playColor)} fill="currentColor" />
+            <Play className={cn("h-8 w-8", playColor)} fill="currentColor" />
           )}
 
           <ChevronRight className="absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 group-active:translate-x-1" />
