@@ -271,6 +271,30 @@ export default function Dashboard() {
     return v > 0 ? v : null;
   }, [isFull, plan.isPlanningConfigured, plan.homeSmartRpkGross]);
 
+  // Status compartilhado entre R$/km mínimo (KM Inteligente) e R$/km real (Performance).
+  // Compara perKm real com o mínimo necessário. Sem dados => neutro.
+  type RpkStatus = "none" | "ok" | "warn" | "bad";
+  const rpkMin = plan.isPlanningConfigured ? plan.homeSmartRpkGross : 0;
+  const rpkStatus: RpkStatus = (() => {
+    if (rpkMin <= 0 || s.totalKm <= 0 || s.perKm <= 0) return "none";
+    const ratio = s.perKm / rpkMin;
+    if (ratio >= 1) return "ok";
+    if (ratio >= 0.8) return "warn";
+    return "bad";
+  })();
+  const rpkStatusTextClass =
+    rpkStatus === "ok" ? "text-success"
+    : rpkStatus === "warn" ? "text-warning"
+    : rpkStatus === "bad" ? "text-destructive"
+    : "text-muted-foreground";
+  const rpkStatusBarClass =
+    rpkStatus === "ok" ? "[&>div]:bg-success"
+    : rpkStatus === "warn" ? "[&>div]:bg-warning"
+    : rpkStatus === "bad" ? "[&>div]:bg-destructive"
+    : "[&>div]:bg-muted-foreground/50";
+  const rpkDiff = s.perKm - rpkMin;
+
+
   // KM planejado fatiado pelo período ativo — replica a mesma mecânica de goalForPeriod.
   // Base: averageKmPerDay × dias planejados no recorte (semana/custom contam planningSelectedDates).
   const kmPlannedForPeriod = useMemo(() => {
