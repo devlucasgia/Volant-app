@@ -271,6 +271,30 @@ export default function Dashboard() {
     return v > 0 ? v : null;
   }, [isFull, plan.isPlanningConfigured, plan.homeSmartRpkGross]);
 
+  // Status compartilhado entre R$/km mínimo (KM Inteligente) e R$/km real (Performance).
+  // Compara perKm real com o mínimo necessário. Sem dados => neutro.
+  type RpkStatus = "none" | "ok" | "warn" | "bad";
+  const rpkMin = plan.isPlanningConfigured ? plan.homeSmartRpkGross : 0;
+  const rpkStatus: RpkStatus = (() => {
+    if (rpkMin <= 0 || s.totalKm <= 0 || s.perKm <= 0) return "none";
+    const ratio = s.perKm / rpkMin;
+    if (ratio >= 1) return "ok";
+    if (ratio >= 0.8) return "warn";
+    return "bad";
+  })();
+  const rpkStatusTextClass =
+    rpkStatus === "ok" ? "text-success"
+    : rpkStatus === "warn" ? "text-warning"
+    : rpkStatus === "bad" ? "text-destructive"
+    : "text-muted-foreground";
+  const rpkStatusBarClass =
+    rpkStatus === "ok" ? "[&>div]:bg-success"
+    : rpkStatus === "warn" ? "[&>div]:bg-warning"
+    : rpkStatus === "bad" ? "[&>div]:bg-destructive"
+    : "[&>div]:bg-muted-foreground/50";
+  const rpkDiff = s.perKm - rpkMin;
+
+
   // KM planejado fatiado pelo período ativo — replica a mesma mecânica de goalForPeriod.
   // Base: averageKmPerDay × dias planejados no recorte (semana/custom contam planningSelectedDates).
   const kmPlannedForPeriod = useMemo(() => {
@@ -387,9 +411,10 @@ export default function Dashboard() {
           onClick={() => navigate("/ajustes/planejamento", { state: { returnTo: "/app" } })}
           aria-label="Ver meta"
             className={cn(
-              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card p-4 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+              "group relative z-10 w-full cursor-pointer overflow-hidden rounded-2xl border bg-card px-4 py-3 text-left transition-all duration-500 active:scale-[0.99] hover:bg-card/95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             goalReached ? cn(themeBorderReached, themeGradientReached) : "border-border",
           )}
+
         >
           {goalReached && (
             <div
@@ -411,7 +436,7 @@ export default function Dashboard() {
                 ) : (
                   <Target className="h-4 w-4 shrink-0" />
                 )}
-                <span className="truncate">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
+                <span className="min-w-0 leading-tight break-words">{isFolgaEffective ? (isFolgaTodayEffective ? "Folga programada" : "Dia de folga") : periodGoal.title}</span>
                 {isFolgaEffective && (
                   <span className="ml-1 inline-flex items-center gap-1 rounded-full border border-border/50 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                     <Coffee className="h-2.5 w-2.5" /> Descanso
@@ -433,10 +458,11 @@ export default function Dashboard() {
             {!isFolgaEffective && (
               <Progress
                 value={goalPct}
-                className={cn("mt-3 h-2 transition-all duration-700", themeBar)}
+                className={cn("mt-2.5 h-2 transition-all duration-700", themeBar)}
               />
             )}
-            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-2" : "mt-1.5")}>
+            <div className={cn("flex items-center justify-between gap-3 text-xs text-muted-foreground", isFolgaEffective ? "mt-1.5" : "mt-1")}>
+
               <span className="tabular-nums truncate">
                 {isFolgaEffective
                   ? (isFolgaTodayEffective
@@ -468,7 +494,7 @@ export default function Dashboard() {
               )}
             </div>
             {monthlyProjection !== null && (
-              <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+              <div className="mt-1.5 border-t border-border/60 pt-1.5 text-[11px] text-muted-foreground">
                 Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
               </div>
             )}
@@ -498,12 +524,19 @@ export default function Dashboard() {
               <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalHours, 1)}h trabalhadas</div>
             </div>
             <div className="flex flex-col items-center justify-center gap-1 px-3 py-3.5">
-              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-info">
+              <div className={cn("flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider transition-colors duration-300", rpkStatusTextClass)}>
                 <Route className="h-3 w-3" /> R$ / km
               </div>
-              <div className="text-2xl font-bold tabular-nums text-foreground leading-none">{brl(s.perKm)}</div>
-              <div className="text-[11px] text-muted-foreground tabular-nums">{num(s.totalKm, 1)} km rodados</div>
+              <div className={cn("text-2xl font-bold tabular-nums leading-none transition-colors duration-300", rpkStatus === "none" ? "text-foreground" : rpkStatusTextClass)}>{brl(s.perKm)}</div>
+              <div className={cn("text-[11px] tabular-nums transition-colors duration-300", rpkStatus === "none" ? "text-muted-foreground" : rpkStatusTextClass)}>
+                {rpkStatus === "none"
+                  ? (rpkMin > 0 ? "Aguardando registros" : `${num(s.totalKm, 1)} km rodados`)
+                  : rpkStatus === "ok"
+                    ? `${brl(Math.abs(rpkDiff))} acima do mínimo`
+                    : `${brl(Math.abs(rpkDiff))} abaixo do mínimo`}
+              </div>
             </div>
+
           </div>
         )}
       </section>
@@ -557,10 +590,8 @@ export default function Dashboard() {
       if (smartKmValue === null) return null;
       const kmRequired = kmPlannedForPeriod;
       const kmDriven = s.totalKm;
-      const kmRemaining = Math.max(0, kmRequired - kmDriven);
       const kmPct = kmRequired > 0 ? Math.min(100, (kmDriven / kmRequired) * 100) : 0;
-      const kmOver = kmRequired > 0 && kmDriven > kmRequired ? kmDriven - kmRequired : 0;
-      const kmOverPct = kmOver > 0 ? (kmOver / kmRequired) * 100 : 0;
+
       return (
         <div key="smartKm" className="flex flex-col items-center">
           <span aria-hidden className="h-0.5 w-px bg-border/40" />
@@ -569,37 +600,31 @@ export default function Dashboard() {
             onClick={() => navigate('/ajustes/planejamento')}
             className="block w-full rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
           >
-            <div className="flex items-center gap-2">
-              <Gauge className="h-4 w-4 shrink-0 text-info" />
-              <span className="text-[13px] font-semibold text-foreground">R$/km mínimo</span>
-              <span className="ml-auto text-[15px] font-bold tabular-nums text-foreground">
+            <div className="flex items-start gap-2">
+              <Gauge className={cn("h-4 w-4 shrink-0 mt-0.5 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
+              <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-foreground">
+                R$/km mínimo pra aceitar corrida
+              </span>
+              <span className="ml-1 shrink-0 text-[17px] font-bold tabular-nums text-foreground animate-breath-soft">
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground/50" />
             </div>
             {kmRequired > 0 && (
               <>
                 <Progress
                   value={kmPct}
-                  className="mt-2.5 h-2 [&>div]:bg-info transition-all duration-700"
+                  className={cn("mt-2 h-2 transition-all duration-700", rpkStatusBarClass, kmDriven > kmRequired && "ring-1 ring-inset ring-foreground/10")}
                 />
-                <div className="mt-1.5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
-                  <span className="tabular-nums truncate">
-                    {kmOver > 0
-                      ? `${num(kmOver, 0)} km acima do plano`
-                      : `Faltam ${num(kmRemaining, 0)} km`}
+                <div className="mt-1 flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                  <span className="min-w-0 flex-1 tabular-nums leading-snug">
+                    {num(kmDriven, 0)} km rodados
                     <span className="ml-1 text-muted-foreground/70">· pra cobrir todos os custos</span>
                   </span>
-                  <div className="flex shrink-0 items-center gap-1.5">
-                    {kmOver > 0 && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-info/40 bg-info/10 px-1.5 py-0.5 text-[10px] font-semibold text-info animate-fade-in">
-                        <TrendingUp className="h-2.5 w-2.5" />
-                        {kmOverPct >= 1 ? `+${num(kmOverPct, 0)}%` : `+${num(kmOver, 0)} km`}
-                      </span>
-                    )}
-                    <span className="tabular-nums font-semibold text-info">{num(kmPct, 0)}%</span>
-                  </div>
+                  <span className={cn("shrink-0 tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
+                    {num(kmRequired > 0 ? (kmDriven / kmRequired) * 100 : 0, 0)}%
+                  </span>
                 </div>
               </>
             )}
@@ -607,6 +632,7 @@ export default function Dashboard() {
         </div>
       );
     })() : null,
+
 
 
     byApp: widgets.byApp ? (() => {
@@ -1027,6 +1053,14 @@ export default function Dashboard() {
             ? (unifiedSlotKey === "byApp" ? "byExpense" : "byApp")
             : null;
 
+          // Item 1: agrupa Meta + KM Inteligente sob eyebrow "Planejamento Inteligente"
+          // quando ambos estão visíveis e smartKm aparece imediatamente após goal.
+          const goalIdx = orderedKeys.indexOf("goal");
+          const smartIdx = orderedKeys.indexOf("smartKm");
+          const showPlanningEyebrow =
+            Boolean(widgets.goal && widgets.smartKm) &&
+            goalIdx >= 0 && smartIdx === goalIdx + 1;
+
           return orderedKeys.map((k, index, arr) => {
             if (k === suppressedKey) return null;
 
@@ -1058,12 +1092,24 @@ export default function Dashboard() {
                   ? "mt-3"
                   : "mt-5";
 
+            if (showPlanningEyebrow && k === "goal") {
+              return (
+                <div key={k} className={marginClass}>
+                  <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    <Target className="h-3.5 w-3.5" /> Planejamento Inteligente
+                  </div>
+                  {block}
+                </div>
+              );
+            }
+
             return (
               <div key={k} className={marginClass}>
                 {block}
               </div>
             );
           }).filter(Boolean);
+
         })()}
       </div>
     </>
