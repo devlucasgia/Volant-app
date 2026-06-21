@@ -375,19 +375,19 @@ export default function Dashboard() {
   // Build the renderer map for each reorderable / hideable card.
   const blocks: Record<HomeCardKey, React.ReactNode> = {
     greeting: widgets.greeting ? (
-        <div key="greeting" className="pt-0.5 pb-1 animate-fade-in">
-          <div className="text-[22px] font-bold tracking-tight text-foreground leading-tight">
+        <div key="greeting" className="pt-0 pb-0.5 animate-fade-in">
+          <div className="text-[19px] font-bold tracking-tight text-foreground leading-tight">
           Olá, {greetingName}{greetingEmoji ? <> <span aria-hidden>{greetingEmoji}</span></> : null}
         </div>
         {greetingMessage && (
           <div className={cn(
-            "mt-1 text-[13px] text-muted-foreground/90 leading-snug",
+            "mt-0.5 text-[12px] text-muted-foreground/90 leading-snug",
             greetingStyleClass(greetingStyle),
           )}>
             {greetingMessage}
           </div>
         )}
-        <div className="mt-0.5 text-[12px] text-muted-foreground/70 leading-snug">
+        <div className="mt-0 text-[11px] text-muted-foreground/70 leading-snug">
           {contextualDate}
         </div>
       </div>
