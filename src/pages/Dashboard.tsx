@@ -600,8 +600,8 @@ export default function Dashboard() {
             onClick={() => navigate('/ajustes/planejamento')}
             className="block w-full rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-transform active:scale-[0.99]"
           >
-            <div className="flex items-start gap-2">
-              <Gauge className={cn("h-4 w-4 shrink-0 mt-0.5 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
+            <div className="flex items-center gap-2">
+              <Gauge className={cn("h-4 w-4 shrink-0 animate-breath-soft transition-colors duration-300", rpkStatusTextClass)} />
               <span className="min-w-0 flex-1 text-[13px] font-semibold leading-tight text-foreground">
                 R$/km mínimo pra aceitar corrida
               </span>
@@ -609,7 +609,7 @@ export default function Dashboard() {
                 {brl(smartKmValue)}
                 <span className="ml-0.5 text-[11px] font-normal text-muted-foreground">/km</span>
               </span>
-              <ChevronRight className="h-3.5 w-3.5 shrink-0 mt-1 text-muted-foreground/50" />
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/50" />
             </div>
             {kmRequired > 0 && (
               <>
@@ -617,10 +617,11 @@ export default function Dashboard() {
                   value={kmPct}
                   className={cn("mt-2 h-2 transition-all duration-700", rpkStatusBarClass, kmDriven > kmRequired && "ring-1 ring-inset ring-foreground/10")}
                 />
-                <div className="mt-1 flex items-start justify-between gap-3 text-xs text-muted-foreground">
+                <div className="mt-1 flex items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span className="min-w-0 flex-1 tabular-nums leading-snug">
-                    {num(kmDriven, 0)} km rodados
-                    <span className="ml-1 text-muted-foreground/70">· pra cobrir todos os custos</span>
+                    <span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>
+                    <span className="mx-1 text-muted-foreground/60">·</span>
+                    <span>Meta {num(kmRequired, 0)} km</span>
                   </span>
                   <span className={cn("shrink-0 tabular-nums font-semibold transition-colors duration-300", rpkStatusTextClass)}>
                     {num(kmRequired > 0 ? (kmDriven / kmRequired) * 100 : 0, 0)}%
