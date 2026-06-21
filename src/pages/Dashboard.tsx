@@ -494,7 +494,7 @@ export default function Dashboard() {
               )}
             </div>
             {monthlyProjection !== null && (
-              <div className="mt-2 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+              <div className="mt-1.5 border-t border-border/60 pt-1.5 text-[11px] text-muted-foreground">
                 Projeção do mês: <span className="font-semibold tabular-nums text-foreground/80">{brl(monthlyProjection)}</span>
               </div>
             )}
