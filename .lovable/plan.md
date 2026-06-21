@@ -1,67 +1,35 @@
-## Sprint 6 — Filtros, badge da Meta Bruta e texto do KM
+Plano de implementação para esta sprint pontual:
 
-Três correções pontuais. Sem mexer em `planningEngine`, queries, DataContext, DnD, AuthContext, demais cards, Admin.
+1. Corrigir definitivamente o alinhamento dos filtros
+- Ajustar o `Segmented` no modo `flat`, que hoje força `justify-start`; ele passará a centralizar o grupo de abas por padrão.
+- Preservar a largura real dos botões, sem `flex-1`, para não esticar os textos.
+- Manter os filtros das outras telas com o mesmo tamanho atual, mudando apenas o alinhamento visual para centro.
+- Corrigir o filtro da Home separadamente: hoje o calendário usa `ml-auto`, empurrando os tabs para a esquerda. Vou remover essa causa e centralizar somente o grupo `Hoje / Semana / Mês`, mantendo o ícone de calendário à direita.
+- Diminuir apenas as palavras da Home (`Hoje`, `Semana`, `Mês`) em 20%, mantendo os demais filtros exatamente no tamanho atual.
 
----
+2. Ajustar Organização de Cards e demais filtros flat
+- Como a Organização de Cards usa o mesmo `Segmented` flat, ela herdará a centralização correta.
+- Validar também os filtros de Relatórios e Histórico que usam esse mesmo componente.
+- Não tocar em DnD, ordem dos cards, filtros de dados, queries ou comportamento de clique.
 
-### Item 1 — Filtros de período: aumentar presença dos tabs (não o gap)
+3. Adicionar suporte a veículo elétrico / kWh em Custos Variáveis
+- Acrescentar a opção `Elétrico` no tipo de combustível/energia.
+- Atualizar os textos do bloco conforme o tipo selecionado:
+  - Combustão/flex: `Consumo (km/L)` e `Preço do litro`.
+  - Elétrico: `Consumo (km/kWh)` e `Preço do kWh`.
+- Reutilizar os campos existentes (`fuel_consumption_kml`, `fuel_price`, `fuel_type`) para evitar alteração estrutural de tabela.
+- Atualizar os tipos TypeScript para aceitar o novo valor.
+- Como já existe uma restrição no banco para `fuel_type`, aplicar uma migração mínima apenas para permitir o novo valor, sem criar tabela/campo novo e sem mexer em dados existentes.
 
-Diagnóstico confirmado lendo o código: hoje cada tab tem `px-1` (Segmented flat e `PeriodBar`), então o grupo todo é dimensionado pelo conteúdo. Aumentar o `gap` (Sprint 5) só adicionou ar entre itens, sem aumentar a presença do grupo. Solução = **Abordagem A** do brief: aumentar o padding horizontal de cada tab, mantendo `shrink-0` (sem voltar a `flex-1`).
+4. Impacto em planejamento, relatórios e cálculos
+- Planejamento inteligente: o cálculo atual já usa `km planejado / consumo × preço`; isso funciona tanto para litro quanto para kWh. Vou apenas ajustar o rótulo do item calculado para `Energia estimada` quando o tipo for elétrico e manter `Combustível estimado` nos demais casos.
+- Relatórios: não há cálculo direto baseado em `fuel_type`; os relatórios continuam usando os lançamentos reais de ganhos/gastos. Sem alteração de lógica.
+- Smart KM: permanece intacto, pois usa custos fixos/manutenção e não deve receber custos variáveis, conforme regra já aprovada.
 
-**`src/components/Segmented.tsx` (tone `flat`, sizeClass linhas 56-64)**
-- `xs`: `py-1 px-1` → `py-1 px-3`
-- `sm`: `py-1.5 px-1` → `py-1.5 px-4`
-- `md`: `py-1.5 px-1` → `py-1.5 px-5`
-- Reduzir gap do track flat (linha 41-42): `gap-6` → `gap-1` (já que agora cada tab tem padding interno suficiente; evita vão duplicado).
-
-**`src/pages/Dashboard.tsx` — `PeriodBar` (linhas 1153, 1163)**
-- Track: `gap-6` → `gap-1`.
-- Cada tab: `px-1 py-1.5 text-[15px]` → `px-5 py-1.5 text-[15px]`.
-- Manter `shrink-0`, `border-b border-border/30`, e o ícone calendário/download com `ml-auto`.
-
-Resultado esperado: cada tab fica visualmente maior (Nubank-like), o grupo ocupa ~70% da largura útil, vão à direita encolhe, sem esticar nenhum tab individualmente.
-
-Cobertura automática: Home (`PeriodBar`), Relatórios, Histórico e Organização de Cards (`Segmented flat`/`flat size="sm"`). Tones `default` e `contextual` ficam intactos.
-
----
-
-### Item 2 — Badge da Meta: sempre percentual em Bruto e Líquido
-
-Causa raiz em `src/pages/Dashboard.tsx` linha 489:
-```
-{overPct >= 1 ? `+${num(overPct, 0)}%` : `+${brl(overAmount)}`}
-```
-Quando o excedente é < 1% (caso típico da meta Bruta batida por pouco), cai no fallback monetário. Não é branch por visão — é fallback genérico que aparece sobretudo na Bruta porque o valor da meta é maior.
-
-**Correção (linha 489):**
-```
-+{overPct >= 1 ? num(overPct, 0) : num(overPct, 1)}%
-```
-Sempre `%`, com 1 casa quando < 1% para evitar "+0%" enganoso. `TrendingUp` e estilos do badge intactos.
-
----
-
-### Item 3 — KM Inteligente: incluir "rodados"
-
-**`src/pages/Dashboard.tsx` linha 623:**
-- `<span className="font-bold text-foreground">{num(kmDriven, 0)} km</span>` → `... {num(kmDriven, 0)} km rodados</span>`
-
-Resto da linha (`·`, `Meta {kmRequired} km`, percentual, badge neutro, cor de status) inalterado.
-
----
-
-### Arquivos tocados
-
-- `src/components/Segmented.tsx` — padding dos tabs flat, gap reduzido.
-- `src/pages/Dashboard.tsx` — `PeriodBar` (padding/gap), badge da Meta (sempre %), texto KM ("rodados").
-
-### Não tocados
-
-`planningEngine`, queries, DataContext, summarize, DnD, AuthContext, herói, Ganhos, Gastos, Jornada, Histórico (lógica), Ajustes, Admin. Cor de status KM↔Performance, badge neutro do KM (Sprint 5) e Sprints 3/4 inalterados.
-
-### Verificação
-
-Playwright 360×800 + screenshot:
-1. Home/Relatórios/Histórico/Organização de Cards: tabs com presença, sem vão grande à direita; comparar com prints de referência.
-2. Card Meta Bruta com meta batida por pouco (ex: R$ 1,24 acima): badge `+0.5%` (ou similar), nunca `+R$`.
-3. KM card: rodapé "X km rodados · Meta Y km".
+5. Validação obrigatória
+- Verificar visualmente no mobile se os filtros estão centralizados de verdade:
+  - Home: `Hoje / Semana / Mês` centralizados, calendário preservado à direita, texto 20% menor só na Home.
+  - Organização de Cards: `Tela inicial / Relatórios` centralizados.
+  - Relatórios/Histórico: filtros flat centralizados sem alteração de tamanho.
+- Verificar no formulário de Custos Variáveis se `Elétrico` aparece e se os labels mudam para `km/kWh` e `Preço do kWh`.
+- Não alterar planningEngine estruturalmente, queries, DataContext, DnD, AuthContext, Admin ou demais cards.
