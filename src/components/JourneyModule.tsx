@@ -145,7 +145,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           onClick={() => openGoal(false)}
           aria-label={isFolga ? "Trabalhar hoje mesmo assim" : "Iniciar jornada"}
           className={cn(
-            "group relative flex w-full items-center justify-center rounded-2xl border px-4 py-6 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+            "group relative flex w-full items-center justify-center rounded-2xl border px-4 py-3 shadow-sm transition-all duration-200 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
             isFolga
               ? "border-border bg-muted/20"
               : cn("bg-card animate-breath", pulseBorder),
