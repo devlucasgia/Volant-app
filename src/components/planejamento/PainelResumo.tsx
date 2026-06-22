@@ -120,7 +120,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
     remainingWorkdaysCount: s.remainingWorkdaysCount,
     currentGross: s.currentGross,
     homeGrossTarget: s.homeGrossTarget,
-    daysWorkedThisMonth,
+    daysWorkedThisMonth: daysWorkedInPlan,
     selectedWorkdaysCount: s.selectedWorkdaysCount,
     currentKm: s.currentKm,
   });
