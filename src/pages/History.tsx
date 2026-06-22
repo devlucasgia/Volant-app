@@ -133,13 +133,17 @@ function SwipeRow({ children, onEdit, onDelete }: SwipeRowProps) {
 }
 
 export default function History() {
-  const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
+  const { entries, removeEntry, removeGroup, platformMetaFor, expenseMetaFor } = useData();
   const { openDrawer } = useUI();
   const { isLimited, requirePremium } = useAccess();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<
+    | { kind: "single"; entry: Entry }
+    | { kind: "session"; groupId: string; count: number }
+    | null
+  >(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -163,25 +167,60 @@ export default function History() {
     });
   }, [entries, filter, search, platformMetaFor, expenseMetaFor]);
 
+  // Agrupa por dia E por group_id (sessões multi-plataforma viram um único item).
   const grouped = useMemo(() => {
-    const acc: Record<string, Entry[]> = {};
+    const acc: Record<string, HistoryItem[]> = {};
+    // Primeira passada: junta linhas por groupId mantendo a ordem temporal.
+    const sessionsByGroup = new Map<string, EarningEntry[]>();
+    const ordered: Entry[] = [];
     for (const e of filtered) {
+      if (e.type === "earning" && e.groupId) {
+        const list = sessionsByGroup.get(e.groupId);
+        if (list) { list.push(e); continue; }
+        const arr: EarningEntry[] = [e];
+        sessionsByGroup.set(e.groupId, arr);
+        ordered.push(e); // marca a posição do primeiro encontro
+        continue;
+      }
+      ordered.push(e);
+    }
+    for (const e of ordered) {
       const day = format(new Date(e.date), "yyyy-MM-dd");
-      (acc[day] ||= []).push(e);
+      const list = (acc[day] ||= []);
+      if (e.type === "earning" && e.groupId) {
+        const rows = sessionsByGroup.get(e.groupId)!;
+        // Só vira "session" quando tem 2+ linhas; se sobrou 1 (filtros), trata como single
+        if (rows.length > 1) {
+          list.push({ kind: "session", rows, groupId: e.groupId, id: `g:${e.groupId}`, date: rows[0].date });
+        } else {
+          list.push({ kind: "single", entry: rows[0], id: rows[0].id, date: rows[0].date });
+        }
+      } else {
+        list.push({ kind: "single", entry: e, id: e.id, date: e.date });
+      }
     }
     return acc;
   }, [filtered]);
 
   const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-  const handleEdit = (e: Entry) => {
+  const handleEditSingle = (e: Entry) => {
     if (!requirePremium()) return;
     openDrawer({ editing: e });
   };
-  const handleDeleteRequest = (e: Entry) => {
+  const handleEditSession = (rows: EarningEntry[]) => {
     if (!requirePremium()) return;
-    setConfirmDelete(e);
+    openDrawer({ editingGroup: rows });
   };
+  const handleDeleteSingle = (e: Entry) => {
+    if (!requirePremium()) return;
+    setConfirmDelete({ kind: "single", entry: e });
+  };
+  const handleDeleteSession = (groupId: string, count: number) => {
+    if (!requirePremium()) return;
+    setConfirmDelete({ kind: "session", groupId, count });
+  };
+
 
   return (
     <>
