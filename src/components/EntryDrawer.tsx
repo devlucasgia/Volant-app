@@ -21,6 +21,7 @@ import { useDraftPersistence } from "@/hooks/useDraftPersistence";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
 import { HoursWheel } from "@/components/entry/HoursWheel";
 import { PlatformRow, type PlatformRowData } from "@/components/entry/PlatformRow";
+import { PlatformLogo } from "@/components/PlatformLogo";
 import { realCurrentKm } from "@/lib/carKm";
 import { brl } from "@/lib/format";
 
