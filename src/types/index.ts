@@ -149,6 +149,12 @@ export interface Settings {
   rpkBase: number | null;
   /** Média de KM por dia trabalhado informada no Planejamento Inteligente. */
   planningAvgKmPerDay: number | null;
+  /** Snapshot do plano original (gravado em Refazer/fresh, nunca em Ajustar). */
+  planningOriginalGoal?: number | null;
+  planningOriginalGoalType?: GoalType | null;
+  planningOriginalAvgKm?: number | null;
+  planningOriginalDates?: string[] | null;
+  planningOriginalCreatedAt?: string | null;
 }
 
 export interface CustomCategory {
