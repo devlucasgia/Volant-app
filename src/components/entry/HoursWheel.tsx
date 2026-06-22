@@ -112,7 +112,7 @@ function Wheel({
   );
 }
 
-export function HoursWheel({ value, onChange, maxHours = 23, minuteStep = 5 }: Props) {
+export function HoursWheel({ value, onChange, maxHours = 23, minuteStep = 1 }: Props) {
   const initial = fromDecimal(value, minuteStep);
   const [mode, setMode] = useState<"wheel" | "type">("wheel");
   const [h, setH] = useState<number>(initial.h);
@@ -131,7 +131,7 @@ export function HoursWheel({ value, onChange, maxHours = 23, minuteStep = 5 }: P
   };
 
   const hours = Array.from({ length: maxHours + 1 }, (_, i) => i);
-  const minutes = Array.from({ length: Math.floor(60 / minuteStep) }, (_, i) => i * minuteStep);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   return (
     <div className="space-y-2">
