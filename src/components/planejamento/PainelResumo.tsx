@@ -180,14 +180,31 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         </div>
       </div>
 
-      {/* ============ 3. Insights placeholder ============ */}
+      {/* ============ 3. Insights inteligentes ============ */}
       <div className="mt-7">
         <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <Lightbulb className="h-3 w-3" /> Insights inteligentes
         </div>
-        <div className="rounded-2xl border border-dashed border-border/50 bg-card/40 p-4 text-center text-[12px] text-muted-foreground">
-          Insights do seu plano chegam em breve.
-        </div>
+        {insights.length > 0 ? (
+          <div className="space-y-2">
+            {insights.map((insight, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2.5 rounded-2xl border p-3 text-[12.5px] leading-snug",
+                  toneClass[insight.tone],
+                )}
+              >
+                <span className="text-base leading-none mt-0.5">{insight.icon}</span>
+                <span className="flex-1">{insight.text}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border/50 bg-card/40 p-4 text-center text-[12px] text-muted-foreground">
+            Registre seus primeiros dados pra ver insights do seu plano.
+          </div>
+        )}
       </div>
 
       {/* ============ 4. Plano vs Realizado ============ */}
