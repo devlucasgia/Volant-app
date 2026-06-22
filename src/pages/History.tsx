@@ -49,13 +49,12 @@ const FILTERS = [
 const SWIPE_REVEAL = 92; // px
 
 interface SwipeRowProps {
-  entry: Entry;
   children: React.ReactNode;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function SwipeRow({ entry, children, onEdit, onDelete }: SwipeRowProps) {
+function SwipeRow({ children, onEdit, onDelete }: SwipeRowProps) {
   const [dx, setDx] = useState(0);
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
