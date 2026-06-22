@@ -116,7 +116,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Meta
             </div>
-            <div className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
               {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">pra faturar</div>
@@ -127,7 +127,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             </div>
             {s.homeSmartRpkGross > 0 ? (
               <div className="flex items-baseline gap-0.5">
-                <span className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+                <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
                   {fmtBRL2(s.homeSmartRpkGross).replace("R$", "").trim()}
                 </span>
                 <span className="text-lg font-semibold text-emerald-200/70 leading-none self-end mb-0.5">
@@ -135,7 +135,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 </span>
               </div>
             ) : (
-              <div className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+              <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
                 —
               </div>
             )}
