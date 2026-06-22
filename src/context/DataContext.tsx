@@ -255,6 +255,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (shouldTriggerMaintFor(e)) triggerMaintenanceCheck(user.id);
   }, [user, triggerMaintenanceCheck]);
 
+  const addEntries = useCallback(async (es: Entry[]) => {
+    if (!user || es.length === 0) return;
+    setEntries((prev) => [...es, ...prev]);
+    const rows = es.map((e) => entryToRow(e, user.id));
+    const { error } = await supabase.from("entries").insert(rows as any);
+    if (error) {
+      const ids = new Set(es.map((e) => e.id));
+      setEntries((prev) => prev.filter((x) => !ids.has(x.id)));
+      throw error;
+    }
+    // Linha-âncora é a primeira; se ela tiver km > 0 (ou for entrada solta com km>0), dispara alerta.
+    if (es.some((e) => shouldTriggerMaintFor(e))) triggerMaintenanceCheck(user.id);
+  }, [user, triggerMaintenanceCheck]);
+
   const removeEntry = useCallback(async (id: string) => {
     const snapshot = entries;
     const removed = entries.find((x) => x.id === id);
@@ -266,6 +280,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       throw error;
     }
     if (removed && shouldTriggerMaintFor(removed)) triggerMaintenanceCheck(user?.id);
+  }, [entries, user, triggerMaintenanceCheck]);
+
+  const removeGroup = useCallback(async (groupId: string) => {
+    if (!user) return;
+    const snapshot = entries;
+    const removed = entries.filter((x) => x.type === "earning" && (x as any).groupId === groupId);
+    if (removed.length === 0) return;
+    setEntries((prev) => prev.filter((x) => !(x.type === "earning" && (x as any).groupId === groupId)));
+    const { error } = await supabase.from("entries").delete().eq("group_id", groupId);
+    if (error) { setEntries(snapshot); throw error; }
+    if (removed.some((e) => shouldTriggerMaintFor(e))) triggerMaintenanceCheck(user.id);
   }, [entries, user, triggerMaintenanceCheck]);
 
   const updateEntry = useCallback(async (e: Entry) => {
