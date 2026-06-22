@@ -288,7 +288,105 @@ export default function History() {
               </div>
 
               <div className="space-y-2">
-                {items.map((e) => {
+                {items.map((item) => {
+                  // ─── Card de sessão multi-plataforma ───
+                  if (item.kind === "session") {
+                    const rows = item.rows;
+                    const anchor = rows[0];
+                    const total = rows.reduce((s, r) => s + (r.gross || 0), 0);
+                    const km = anchor.km;
+                    const hrs = anchor.hours;
+
+                    const card = (
+                      <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+                        <div className="flex items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-success/15 text-success">
+                                Jornada · {rows.length} apps
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(anchor.date), "HH:mm")}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-base font-bold tabular-nums text-success">
+                              + {brl(total)}
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Ações">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditSession(rows)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Editar jornada
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteSession(item.groupId, rows.length)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir jornada
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="mt-3 space-y-1.5">
+                          {rows.map((r) => {
+                            const meta = platformMetaFor(r.app);
+                            return (
+                              <div key={r.id} className="flex items-center gap-2.5">
+                                <PlatformLogo
+                                  platformKey={r.app}
+                                  label={meta.label}
+                                  hex={meta.hex}
+                                  imageUrl={meta.imageUrl}
+                                  size="sm"
+                                />
+                                <span className="truncate text-xs font-medium">{meta.label}</span>
+                                {(r.rides ?? 0) > 0 && (
+                                  <span className="text-[11px] text-muted-foreground">{r.rides} corr.</span>
+                                )}
+                                <span className="ml-auto text-xs font-bold tabular-nums text-success">
+                                  {brl(r.gross)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {(km > 0 || hrs > 0) && (
+                          <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-2 text-[11px] text-muted-foreground">
+                            {km > 0 && <span>{km} km</span>}
+                            {km > 0 && hrs > 0 && <span>·</span>}
+                            {hrs > 0 && <span>{hrs}h</span>}
+                          </div>
+                        )}
+                        {anchor.notes && (
+                          <div className="mt-2 truncate text-[11px] text-muted-foreground">
+                            {anchor.notes}
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <SwipeRow
+                        key={item.id}
+                        onEdit={() => handleEditSession(rows)}
+                        onDelete={() => handleDeleteSession(item.groupId, rows.length)}
+                      >
+                        {card}
+                      </SwipeRow>
+                    );
+                  }
+
+                  // ─── Card simples (entrada solta) ───
+                  const e = item.entry;
                   const isEarn = e.type === "earning";
                   const card = (
                     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
@@ -373,12 +471,12 @@ export default function History() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(e)}>
+                          <DropdownMenuItem onClick={() => handleEditSingle(e)}>
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteRequest(e)}
+                            onClick={() => handleDeleteSingle(e)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
@@ -389,16 +487,16 @@ export default function History() {
                   );
                   return (
                     <SwipeRow
-                      key={e.id}
-                      entry={e}
-                      onEdit={() => handleEdit(e)}
-                      onDelete={() => handleDeleteRequest(e)}
+                      key={item.id}
+                      onEdit={() => handleEditSingle(e)}
+                      onDelete={() => handleDeleteSingle(e)}
                     >
                       {card}
                     </SwipeRow>
                   );
                 })}
               </div>
+
             </section>
           );
         })}
