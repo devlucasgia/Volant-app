@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { startOfMonth } from "date-fns";
 import {
   Lightbulb,
   GitCompare,
