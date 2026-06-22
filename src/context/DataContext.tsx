@@ -340,6 +340,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
       planning_selected_dates: next.planningSelectedDates as any,
       rpk_base: next.rpkBase,
       planning_avg_km_per_day: next.planningAvgKmPerDay,
+      planning_original_goal: next.planningOriginalGoal ?? null,
+      planning_original_goal_type: next.planningOriginalGoalType ?? null,
+      planning_original_avg_km: next.planningOriginalAvgKm ?? null,
+      planning_original_dates: (next.planningOriginalDates ?? null) as any,
+      planning_original_created_at: next.planningOriginalCreatedAt ?? null,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.
