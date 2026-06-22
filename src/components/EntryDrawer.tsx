@@ -246,16 +246,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     ? Math.max(0, kmEnd - kmStart)
     : null;
 
-  const handleAddPlatform = () => {
-    // Achar primeira plataforma operacional ainda não usada
-    const next = earningPlatforms.find((p) => p.type === "ride" && !usedKeys.includes(p.key));
-    if (!next) {
-      toast.info("Você já adicionou todas as plataformas disponíveis.");
-      return;
-    }
-    setPlatforms([...platforms, newRow(next.key)]);
-    setAddedExtra(true);
-  };
+  const [addPickerOpen, setAddPickerOpen] = useState(false);
+  const [pendingAppend, setPendingAppend] = useState(false);
+
+  const unusedPlatforms = earningPlatforms.filter((p) => p.type === "ride" && !usedKeys.includes(p.key));
 
   const submit = async () => {
     if (submitting) return;
