@@ -700,15 +700,23 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       />
       <CategoryDialog
         open={platDialogOpen}
-        onOpenChange={setPlatDialogOpen}
+        onOpenChange={(v) => {
+          setPlatDialogOpen(v);
+          if (!v) setPendingAppend(false);
+        }}
         type="earning"
         onCreated={(key) => {
-          // Substitui a plataforma da linha que disparou o "criar nova" — usa a primeira sem valor.
-          const idx = platforms.findIndex((p) => !p.gross);
-          const target = idx >= 0 ? idx : 0;
-          const arr = [...platforms];
-          arr[target] = { ...arr[target], app: key as AppName };
-          setPlatforms(arr);
+          if (pendingAppend) {
+            setPlatforms((prev) => [...prev, newRow(key)]);
+            setAddedExtra(true);
+            setPendingAppend(false);
+          } else {
+            const idx = platforms.findIndex((p) => !p.gross);
+            const target = idx >= 0 ? idx : 0;
+            const arr = [...platforms];
+            arr[target] = { ...arr[target], app: key as AppName };
+            setPlatforms(arr);
+          }
         }}
       />
     </Drawer>
