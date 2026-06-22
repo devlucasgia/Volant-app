@@ -215,9 +215,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <div className="rounded-2xl border border-dashed border-border/40 bg-muted/10 p-3.5">
-              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
-                <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
+            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+                Plano de {mesLabel}
               </div>
               {(() => {
                 const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
@@ -226,7 +226,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
                   ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
                   : s.requiredRpk;
-                const dimClass = "text-muted-foreground font-normal";
+                const dimClass = "text-muted-foreground/60 font-normal";
                 return (
                   <>
                     <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} valueClass={dimClass} />
@@ -245,13 +245,10 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 );
               })()}
             </div>
-            <p className="mt-1.5 px-1 text-[10px] text-muted-foreground/50 leading-tight">
-              Gravado no início do plano · não muda com Ajustes
-            </p>
           </div>
 
           <div>
-            <div className="rounded-2xl border border-border/80 bg-card/80 p-3.5">
+            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5">
               <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                 <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 Até agora
@@ -259,10 +256,18 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               <PlanoLine
                 label="Já fiz"
                 value={fmtBRL(s.currentGross)}
-                valueClass="text-primary"
+                valueClass="text-primary font-bold text-[15px]"
               />
-              <PlanoLine label="Dias rodados" value={`${daysWorkedThisMonth}`} />
-              <PlanoLine label="KM rodado" value={fmtKm(s.currentKm)} />
+              <PlanoLine
+                label="Dias rodados"
+                value={`${daysWorkedThisMonth}`}
+                valueClass="text-foreground font-semibold"
+              />
+              <PlanoLine
+                label="KM rodado"
+                value={fmtKm(s.currentKm)}
+                valueClass="text-foreground font-semibold"
+              />
               <PlanoLine
                 label="R$/km atual"
                 value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}
