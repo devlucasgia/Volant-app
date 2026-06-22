@@ -48,6 +48,13 @@ const FILTERS = [
 
 const SWIPE_REVEAL = 92; // px
 
+function fmtHM(dec: number) {
+  let h = Math.floor(dec);
+  let m = Math.round((dec - h) * 60);
+  if (m === 60) { h += 1; m = 0; }
+  return m === 0 ? `${h}h` : `${h}h ${m}min`;
+}
+
 interface SwipeRowProps {
   children: React.ReactNode;
   onEdit: () => void;
