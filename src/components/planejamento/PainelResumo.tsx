@@ -137,7 +137,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       {/* ============ 1. Timeline ============ */}
       <div className="flex items-center gap-2.5 px-1 text-[11.5px] text-muted-foreground">
         <span>
-          <b className="font-semibold text-foreground/85">{daysWorkedThisMonth}</b> de{" "}
+          <b className="font-semibold text-foreground/85">{daysWorkedInPlan}</b> de{" "}
           <b className="font-semibold text-foreground/85">{planDaysTotal}</b> dias
         </span>
         <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-border/60">
