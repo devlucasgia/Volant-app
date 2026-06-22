@@ -223,6 +223,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
         const psd = (sRow as any).planning_selected_dates;
         const rpk = (sRow as any).rpk_base;
         const avgKm = (sRow as any).planning_avg_km_per_day;
+        const poGoal = (sRow as any).planning_original_goal;
+        const poGoalType = (sRow as any).planning_original_goal_type;
+        const poAvgKm = (sRow as any).planning_original_avg_km;
+        const poDates = (sRow as any).planning_original_dates;
+        const poCreatedAt = (sRow as any).planning_original_created_at;
         setSettings({
           dailyGoal: Number(sRow.daily_goal) || 0,
           monthlyGoal: Number((sRow as any).monthly_goal) || 0,
@@ -239,6 +244,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
           planningSelectedDates: Array.isArray(psd) ? (psd as string[]) : null,
           rpkBase: rpk == null ? null : Number(rpk),
           planningAvgKmPerDay: avgKm == null ? null : Number(avgKm),
+          planningOriginalGoal: poGoal == null ? null : Number(poGoal),
+          planningOriginalGoalType: (poGoalType as any) ?? null,
+          planningOriginalAvgKm: poAvgKm == null ? null : Number(poAvgKm),
+          planningOriginalDates: Array.isArray(poDates) ? (poDates as string[]) : null,
+          planningOriginalCreatedAt: poCreatedAt ?? null,
         });
       }
       setLoading(false);
