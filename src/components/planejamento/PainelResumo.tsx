@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   ArrowRight,
-  Check,
+  BookMarked,
   Route,
   ArrowLeftRight,
   Target,
@@ -100,7 +100,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 2. Hero — Objetivos do Dia ============ */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/25 bg-gradient-to-br from-primary/[0.10] via-primary/[0.02] to-transparent p-5 shadow-[0_18px_42px_-32px_hsl(var(--primary)/0.55)]">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.10] via-primary/[0.02] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.55)]">
+        {/* glow radial canto superior direito */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/[0.08] blur-2xl" />
         <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/85">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
@@ -114,7 +116,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Meta
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums leading-none text-foreground">
+            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-3xl font-bold tabular-nums leading-none">
               {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">pra faturar</div>
@@ -123,7 +125,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               R$/km mínimo
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums leading-none text-foreground">
+            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-3xl font-bold tabular-nums leading-none">
               {s.homeSmartRpkGross > 0 ? `${fmtBRL2(s.homeSmartRpkGross)}/km` : "—"}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">por corrida</div>
@@ -136,7 +138,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 3. Insights placeholder ============ */}
-      <div>
+      <div className="mt-7">
         <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <Lightbulb className="h-3 w-3" /> Insights inteligentes
         </div>
@@ -146,7 +148,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 4. Plano vs Realizado ============ */}
-      <div>
+      <div className="mt-7">
         <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <ArrowRight className="h-3 w-3" /> Plano vs realizado
         </div>
@@ -154,7 +156,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <div className="mb-1 flex items-center gap-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground opacity-60">
-              <Check className="h-3 w-3" /> Plano de {mesLabel}
+              <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
             </div>
             <div className="rounded-2xl border border-dashed border-border/60 bg-muted/15 p-3">
               <PlanoLine label="Meta líquida" value={fmtBRL(s.homeNetTarget)} />
@@ -197,7 +199,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 5. Meta do Mês · Composição ============ */}
-      <div>
+      <div className="mt-7">
         <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <Target className="h-3 w-3" /> Meta do mês · composição
         </div>
@@ -345,7 +347,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 6. Botões ============ */}
-      <div className="grid grid-cols-2 gap-2.5 pt-1">
+      <div className="grid grid-cols-2 gap-2.5 pt-1 mt-7">
         <button
           type="button"
           onClick={onAdjust}
@@ -363,12 +365,16 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 7. Nota rodapé ============ */}
-      <p className="px-4 text-center text-[11px] leading-snug text-muted-foreground">
-        <b className="font-semibold text-foreground/80">Ajustar</b> muda só o que você
-        tocar e guarda seu plano original.{" "}
-        <b className="font-semibold text-foreground/80">Refazer</b> começa um plano novo
-        e substitui o atual.
-      </p>
+      <div className="px-4 text-center text-[11px] text-muted-foreground leading-snug space-y-1">
+        <p>
+          <span className="font-semibold text-foreground/70">Ajustar</span>{" "}
+          muda só o que você tocar e guarda seu plano original.
+        </p>
+        <p>
+          <span className="font-semibold text-foreground/70">Refazer</span>{" "}
+          começa um plano novo e substitui o atual.
+        </p>
+      </div>
     </div>
   );
 }

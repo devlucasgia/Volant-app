@@ -65,7 +65,7 @@ function PlanHeader({ onBack }: { onBack: () => void }) {
             Planejamento Inteligente
           </h1>
           <p className="text-[11px] leading-tight text-muted-foreground/80">
-            Defina sua meta e descubra o R$/km ideal para fechar o mês.
+            Seus objetivos e acompanhamento do mês
           </p>
         </div>
       </div>
