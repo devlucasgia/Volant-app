@@ -519,9 +519,15 @@ export default function History() {
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deseja excluir este registro?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmDelete?.kind === "session"
+                ? "Excluir esta jornada?"
+                : "Deseja excluir este registro?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O registro será removido do seu histórico.
+              {confirmDelete?.kind === "session"
+                ? `Essa ação não pode ser desfeita. Os ${confirmDelete.count} registros desta jornada serão removidos.`
+                : "Essa ação não pode ser desfeita. O registro será removido do seu histórico."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -533,7 +539,11 @@ export default function History() {
                 setConfirmDelete(null);
                 if (!target) return;
                 try {
-                  await removeEntry(target.id);
+                  if (target.kind === "session") {
+                    await removeGroup(target.groupId);
+                  } else {
+                    await removeEntry(target.entry.id);
+                  }
                 } catch (err) {
                   toast.error("Não foi possível excluir", {
                     description: friendlyDbError(err, "Tente novamente em instantes."),
