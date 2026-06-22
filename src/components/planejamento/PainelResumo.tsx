@@ -159,17 +159,30 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
             </div>
             <div className="rounded-2xl border border-dashed border-border/60 bg-muted/15 p-3">
-              <PlanoLine label="Meta líquida" value={fmtBRL(s.homeNetTarget)} />
-              <PlanoLine label="Dias" value={`${s.selectedWorkdaysCount}`} />
-              <PlanoLine
-                label="KM/dia"
-                value={s.averageKmPerDay > 0 ? fmtKm(s.averageKmPerDay) : "—"}
-              />
-              <PlanoLine
-                label="R$/km alvo"
-                value={s.requiredRpk > 0 ? fmtBRL2(s.requiredRpk) : "—"}
-              />
+              {(() => {
+                const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
+                const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
+                const planKmDay = s.hasOriginalPlan ? (s.originalAvgKm ?? 0) : s.averageKmPerDay;
+                const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
+                  ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
+                  : s.requiredRpk;
+                return (
+                  <>
+                    <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} />
+                    <PlanoLine label="Dias" value={`${planDays}`} />
+                    <PlanoLine
+                      label="KM/dia"
+                      value={planKmDay > 0 ? fmtKm(planKmDay) : "—"}
+                    />
+                    <PlanoLine
+                      label="R$/km alvo"
+                      value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
+                    />
+                  </>
+                );
+              })()}
             </div>
+
           </div>
 
           <div>

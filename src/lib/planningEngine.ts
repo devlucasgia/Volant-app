@@ -81,6 +81,16 @@ export interface PlanningSnapshot {
   averageKmPerWorkday: number;
 
 
+  // Snapshot do plano original (Refazer/fresh). Fica null em usuários
+  // sem snapshot gravado — consumidores devem usar `hasOriginalPlan`.
+  hasOriginalPlan: boolean;
+  originalGoal: number | null;
+  originalGoalType: GoalType | null;
+  originalAvgKm: number | null;
+  originalDaysCount: number;
+  originalKmTotal: number;
+  originalCreatedAt: string | null;
+
   status: PlanningStatusKind;
   message: string;
 }
@@ -285,6 +295,19 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const requiredRpkOut = clampPos(requiredRpk);
   const remainingPlannedKmOut = clampPos(remainingPlannedKm);
 
+  // Snapshot do plano original — usado pelo card "PLANO" (De/Para).
+  const originalGoal = settings.planningOriginalGoal ?? null;
+  const originalGoalType = (settings.planningOriginalGoalType ?? null) as GoalType | null;
+  const originalAvgKm = settings.planningOriginalAvgKm ?? null;
+  const originalDates = Array.isArray(settings.planningOriginalDates)
+    ? settings.planningOriginalDates
+    : null;
+  const originalCreatedAt = settings.planningOriginalCreatedAt ?? null;
+  const originalDaysCount = originalDates?.length ?? 0;
+  const originalKmTotal = (originalAvgKm ?? 0) * originalDaysCount;
+  const hasOriginalPlan =
+    originalGoal != null && originalDates != null && originalDates.length > 0;
+
   return {
     isPlanningConfigured,
     mainGoalType,
@@ -336,6 +359,13 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
         : 0,
     status,
     message,
+    hasOriginalPlan,
+    originalGoal,
+    originalGoalType,
+    originalAvgKm,
+    originalDaysCount,
+    originalKmTotal,
+    originalCreatedAt,
   };
 }
 
