@@ -236,6 +236,12 @@ export function GuidedFlow({
         if (plan.plannedKmTotal > 0) {
           patch.kmPlannedMonth = Math.round(plan.plannedKmTotal);
         }
+        // Snapshot do plano original (Refazer/fresh) — não é tocado por Ajustes.
+        patch.planningOriginalGoal = draft.monthlyGoal;
+        patch.planningOriginalGoalType = draft.goalType;
+        patch.planningOriginalAvgKm = draft.avgKmPerDay;
+        patch.planningOriginalDates = draft.selectedDates;
+        patch.planningOriginalCreatedAt = new Date().toISOString();
       }
 
       await updateSettings(patch);
