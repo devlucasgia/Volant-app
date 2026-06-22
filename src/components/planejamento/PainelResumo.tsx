@@ -167,10 +167,10 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <div className="mb-1 flex items-center gap-1 px-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground opacity-60">
-              <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
-            </div>
-            <div className="rounded-2xl border border-dashed border-border/60 bg-muted/15 p-3">
+            <div className="rounded-2xl border border-dashed border-border/40 bg-muted/10 p-3.5">
+              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+                <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
+              </div>
               {(() => {
                 const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
                 const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
@@ -178,34 +178,36 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
                   ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
                   : s.requiredRpk;
+                const dimClass = "text-muted-foreground font-normal";
                 return (
                   <>
-                    <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} />
-                    <PlanoLine label="Dias" value={`${planDays}`} />
+                    <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} valueClass={dimClass} />
+                    <PlanoLine label="Dias" value={`${planDays}`} valueClass={dimClass} />
                     <PlanoLine
-                      label="KM/dia"
-                      value={planKmDay > 0 ? fmtKm(planKmDay) : "—"}
+                      label="KM estimado"
+                      value={planKmDay > 0 ? fmtKm(planKmDay * planDays) : "—"}
+                      valueClass={dimClass}
                     />
                     <PlanoLine
                       label="R$/km alvo"
                       value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
+                      valueClass={dimClass}
                     />
                   </>
                 );
               })()}
             </div>
-
+            <p className="mt-1.5 px-1 text-[10px] text-muted-foreground/50 leading-tight">
+              Gravado no início do plano · não muda com Ajustes
+            </p>
           </div>
 
           <div>
-            <div className="mb-1 flex items-center gap-1 pl-1 text-[10px] font-semibold uppercase tracking-wider text-primary">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
-                <span className="relative h-1.5 w-1.5 rounded-full bg-primary" />
-              </span>
-              Até agora
-            </div>
-            <div className="rounded-2xl border border-border/60 bg-card/60 p-3">
+            <div className="rounded-2xl border border-border/80 bg-card/80 p-3.5">
+              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                Até agora
+              </div>
               <PlanoLine
                 label="Já fiz"
                 value={fmtBRL(s.currentGross)}
