@@ -11,7 +11,7 @@ import { useData } from "@/context/DataContext";
 import { useAccess } from "@/context/AccessContext";
 import { AppName, Entry, EarningEntry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { CalendarIcon, Plus, Loader2, ChevronDown } from "lucide-react";
+import { CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
 import { Segmented } from "@/components/Segmented";
 import { cn } from "@/lib/utils";
