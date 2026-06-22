@@ -41,10 +41,13 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const daysWorkedThisMonth = realData.daysWorkedThisMonth;
 
-  const hoje = new Date();
-  const diaAtual = hoje.getDate();
-  const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-  const timelinePct = Math.min(100, Math.max(0, ((diaAtual - 1) / diasNoMes) * 100));
+  const planDaysTotal = s.hasOriginalPlan
+    ? s.originalDaysCount
+    : s.selectedWorkdaysCount;
+  const timelinePct =
+    planDaysTotal > 0
+      ? Math.min(100, (daysWorkedThisMonth / planDaysTotal) * 100)
+      : 0;
   const planDate = s.originalCreatedAt ? new Date(s.originalCreatedAt) : new Date();
   const mesLabel = planDate
     .toLocaleDateString("pt-BR", { month: "long" })
