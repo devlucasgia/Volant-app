@@ -316,7 +316,7 @@ export default function History() {
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-base font-bold tabular-nums text-success">+ {brl(total)}</span>
+                            <span className="text-sm font-bold tabular-nums text-success">+ {brl(total)}</span>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Ações">
