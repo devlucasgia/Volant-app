@@ -70,6 +70,7 @@ function rowToEntry(r: any): Entry {
       km: Number(r.km) || 0, hours: Number(r.hours) || 0, gross: Number(r.gross) || 0,
       rides: r.rides == null ? undefined : Number(r.rides),
       notes: r.notes ?? undefined,
+      groupId: r.group_id ?? undefined,
     };
   }
   return {
@@ -88,7 +89,8 @@ function entryToRow(e: Entry, userId: string) {
     return { id: e.id, user_id: userId, type: "earning", entry_date: e.date,
       app: e.app, km: e.km, hours: e.hours, gross: e.gross,
       rides: e.rides ?? null,
-      notes: e.notes ?? null };
+      notes: e.notes ?? null,
+      group_id: e.groupId ?? null };
   }
   return { id: e.id, user_id: userId, type: "expense", entry_date: e.date,
     expense_category: e.expense.category, expense_amount: e.expense.amount,
