@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { startOfMonth } from "date-fns";
 import {
   Lightbulb,
   GitCompare,
@@ -41,17 +42,46 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const daysWorkedThisMonth = realData.daysWorkedThisMonth;
 
+  // Dias trabalhados apenas após a criação do plano atual (usado em timeline e insights)
+  const planStartDate = s.originalCreatedAt
+    ? new Date(s.originalCreatedAt)
+    : startOfMonth(new Date());
+  const planStartTs = planStartDate.getTime();
+  const daysWorkedInPlan = useMemo(() => {
+    const workedDates = new Set<string>();
+    for (const e of entries) {
+      if (e.type !== "earning") continue;
+      const d = new Date(e.date);
+      if (d.getTime() < planStartTs) continue;
+      workedDates.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    }
+    return workedDates.size;
+  }, [entries, planStartTs]);
+
   const planDaysTotal = s.hasOriginalPlan
     ? s.originalDaysCount
     : s.selectedWorkdaysCount;
   const timelinePct =
     planDaysTotal > 0
-      ? Math.min(100, (daysWorkedThisMonth / planDaysTotal) * 100)
+      ? Math.min(100, (daysWorkedInPlan / planDaysTotal) * 100)
       : 0;
   const planDate = s.originalCreatedAt ? new Date(s.originalCreatedAt) : new Date();
   const mesLabel = planDate
     .toLocaleDateString("pt-BR", { month: "long" })
     .toUpperCase();
+
+  // Detectar se o plano foi refeito (originalCreatedAt > início do mês atual)
+  const inicioDoMes = startOfMonth(new Date());
+  const foiRefeito = s.originalCreatedAt
+    ? new Date(s.originalCreatedAt) > inicioDoMes
+    : false;
+  const dataRefazendo =
+    foiRefeito && s.originalCreatedAt
+      ? new Date(s.originalCreatedAt).toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+        })
+      : null;
 
   const rpkAtual = s.currentKm > 0 ? s.currentGross / s.currentKm : 0;
   const rpkPct = s.requiredRpk > 0 ? rpkAtual / s.requiredRpk : 0;
@@ -90,7 +120,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
     remainingWorkdaysCount: s.remainingWorkdaysCount,
     currentGross: s.currentGross,
     homeGrossTarget: s.homeGrossTarget,
-    daysWorkedThisMonth,
+    daysWorkedThisMonth: daysWorkedInPlan,
     selectedWorkdaysCount: s.selectedWorkdaysCount,
     currentKm: s.currentKm,
   });
@@ -107,7 +137,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       {/* ============ 1. Timeline ============ */}
       <div className="flex items-center gap-2.5 px-1 text-[11.5px] text-muted-foreground">
         <span>
-          <b className="font-semibold text-foreground/85">{daysWorkedThisMonth}</b> de{" "}
+          <b className="font-semibold text-foreground/85">{daysWorkedInPlan}</b> de{" "}
           <b className="font-semibold text-foreground/85">{planDaysTotal}</b> dias
         </span>
         <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-border/60">
@@ -244,6 +274,13 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   </>
                 );
               })()}
+              {dataRefazendo && (
+                <div className="mt-2.5 border-t border-border/20 pt-2">
+                  <span className="text-[10px] text-muted-foreground/50">
+                    Refeito em {dataRefazendo}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
