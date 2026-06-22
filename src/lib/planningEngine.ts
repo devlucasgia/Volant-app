@@ -295,6 +295,19 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const requiredRpkOut = clampPos(requiredRpk);
   const remainingPlannedKmOut = clampPos(remainingPlannedKm);
 
+  // Snapshot do plano original — usado pelo card "PLANO" (De/Para).
+  const originalGoal = settings.planningOriginalGoal ?? null;
+  const originalGoalType = (settings.planningOriginalGoalType ?? null) as GoalType | null;
+  const originalAvgKm = settings.planningOriginalAvgKm ?? null;
+  const originalDates = Array.isArray(settings.planningOriginalDates)
+    ? settings.planningOriginalDates
+    : null;
+  const originalCreatedAt = settings.planningOriginalCreatedAt ?? null;
+  const originalDaysCount = originalDates?.length ?? 0;
+  const originalKmTotal = (originalAvgKm ?? 0) * originalDaysCount;
+  const hasOriginalPlan =
+    originalGoal != null && originalDates != null && originalDates.length > 0;
+
   return {
     isPlanningConfigured,
     mainGoalType,
