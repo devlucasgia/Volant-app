@@ -69,7 +69,7 @@ const newRow = (app: string): PlatformRowData => ({
 
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   const {
-    addEntry, addEntries, updateEntry, removeGroup,
+    addEntry, addEntries, updateEntry, removeEntry, removeGroup,
     entries, activeCar,
     expenseCategories, earningPlatforms, isSimplePlatform,
   } = useData();
