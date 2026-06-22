@@ -100,6 +100,9 @@ export interface EarningEntry {
   gross: number;
   rides?: number;
   notes?: string;
+  /** Quando preenchido, indica que esta linha faz parte de uma sessão multi-plataforma.
+   * A primeira linha do grupo (âncora) carrega km/hours/notes; demais ficam com 0/null. */
+  groupId?: string;
 }
 
 export interface ExpenseEntry {
