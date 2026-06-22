@@ -614,6 +614,21 @@ function Step4({
           </p>
         </div>
 
+        {plan.requiredRpk != null && plan.requiredRpk > 3.5 && (
+          <div
+            className={cn(
+              "rounded-2xl border p-3 text-[12px] leading-snug",
+              plan.requiredRpk > 5
+                ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
+                : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
+            )}
+          >
+            {plan.requiredRpk > 5
+              ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir no dia a dia. Considere aumentar os dias ou reduzir a meta.`
+              : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. Possível, mas vai precisar de corridas bem selecionadas.`}
+          </div>
+        )}
+
         <p className="px-1 text-[10.5px] leading-snug text-muted-foreground/75">
           Com o tempo, seus registros de ganhos, gastos e KM ajudam o Volant a mostrar referências mais próximas da sua realidade.
         </p>
