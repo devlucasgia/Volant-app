@@ -231,9 +231,9 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const homeDailyNet =
     remainingWorkdaysCount > 0 ? homeRemainingNet / remainingWorkdaysCount : 0;
   const homeSmartRpkGross =
-    remainingPlannedKm > 0 ? homeRemainingGross / remainingPlannedKm : 0;
+    smartKmRemaining > 0 ? homeRemainingGross / smartKmRemaining : 0;
   const homeSmartRpkNet =
-    remainingPlannedKm > 0 ? homeRemainingNet / remainingPlannedKm : 0;
+    smartKmRemaining > 0 ? homeRemainingNet / smartKmRemaining : 0;
 
 
   // Status
