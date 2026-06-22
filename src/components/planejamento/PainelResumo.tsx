@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
-  ArrowRight,
+  GitCompare,
   BookMarked,
   Route,
   ArrowLeftRight,
@@ -100,9 +100,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       </div>
 
       {/* ============ 2. Hero — Objetivos do Dia ============ */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.10] via-primary/[0.02] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.55)]">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.14] via-primary/[0.04] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.6)]">
         {/* glow radial canto superior direito */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/[0.08] blur-2xl" />
+        <div className="pointer-events-none absolute -right-6 -top-6 h-44 w-44 rounded-full bg-primary/[0.12] blur-2xl" />
         <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/85">
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inset-0 animate-ping rounded-full bg-primary/60" />
@@ -116,7 +116,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Meta
             </div>
-            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-3xl font-bold tabular-nums leading-none">
+            <div className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
               {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)}
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">pra faturar</div>
@@ -125,9 +125,20 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               R$/km mínimo
             </div>
-            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-3xl font-bold tabular-nums leading-none">
-              {s.homeSmartRpkGross > 0 ? `${fmtBRL2(s.homeSmartRpkGross)}/km` : "—"}
-            </div>
+            {s.homeSmartRpkGross > 0 ? (
+              <div className="flex items-baseline gap-0.5">
+                <span className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+                  {fmtBRL2(s.homeSmartRpkGross).replace("R$", "").trim()}
+                </span>
+                <span className="text-lg font-semibold text-emerald-200/70 leading-none self-end mb-0.5">
+                  /km
+                </span>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-b from-foreground to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+                —
+              </div>
+            )}
             <div className="mt-1 text-[11px] text-muted-foreground">por corrida</div>
           </div>
         </div>
@@ -150,7 +161,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       {/* ============ 4. Plano vs Realizado ============ */}
       <div className="mt-7">
         <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <ArrowRight className="h-3 w-3" /> Plano vs realizado
+          <GitCompare className="h-3 w-3" /> Plano vs realizado
         </div>
 
         <div className="grid grid-cols-2 gap-2">
