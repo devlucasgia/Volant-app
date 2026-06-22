@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Compass } from "lucide-react";
+import { ArrowLeft, Brain } from "lucide-react";
 
 import { useData } from "@/context/DataContext";
 import { EmptyState } from "@/components/planejamento/EmptyState";
