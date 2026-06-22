@@ -9,7 +9,7 @@ import { Entry, EarningEntry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MoreVertical, Pencil, Search, ShieldCheck, Trash2, X } from "lucide-react";
+import { MoreVertical, Pencil, Route, Search, ShieldCheck, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
