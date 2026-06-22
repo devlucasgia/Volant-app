@@ -557,6 +557,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             {unusedPlatforms.map((p) => (
                               <SelectItem key={p.key} value={p.key}>
                                 <div className="flex items-center gap-2.5">
+                                  <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} imageUrl={p.imageUrl} size="sm" />
                                   <span>{p.label}</span>
                                 </div>
                               </SelectItem>
