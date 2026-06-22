@@ -306,77 +306,79 @@ export default function History() {
 
                     const card = (
                       <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
-                        <div className="flex items-start gap-2">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-success/15 text-success">
-                                Jornada · {rows.length} apps
-                              </span>
-                              <span className="text-[10px] text-muted-foreground">
-                                {format(new Date(anchor.date), "HH:mm")}
-                              </span>
-                            </div>
+                        {/* Header */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                            <Route className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Jornada · {rows.length} apps</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {format(new Date(anchor.date), "HH:mm")}
+                            </span>
                           </div>
-                          <div className="text-right">
-                            <div className="text-base font-bold tabular-nums text-success">
-                              + {brl(total)}
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-base font-bold tabular-nums text-success">+ {brl(total)}</span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Ações">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleEditSession(rows)}>
+                                  <Pencil className="mr-2 h-4 w-4" /> Editar jornada
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive"
+                                  onClick={() => handleDeleteSession(item.groupId, rows.length)}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" /> Excluir jornada
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Ações">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditSession(rows)}>
-                                <Pencil className="mr-2 h-4 w-4" /> Editar jornada
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => handleDeleteSession(item.groupId, rows.length)}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" /> Excluir jornada
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </div>
 
-                        <div className="mt-3 space-y-1.5">
+                        {/* App lines */}
+                        <div className="my-2 border-t border-border/50" />
+                        <div className="space-y-1.5">
                           {rows.map((r) => {
                             const meta = platformMetaFor(r.app);
                             return (
-                              <div key={r.id} className="flex items-center gap-2.5">
-                                <PlatformLogo
-                                  platformKey={r.app}
-                                  label={meta.label}
-                                  hex={meta.hex}
-                                  imageUrl={meta.imageUrl}
-                                  size="sm"
-                                />
-                                <span className="truncate text-xs font-medium">{meta.label}</span>
-                                {(r.rides ?? 0) > 0 && (
-                                  <span className="text-[11px] text-muted-foreground">{r.rides} corr.</span>
-                                )}
-                                <span className="ml-auto text-xs font-bold tabular-nums text-success">
-                                  {brl(r.gross)}
-                                </span>
+                              <div key={r.id} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <PlatformLogo
+                                    platformKey={r.app}
+                                    label={meta.label}
+                                    hex={meta.hex}
+                                    imageUrl={meta.imageUrl}
+                                    size="sm"
+                                  />
+                                  <span className="truncate text-xs font-medium">{meta.label}</span>
+                                  {(r.rides ?? 0) > 0 && (
+                                    <span className="text-[11px] text-muted-foreground">{r.rides} corr.</span>
+                                  )}
+                                </div>
+                                <span className="text-sm font-semibold tabular-nums text-success">{brl(r.gross)}</span>
                               </div>
                             );
                           })}
                         </div>
 
-                        {(km > 0 || hrs > 0) && (
-                          <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-2 text-[11px] text-muted-foreground">
-                            {km > 0 && <span>{km} km</span>}
-                            {km > 0 && hrs > 0 && <span>·</span>}
-                            {hrs > 0 && <span>{hrs}h</span>}
-                          </div>
-                        )}
-                        {anchor.notes && (
-                          <div className="mt-2 truncate text-[11px] text-muted-foreground">
-                            {anchor.notes}
-                          </div>
+                        {/* Footer */}
+                        {(km > 0 || hrs > 0 || anchor.notes) && (
+                          <>
+                            <div className="my-2 border-t border-border/50" />
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                {km > 0 && <span>{km} km</span>}
+                                {km > 0 && hrs > 0 && <span>·</span>}
+                                {hrs > 0 && <span>{fmtHM(hrs)}</span>}
+                              </div>
+                              {anchor.notes && (
+                                <span className="truncate">{anchor.notes}</span>
+                              )}
+                            </div>
+                          </>
                         )}
                       </div>
                     );
