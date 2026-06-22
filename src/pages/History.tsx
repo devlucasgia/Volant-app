@@ -5,7 +5,7 @@ import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { useAccess } from "@/context/AccessContext";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
-import { Entry } from "@/types";
+import { Entry, EarningEntry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -34,6 +34,11 @@ import { toast } from "sonner";
 import { friendlyDbError } from "@/lib/friendlyErrors";
 
 type Filter = "all" | "earning" | "expense";
+
+/** Um item do histórico: entrada solta OU sessão multi-plataforma agrupada. */
+type HistoryItem =
+  | { kind: "single"; entry: Entry; id: string; date: string }
+  | { kind: "session"; rows: EarningEntry[]; groupId: string; id: string; date: string };
 
 const FILTERS = [
   { key: "all" as const, label: "Todos" },
