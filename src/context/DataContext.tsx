@@ -21,8 +21,10 @@ interface DataCtx {
   carInitialKm: number;
   loading: boolean;
   addEntry: (e: Entry) => Promise<void>;
+  addEntries: (es: Entry[]) => Promise<void>;
   updateEntry: (e: Entry) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
+  removeGroup: (groupId: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshCars: () => Promise<void>;
@@ -70,6 +72,7 @@ function rowToEntry(r: any): Entry {
       km: Number(r.km) || 0, hours: Number(r.hours) || 0, gross: Number(r.gross) || 0,
       rides: r.rides == null ? undefined : Number(r.rides),
       notes: r.notes ?? undefined,
+      groupId: r.group_id ?? undefined,
     };
   }
   return {
@@ -88,7 +91,8 @@ function entryToRow(e: Entry, userId: string) {
     return { id: e.id, user_id: userId, type: "earning", entry_date: e.date,
       app: e.app, km: e.km, hours: e.hours, gross: e.gross,
       rides: e.rides ?? null,
-      notes: e.notes ?? null };
+      notes: e.notes ?? null,
+      group_id: e.groupId ?? null };
   }
   return { id: e.id, user_id: userId, type: "expense", entry_date: e.date,
     expense_category: e.expense.category, expense_amount: e.expense.amount,
@@ -251,6 +255,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     if (shouldTriggerMaintFor(e)) triggerMaintenanceCheck(user.id);
   }, [user, triggerMaintenanceCheck]);
 
+  const addEntries = useCallback(async (es: Entry[]) => {
+    if (!user || es.length === 0) return;
+    setEntries((prev) => [...es, ...prev]);
+    const rows = es.map((e) => entryToRow(e, user.id));
+    const { error } = await supabase.from("entries").insert(rows as any);
+    if (error) {
+      const ids = new Set(es.map((e) => e.id));
+      setEntries((prev) => prev.filter((x) => !ids.has(x.id)));
+      throw error;
+    }
+    // Linha-âncora é a primeira; se ela tiver km > 0 (ou for entrada solta com km>0), dispara alerta.
+    if (es.some((e) => shouldTriggerMaintFor(e))) triggerMaintenanceCheck(user.id);
+  }, [user, triggerMaintenanceCheck]);
+
   const removeEntry = useCallback(async (id: string) => {
     const snapshot = entries;
     const removed = entries.find((x) => x.id === id);
@@ -262,6 +280,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       throw error;
     }
     if (removed && shouldTriggerMaintFor(removed)) triggerMaintenanceCheck(user?.id);
+  }, [entries, user, triggerMaintenanceCheck]);
+
+  const removeGroup = useCallback(async (groupId: string) => {
+    if (!user) return;
+    const snapshot = entries;
+    const removed = entries.filter((x) => x.type === "earning" && (x as any).groupId === groupId);
+    if (removed.length === 0) return;
+    setEntries((prev) => prev.filter((x) => !(x.type === "earning" && (x as any).groupId === groupId)));
+    const { error } = await supabase.from("entries").delete().eq("group_id", groupId);
+    if (error) { setEntries(snapshot); throw error; }
+    if (removed.some((e) => shouldTriggerMaintFor(e))) triggerMaintenanceCheck(user.id);
   }, [entries, user, triggerMaintenanceCheck]);
 
   const updateEntry = useCallback(async (e: Entry) => {
@@ -410,11 +439,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
-      addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
+      addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor,
       earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory }),
-    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, updateEntry, removeEntry, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
+    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory]
   );

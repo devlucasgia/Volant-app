@@ -5,7 +5,7 @@ import { useData } from "@/context/DataContext";
 import { useUI } from "@/context/UIContext";
 import { useAccess } from "@/context/AccessContext";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
-import { Entry } from "@/types";
+import { Entry, EarningEntry } from "@/types";
 import { brl } from "@/lib/format";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -35,6 +35,11 @@ import { friendlyDbError } from "@/lib/friendlyErrors";
 
 type Filter = "all" | "earning" | "expense";
 
+/** Um item do histórico: entrada solta OU sessão multi-plataforma agrupada. */
+type HistoryItem =
+  | { kind: "single"; entry: Entry; id: string; date: string }
+  | { kind: "session"; rows: EarningEntry[]; groupId: string; id: string; date: string };
+
 const FILTERS = [
   { key: "all" as const, label: "Todos" },
   { key: "earning" as const, label: "Ganhos" },
@@ -44,13 +49,12 @@ const FILTERS = [
 const SWIPE_REVEAL = 92; // px
 
 interface SwipeRowProps {
-  entry: Entry;
   children: React.ReactNode;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-function SwipeRow({ entry, children, onEdit, onDelete }: SwipeRowProps) {
+function SwipeRow({ children, onEdit, onDelete }: SwipeRowProps) {
   const [dx, setDx] = useState(0);
   const startX = useRef<number | null>(null);
   const startY = useRef<number | null>(null);
@@ -129,13 +133,17 @@ function SwipeRow({ entry, children, onEdit, onDelete }: SwipeRowProps) {
 }
 
 export default function History() {
-  const { entries, removeEntry, platformMetaFor, expenseMetaFor } = useData();
+  const { entries, removeEntry, removeGroup, platformMetaFor, expenseMetaFor } = useData();
   const { openDrawer } = useUI();
   const { isLimited, requirePremium } = useAccess();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState<Entry | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<
+    | { kind: "single"; entry: Entry }
+    | { kind: "session"; groupId: string; count: number }
+    | null
+  >(null);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -159,25 +167,60 @@ export default function History() {
     });
   }, [entries, filter, search, platformMetaFor, expenseMetaFor]);
 
+  // Agrupa por dia E por group_id (sessões multi-plataforma viram um único item).
   const grouped = useMemo(() => {
-    const acc: Record<string, Entry[]> = {};
+    const acc: Record<string, HistoryItem[]> = {};
+    // Primeira passada: junta linhas por groupId mantendo a ordem temporal.
+    const sessionsByGroup = new Map<string, EarningEntry[]>();
+    const ordered: Entry[] = [];
     for (const e of filtered) {
+      if (e.type === "earning" && e.groupId) {
+        const list = sessionsByGroup.get(e.groupId);
+        if (list) { list.push(e); continue; }
+        const arr: EarningEntry[] = [e];
+        sessionsByGroup.set(e.groupId, arr);
+        ordered.push(e); // marca a posição do primeiro encontro
+        continue;
+      }
+      ordered.push(e);
+    }
+    for (const e of ordered) {
       const day = format(new Date(e.date), "yyyy-MM-dd");
-      (acc[day] ||= []).push(e);
+      const list = (acc[day] ||= []);
+      if (e.type === "earning" && e.groupId) {
+        const rows = sessionsByGroup.get(e.groupId)!;
+        // Só vira "session" quando tem 2+ linhas; se sobrou 1 (filtros), trata como single
+        if (rows.length > 1) {
+          list.push({ kind: "session", rows, groupId: e.groupId, id: `g:${e.groupId}`, date: rows[0].date });
+        } else {
+          list.push({ kind: "single", entry: rows[0], id: rows[0].id, date: rows[0].date });
+        }
+      } else {
+        list.push({ kind: "single", entry: e, id: e.id, date: e.date });
+      }
     }
     return acc;
   }, [filtered]);
 
   const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
-  const handleEdit = (e: Entry) => {
+  const handleEditSingle = (e: Entry) => {
     if (!requirePremium()) return;
     openDrawer({ editing: e });
   };
-  const handleDeleteRequest = (e: Entry) => {
+  const handleEditSession = (rows: EarningEntry[]) => {
     if (!requirePremium()) return;
-    setConfirmDelete(e);
+    openDrawer({ editingGroup: rows });
   };
+  const handleDeleteSingle = (e: Entry) => {
+    if (!requirePremium()) return;
+    setConfirmDelete({ kind: "single", entry: e });
+  };
+  const handleDeleteSession = (groupId: string, count: number) => {
+    if (!requirePremium()) return;
+    setConfirmDelete({ kind: "session", groupId, count });
+  };
+
 
   return (
     <>
@@ -245,7 +288,105 @@ export default function History() {
               </div>
 
               <div className="space-y-2">
-                {items.map((e) => {
+                {items.map((item) => {
+                  // ─── Card de sessão multi-plataforma ───
+                  if (item.kind === "session") {
+                    const rows = item.rows;
+                    const anchor = rows[0];
+                    const total = rows.reduce((s, r) => s + (r.gross || 0), 0);
+                    const km = anchor.km;
+                    const hrs = anchor.hours;
+
+                    const card = (
+                      <div className="rounded-2xl border border-border bg-card p-3 shadow-sm">
+                        <div className="flex items-start gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded px-1.5 py-0.5 text-[10px] font-bold bg-success/15 text-success">
+                                Jornada · {rows.length} apps
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(anchor.date), "HH:mm")}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-base font-bold tabular-nums text-success">
+                              + {brl(total)}
+                            </div>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" aria-label="Ações">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditSession(rows)}>
+                                <Pencil className="mr-2 h-4 w-4" /> Editar jornada
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleDeleteSession(item.groupId, rows.length)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" /> Excluir jornada
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        <div className="mt-3 space-y-1.5">
+                          {rows.map((r) => {
+                            const meta = platformMetaFor(r.app);
+                            return (
+                              <div key={r.id} className="flex items-center gap-2.5">
+                                <PlatformLogo
+                                  platformKey={r.app}
+                                  label={meta.label}
+                                  hex={meta.hex}
+                                  imageUrl={meta.imageUrl}
+                                  size="sm"
+                                />
+                                <span className="truncate text-xs font-medium">{meta.label}</span>
+                                {(r.rides ?? 0) > 0 && (
+                                  <span className="text-[11px] text-muted-foreground">{r.rides} corr.</span>
+                                )}
+                                <span className="ml-auto text-xs font-bold tabular-nums text-success">
+                                  {brl(r.gross)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {(km > 0 || hrs > 0) && (
+                          <div className="mt-3 flex items-center gap-2 border-t border-border/50 pt-2 text-[11px] text-muted-foreground">
+                            {km > 0 && <span>{km} km</span>}
+                            {km > 0 && hrs > 0 && <span>·</span>}
+                            {hrs > 0 && <span>{hrs}h</span>}
+                          </div>
+                        )}
+                        {anchor.notes && (
+                          <div className="mt-2 truncate text-[11px] text-muted-foreground">
+                            {anchor.notes}
+                          </div>
+                        )}
+                      </div>
+                    );
+
+                    return (
+                      <SwipeRow
+                        key={item.id}
+                        onEdit={() => handleEditSession(rows)}
+                        onDelete={() => handleDeleteSession(item.groupId, rows.length)}
+                      >
+                        {card}
+                      </SwipeRow>
+                    );
+                  }
+
+                  // ─── Card simples (entrada solta) ───
+                  const e = item.entry;
                   const isEarn = e.type === "earning";
                   const card = (
                     <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm">
@@ -330,12 +471,12 @@ export default function History() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(e)}>
+                          <DropdownMenuItem onClick={() => handleEditSingle(e)}>
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-destructive focus:text-destructive"
-                            onClick={() => handleDeleteRequest(e)}
+                            onClick={() => handleDeleteSingle(e)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Excluir
@@ -346,16 +487,16 @@ export default function History() {
                   );
                   return (
                     <SwipeRow
-                      key={e.id}
-                      entry={e}
-                      onEdit={() => handleEdit(e)}
-                      onDelete={() => handleDeleteRequest(e)}
+                      key={item.id}
+                      onEdit={() => handleEditSingle(e)}
+                      onDelete={() => handleDeleteSingle(e)}
                     >
                       {card}
                     </SwipeRow>
                   );
                 })}
               </div>
+
             </section>
           );
         })}
@@ -378,9 +519,15 @@ export default function History() {
       <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deseja excluir este registro?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmDelete?.kind === "session"
+                ? "Excluir esta jornada?"
+                : "Deseja excluir este registro?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Essa ação não pode ser desfeita. O registro será removido do seu histórico.
+              {confirmDelete?.kind === "session"
+                ? `Essa ação não pode ser desfeita. Os ${confirmDelete.count} registros desta jornada serão removidos.`
+                : "Essa ação não pode ser desfeita. O registro será removido do seu histórico."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -392,7 +539,11 @@ export default function History() {
                 setConfirmDelete(null);
                 if (!target) return;
                 try {
-                  await removeEntry(target.id);
+                  if (target.kind === "session") {
+                    await removeGroup(target.groupId);
+                  } else {
+                    await removeEntry(target.entry.id);
+                  }
                 } catch (err) {
                   toast.error("Não foi possível excluir", {
                     description: friendlyDbError(err, "Tente novamente em instantes."),

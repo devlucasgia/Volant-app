@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
-import { Entry, ExpenseCategory } from "@/types";
+import { Entry, EarningEntry, ExpenseCategory } from "@/types";
 
 interface EntryDrawerPreset {
   tab?: "earning" | "expense";
   category?: ExpenseCategory;
   /** When provided, the drawer opens in edit mode for this entry. */
   editing?: Entry | null;
+  /** When provided, the drawer opens in edit mode for a multi-platform session (all rows of a group). */
+  editingGroup?: EarningEntry[];
   onAfterSave?: () => void;
   /** Prefill worked hours (used after ending a journey). */
   prefillHours?: number;

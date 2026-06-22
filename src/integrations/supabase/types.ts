@@ -236,6 +236,7 @@ export type Database = {
           expense_category: string | null
           expense_description: string | null
           gross: number | null
+          group_id: string | null
           hours: number | null
           id: string
           km: number | null
@@ -253,6 +254,7 @@ export type Database = {
           expense_category?: string | null
           expense_description?: string | null
           gross?: number | null
+          group_id?: string | null
           hours?: number | null
           id?: string
           km?: number | null
@@ -270,6 +272,7 @@ export type Database = {
           expense_category?: string | null
           expense_description?: string | null
           gross?: number | null
+          group_id?: string | null
           hours?: number | null
           id?: string
           km?: number | null

@@ -1,39 +1,43 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { NumberField } from "@/components/NumberField";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useData } from "@/context/DataContext";
 import { useAccess } from "@/context/AccessContext";
-import { AppName, Entry, ExpenseCategory, MaintenanceType } from "@/types";
+import { AppName, Entry, EarningEntry, ExpenseCategory, MaintenanceType } from "@/types";
 import { toast } from "sonner";
-import { TrendingUp, TrendingDown, CalendarIcon, Plus, Loader2 } from "lucide-react";
+import { CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
-import { PlatformLogo } from "@/components/PlatformLogo";
+import { Segmented } from "@/components/Segmented";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useDraftPersistence } from "@/hooks/useDraftPersistence";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
+import { HoursWheel } from "@/components/entry/HoursWheel";
+import { PlatformRow, type PlatformRowData } from "@/components/entry/PlatformRow";
+import { realCurrentKm } from "@/lib/carKm";
+import { brl } from "@/lib/format";
 
-const ENTRY_DRAFT_KEY = "volant_draft_entry_v1";
+const ENTRY_DRAFT_KEY = "volant_draft_entry_v2";
+
 interface EntryDraft {
   tab: "earning" | "expense";
-  date: string; // ISO
-  app: AppName;
+  date: string;
+  // earning
+  platforms: PlatformRowData[];
   kmMode: "total" | "range";
   kmTotal: number | null;
   kmStart: number | null;
   kmEnd: number | null;
   hours: number | null;
-  gross: number | null;
-  rides: number | null;
   notes: string;
+  // expense
   category: ExpenseCategory;
   maintenanceType: MaintenanceType;
   amount: number | null;
@@ -44,6 +48,8 @@ interface EntryDrawerPreset {
   tab?: "earning" | "expense";
   category?: ExpenseCategory;
   editing?: Entry | null;
+  /** Editar uma sessão multi-plataforma: passa todas as linhas do grupo. */
+  editingGroup?: EarningEntry[];
   onAfterSave?: () => void;
   prefillHours?: number;
 }
@@ -54,65 +60,112 @@ interface Props {
   preset?: EntryDrawerPreset | null;
 }
 
+const newRow = (app: string): PlatformRowData => ({
+  uid: crypto.randomUUID(),
+  app,
+  gross: null,
+  rides: null,
+});
+
 export function EntryDrawer({ open, onOpenChange, preset }: Props) {
-  const { addEntry, updateEntry, expenseCategories, earningPlatforms, isSimplePlatform } = useData();
+  const {
+    addEntry, addEntries, updateEntry, removeEntry, removeGroup,
+    entries, activeCar,
+    expenseCategories, earningPlatforms, isSimplePlatform,
+  } = useData();
   const { requirePremium } = useAccess();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
-  const [tab, setTab] = useState<"earning" | "expense">("earning");
   const [date, setDate] = useState<Date>(new Date());
   const [submitting, setSubmitting] = useState(false);
   const editing = preset?.editing || null;
-  const isEditing = !!editing;
+  const editingGroup = preset?.editingGroup || null;
+  const tab: "earning" | "expense" =
+    editing ? editing.type
+    : editingGroup ? "earning"
+    : (preset?.tab || "earning");
+  const isEditing = !!editing || !!editingGroup;
 
-  // earning state
-  const [app, setApp] = useState<AppName>("uber");
+  // EARNING state
+  const [platforms, setPlatforms] = useState<PlatformRowData[]>([newRow("uber")]);
   const [kmMode, setKmMode] = useState<"total" | "range">("total");
   const [kmTotal, setKmTotal] = useState<number | null>(null);
   const [kmStart, setKmStart] = useState<number | null>(null);
   const [kmEnd, setKmEnd] = useState<number | null>(null);
   const [hours, setHours] = useState<number | null>(null);
-  const [gross, setGross] = useState<number | null>(null);
-  const [rides, setRides] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
+  const [addedExtra, setAddedExtra] = useState(false);
 
-  // expense state
+  // EXPENSE state
   const [category, setCategory] = useState<ExpenseCategory>("combustivel");
   const [amount, setAmount] = useState<number | null>(null);
   const [maintenanceType, setMaintenanceType] = useState<MaintenanceType>("oleo");
   const [description, setDescription] = useState("");
 
-  // ── Persistência de rascunho (só para criação nova; nunca para edição) ──
-  // Salva o estado em sessionStorage com debounce. Restaura ao reabrir o drawer
-  // se o usuário não tiver finalizado (ex.: trocou de aba/voltou de outro app).
+  // Última plataforma usada (sugestão inicial)
+  const lastUsedPlatform = useMemo(() => {
+    const last = entries.find((e) => e.type === "earning") as EarningEntry | undefined;
+    return last?.app && earningPlatforms.some((p) => p.key === last.app && p.type === "ride")
+      ? last.app
+      : "uber";
+  }, [entries, earningPlatforms]);
+
+  // Sugestão de odômetro inicial (KM real atual do carro)
+  const suggestedStartKm = useMemo(() => {
+    return activeCar ? Math.round(realCurrentKm(activeCar, entries)) : 0;
+  }, [activeCar, entries]);
+
+  // ───── Draft persistence (criação nova) ─────
   const draftValue: EntryDraft = {
-    tab, date: date.toISOString(), app, kmMode, kmTotal, kmStart, kmEnd,
-    hours, gross, rides, notes, category, maintenanceType, amount, description,
+    tab, date: date.toISOString(),
+    platforms, kmMode, kmTotal, kmStart, kmEnd, hours, notes,
+    category, maintenanceType, amount, description,
   };
   const draftEnabled = open && !isEditing && !preset?.prefillHours;
   const draftRef = useDraftPersistence<EntryDraft>(ENTRY_DRAFT_KEY, draftValue, {
-    enabled: draftEnabled,
-    storage: "session",
+    enabled: draftEnabled, storage: "session",
   });
   const restoredOnceRef = useRef(false);
 
-  // Apply preset / editing on open
+  // Aplicar preset/edição ao abrir
   useEffect(() => {
     if (!open) { restoredOnceRef.current = false; return; }
+
+    // Edição de uma sessão multi-plataforma
+    if (editingGroup && editingGroup.length > 0) {
+      const sorted = [...editingGroup].sort((a, b) => +new Date(a.date) - +new Date(b.date));
+      const anchor = sorted[0];
+      setDate(new Date(anchor.date));
+      setPlatforms(sorted.map((e) => ({
+        uid: crypto.randomUUID(),
+        app: e.app,
+        gross: e.gross || null,
+        rides: e.rides ?? null,
+      })));
+      setKmMode("total");
+      setKmTotal(anchor.km || null);
+      setKmStart(null); setKmEnd(null);
+      setHours(anchor.hours || null);
+      setNotes(anchor.notes || "");
+      setAddedExtra(true);
+      return;
+    }
+
+    // Edição de uma entrada isolada
     if (editing) {
       setDate(new Date(editing.date));
       if (editing.type === "earning") {
-        setTab("earning");
-        setApp(editing.app);
+        setPlatforms([{
+          uid: crypto.randomUUID(), app: editing.app,
+          gross: editing.gross || null, rides: editing.rides ?? null,
+        }]);
         setKmMode("total");
         setKmTotal(editing.km || null);
         setKmStart(null); setKmEnd(null);
         setHours(editing.hours || null);
-        setGross(editing.gross || null);
-        setRides(editing.rides ?? null);
         setNotes(editing.notes || "");
+        setAddedExtra(false);
       } else {
-        setTab("expense");
         setCategory(editing.expense.category);
         setAmount(editing.expense.amount || null);
         setMaintenanceType(editing.expense.maintenanceType || "oleo");
@@ -120,153 +173,220 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       }
       return;
     }
-    // Fresh new record — clear any stale state from previous sessions.
+
+    // NOVO REGISTRO — limpar e aplicar preset
     setDate(new Date());
-    setApp("uber");
-    setKmMode("total");
-    setKmTotal(null); setKmStart(null); setKmEnd(null);
-    setHours(null); setGross(null); setRides(null); setNotes("");
+    setPlatforms([newRow(lastUsedPlatform)]);
+    setAddedExtra(false);
+    setKmMode("total"); setKmTotal(null); setKmStart(null); setKmEnd(null);
+    setHours(null); setNotes("");
     setAmount(null); setDescription(""); setMaintenanceType("oleo");
-    if (preset?.tab) setTab(preset.tab); else setTab("earning");
     if (preset?.category) setCategory(preset.category); else setCategory("combustivel");
     if (preset?.prefillHours !== undefined && preset.prefillHours > 0) {
       setHours(Math.round(preset.prefillHours * 100) / 100);
     }
 
-    // Tentar restaurar rascunho (uma vez por abertura) — não restaura quando
-    // veio um preset.prefillHours (fluxo "fim da jornada" tem dados próprios).
+    // Restaurar rascunho (uma vez) — tolerante a formato antigo
     if (!restoredOnceRef.current && !preset?.prefillHours) {
       restoredOnceRef.current = true;
-      const saved = draftRef.load();
+      const saved = draftRef.load() as Partial<EntryDraft> & { app?: string; gross?: number | null; rides?: number | null } | null;
       if (saved) {
         try {
-          // IMPORTANTE: quando o usuário tocou em "Novo ganho" ou "Novo gasto",
-          // o `preset.tab` precisa vencer qualquer aba salva no rascunho — caso
-          // contrário o app reabre sempre na última aba aberta. Mesma regra
-          // vale para a categoria de gasto vinda do preset.
-          setTab(preset?.tab ?? saved.tab ?? "earning");
-          setDate(saved.date ? new Date(saved.date) : new Date());
-          setApp(saved.app ?? "uber");
+          if (saved.date) setDate(new Date(saved.date));
+          // Compat: rascunho antigo guardava app/gross/rides no topo
+          if (Array.isArray(saved.platforms) && saved.platforms.length > 0) {
+            setPlatforms(saved.platforms.map((p) => ({
+              uid: p.uid || crypto.randomUUID(),
+              app: p.app || lastUsedPlatform,
+              gross: p.gross ?? null,
+              rides: p.rides ?? null,
+            })));
+            setAddedExtra(saved.platforms.length > 1);
+          } else if (saved.app) {
+            setPlatforms([{
+              uid: crypto.randomUUID(),
+              app: saved.app,
+              gross: saved.gross ?? null,
+              rides: saved.rides ?? null,
+            }]);
+          }
           setKmMode(saved.kmMode ?? "total");
           setKmTotal(saved.kmTotal ?? null);
           setKmStart(saved.kmStart ?? null);
           setKmEnd(saved.kmEnd ?? null);
           setHours(saved.hours ?? null);
-          setGross(saved.gross ?? null);
-          setRides(saved.rides ?? null);
           setNotes(saved.notes ?? "");
-          setCategory(preset?.category ?? saved.category ?? "combustivel");
+          if (!preset?.category) setCategory(saved.category ?? "combustivel");
           setMaintenanceType(saved.maintenanceType ?? "oleo");
           setAmount(saved.amount ?? null);
           setDescription(saved.description ?? "");
-          // Restauração silenciosa — sem toast.
         } catch { /* noop */ }
       }
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, preset, editing]);
+  }, [open, preset, editing, editingGroup, lastUsedPlatform]);
 
   const reset = () => {
+    setPlatforms([newRow(lastUsedPlatform)]);
+    setAddedExtra(false);
     setKmTotal(null); setKmStart(null); setKmEnd(null);
-    setHours(null); setGross(null); setRides(null); setNotes("");
+    setHours(null); setNotes("");
     setAmount(null); setDescription("");
     setDate(new Date());
     draftRef.clear();
   };
 
-  const submit = async () => {
-    if (submitting) return;
-    // Gate operational entry creation / editing behind Premium.
-    if (!requirePremium()) {
-      onOpenChange(false);
+  // Plataforma principal define se é receita simples
+  const primaryPlatform = platforms[0]?.app || "uber";
+  const isSimple = isSimplePlatform(primaryPlatform);
+
+  const usedKeys = platforms.map((p) => p.app);
+  const totalGross = platforms.reduce((s, p) => s + (p.gross || 0), 0);
+  const liveKm = kmMode === "range" && kmStart != null && kmEnd != null
+    ? Math.max(0, kmEnd - kmStart)
+    : null;
+
+  const handleAddPlatform = () => {
+    // Achar primeira plataforma operacional ainda não usada
+    const next = earningPlatforms.find((p) => p.type === "ride" && !usedKeys.includes(p.key));
+    if (!next) {
+      toast.info("Você já adicionou todas as plataformas disponíveis.");
       return;
     }
+    setPlatforms([...platforms, newRow(next.key)]);
+    setAddedExtra(true);
+  };
+
+  const submit = async () => {
+    if (submitting) return;
+    if (!requirePremium()) { onOpenChange(false); return; }
     const now = new Date();
     const chosen = new Date(date);
     if (!isEditing) chosen.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
     const dateIso = chosen.toISOString();
 
-    const isSimple = isSimplePlatform(app);
-    const km = isSimple ? 0 : (kmMode === "total"
-      ? (kmTotal ?? 0)
-      : Math.max(0, (kmEnd ?? 0) - (kmStart ?? 0)));
-    const h = isSimple ? 0 : (hours ?? 0);
-    const g = gross ?? 0;
-    const r = isSimple ? 0 : (rides ?? 0);
-    const a = amount ?? 0;
-
     setSubmitting(true);
     try {
-      if (isEditing && editing) {
-        if (editing.type === "earning") {
-          if (g <= 0) { toast.error("Informe o valor recebido"); return; }
-          await updateEntry({
-            ...editing, date: dateIso, app, km, hours: h, gross: g,
-            rides: r > 0 ? r : undefined, notes,
-          });
-        } else {
-          if (a <= 0) { toast.error("Informe o valor do gasto"); return; }
-          const isMaint = category === "manutencao";
+      // ─────── GASTO ───────
+      if (tab === "expense") {
+        const a = amount ?? 0;
+        if (a <= 0) { toast.error("Informe o valor do gasto"); return; }
+        const isMaint = category === "manutencao";
+        if (editing && editing.type === "expense") {
           await updateEntry({
             ...editing, date: dateIso,
             expense: { category, amount: a, description, maintenanceType: isMaint ? maintenanceType : undefined },
           });
+          toast.success("Gasto atualizado!");
+        } else {
+          await addEntry({
+            id: crypto.randomUUID(), type: "expense", date: dateIso,
+            expense: { category, amount: a, description, maintenanceType: isMaint ? maintenanceType : undefined },
+          });
+          if (isMaint && (maintenanceType === "oleo" || maintenanceType === "pneus")) {
+            toast.success("Gasto registrado!", {
+              description: "Quer atualizar o KM da última troca para o acompanhamento?",
+              action: {
+                label: "Atualizar",
+                onClick: () => window.location.assign(`/ajustes/veiculos/manutencao#${maintenanceType}`),
+              },
+              duration: 6000,
+            });
+          } else {
+            toast.success("Gasto registrado!");
+          }
         }
-        toast.success("Registro atualizado!");
-        reset();
-        onOpenChange(false);
+        const cb = preset?.onAfterSave;
+        const wasMaint = isMaint;
+        reset(); onOpenChange(false);
+        if (wasMaint && cb) cb();
         return;
       }
 
-      const hasEarning = g > 0 || km > 0 || h > 0;
-      const hasExpense = a > 0;
+      // ─────── GANHO ───────
+      // Calcular KM/horas (receita simples zera)
+      const km = isSimple ? 0 : (kmMode === "total"
+        ? (kmTotal ?? 0)
+        : Math.max(0, (kmEnd ?? 0) - (kmStart ?? 0)));
+      const h = isSimple ? 0 : (hours ?? 0);
 
-      if (!hasEarning && !hasExpense) {
-        toast.error("Preencha um ganho ou um gasto");
-        return;
-      }
-      const tasks: Promise<void>[] = [];
-      if (hasEarning) {
-        if (g <= 0) { toast.error("Informe o valor recebido"); return; }
-        tasks.push(addEntry({
+      // Linhas válidas (valor > 0)
+      const valid = platforms.filter((p) => (p.gross || 0) > 0);
+      if (valid.length === 0) { toast.error("Informe o valor recebido"); return; }
+
+      // Receita simples sempre 1 linha sem grupo
+      if (isSimple) {
+        const r = valid[0];
+        const entry: EarningEntry = {
           id: crypto.randomUUID(), type: "earning", date: dateIso,
-          app, km, hours: h, gross: g, rides: r > 0 ? r : undefined, notes,
-        }));
+          app: r.app, km: 0, hours: 0, gross: r.gross || 0, notes,
+        };
+        // Em edição de uma entrada simples isolada
+        if (editing && editing.type === "earning" && !editingGroup) {
+          await updateEntry({ ...editing, date: dateIso, app: r.app, km: 0, hours: 0, gross: r.gross || 0, rides: undefined, notes });
+        } else if (editingGroup) {
+          // Sessão virou simples → insert + remove do grupo antigo (insert primeiro)
+          await addEntries([entry]);
+          try { await removeGroup(editingGroup[0].groupId!); } catch { /* duplicado recuperável */ }
+        } else {
+          await addEntry(entry);
+        }
+        toast.success(isEditing ? "Registro atualizado!" : "Ganho registrado!");
+        reset(); onOpenChange(false);
+        return;
       }
-      if (hasExpense) {
-        const isMaint = category === "manutencao";
-        tasks.push(addEntry({
-          id: crypto.randomUUID(), type: "expense", date: dateIso,
-          expense: { category, amount: a, description,
-            maintenanceType: isMaint ? maintenanceType : undefined },
-        }));
-      }
-      await Promise.all(tasks);
-      const wasMaintOilOrTires =
-        hasExpense && category === "manutencao" && (maintenanceType === "oleo" || maintenanceType === "pneus");
-      if (wasMaintOilOrTires) {
-        toast.success("Gasto registrado!", {
-          description: "Quer atualizar o KM da última troca para o acompanhamento?",
-          action: {
-            label: "Atualizar",
-            onClick: () => {
-              window.location.assign(`/ajustes/veiculos/manutencao#${maintenanceType}`);
-            },
-          },
-          duration: 6000,
-        });
+
+      // Multi-plataforma operacional
+      // 1 plataforma válida → sem grupo
+      if (valid.length === 1) {
+        const r = valid[0];
+        const single: EarningEntry = {
+          id: crypto.randomUUID(), type: "earning", date: dateIso,
+          app: r.app, km, hours: h, gross: r.gross || 0,
+          rides: (r.rides || 0) > 0 ? (r.rides as number) : undefined,
+          notes,
+        };
+        if (editing && editing.type === "earning" && !editingGroup) {
+          await updateEntry({
+            ...editing, date: dateIso, app: r.app, km, hours: h,
+            gross: r.gross || 0,
+            rides: (r.rides || 0) > 0 ? (r.rides as number) : undefined,
+            notes,
+          });
+        } else if (editingGroup) {
+          // Colapso de grupo → 1 linha: insert primeiro, depois remove o grupo antigo
+          await addEntries([single]);
+          try { await removeGroup(editingGroup[0].groupId!); } catch { /* duplicado recuperável */ }
+        } else {
+          await addEntry(single);
+        }
       } else {
-        toast.success(
-          hasEarning && hasExpense ? "Ganho e gasto registrados!" :
-          hasEarning ? "Ganho registrado!" : "Gasto registrado!"
-        );
+        // 2+ → sessão com group_id NOVO (mesmo em edição)
+        const groupId = crypto.randomUUID();
+        const sessionEntries: EarningEntry[] = valid.map((r, idx) => ({
+          id: crypto.randomUUID(),
+          type: "earning",
+          date: dateIso,
+          app: r.app,
+          km: idx === 0 ? km : 0,
+          hours: idx === 0 ? h : 0,
+          gross: r.gross || 0,
+          rides: (r.rides || 0) > 0 ? (r.rides as number) : undefined,
+          notes: idx === 0 ? (notes || undefined) : undefined,
+          groupId,
+        }));
+        // ORDEM SEGURA: insert antes, delete depois
+        await addEntries(sessionEntries);
+        if (editingGroup) {
+          try { await removeGroup(editingGroup[0].groupId!); } catch { /* duplicado recuperável */ }
+        } else if (editing && editing.type === "earning") {
+          // Linha isolada virou sessão — remove a antiga DEPOIS do insert ok
+          try { await removeEntry(editing.id); } catch { /* duplicado recuperável */ }
+        }
       }
-      const cb = preset?.onAfterSave;
-      const wasMaint = hasExpense && category === "manutencao";
-      reset();
-      onOpenChange(false);
-      if (wasMaint && cb) cb();
+
+      toast.success(isEditing ? "Jornada atualizada!" : "Ganho registrado!");
+      reset(); onOpenChange(false);
     } catch (err) {
       console.error("[entry save]", err);
       toast.error("Não foi possível salvar. Revise as informações e tente novamente.");
@@ -276,13 +396,19 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
   };
 
   const { ref: scrollRef, keyboardHeight } = useKeyboardAwareScroll<HTMLDivElement>();
+  const titleText = isEditing
+    ? (tab === "earning" ? "Editar jornada" : "Editar gasto")
+    : (tab === "earning" ? "Novo ganho" : "Novo gasto");
 
   return (
     <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
-      <DrawerContent className={cn("flex flex-col", keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]") }>
+      <DrawerContent className={cn(
+        "flex flex-col",
+        tab === "earning" ? "max-h-[100dvh] h-[100dvh]" : (keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]"),
+      )}>
         <div className="mx-auto flex w-full max-w-md flex-1 min-h-0 flex-col">
           <DrawerHeader className="pb-2 shrink-0">
-            <DrawerTitle>{isEditing ? "Editar registro" : "Novo registro"}</DrawerTitle>
+            <DrawerTitle>{titleText}</DrawerTitle>
           </DrawerHeader>
 
           <div
@@ -293,14 +419,12 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
               paddingBottom: keyboardHeight > 0 ? keyboardHeight + 24 : undefined,
             }}
           >
+            {/* Data — compartilhada */}
             <div className="mb-4 space-y-2">
               <Label>Data do registro</Label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
-                  >
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {format(date, "PPP", { locale: ptBR })}
                   </Button>
@@ -311,7 +435,6 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     selected={date}
                     onSelect={(d) => {
                       if (!d) return;
-                      // Preserve original time-of-day so editing the date never zeroes the clock.
                       const merged = new Date(d);
                       merged.setHours(date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
                       setDate(merged);
@@ -325,118 +448,158 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
               </Popover>
             </div>
 
-            <Tabs value={tab} onValueChange={(v) => !isEditing && setTab(v as any)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="earning" className="gap-2" disabled={isEditing && editing?.type !== "earning"}>
-                  <TrendingUp className="h-4 w-4" /> Lucro
-                </TabsTrigger>
-                <TabsTrigger value="expense" className="gap-2" disabled={isEditing && editing?.type !== "expense"}>
-                  <TrendingDown className="h-4 w-4" /> Gasto
-                </TabsTrigger>
-              </TabsList>
+            {tab === "earning" ? (
+              <div className="space-y-5">
+                {!isSimple && (
+                  <>
+                    <div>
+                      <div className="mb-3 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                        A jornada
+                      </div>
+                      <div className="grid gap-4">
+                        {/* Horas */}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Horas trabalhadas</Label>
+                          <HoursWheel value={hours} onChange={setHours} />
+                        </div>
 
-              <TabsContent value="earning" className="mt-4 space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label>Plataforma</Label>
-                    <button type="button" onClick={() => setPlatDialogOpen(true)}
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-                      <Plus className="h-3 w-3" /> Nova plataforma
-                    </button>
-                  </div>
-                  <Select value={app} onValueChange={(v) => setApp(v as AppName)}>
-                    <SelectTrigger className="h-12">
-                      <SelectValue>
-                        {(() => {
-                          const p = earningPlatforms.find((x) => x.key === app);
-                          if (!p) return null;
-                          return (
-                            <div className="flex items-center gap-2.5">
-                              <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} imageUrl={p.imageUrl} size="sm" />
-                              <span className="font-semibold">{p.label}</span>
-                              {p.type === "simple" && (
-                                <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                                  Receita
-                                </span>
+                        {/* Quilometragem */}
+                        <div className="space-y-2">
+                          <Label className="text-xs">Quilometragem</Label>
+                          <Segmented
+                            options={[{ key: "total", label: "Total" }, { key: "range", label: "Inicial / Final" }]}
+                            value={kmMode}
+                            onChange={(v) => setKmMode(v as "total" | "range")}
+                            tone="flat"
+                            size="sm"
+                          />
+                          {kmMode === "total" ? (
+                            <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
+                          ) : (
+                            <>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                  <div className="text-[10px] text-muted-foreground">
+                                    KM inicial {suggestedStartKm > 0 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => setKmStart(suggestedStartKm)}
+                                        className="ml-1 font-medium text-primary hover:underline"
+                                      >
+                                        Usar {suggestedStartKm.toLocaleString("pt-BR")} km
+                                      </button>
+                                    )}
+                                  </div>
+                                  <NumberField
+                                    placeholder={suggestedStartKm > 0 ? String(suggestedStartKm) : "Km inicial"}
+                                    value={kmStart}
+                                    onChange={setKmStart}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <div className="text-[10px] text-muted-foreground">KM final</div>
+                                  <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
+                                </div>
+                              </div>
+                              {liveKm !== null && liveKm > 0 && (
+                                <div className="text-right text-[11px] font-medium text-muted-foreground">
+                                  Rodou <span className="font-bold text-foreground">{liveKm.toLocaleString("pt-BR")} km</span>
+                                </div>
                               )}
-                            </div>
-                          );
-                        })()}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {earningPlatforms.map((p) => (
-                        <SelectItem key={p.key} value={p.key}>
-                          <div className="flex items-center gap-2.5">
-                            <PlatformLogo platformKey={p.key} label={p.label} hex={p.hex} imageUrl={p.imageUrl} size="sm" />
-                            <span>{p.label}</span>
-                            {p.type === "simple" && (
-                              <span className="rounded-full bg-muted px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
-                                Receita
-                              </span>
-                            )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lista de plataformas */}
+                    <div>
+                      <div className="mb-3 text-sm font-bold text-foreground">
+                        Em quais apps você rodou hoje?
+                      </div>
+                      <div className="space-y-2">
+                        {platforms.map((row, idx) => (
+                          <PlatformRow
+                            key={row.uid}
+                            row={row}
+                            usedKeys={usedKeys}
+                            hideRemove={platforms.length === 1}
+                            onChange={(next) => {
+                              const arr = [...platforms];
+                              arr[idx] = next;
+                              setPlatforms(arr);
+                            }}
+                            onRemove={() => {
+                              setPlatforms(platforms.filter((_, i) => i !== idx));
+                            }}
+                            onCreateNewPlatform={() => setPlatDialogOpen(true)}
+                          />
+                        ))}
+
+                        <button
+                          type="button"
+                          onClick={handleAddPlatform}
+                          className={cn(
+                            "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/70 bg-muted/30 px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary",
+                            !addedExtra && platforms.length === 1 && "animate-breath",
+                          )}
+                        >
+                          <Plus className="h-4 w-4" /> Adicionar plataforma
+                        </button>
+
+                        {totalGross > 0 && platforms.length > 1 && (
+                          <div className="flex items-center justify-between rounded-xl bg-success/10 px-3 py-2 text-sm">
+                            <span className="text-muted-foreground">Total do dia</span>
+                            <span className="text-base font-bold text-success">{brl(totalGross)}</span>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {!isSimplePlatform(app) && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label>Quilometragem</Label>
-                      <div className="flex rounded-md bg-muted p-0.5 text-xs">
-                        <button
-                          type="button"
-                          onClick={() => setKmMode("total")}
-                          className={cn("rounded px-2 py-1", kmMode === "total" && "bg-card shadow-sm")}
-                        >Total</button>
-                        <button
-                          type="button"
-                          onClick={() => setKmMode("range")}
-                          className={cn("rounded px-2 py-1", kmMode === "range" && "bg-card shadow-sm")}
-                        >Inicial/Final</button>
+                        )}
                       </div>
                     </div>
-                    {kmMode === "total" ? (
-                      <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
-                    ) : (
-                      <div className="grid grid-cols-2 gap-2">
-                        <NumberField placeholder="Km inicial" value={kmStart} onChange={setKmStart} />
-                        <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
-                      </div>
-                    )}
-                  </div>
+                  </>
                 )}
 
-                <div className={cn("gap-2", isSimplePlatform(app) ? "" : "grid grid-cols-2")}>
-                  {!isSimplePlatform(app) && (
-                    <div className="space-y-2">
-                      <Label>Horas trabalhadas</Label>
-                      <NumberField placeholder="Ex: 6.5" value={hours} onChange={setHours} />
-                    </div>
-                  )}
+                {/* Receita simples */}
+                {isSimple && (
                   <div className="space-y-2">
+                    <Label>Plataforma</Label>
+                    <Select value={primaryPlatform} onValueChange={(v) => {
+                      setPlatforms([{ ...platforms[0], app: v }]);
+                    }}>
+                      <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {earningPlatforms.map((p) => (
+                          <SelectItem key={p.key} value={p.key}>
+                            <span className="mr-2">{p.emoji}</span>{p.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <Label>Valor recebido</Label>
-                    <NumberField currency value={gross} onChange={setGross} />
-                  </div>
-                </div>
-
-                {!isSimplePlatform(app) && (
-                  <div className="space-y-2">
-                    <Label>Quantidade de corridas</Label>
-                    <NumberField placeholder="Opcional" value={rides} onChange={setRides} decimal={false} />
+                    <NumberField
+                      currency
+                      value={platforms[0]?.gross ?? null}
+                      onChange={(v) => setPlatforms([{ ...platforms[0], gross: v }])}
+                      className="h-12 text-lg font-bold"
+                    />
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label>Observações</Label>
-                  <Textarea rows={2} placeholder="Opcional" value={notes} onChange={(e) => setNotes(e.target.value)} />
+                {/* Observações */}
+                <div>
+                  <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                    Observações
+                  </div>
+                  <Textarea
+                    rows={2}
+                    placeholder="Opcional"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
                 </div>
-              </TabsContent>
-
-              <TabsContent value="expense" className="mt-4 space-y-4">
+              </div>
+            ) : (
+              // ─── GASTO ───
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label>Categoria</Label>
@@ -472,17 +635,25 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   </div>
                 )}
 
+                {/* Valor herói — vermelho */}
                 <div className="space-y-2">
-                  <Label>Valor</Label>
-                  <NumberField currency value={amount} onChange={setAmount} />
+                  <Label className="text-center block">Valor do gasto</Label>
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
+                    <NumberField
+                      currency
+                      value={amount}
+                      onChange={setAmount}
+                      className="h-14 border-0 bg-transparent text-center text-2xl font-bold text-destructive shadow-none focus-visible:ring-0 [&]:pl-2"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Descrição</Label>
                   <Textarea rows={2} placeholder="Opcional" value={description} onChange={(e) => setDescription(e.target.value)} />
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            )}
           </div>
 
           <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
@@ -507,7 +678,14 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         open={platDialogOpen}
         onOpenChange={setPlatDialogOpen}
         type="earning"
-        onCreated={(key) => setApp(key as AppName)}
+        onCreated={(key) => {
+          // Substitui a plataforma da linha que disparou o "criar nova" — usa a primeira sem valor.
+          const idx = platforms.findIndex((p) => !p.gross);
+          const target = idx >= 0 ? idx : 0;
+          const arr = [...platforms];
+          arr[target] = { ...arr[target], app: key as AppName };
+          setPlatforms(arr);
+        }}
       />
     </Drawer>
   );
