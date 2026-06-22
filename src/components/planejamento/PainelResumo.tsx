@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   GitCompare,
-  BookMarked,
   Route,
   ArrowLeftRight,
   Target,
@@ -13,6 +12,7 @@ import {
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
 import { useData } from "@/context/DataContext";
+import { computePlanningInsights } from "@/lib/planningInsights";
 import { cn } from "@/lib/utils";
 
 const fmtBRL = (v: number) =>
