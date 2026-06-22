@@ -530,16 +530,46 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                           />
                         ))}
 
-                        <button
-                          type="button"
-                          onClick={handleAddPlatform}
-                          className={cn(
-                            "flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border/70 bg-muted/30 px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:text-primary",
-                            !addedExtra && platforms.length === 1 && "animate-breath",
-                          )}
+                        <Select
+                          onValueChange={(v) => {
+                            if (v === "__new__") {
+                              setPendingAppend(true);
+                              setPlatDialogOpen(true);
+                              return;
+                            }
+                            setPlatforms([...platforms, newRow(v)]);
+                            setAddedExtra(true);
+                          }}
                         >
-                          <Plus className="h-4 w-4" /> Adicionar plataforma
-                        </button>
+                          <SelectTrigger
+                            className={cn(
+                              "flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-transparent px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-success hover:text-success hover:bg-success/5 focus:ring-0",
+                              platforms.length === 1 && "animate-breath",
+                            )}
+                          >
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success/20 text-success">
+                              <Plus className="h-3.5 w-3.5" />
+                            </div>
+                            Adicionar plataforma
+                          </SelectTrigger>
+                          <SelectContent>
+                            {unusedPlatforms.map((p) => (
+                              <SelectItem key={p.key} value={p.key}>
+                                <div className="flex items-center gap-2.5">
+                                  <span>{p.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                            {unusedPlatforms.length === 0 && (
+                              <div className="px-2 py-1.5 text-sm text-muted-foreground">Todas as plataformas já adicionadas</div>
+                            )}
+                            <SelectItem value="__new__">
+                              <div className="flex items-center gap-2 text-primary">
+                                <Plus className="h-4 w-4" /> Criar nova plataforma
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
 
                         {totalGross > 0 && platforms.length > 1 && (
                           <div className="flex items-center justify-between rounded-xl bg-success/10 px-3 py-2 text-sm">
