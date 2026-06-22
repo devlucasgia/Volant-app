@@ -358,7 +358,7 @@ export default function History() {
                                     <span className="text-[11px] text-muted-foreground">{r.rides} corr.</span>
                                   )}
                                 </div>
-                                <span className="text-sm font-semibold tabular-nums text-success">{brl(r.gross)}</span>
+                                <span className="text-xs font-semibold tabular-nums text-success">{brl(r.gross)}</span>
                               </div>
                             );
                           })}
