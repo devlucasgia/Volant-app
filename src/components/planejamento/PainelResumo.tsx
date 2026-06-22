@@ -45,7 +45,8 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const diaAtual = hoje.getDate();
   const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   const timelinePct = Math.min(100, Math.max(0, ((diaAtual - 1) / diasNoMes) * 100));
-  const mesLabel = hoje
+  const planDate = s.originalCreatedAt ? new Date(s.originalCreatedAt) : new Date();
+  const mesLabel = planDate
     .toLocaleDateString("pt-BR", { month: "long" })
     .toUpperCase();
 
