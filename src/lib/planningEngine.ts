@@ -81,6 +81,16 @@ export interface PlanningSnapshot {
   averageKmPerWorkday: number;
 
 
+  // Snapshot do plano original (Refazer/fresh). Fica null em usuários
+  // sem snapshot gravado — consumidores devem usar `hasOriginalPlan`.
+  hasOriginalPlan: boolean;
+  originalGoal: number | null;
+  originalGoalType: GoalType | null;
+  originalAvgKm: number | null;
+  originalDaysCount: number;
+  originalKmTotal: number;
+  originalCreatedAt: string | null;
+
   status: PlanningStatusKind;
   message: string;
 }
