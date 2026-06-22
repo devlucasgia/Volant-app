@@ -380,10 +380,8 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         if (editingGroup) {
           try { await removeGroup(editingGroup[0].groupId!); } catch { /* duplicado recuperável */ }
         } else if (editing && editing.type === "earning") {
-          // Editou uma linha isolada e adicionou plataformas — remove a antiga
-          try { await updateEntry; } catch { /* noop */ }
-          // Aqui o correto é remover a entrada antiga via removeEntry; mantemos via context já carregado
-          // Não temos removeEntry no escopo; importamos abaixo se necessário. Para manter mínimo, omitimos.
+          // Linha isolada virou sessão — remove a antiga DEPOIS do insert ok
+          try { await removeEntry(editing.id); } catch { /* duplicado recuperável */ }
         }
       }
 
