@@ -63,6 +63,11 @@ const DEFAULT_SETTINGS: Settings = {
   planningSelectedDates: null,
   rpkBase: null,
   planningAvgKmPerDay: null,
+  planningOriginalGoal: null,
+  planningOriginalGoalType: null,
+  planningOriginalAvgKm: null,
+  planningOriginalDates: null,
+  planningOriginalCreatedAt: null,
 };
 
 function rowToEntry(r: any): Entry {
