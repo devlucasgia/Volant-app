@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   ArrowRight,
-  Check,
+  BookMarked,
   Route,
   ArrowLeftRight,
   Target,
