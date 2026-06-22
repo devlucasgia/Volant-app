@@ -82,6 +82,26 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
       : 0;
 
+  const insights = computePlanningInsights({
+    rpkAtual,
+    rpkMinimo: s.requiredRpk,
+    homeRemainingGross: s.homeRemainingGross,
+    homeDailyGross: s.homeDailyGross,
+    remainingWorkdaysCount: s.remainingWorkdaysCount,
+    currentGross: s.currentGross,
+    homeGrossTarget: s.homeGrossTarget,
+    daysWorkedThisMonth,
+    selectedWorkdaysCount: s.selectedWorkdaysCount,
+    currentKm: s.currentKm,
+  });
+
+  const toneClass: Record<string, string> = {
+    good: "border-primary/30 bg-primary/[0.06] text-foreground",
+    warn: "border-amber-500/30 bg-amber-500/[0.06] text-foreground",
+    bad: "border-rose-500/30 bg-rose-500/[0.06] text-foreground",
+    info: "border-border/50 bg-card/50 text-muted-foreground",
+  };
+
   return (
     <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5 pb-28 animate-fade-in">
       {/* ============ 1. Timeline ============ */}
