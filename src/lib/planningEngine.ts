@@ -359,6 +359,13 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
         : 0,
     status,
     message,
+    hasOriginalPlan,
+    originalGoal,
+    originalGoalType,
+    originalAvgKm,
+    originalDaysCount,
+    originalKmTotal,
+    originalCreatedAt,
   };
 }
 
