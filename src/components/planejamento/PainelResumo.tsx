@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import {
   Lightbulb,
   GitCompare,
-  BookMarked,
   Route,
   ArrowLeftRight,
   Target,
@@ -13,6 +12,7 @@ import {
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
 import { useData } from "@/context/DataContext";
+import { computePlanningInsights } from "@/lib/planningInsights";
 import { cn } from "@/lib/utils";
 
 const fmtBRL = (v: number) =>
@@ -41,10 +41,13 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const daysWorkedThisMonth = realData.daysWorkedThisMonth;
 
-  const hoje = new Date();
-  const diaAtual = hoje.getDate();
-  const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-  const timelinePct = Math.min(100, Math.max(0, ((diaAtual - 1) / diasNoMes) * 100));
+  const planDaysTotal = s.hasOriginalPlan
+    ? s.originalDaysCount
+    : s.selectedWorkdaysCount;
+  const timelinePct =
+    planDaysTotal > 0
+      ? Math.min(100, (daysWorkedThisMonth / planDaysTotal) * 100)
+      : 0;
   const planDate = s.originalCreatedAt ? new Date(s.originalCreatedAt) : new Date();
   const mesLabel = planDate
     .toLocaleDateString("pt-BR", { month: "long" })
@@ -79,12 +82,33 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
       : 0;
 
+  const insights = computePlanningInsights({
+    rpkAtual,
+    rpkMinimo: s.requiredRpk,
+    homeRemainingGross: s.homeRemainingGross,
+    homeDailyGross: s.homeDailyGross,
+    remainingWorkdaysCount: s.remainingWorkdaysCount,
+    currentGross: s.currentGross,
+    homeGrossTarget: s.homeGrossTarget,
+    daysWorkedThisMonth,
+    selectedWorkdaysCount: s.selectedWorkdaysCount,
+    currentKm: s.currentKm,
+  });
+
+  const toneClass: Record<string, string> = {
+    good: "border-primary/30 bg-primary/[0.06] text-foreground",
+    warn: "border-amber-500/30 bg-amber-500/[0.06] text-foreground",
+    bad: "border-rose-500/30 bg-rose-500/[0.06] text-foreground",
+    info: "border-border/50 bg-card/50 text-muted-foreground",
+  };
+
   return (
     <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5 pb-28 animate-fade-in">
       {/* ============ 1. Timeline ============ */}
       <div className="flex items-center gap-2.5 px-1 text-[11.5px] text-muted-foreground">
         <span>
-          Dia <b className="font-semibold text-foreground/85">{diaAtual}</b>
+          <b className="font-semibold text-foreground/85">{daysWorkedThisMonth}</b> de{" "}
+          <b className="font-semibold text-foreground/85">{planDaysTotal}</b> dias
         </span>
         <div className="relative h-1 flex-1 overflow-hidden rounded-full bg-border/60">
           <div
@@ -117,8 +141,15 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
             <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               Meta
             </div>
-            <div className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
-              {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)}
+            <div className="flex items-baseline gap-1">
+              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-lg font-semibold leading-none self-end mb-0.5">
+                R$
+              </span>
+              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
+                {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)
+                  .replace("R$", "")
+                  .trim()}
+              </span>
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">pra faturar</div>
           </div>
@@ -149,14 +180,31 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         </div>
       </div>
 
-      {/* ============ 3. Insights placeholder ============ */}
+      {/* ============ 3. Insights inteligentes ============ */}
       <div className="mt-7">
         <div className="mb-1.5 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           <Lightbulb className="h-3 w-3" /> Insights inteligentes
         </div>
-        <div className="rounded-2xl border border-dashed border-border/50 bg-card/40 p-4 text-center text-[12px] text-muted-foreground">
-          Insights do seu plano chegam em breve.
-        </div>
+        {insights.length > 0 ? (
+          <div className="space-y-2">
+            {insights.map((insight, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2.5 rounded-2xl border p-3 text-[12.5px] leading-snug",
+                  toneClass[insight.tone],
+                )}
+              >
+                <span className="text-base leading-none mt-0.5">{insight.icon}</span>
+                <span className="flex-1">{insight.text}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-border/50 bg-card/40 p-4 text-center text-[12px] text-muted-foreground">
+            Registre seus primeiros dados pra ver insights do seu plano.
+          </div>
+        )}
       </div>
 
       {/* ============ 4. Plano vs Realizado ============ */}
@@ -167,9 +215,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <div className="rounded-2xl border border-dashed border-border/40 bg-muted/10 p-3.5">
-              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
-                <BookMarked className="h-3 w-3" /> Plano de {mesLabel}
+            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+                Plano de {mesLabel}
               </div>
               {(() => {
                 const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
@@ -178,7 +226,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
                   ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
                   : s.requiredRpk;
-                const dimClass = "text-muted-foreground font-normal";
+                const dimClass = "text-muted-foreground/60 font-normal";
                 return (
                   <>
                     <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} valueClass={dimClass} />
@@ -197,13 +245,10 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 );
               })()}
             </div>
-            <p className="mt-1.5 px-1 text-[10px] text-muted-foreground/50 leading-tight">
-              Gravado no início do plano · não muda com Ajustes
-            </p>
           </div>
 
           <div>
-            <div className="rounded-2xl border border-border/80 bg-card/80 p-3.5">
+            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5">
               <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                 <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 Até agora
@@ -211,10 +256,18 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
               <PlanoLine
                 label="Já fiz"
                 value={fmtBRL(s.currentGross)}
-                valueClass="text-primary"
+                valueClass="text-primary font-bold text-[15px]"
               />
-              <PlanoLine label="Dias rodados" value={`${daysWorkedThisMonth}`} />
-              <PlanoLine label="KM rodado" value={fmtKm(s.currentKm)} />
+              <PlanoLine
+                label="Dias rodados"
+                value={`${daysWorkedThisMonth}`}
+                valueClass="text-foreground font-semibold"
+              />
+              <PlanoLine
+                label="KM rodado"
+                value={fmtKm(s.currentKm)}
+                valueClass="text-foreground font-semibold"
+              />
               <PlanoLine
                 label="R$/km atual"
                 value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}

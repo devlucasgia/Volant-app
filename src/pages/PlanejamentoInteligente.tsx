@@ -192,22 +192,34 @@ export default function PlanejamentoInteligente() {
       <AlertDialog open={confirmRedo} onOpenChange={setConfirmRedo}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Refazer planejamento?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Isso não apaga seus registros, veículo ou custos. Apenas refaz seu planejamento.
-              Seu planejamento atual continua valendo até você concluir o novo fluxo.
+            <AlertDialogTitle>Refazer o planejamento?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Isso vai{" "}
+                  <span className="font-semibold text-destructive">
+                    substituir seu plano atual de {new Date().toLocaleDateString("pt-BR", { month: "long" })}
+                  </span>{" "}
+                  por um novo — incluindo o De/Para que está sendo acompanhado.
+                </p>
+                <p>
+                  Seus registros de ganhos, gastos e veículo não são afetados.
+                  O plano atual continua valendo até você concluir o novo fluxo.
+                </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>Manter plano atual</AlertDialogCancel>
             <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 setConfirmRedo(false);
                 setFlowConfig({ variant: "fresh" });
                 setMode("flow");
               }}
             >
-              Refazer
+              Sim, refazer
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

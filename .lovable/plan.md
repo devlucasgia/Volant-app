@@ -1,82 +1,67 @@
-Ajustes visuais e UX no painel de Planejamento Inteligente. Sem alteração de lógica.
+# Sprint D.2 — Correções De/Para + Insights v2 + Alerta de Viabilidade
 
-## Mudanças
+Executar exatamente as 7 mudanças do brief, com **duas alterações** vs. a versão anterior do plano: o conteúdo de `planningInsights.ts` vem do arquivo enviado `volant-planningInsights-v2.ts` (não do banco de frases descrito no brief), e a chamada de `computePlanningInsights` no `PainelResumo` passa `currentKm: s.currentKm`. Nenhuma outra alteração silenciosa.
 
-### 1 — Herói: gradiente real + glow (`PainelResumo.tsx`)
-Substituir wrapper do card herói com classes EXATAS:
-```tsx
-<div className="relative overflow-hidden rounded-2xl border border-primary/25
-  bg-gradient-to-br from-primary/[0.14] via-primary/[0.04] to-transparent p-5
-  shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.6)]">
-  <div className="pointer-events-none absolute -right-6 -top-6 h-44 w-44
-    rounded-full bg-primary/[0.12] blur-2xl" />
-  ...
-</div>
-```
-Valores META, R$/KM e "—" usam: `bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none` (trocar `from-foreground` por `from-white`).
+## Arquivos
 
-### 2 — Timeline pelo dia atual do mês
-Já está calculada por `diaAtual / diasNoMes` no código (linhas 41-46). Confirmar fórmula `((diaAtual - 1) / diasNoMes) * 100` (já está assim). **Nenhuma mudança necessária aqui** — já implementado corretamente.
+### 1. `src/components/planejamento/PainelResumo.tsx`
+- **M1 — Timeline (linhas 44–101):** trocar `((diaAtual - 1) / diasNoMes)` por progresso de dias do plano:
+  ```ts
+  const planDaysTotal = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
+  const timelinePct = planDaysTotal > 0
+    ? Math.min(100, (daysWorkedThisMonth / planDaysTotal) * 100)
+    : 0;
+  ```
+  JSX: à esquerda `{daysWorkedThisMonth} de {planDaysTotal} dias`; à direita mantém `{remainingWorkdaysCount} dia(s) restante(s)`. Remover `diaAtual`/`diasNoMes` se ficarem órfãos.
+- **M2a:** remover `<BookMarked />` do label "Plano de {mesLabel}" (linha 172). Remover `BookMarked` do import se ficar órfão.
+- **M2b:** remover o `<p>` "Gravado no início do plano · não muda com Ajustes" (linhas 200–202).
+- **M2c — Card esquerdo:** `border-dashed border-border/30 bg-muted/[0.06] p-3.5`; `dimClass = "text-muted-foreground/60 font-normal"`.
+- **M2d — Card direito:** `border-primary/30 bg-primary/[0.05] p-3.5`; "Já fiz" usa `text-primary font-bold text-[15px]`; "Dias rodados" e "KM rodado" usam `text-foreground font-semibold` via `valueClass`; "R$/km atual" mantém `rpkColor`.
+- **M3 — Herói META:** envolver número em `flex items-baseline gap-1` com `<span>` "R$" pequeno (`text-lg text-emerald-200/70 font-semibold self-end mb-0.5`) e número via `fmtBRL(...).replace("R$","").trim()`, mantendo gradiente atual.
+- **M4 — Insights:** importar `computePlanningInsights` de `@/lib/planningInsights`. Após dados derivados:
+  ```ts
+  const insights = computePlanningInsights({
+    rpkAtual,
+    rpkMinimo: s.requiredRpk,
+    homeRemainingGross: s.homeRemainingGross,
+    homeDailyGross: s.homeDailyGross,
+    remainingWorkdaysCount: s.remainingWorkdaysCount,
+    currentGross: s.currentGross,
+    homeGrossTarget: s.homeGrossTarget,
+    daysWorkedThisMonth,
+    selectedWorkdaysCount: s.selectedWorkdaysCount,
+    currentKm: s.currentKm, // ← adicionado conforme pedido
+  });
+  ```
+  Substituir o placeholder (linhas 152–160) por: cabeçalho "Insights inteligentes" + até 2 cards (ícone + texto, cor por `tone` → `good`=primary, `warn`=amber, `bad`=rose, `info`=muted). Fallback "Registre seus primeiros dados pra ver insights do seu plano." quando `insights.length === 0`.
 
-### 3 — Nome do mês usa data de criação do plano
-Trocar:
-```tsx
-const planDate = s.originalCreatedAt ? new Date(s.originalCreatedAt) : new Date();
-const mesLabel = planDate.toLocaleDateString("pt-BR", { month: "long" }).toUpperCase();
-```
+### 2. `src/pages/PlanejamentoInteligente.tsx` — M5
+Substituir o `AlertDialogContent` do Refazer:
+- Título: "Refazer o planejamento?"
+- Parágrafo 1 (com destaque destrutivo em "substituir seu plano atual de {mesAtual}…").
+- Parágrafo 2: registros não são afetados; plano atual vale até concluir o novo.
+- `AlertDialogCancel` = "Manter plano atual" (botão primário).
+- `AlertDialogAction` = "Sim, refazer" com `bg-destructive text-destructive-foreground hover:bg-destructive/90`.
+- Adicionar `const mesAtual = new Date().toLocaleDateString("pt-BR", { month: "long" });`.
 
-### 4 — Sub-labels movidos para dentro dos cards
-Remover os blocos `<div className="mb-1 flex items-center gap-1 ...">PLANO DE {mesLabel}</div>` e `<div className="mb-1 ... ATÉ AGORA">` que ficam ACIMA dos cards. Inserir cabeçalho interno no topo de cada card:
+### 3. `src/components/planejamento/GuidedFlow.tsx` — M6
+Após o card "COM SUA ROTINA PLANEJADA" (depois da linha 615) e antes do `<p>` final, adicionar bloco condicional usando `plan.requiredRpk` (já existente — sem novo cálculo):
+- `> 5` → vermelho (`border-rose-500/30 bg-rose-500/[0.07] text-rose-300`) com texto "⚠️ R$ X,XX/km é muito difícil de atingir no dia a dia. Considere aumentar os dias ou reduzir a meta."
+- `> 3.5` → âmbar (`border-amber-500/30 bg-amber-500/[0.07] text-amber-300`) com texto "💡 R$ X,XX/km é exigente. Possível, mas vai precisar de corridas bem selecionadas."
+- `<= 3.5` → não renderiza.
 
-Card esquerdo:
-```tsx
-<div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold
-                uppercase tracking-[0.14em] text-muted-foreground/60">
-  <BookMarked className="h-3 w-3" /> PLANO DE {mesLabel}
-</div>
-```
-
-Card direito:
-```tsx
-<div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold
-                uppercase tracking-[0.14em] text-primary">
-  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-  ATÉ AGORA
-</div>
-```
-Padding interno dos cards passa de `p-3` para `p-3.5`.
-
-### 5 — "KM/dia" → "KM estimado"
-No card esquerdo, trocar:
-```tsx
-<PlanoLine label="KM estimado" value={planKmDay > 0 ? fmtKm(planKmDay * planDays) : "—"} />
-```
-
-### 6 — Contraste De/Para nos cards
-Card esquerdo (Plano): borda `border-dashed border-border/40`, fundo `bg-muted/10`. Valores das `PlanoLine` ficam em `text-muted-foreground` (passar `valueClass="text-muted-foreground font-normal"` para apagar). 
-Card direito (Até agora): borda `border-border/80`, fundo `bg-card/80`. "Já fiz" segue `text-primary`, "R$/km atual" segue `rpkColor`.
-
-### 7 — Nota abaixo do card esquerdo
-Inserir após o card esquerdo, dentro do mesmo `<div>` da coluna:
-```tsx
-<p className="mt-1.5 px-1 text-[10px] text-muted-foreground/50 leading-tight">
-  Gravado no início do plano · não muda com Ajustes
-</p>
-```
-
-### 8 — Brain de volta no header (`PlanejamentoInteligente.tsx`)
-Trocar import `Compass` por `Brain` e o `<Compass>` no `PlanHeader` por `<Brain>`. Nenhuma outra alteração.
+### 4. `src/lib/planningInsights.ts` — M7 (novo)
+**Conteúdo = arquivo enviado `volant-planningInsights-v2.ts` (146 linhas, na íntegra).** Inclui `InsightTone`, `PlanningInsight`, `PlanningInsightsInput` (com `currentKm` obrigatório e `hoursWorked?` opcional) e `computePlanningInsights` com as regras v2: meta batida (early return), KM alto/rendimento baixo, R$/km acima, projeção da meta, quase lá, poucos dias restantes. Retorna `slice(0, 2)`. Copiar via `code--copy user-uploads://volant-planningInsights-v2.ts src/lib/planningInsights.ts`.
 
 ## Fora de escopo
-planningEngine, smartKm, GuidedFlow, AjustarSheet, EmptyState, Dashboard, DataContext, toggle bruto/líquida (continua funcionando), animação de custos (mantida).
+`planningEngine.ts`, `smartKm.ts`, `AjustarSheet.tsx`, `EmptyState.tsx`, `Dashboard.tsx`, herói (gradiente já correto), toggle bruto/líquida, animação de custos, DataContext, AuthContext, queries Supabase, DnD hooks, admin.
 
 ## Validação
 1. Build TS limpo.
-2. Herói com gradiente verde + glow visíveis.
-3. Timeline reflete dia atual do mês calendário.
-4. "PLANO DE {MÊS}" usa mês de `originalCreatedAt` quando existe.
-5. Sub-labels dentro dos cards; bolinha pulsante verde em "ATÉ AGORA".
-6. Card esquerdo apagado, direito vivo.
-7. "KM estimado" mostra total (planKmDay × planDays).
-8. Nota discreta abaixo do card esquerdo.
-9. Ícone Brain no header.
+2. Timeline exibe "X de Y dias" baseado em dias trabalhados vs plano original.
+3. "PLANO DE JUNHO" sem ícone.
+4. Card esquerdo apagado, direito vivo com fundo verde sutil; "Já fiz" verde/bold/maior.
+5. "R$" pequeno à esquerda do número da META no herói.
+6. Insights v2 mostram até 2 cards com tom correto; fallback quando sem dados; insight de "KM alto / rendimento baixo" usa `currentKm`.
+7. Modal Refazer com tom destrutivo e botão primário "Manter plano atual".
+8. Alerta de viabilidade aparece no passo de KM quando R$/km > 3,50.
