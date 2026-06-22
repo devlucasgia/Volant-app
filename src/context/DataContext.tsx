@@ -21,8 +21,10 @@ interface DataCtx {
   carInitialKm: number;
   loading: boolean;
   addEntry: (e: Entry) => Promise<void>;
+  addEntries: (es: Entry[]) => Promise<void>;
   updateEntry: (e: Entry) => Promise<void>;
   removeEntry: (id: string) => Promise<void>;
+  removeGroup: (groupId: string) => Promise<void>;
   updateSettings: (patch: Partial<Settings>) => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshCars: () => Promise<void>;
