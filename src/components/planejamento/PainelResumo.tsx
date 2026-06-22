@@ -274,6 +274,13 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   </>
                 );
               })()}
+              {dataRefazendo && (
+                <div className="mt-2.5 border-t border-border/20 pt-2">
+                  <span className="text-[10px] text-muted-foreground/50">
+                    Refeito em {dataRefazendo}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
