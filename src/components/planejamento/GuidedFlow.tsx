@@ -298,7 +298,9 @@ export function GuidedFlow({
   const originalCreatedAt = settings.planningOriginalCreatedAt
     ? new Date(settings.planningOriginalCreatedAt)
     : null;
-  const isPrimeiroPlano = !originalCreatedAt && !settings.planningStatus;
+  const isPrimeiroPlano =
+    !originalCreatedAt &&
+    (!settings.planningStatus || settings.planningStatus === "not_configured");
   const isMesNovo = originalCreatedAt
     ? originalCreatedAt.getMonth() !== hoje.getMonth() ||
       originalCreatedAt.getFullYear() !== hoje.getFullYear()
@@ -898,20 +900,27 @@ function Step6({
   daysWorked: number;
   isRefazer: boolean;
 }) {
-  const temDados = currentGross > 0 || daysWorked > 0;
+  const temDados = currentGross > 0 && isRefazer;
 
-  // Meta diária e R$/km recalculados com base no que já foi realizado
-  const diasRestantes = Math.max(1, draft.selectedDates.length - daysWorked);
-  const faltaFaturar = Math.max(0, plan.faturamentoNecessario - currentGross);
-  const metaDiariaReal = diasRestantes > 0 ? faltaFaturar / diasRestantes : 0;
-  const kmRestante = Math.max(
-    0,
-    draft.avgKmPerDay * draft.selectedDates.length - currentKm,
-  );
-  const rpkReal = kmRestante > 0 ? faltaFaturar / kmRestante : plan.requiredRpk ?? 0;
+  // Dias do novo plano que ainda não passaram (>= hoje)
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  const diasFuturos = draft.selectedDates.filter((iso) => {
+    const d = new Date(iso);
+    d.setHours(0, 0, 0, 0);
+    return d >= hoje;
+  });
 
-  const metaDiariaExibida = temDados ? metaDiariaReal : plan.metaDiaria ?? null;
-  const rpkExibido = temDados ? rpkReal : plan.requiredRpk ?? null;
+  // Norteadores: se há dados, descontar o já feito
+  const faltaFaturar = temDados
+    ? Math.max(0, plan.faturamentoNecessario - currentGross)
+    : plan.faturamentoNecessario;
+
+  const diasBase = temDados && diasFuturos.length > 0 ? diasFuturos.length : draft.selectedDates.length;
+  const kmBase = draft.avgKmPerDay * diasBase;
+
+  const metaDiariaExibida = temDados && diasBase > 0 ? faltaFaturar / diasBase : plan.metaDiaria ?? null;
+  const rpkExibido = temDados && kmBase > 0 ? faltaFaturar / kmBase : plan.requiredRpk ?? null;
 
   const metaImpossivel = rpkExibido != null && rpkExibido > 5;
 
@@ -940,7 +949,7 @@ function Step6({
                 R$
               </span>
               <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {metaDiariaExibida != null
+                {metaDiariaExibida != null && metaDiariaExibida > 0
                   ? metaDiariaExibida.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
                   : "—"}
               </span>
@@ -953,7 +962,7 @@ function Step6({
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {rpkExibido != null
+                {rpkExibido != null && rpkExibido > 0
                   ? rpkExibido.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -970,7 +979,7 @@ function Step6({
       </div>
 
       {/* Já realizado este mês (apenas em Refazer com dados) */}
-      {temDados && isRefazer && (
+      {temDados && (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
           <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
             Já realizado este mês
