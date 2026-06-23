@@ -75,13 +75,6 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const foiRefeito = s.originalCreatedAt
     ? new Date(s.originalCreatedAt) > inicioDoMes
     : false;
-  const dataRefazendo =
-    foiRefeito && s.originalCreatedAt
-      ? new Date(s.originalCreatedAt).toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-        })
-      : null;
 
   const rpkAtual = s.currentKm > 0 ? s.currentGross / s.currentKm : 0;
   const rpkPct = s.requiredRpk > 0 ? rpkAtual / s.requiredRpk : 0;
