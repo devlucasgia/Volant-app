@@ -93,7 +93,7 @@ export function computePlanningInsights(
     if (metaImpossivel) {
       text = `Seu R$/km mínimo de ${fmt2(rpkMinimo)} está num território muito difícil — poucos motoristas chegam lá sem corridas premium ou longas. Se não é sua realidade agora, ajustar a meta ou os dias de trabalho vai ser mais eficiente que forçar o mês.`;
     } else if (metaDificil && kmAlto) {
-      text = `Você rodou bastante (${currentKm.toLocaleString("pt-BR")} km) mas o R$/km de ${fmt2(rpkAtual)} está abaixo dos ${fmt2(rpkMinimo)} que a meta exige. Com um mínimo exigente como esse, quantidade de km não resolve — qualidade de corrida sim.`;
+      text = `Você rodou bastante (${currentKm.toLocaleString("pt-BR")} km) mas o R$/km de ${fmt2(rpkAtual)} está abaixo dos ${fmt2(rpkMinimo)} que a meta exige. Com um mínimo exigente como esse, quantidade de km não resolve. Qualidade de corrida, sim.`;
     } else if (metaDificil) {
       text = `Com R$/km mínimo de ${fmt2(rpkMinimo)}, você está num plano puxado. Seu R$/km atual é ${fmt2(rpkAtual)}. Recusar corridas abaixo de ${fmt2(rpkMinimo * 0.9)}/km e priorizar as mais longas é o caminho mais realista.`;
     } else if (kmAlto) {
