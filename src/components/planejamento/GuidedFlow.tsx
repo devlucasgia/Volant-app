@@ -190,7 +190,11 @@ export function GuidedFlow({
 
   const canNext = (() => {
     if (step === 1) return true;
-    if (step === 2) return draft.monthlyGoal > 0;
+    if (step === 2) {
+      if (draft.monthlyGoal <= 0) return false;
+      if (isRedo && draft.monthlyGoal === settings.monthlyGoal) return false;
+      return true;
+    }
     if (step === 3) return draft.selectedDates.length > 0;
     if (step === 4) return draft.avgKmPerDay > 0;
     if (step === 5) return true;
