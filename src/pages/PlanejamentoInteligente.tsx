@@ -153,6 +153,7 @@ export default function PlanejamentoInteligente() {
         onCancel={() => setMode("panel")}
         onDone={() => setMode("panel")}
         returnTo={returnTo}
+        isRedo={flowConfig.isRedo}
       />
     );
   }
