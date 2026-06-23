@@ -258,42 +258,8 @@ export function GuidedFlow({
   };
 
   // ── Dados reais do mês atual (usados no Step6 quando há Refazer em mês em andamento) ──
-  const currentGrossReal = useMemo(
-    () =>
-      entries.reduce((sum, e) => {
-        if (e.type !== "earning") return sum;
-        const d = new Date(e.date);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-          ? sum + (e.gross ?? 0)
-          : sum;
-      }, 0),
-    [entries],
-  );
-  const currentKmReal = useMemo(
-    () =>
-      entries.reduce((sum, e) => {
-        if (e.type !== "earning") return sum;
-        const d = new Date(e.date);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-          ? sum + (e.km ?? 0)
-          : sum;
-      }, 0),
-    [entries],
-  );
-  const daysWorkedReal = useMemo(() => {
-    const dates = new Set<string>();
-    const now = new Date();
-    entries.forEach((e) => {
-      if (e.type !== "earning") return;
-      const d = new Date(e.date);
-      if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
-        dates.add(d.toISOString().split("T")[0]);
-      }
-    });
-    return dates.size;
-  }, [entries]);
+  // Usa o mesmo helper do PainelResumo, com bucketing em fuso local.
+  const realMes = useMemo(() => getCurrentMonthRealData(entries), [entries]);
 
   // ── Texto contextual do botão final ──
   const hoje = new Date();
