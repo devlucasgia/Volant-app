@@ -449,7 +449,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   </span>
                 </div>
                 <div className="mt-0.5 text-[10.5px] text-muted-foreground/80">
-                  fora da meta — só referência
+                  fora da meta, só referência
                 </div>
               </div>
             )}
