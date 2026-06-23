@@ -624,8 +624,8 @@ function Step4({
             )}
           >
             {plan.requiredRpk > 5
-              ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir no dia a dia. Considere aumentar os dias ou reduzir a meta.`
-              : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. Possível, mas vai precisar de corridas bem selecionadas.`}
+              ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
+              : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
           </div>
         )}
 

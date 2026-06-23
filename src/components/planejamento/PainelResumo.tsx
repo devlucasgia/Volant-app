@@ -75,13 +75,6 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const foiRefeito = s.originalCreatedAt
     ? new Date(s.originalCreatedAt) > inicioDoMes
     : false;
-  const dataRefazendo =
-    foiRefeito && s.originalCreatedAt
-      ? new Date(s.originalCreatedAt).toLocaleDateString("pt-BR", {
-          day: "2-digit",
-          month: "2-digit",
-        })
-      : null;
 
   const rpkAtual = s.currentKm > 0 ? s.currentGross / s.currentKm : 0;
   const rpkPct = s.requiredRpk > 0 ? rpkAtual / s.requiredRpk : 0;
@@ -112,6 +105,17 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
       : 0;
 
+  const plannedKmProportional = s.averageKmPerDay * daysWorkedInPlan;
+  const totalHoursWorked = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        if (new Date(e.date).getTime() < planStartTs) return sum;
+        return sum + (e.hours ?? 0);
+      }, 0),
+    [entries, planStartTs],
+  );
+
   const insights = computePlanningInsights({
     rpkAtual,
     rpkMinimo: s.requiredRpk,
@@ -123,6 +127,8 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
     daysWorkedThisMonth: daysWorkedInPlan,
     selectedWorkdaysCount: s.selectedWorkdaysCount,
     currentKm: s.currentKm,
+    plannedKmProportional,
+    totalHoursWorked,
   });
 
   const toneClass: Record<string, string> = {
@@ -246,8 +252,15 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5">
-              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
-                Plano de {mesLabel}
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
+                  Plano de {mesLabel}
+                </span>
+                {foiRefeito && (
+                  <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-400">
+                    Refeito
+                  </span>
+                )}
               </div>
               {(() => {
                 const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
@@ -274,13 +287,6 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   </>
                 );
               })()}
-              {dataRefazendo && (
-                <div className="mt-2.5 border-t border-border/20 pt-2">
-                  <span className="text-[10px] text-muted-foreground/50">
-                    Refeito em {dataRefazendo}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
 
