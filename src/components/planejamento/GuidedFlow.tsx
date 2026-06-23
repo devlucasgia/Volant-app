@@ -515,6 +515,11 @@ function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
             </button>
           ))}
         </div>
+        <div className="mt-3 rounded-xl border border-border/40 bg-muted/20 px-3 py-2.5">
+          <p className="text-[11.5px] leading-snug text-muted-foreground">
+            Os dias <span className="font-medium text-foreground/80">não marcados</span> são tratados como folga. Você pode trabalhar neles se quiser, mas não entram na meta diária.
+          </p>
+        </div>
         <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-3 text-[12px]">
           <span className="text-muted-foreground">Dias selecionados</span>
           <span className="font-semibold tabular-nums text-foreground">
