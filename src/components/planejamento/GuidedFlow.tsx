@@ -454,8 +454,8 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
         title={isLiquido ? "Quanto quer de lucro líquido?" : "Quanto quer faturar?"}
         subtitle={
           isLiquido
-            ? "É o valor que você quer ver sobrando no fim do mês, depois de pagar os custos fixos do carro."
-            : "Seu objetivo total de faturamento no mês."
+            ? "Quanto você quer tirar de salário esse mês? A gente calcula o faturamento bruto necessário."
+            : "Quanto você quer faturar no total esse mês, antes de descontar qualquer custo."
         }
       />
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
@@ -466,8 +466,10 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
           autoFocus
           inputMode="decimal"
         />
-        <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
-          Exemplo: 4.000 para R$ 4.000,00 de sobra no mês.
+        <p className="mt-2 text-[11px] font-medium text-emerald-400/80">
+          {draft.monthlyGoal > 0
+            ? `✓ ${isLiquido ? "Lucro líquido" : "Faturamento bruto"} de ${fmtBRL(draft.monthlyGoal)}/mês`
+            : ""}
         </p>
       </div>
     </div>
