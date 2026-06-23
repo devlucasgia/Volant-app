@@ -97,7 +97,7 @@ export function computePlanningInsights(
     } else if (metaDificil) {
       text = `Com R$/km mínimo de ${fmt2(rpkMinimo)}, você está num plano puxado. Seu R$/km atual é ${fmt2(rpkAtual)}. Recusar corridas abaixo de ${fmt2(rpkMinimo * 0.9)}/km e priorizar as mais longas é o caminho mais realista.`;
     } else if (kmAlto) {
-      text = `Você rodou ${currentKm.toLocaleString("pt-BR")} km mas está rendendo ${fmt2(rpkAtual)}/km — abaixo do mínimo de ${fmt2(rpkMinimo)}. Você está rodando mais do que o necessário por menos do que deveria. Corridas seletivas valem mais que km a mais.`;
+      text = `Você rodou ${currentKm.toLocaleString("pt-BR")} km mas está rendendo ${fmt2(rpkAtual)}/km, abaixo do mínimo de ${fmt2(rpkMinimo)}. Você está rodando mais do que o necessário por menos do que deveria. Corridas seletivas valem mais que km a mais.`;
     } else {
       text = `Seu R$/km está em ${fmt2(rpkAtual)}, abaixo do mínimo de ${fmt2(rpkMinimo)}. No ritmo atual, você vai precisar rodar ${kmExtraRestante.toLocaleString("pt-BR")} km a mais do que o planejado. Subir o R$/km é mais eficiente que rodar mais.`;
     }
