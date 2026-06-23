@@ -198,15 +198,14 @@ export default function PlanejamentoInteligente() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Isso vai{" "}
+                  Isso{" "}
                   <span className="font-semibold text-destructive">
-                    substituir seu plano atual de {new Date().toLocaleDateString("pt-BR", { month: "long" })}
+                    substitui seu plano atual de {new Date().toLocaleDateString("pt-BR", { month: "long" })}
                   </span>{" "}
-                  por um novo — incluindo o De/Para que está sendo acompanhado.
+                  por um novo. O De/Para que está sendo acompanhado é zerado.
                 </p>
                 <p>
-                  Seus registros de ganhos, gastos e veículo não são afetados.
-                  O plano atual continua valendo até você concluir o novo fluxo.
+                  Seus registros de ganhos, gastos e veículo não mudam. O plano atual continua valendo até você concluir o novo.
                 </p>
               </div>
             </AlertDialogDescription>
@@ -217,7 +216,7 @@ export default function PlanejamentoInteligente() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
                 setConfirmRedo(false);
-                setFlowConfig({ variant: "fresh" });
+                setFlowConfig({ variant: "fresh", isRedo: true });
                 setMode("flow");
               }}
             >
