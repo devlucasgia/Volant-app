@@ -116,7 +116,7 @@ export function computePlanningInsights(
   if (kmMuitoAbaixo) {
     const kmFaltando = Math.round(plannedKmProportional - currentKm);
     bad.push({ icon: "📍", tone: "bad",
-      text: `Até agora o plano previa ${Math.round(plannedKmProportional).toLocaleString("pt-BR")} km, mas você fez ${currentKm.toLocaleString("pt-BR")} km — ${kmFaltando.toLocaleString("pt-BR")} km abaixo. Isso pressiona o R$/km mínimo que sobra para os dias restantes.`,
+      text: `Até agora o plano previa ${Math.round(plannedKmProportional).toLocaleString("pt-BR")} km, mas você fez ${currentKm.toLocaleString("pt-BR")} km, ${kmFaltando.toLocaleString("pt-BR")} km abaixo. Isso pressiona o R$/km mínimo que sobra para os dias restantes.`,
     });
   }
 
