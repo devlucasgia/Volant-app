@@ -871,14 +871,10 @@ function Step6({
 }) {
   const temDados = currentGross > 0 && isRefazer;
 
-  // Dias do novo plano que ainda não passaram (>= hoje)
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  const diasFuturos = draft.selectedDates.filter((iso) => {
-    const d = new Date(iso);
-    d.setHours(0, 0, 0, 0);
-    return d >= hoje;
-  });
+  // Dias do novo plano que ainda não passaram (>= hoje) — comparação por
+  // string ISO local, igual ao engine, pra não cair em armadilha de fuso.
+  const hojeIso = toIsoDate(startOfDay(new Date()));
+  const diasFuturos = draft.selectedDates.filter((iso) => iso >= hojeIso);
 
   // Norteadores: se há dados, descontar o já feito
   const faltaFaturar = temDados
