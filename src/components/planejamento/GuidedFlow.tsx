@@ -397,6 +397,10 @@ export function GuidedFlow({
             variableItems={variable.items}
             variableTotal={variable.total}
             fixedTotal={costs.total}
+            currentGross={currentGrossReal}
+            currentKm={currentKmReal}
+            daysWorked={daysWorkedReal}
+            isRefazer={!isEdit && settings.planningOriginalCreatedAt != null}
           />
         )}
       </div>
