@@ -425,7 +425,7 @@ export function GuidedFlow({
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />{" "}
-                  {isEdit ? "Salvar alteração" : "Começar com esse plano"}
+                  {botaoTexto}
                 </>
               )}
             </Button>
