@@ -819,8 +819,6 @@ function Step5({
 function Step6({
   draft,
   plan,
-  costsItems,
-  variableItems,
   variableTotal,
   fixedTotal,
 }: {
@@ -831,121 +829,115 @@ function Step6({
   variableTotal: number;
   fixedTotal: number;
 }) {
+  const metaImpossivel = plan.requiredRpk != null && plan.requiredRpk > 5;
+
   return (
-    <div>
+    <div className="space-y-3">
       <StepHeader
         icon={Gauge}
-        title="Tudo pronto. Aqui está seu plano."
-        subtitle="Confira o resumo antes de concluir."
+        title="Aqui estão seus objetivos."
+        subtitle="Esses são os dois números que vão guiar seu mês."
       />
 
-      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/[0.1] via-primary/[0.04] to-transparent p-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary/90">
-          Sua meta de {draft.goalType === "liquido" ? "lucro líquido" : "ganho bruto"}
+      {/* Herói — espelha o PainelResumo */}
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.14] via-primary/[0.04] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.6)]">
+        <div className="pointer-events-none absolute -right-6 -top-6 h-44 w-44 rounded-full bg-primary/[0.12] blur-2xl" />
+        <div className="mb-3 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90">
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+          Objetivos do dia
         </div>
-        <div className="mt-1 text-2xl font-bold tabular-nums text-foreground">
-          {fmtBRL(draft.monthlyGoal)}
+        <div className="grid grid-cols-2 divide-x divide-border/40">
+          <div className="pr-4">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              Meta
+            </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
+                R$
+              </span>
+              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
+                {plan.metaDiaria != null
+                  ? plan.metaDiaria.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                  : "—"}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground/60">pra faturar</div>
+          </div>
+          <div className="pl-4">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              R$/KM mínimo
+            </div>
+            <div className="flex items-baseline gap-0.5">
+              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
+                {plan.requiredRpk != null
+                  ? plan.requiredRpk.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  : "—"}
+              </span>
+              <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
+                /km
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground/60">por corrida</div>
+          </div>
         </div>
-        {plan.metaDiaria != null && (
-          <div className="mt-1 text-[12px] text-muted-foreground">
-            Meta diária:{" "}
-            <span className="font-semibold tabular-nums text-foreground/90">
-              {fmtBRL(plan.metaDiaria)}
-            </span>{" "}
-            em {draft.selectedDates.length} dias
+      </div>
+
+      {/* Alerta de viabilidade */}
+      {plan.requiredRpk != null && plan.requiredRpk > 3.5 && (
+        <div
+          className={cn(
+            "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
+            metaImpossivel
+              ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
+              : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
+          )}
+        >
+          {metaImpossivel
+            ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
+            : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
+        </div>
+      )}
+
+      {/* Composição com cores semânticas */}
+      <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Composição do plano
+        </div>
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted-foreground">Faturamento bruto necessário</span>
+          <span className="font-bold tabular-nums text-blue-400">
+            {fmtBRL(plan.faturamentoNecessario)}
+          </span>
+        </div>
+        {fixedTotal > 0 && (
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="text-muted-foreground">Custos do carro na meta</span>
+            <span className="font-semibold tabular-nums text-rose-400">
+              − {fmtBRL(fixedTotal)}
+            </span>
+          </div>
+        )}
+        <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-2 text-[13px]">
+          <span className="font-semibold text-foreground/90">
+            {draft.goalType === "liquido" ? "Seu lucro líquido" : "Meta de faturamento"}
+          </span>
+          <span className="font-bold tabular-nums text-emerald-400">
+            {fmtBRL(draft.monthlyGoal)}
+          </span>
+        </div>
+        {variableTotal > 0 && (
+          <div className="mt-0.5 flex items-center justify-between border-t border-border/30 pt-2 text-[12px]">
+            <span className="text-muted-foreground/70">Combustível estimado (referência)</span>
+            <span className="tabular-nums text-muted-foreground/70">
+              {fmtBRL(variableTotal)}
+            </span>
           </div>
         )}
       </div>
-
-      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        <Stat
-          icon={Route}
-          label="KM planejado no período"
-          value={plan.plannedKmTotal > 0 ? fmtKm(plan.plannedKmTotal) : "—"}
-        />
-        <Stat
-          icon={TrendingUp}
-          label="R$/KM mínimo necessário"
-          value={plan.requiredRpk != null ? `${fmtRpk(plan.requiredRpk)}/km` : "—"}
-        />
-        <Stat
-          icon={CarIcon}
-          label="Custos fixos"
-          value={fixedTotal > 0 ? `${fmtBRL(fixedTotal)}/mês` : "—"}
-        />
-        <Stat
-          icon={CarIcon}
-          label="Custos variáveis"
-          value={variableTotal > 0 ? `${fmtBRL(variableTotal)}/mês` : "—"}
-        />
-        <Stat
-          icon={TrendingUp}
-          label={draft.goalType === "liquido" ? "Faturamento bruto" : "Lucro estimado"}
-          value={
-            draft.goalType === "liquido"
-              ? fmtBRL(plan.faturamentoNecessario)
-              : plan.lucroEstimado != null
-                ? fmtBRL(plan.lucroEstimado)
-                : "—"
-          }
-        />
-      </div>
-
-      {(costsItems.length > 0 || variableItems.length > 0) && (
-        <div className="mt-3 rounded-2xl border border-border/60 bg-card/60 p-4 space-y-3">
-          {costsItems.length > 0 && (
-            <div>
-              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-                Custos fixos
-              </div>
-              <ul className="space-y-1.5">
-                {costsItems.map((it, i) => (
-                  <li key={`f-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
-                    <span>{it.label}</span>
-                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {variableItems.length > 0 && (
-            <div className="border-t border-border/40 pt-3">
-              <div className="mb-2 text-[12px] font-semibold text-foreground/90">
-                Variáveis · referência (não entra na meta)
-              </div>
-              <ul className="space-y-1.5">
-                {variableItems.map((it, i) => (
-                  <li key={`v-${i}`} className="flex items-center justify-between text-[12px] text-muted-foreground">
-                    <span>{it.label}</span>
-                    <span className="font-medium tabular-nums text-foreground/85">{fmtBRL(it.value)}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
 
-function Stat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/60 bg-card/60 p-3.5">
-      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </div>
-      <div className="mt-1.5 text-[15px] font-bold tabular-nums leading-tight text-foreground">
-        {value}
-      </div>
-    </div>
-  );
-}
