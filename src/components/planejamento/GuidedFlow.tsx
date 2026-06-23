@@ -85,6 +85,7 @@ export function GuidedFlow({
   initialStep,
   initialDraft,
   editMode,
+  isRedo = false,
 }: Props) {
   const navigate = useNavigate();
   const { settings, cars, updateSettings, entries } = useData();
