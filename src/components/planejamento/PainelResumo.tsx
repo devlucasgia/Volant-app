@@ -212,7 +212,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         </div>
 
         <div className="mt-4 border-t border-primary/15 pt-2.5 text-[11px] leading-snug text-muted-foreground">
-          Fixos até você lançar novos registros — aí recalculam.
+          Fixos até você lançar novos registros. Aí recalculam.
         </div>
       </div>
 
@@ -393,7 +393,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 </div>
                 <div className="text-[11px] text-muted-foreground transition-colors duration-300">
                   {viewLiquida
-                    ? "zerados nesta visão — esse dinheiro é só seu"
+                    ? "zerados nesta visão, esse dinheiro é só seu"
                     : `${fmtBRL(s.consideredCosts)} empurraram seu bruto pra cima`}
                 </div>
               </div>
@@ -449,7 +449,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                   </span>
                 </div>
                 <div className="mt-0.5 text-[10.5px] text-muted-foreground/80">
-                  fora da meta — só referência
+                  fora da meta, só referência
                 </div>
               </div>
             )}

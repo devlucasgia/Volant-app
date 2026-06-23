@@ -93,11 +93,11 @@ export function computePlanningInsights(
     if (metaImpossivel) {
       text = `Seu R$/km mínimo de ${fmt2(rpkMinimo)} está num território muito difícil — poucos motoristas chegam lá sem corridas premium ou longas. Se não é sua realidade agora, ajustar a meta ou os dias de trabalho vai ser mais eficiente que forçar o mês.`;
     } else if (metaDificil && kmAlto) {
-      text = `Você rodou bastante (${currentKm.toLocaleString("pt-BR")} km) mas o R$/km de ${fmt2(rpkAtual)} está abaixo dos ${fmt2(rpkMinimo)} que a meta exige. Com um mínimo exigente como esse, quantidade de km não resolve — qualidade de corrida sim.`;
+      text = `Você rodou bastante (${currentKm.toLocaleString("pt-BR")} km) mas o R$/km de ${fmt2(rpkAtual)} está abaixo dos ${fmt2(rpkMinimo)} que a meta exige. Com um mínimo exigente como esse, quantidade de km não resolve. Qualidade de corrida, sim.`;
     } else if (metaDificil) {
       text = `Com R$/km mínimo de ${fmt2(rpkMinimo)}, você está num plano puxado. Seu R$/km atual é ${fmt2(rpkAtual)}. Recusar corridas abaixo de ${fmt2(rpkMinimo * 0.9)}/km e priorizar as mais longas é o caminho mais realista.`;
     } else if (kmAlto) {
-      text = `Você rodou ${currentKm.toLocaleString("pt-BR")} km mas está rendendo ${fmt2(rpkAtual)}/km — abaixo do mínimo de ${fmt2(rpkMinimo)}. Você está rodando mais do que o necessário por menos do que deveria. Corridas seletivas valem mais que km a mais.`;
+      text = `Você rodou ${currentKm.toLocaleString("pt-BR")} km mas está rendendo ${fmt2(rpkAtual)}/km, abaixo do mínimo de ${fmt2(rpkMinimo)}. Você está rodando mais do que o necessário por menos do que deveria. Corridas seletivas valem mais que km a mais.`;
     } else {
       text = `Seu R$/km está em ${fmt2(rpkAtual)}, abaixo do mínimo de ${fmt2(rpkMinimo)}. No ritmo atual, você vai precisar rodar ${kmExtraRestante.toLocaleString("pt-BR")} km a mais do que o planejado. Subir o R$/km é mais eficiente que rodar mais.`;
     }
@@ -116,7 +116,7 @@ export function computePlanningInsights(
   if (kmMuitoAbaixo) {
     const kmFaltando = Math.round(plannedKmProportional - currentKm);
     bad.push({ icon: "📍", tone: "bad",
-      text: `Até agora o plano previa ${Math.round(plannedKmProportional).toLocaleString("pt-BR")} km, mas você fez ${currentKm.toLocaleString("pt-BR")} km — ${kmFaltando.toLocaleString("pt-BR")} km abaixo. Isso pressiona o R$/km mínimo que sobra para os dias restantes.`,
+      text: `Até agora o plano previa ${Math.round(plannedKmProportional).toLocaleString("pt-BR")} km, mas você fez ${currentKm.toLocaleString("pt-BR")} km, ${kmFaltando.toLocaleString("pt-BR")} km abaixo. Isso pressiona o R$/km mínimo que sobra para os dias restantes.`,
     });
   }
 
