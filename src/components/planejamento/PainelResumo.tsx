@@ -105,6 +105,15 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
       ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
       : 0;
 
+  const plannedKmProportional = s.averageKmPerDay * daysWorkedInPlan;
+  const totalHoursWorked = useMemo(
+    () =>
+      entries
+        .filter((e) => e.type === "earning" && new Date(e.date).getTime() >= planStartTs)
+        .reduce((sum, e) => sum + (e.hours ?? 0), 0),
+    [entries, planStartTs],
+  );
+
   const insights = computePlanningInsights({
     rpkAtual,
     rpkMinimo: s.requiredRpk,
@@ -116,6 +125,8 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
     daysWorkedThisMonth: daysWorkedInPlan,
     selectedWorkdaysCount: s.selectedWorkdaysCount,
     currentKm: s.currentKm,
+    plannedKmProportional,
+    totalHoursWorked,
   });
 
   const toneClass: Record<string, string> = {
