@@ -108,9 +108,11 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
   const plannedKmProportional = s.averageKmPerDay * daysWorkedInPlan;
   const totalHoursWorked = useMemo(
     () =>
-      entries
-        .filter((e) => e.type === "earning" && new Date(e.date).getTime() >= planStartTs)
-        .reduce((sum, e) => sum + (e.hours ?? 0), 0),
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        if (new Date(e.date).getTime() < planStartTs) return sum;
+        return sum + (e.hours ?? 0);
+      }, 0),
     [entries, planStartTs],
   );
 
