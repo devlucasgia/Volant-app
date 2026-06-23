@@ -82,7 +82,7 @@ export function GuidedFlow({
   editMode,
 }: Props) {
   const navigate = useNavigate();
-  const { settings, cars, updateSettings } = useData();
+  const { settings, cars, updateSettings, entries } = useData();
   const { useHideChrome } = useUI();
   useHideChrome();
   const activeCar = useMemo(
