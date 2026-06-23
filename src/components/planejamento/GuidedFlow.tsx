@@ -368,9 +368,9 @@ export function GuidedFlow({
             variableItems={variable.items}
             variableTotal={variable.total}
             fixedTotal={costs.total}
-            currentGross={currentGrossReal}
-            currentKm={currentKmReal}
-            daysWorked={daysWorkedReal}
+            currentGross={realMes.grossThisMonth}
+            currentKm={realMes.kmThisMonth}
+            daysWorked={realMes.daysWorkedThisMonth}
             isRefazer={!isEdit && settings.planningOriginalCreatedAt != null}
           />
         )}
