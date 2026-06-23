@@ -484,8 +484,19 @@ function Step1({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
   );
 }
 
-function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+function Step2({
+  draft,
+  setDraft,
+  isRedo,
+  currentGoal,
+}: {
+  draft: Draft;
+  setDraft: (u: (d: Draft) => Draft) => void;
+  isRedo: boolean;
+  currentGoal: number;
+}) {
   const isLiquido = draft.goalType === "liquido";
+  const metaIgual = isRedo && draft.monthlyGoal > 0 && draft.monthlyGoal === currentGoal;
   return (
     <div>
       <StepHeader
@@ -511,6 +522,11 @@ function Step2({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
             : ""}
         </p>
       </div>
+      {metaIgual && (
+        <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.07] p-3 text-[12px] leading-snug text-amber-300">
+          Essa já é a meta do seu plano atual. Pra mudar só os dias ou o KM, use o Ajustar. Pra refazer do zero, defina uma meta diferente.
+        </div>
+      )}
     </div>
   );
 }
