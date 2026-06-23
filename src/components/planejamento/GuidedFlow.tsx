@@ -756,7 +756,21 @@ function Step5({
   }
 
   const carName = `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "Veículo";
-  const grandTotal = costsTotal;
+
+  // Split fixos: financiamento (parcelas/seguro/etc) vs desgaste (óleo/pneus)
+  const isDesgaste = (label: string) => /óleo|oleo|pneu/i.test(label);
+  const parcelasTotal = costsItems
+    .filter((i) => !isDesgaste(i.label))
+    .reduce((a, i) => a + i.value, 0);
+  const desgasteTotal = costsItems
+    .filter((i) => isDesgaste(i.label))
+    .reduce((a, i) => a + i.value, 0);
+  const fixosSoma = parcelasTotal + desgasteTotal;
+  const parcelasPct = fixosSoma > 0 ? (parcelasTotal / fixosSoma) * 100 : 0;
+  const desgastePct = fixosSoma > 0 ? (desgasteTotal / fixosSoma) * 100 : 0;
+
+  const combustivelItem = variableItems.find((i) => /combust/i.test(i.label));
+  const outrosVariaveis = variableItems.filter((i) => !/combust/i.test(i.label));
 
   return (
     <div>
@@ -772,21 +786,80 @@ function Step5({
         <span className="text-[12.5px] font-semibold text-foreground/95">{carName}</span>
       </div>
 
-      <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-4">
-        {/* ===== Custos fixos ===== */}
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-              Custos fixos
+      {costsItems.length === 0 && !combustivelItem && outrosVariaveis.length === 0 ? (
+        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.05] p-4">
+          <p className="text-[12.5px] leading-snug text-foreground/85">
+            Nenhum custo cadastrado pra esse veículo ainda.
+          </p>
+          <button
+            type="button"
+            onClick={onEditCosts}
+            className="mt-1 text-[12.5px] font-semibold text-primary hover:underline"
+          >
+            Cadastrar custos do veículo →
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+          {/* Header igual ao card "Custos do carro na sua meta" do PainelResumo */}
+          <div className="flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 text-muted-foreground">
+              <Route className="h-3.5 w-3.5" />
             </span>
-            {costsItems.length > 0 && (
-              <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
-                {fmtBRL(costsTotal)}
-              </span>
-            )}
+            <div className="min-w-0">
+              <div className="text-[13px] font-semibold text-foreground/90">
+                Custos do carro na meta
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {costsTotal > 0
+                  ? `${fmtBRL(costsTotal)} empurram seu bruto pra cima`
+                  : "Sem custos fixos cadastrados"}
+              </div>
+            </div>
           </div>
-          {costsItems.length === 0 ? (
-            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
+
+          {/* Barra empilhada Financiamento + Desgaste */}
+          {fixosSoma > 0 && (
+            <>
+              <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-full bg-sky-500/70"
+                  style={{ width: `${parcelasPct}%` }}
+                />
+                <div
+                  className="h-full bg-primary/70"
+                  style={{ width: `${desgastePct}%` }}
+                />
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-sky-500/70" />
+                  Financiamento {Math.round(parcelasPct)}%
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
+                  Desgaste {Math.round(desgastePct)}%
+                </span>
+              </div>
+            </>
+          )}
+
+          {costsItems.length > 0 ? (
+            <ul className="mt-3 space-y-1.5">
+              {costsItems.map((it, i) => (
+                <li
+                  key={`f-${i}`}
+                  className="flex items-center justify-between text-[12px] text-muted-foreground"
+                >
+                  <span>{it.label}</span>
+                  <span className="font-medium tabular-nums text-foreground/85">
+                    {fmtBRL(it.value)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
               <p className="text-[12px] leading-snug text-foreground/85">
                 Nenhum custo fixo cadastrado.
               </p>
@@ -798,67 +871,36 @@ function Step5({
                 Cadastrar custos fixos →
               </button>
             </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {costsItems.map((it, i) => (
-                <li key={i} className="flex items-center justify-between text-[13px]">
-                  <span className="text-muted-foreground">{it.label}</span>
-                  <span className="font-medium tabular-nums text-foreground/95">{fmtBRL(it.value)}</span>
-                </li>
-              ))}
-            </ul>
           )}
-        </div>
 
-        {/* ===== Custos variáveis ===== */}
-        <div className="border-t border-border/40 pt-3">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-              Variáveis · referência (não entra na meta)
-            </span>
-            {variableItems.length > 0 && (
-              <span className="text-[12px] font-semibold tabular-nums text-foreground/90">
-                {fmtBRL(variableTotal)}
-              </span>
-            )}
-          </div>
-          {variableItems.length === 0 ? (
-            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
-              <p className="text-[12px] leading-snug text-foreground/85">
-                Nenhum custo variável cadastrado (combustível e alimentação).
-              </p>
-              <button
-                type="button"
-                onClick={onEditCosts}
-                className="mt-1 text-[12px] font-semibold text-primary hover:underline"
-              >
-                Cadastrar custos variáveis →
-              </button>
+          {(combustivelItem || outrosVariaveis.length > 0) && (
+            <div className="mt-3 border-t border-border/40 pt-2.5">
+              {combustivelItem && (
+                <div className="flex items-center justify-between text-[12px] text-muted-foreground">
+                  <span>{combustivelItem.label}</span>
+                  <span className="font-medium tabular-nums text-foreground/70">
+                    {fmtBRL(combustivelItem.value)}
+                  </span>
+                </div>
+              )}
+              {outrosVariaveis.map((it, i) => (
+                <div
+                  key={`v-${i}`}
+                  className="flex items-center justify-between text-[12px] text-muted-foreground"
+                >
+                  <span>{it.label}</span>
+                  <span className="font-medium tabular-nums text-foreground/70">
+                    {fmtBRL(it.value)}
+                  </span>
+                </div>
+              ))}
+              <div className="mt-0.5 text-[10.5px] text-muted-foreground/80">
+                fora da meta, só referência
+              </div>
             </div>
-          ) : (
-            <ul className="space-y-1.5">
-              {variableItems.map((it, i) => (
-                <li key={i} className="flex items-center justify-between text-[13px]">
-                  <span className="text-muted-foreground">{it.label}</span>
-                  <span className="font-medium tabular-nums text-foreground/95">{fmtBRL(it.value)}</span>
-                </li>
-              ))}
-            </ul>
           )}
         </div>
-
-        {/* ===== Total ===== */}
-        {grandTotal > 0 && (
-          <div className="flex items-center justify-between border-t border-border/40 pt-3">
-            <span className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground/90">
-              Total mensal na meta
-            </span>
-            <span className="text-[16px] font-bold tabular-nums text-foreground">
-              {fmtBRL(grandTotal)}
-            </span>
-          </div>
-        )}
-      </div>
+      )}
 
       <button
         type="button"
