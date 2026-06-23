@@ -82,7 +82,7 @@ export function GuidedFlow({
   editMode,
 }: Props) {
   const navigate = useNavigate();
-  const { settings, cars, updateSettings } = useData();
+  const { settings, cars, updateSettings, entries } = useData();
   const { useHideChrome } = useUI();
   useHideChrome();
   const activeCar = useMemo(
@@ -254,6 +254,64 @@ export function GuidedFlow({
     }
   };
 
+  // ── Dados reais do mês atual (usados no Step6 quando há Refazer em mês em andamento) ──
+  const currentGrossReal = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        const d = new Date(e.date);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          ? sum + (e.gross ?? 0)
+          : sum;
+      }, 0),
+    [entries],
+  );
+  const currentKmReal = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        const d = new Date(e.date);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          ? sum + (e.km ?? 0)
+          : sum;
+      }, 0),
+    [entries],
+  );
+  const daysWorkedReal = useMemo(() => {
+    const dates = new Set<string>();
+    const now = new Date();
+    entries.forEach((e) => {
+      if (e.type !== "earning") return;
+      const d = new Date(e.date);
+      if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+        dates.add(d.toISOString().split("T")[0]);
+      }
+    });
+    return dates.size;
+  }, [entries]);
+
+  // ── Texto contextual do botão final ──
+  const hoje = new Date();
+  const mesAtualNome = hoje.toLocaleDateString("pt-BR", { month: "long" });
+  const originalCreatedAt = settings.planningOriginalCreatedAt
+    ? new Date(settings.planningOriginalCreatedAt)
+    : null;
+  const isPrimeiroPlano = !originalCreatedAt && !settings.planningStatus;
+  const isMesNovo = originalCreatedAt
+    ? originalCreatedAt.getMonth() !== hoje.getMonth() ||
+      originalCreatedAt.getFullYear() !== hoje.getFullYear()
+    : false;
+  const botaoTexto = isEdit
+    ? "Salvar alteração"
+    : isPrimeiroPlano
+      ? "Criar meu plano"
+      : isMesNovo
+        ? `Planejar ${mesAtualNome}`
+        : "Refazer planejamento";
+
+
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
@@ -339,6 +397,10 @@ export function GuidedFlow({
             variableItems={variable.items}
             variableTotal={variable.total}
             fixedTotal={costs.total}
+            currentGross={currentGrossReal}
+            currentKm={currentKmReal}
+            daysWorked={daysWorkedReal}
+            isRefazer={!isEdit && settings.planningOriginalCreatedAt != null}
           />
         )}
       </div>
@@ -363,7 +425,7 @@ export function GuidedFlow({
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />{" "}
-                  {isEdit ? "Salvar alteração" : "Começar com esse plano"}
+                  {botaoTexto}
                 </>
               )}
             </Button>
@@ -820,6 +882,10 @@ function Step6({
   plan,
   variableTotal,
   fixedTotal,
+  currentGross,
+  currentKm,
+  daysWorked,
+  isRefazer,
 }: {
   draft: Draft;
   plan: ReturnType<typeof computePlan>;
@@ -827,8 +893,27 @@ function Step6({
   variableItems: { label: string; value: number }[];
   variableTotal: number;
   fixedTotal: number;
+  currentGross: number;
+  currentKm: number;
+  daysWorked: number;
+  isRefazer: boolean;
 }) {
-  const metaImpossivel = plan.requiredRpk != null && plan.requiredRpk > 5;
+  const temDados = currentGross > 0 || daysWorked > 0;
+
+  // Meta diária e R$/km recalculados com base no que já foi realizado
+  const diasRestantes = Math.max(1, draft.selectedDates.length - daysWorked);
+  const faltaFaturar = Math.max(0, plan.faturamentoNecessario - currentGross);
+  const metaDiariaReal = diasRestantes > 0 ? faltaFaturar / diasRestantes : 0;
+  const kmRestante = Math.max(
+    0,
+    draft.avgKmPerDay * draft.selectedDates.length - currentKm,
+  );
+  const rpkReal = kmRestante > 0 ? faltaFaturar / kmRestante : plan.requiredRpk ?? 0;
+
+  const metaDiariaExibida = temDados ? metaDiariaReal : plan.metaDiaria ?? null;
+  const rpkExibido = temDados ? rpkReal : plan.requiredRpk ?? null;
+
+  const metaImpossivel = rpkExibido != null && rpkExibido > 5;
 
   return (
     <div className="space-y-3">
@@ -855,8 +940,8 @@ function Step6({
                 R$
               </span>
               <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {plan.metaDiaria != null
-                  ? plan.metaDiaria.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                {metaDiariaExibida != null
+                  ? metaDiariaExibida.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
                   : "—"}
               </span>
             </div>
@@ -868,8 +953,8 @@ function Step6({
             </div>
             <div className="flex items-baseline gap-0.5">
               <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {plan.requiredRpk != null
-                  ? plan.requiredRpk.toLocaleString("pt-BR", {
+                {rpkExibido != null
+                  ? rpkExibido.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })
@@ -884,8 +969,35 @@ function Step6({
         </div>
       </div>
 
+      {/* Já realizado este mês (apenas em Refazer com dados) */}
+      {temDados && isRefazer && (
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
+          <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+            Já realizado este mês
+          </div>
+          <div className="space-y-1.5 text-[13px]">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Faturamento</span>
+              <span className="font-semibold text-emerald-400">{fmtBRL(currentGross)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">KM rodado</span>
+              <span className="font-semibold text-foreground/90">{fmtKm(currentKm)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Dias trabalhados</span>
+              <span className="font-semibold text-foreground/90">{daysWorked}</span>
+            </div>
+            <div className="mt-1 flex justify-between border-t border-border/40 pt-2">
+              <span className="text-muted-foreground">Ainda falta faturar</span>
+              <span className="font-bold text-blue-400">{fmtBRL(faltaFaturar)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Alerta de viabilidade */}
-      {plan.requiredRpk != null && plan.requiredRpk > 3.5 && (
+      {rpkExibido != null && rpkExibido > 3.5 && (
         <div
           className={cn(
             "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
@@ -895,8 +1007,8 @@ function Step6({
           )}
         >
           {metaImpossivel
-            ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
-            : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
+            ? `⚠️ R$ ${rpkExibido.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
+            : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
         </div>
       )}
 
