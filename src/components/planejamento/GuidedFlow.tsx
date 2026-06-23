@@ -178,7 +178,7 @@ export function GuidedFlow({
         monthlyGoal: draft.monthlyGoal,
         goalType: draft.goalType,
         diasSelecionados: draft.selectedDates.length,
-        custosFixos: costs.total + (draft.goalType === "liquido" ? variable.total : 0),
+        custosFixos: costs.total,
         avgKmPerDay: draft.avgKmPerDay,
       }),
     [draft, costs.total, variable.total],
