@@ -57,6 +57,8 @@ interface Props {
    */
   returnTo?: string;
   editMode?: { steps: number[] };
+  /** Sinaliza fluxo "Refazer" — habilita a trava de meta igual no passo 1. */
+  isRedo?: boolean;
 }
 
 interface Draft {
