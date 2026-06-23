@@ -212,7 +212,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         </div>
 
         <div className="mt-4 border-t border-primary/15 pt-2.5 text-[11px] leading-snug text-muted-foreground">
-          Fixos até você lançar novos registros — aí recalculam.
+          Fixos até você lançar novos registros. Aí recalculam.
         </div>
       </div>
 
