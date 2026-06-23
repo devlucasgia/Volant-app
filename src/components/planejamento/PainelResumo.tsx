@@ -252,12 +252,12 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
         <div className="grid grid-cols-2 gap-2">
           <div>
             <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5">
-              <div className="mb-3 flex items-center gap-2 min-w-0">
-                <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
+              <div className="mb-3 flex items-center gap-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
                   Plano de {mesLabel}
                 </span>
                 {foiRefeito && (
-                  <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-400">
+                  <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[7px] font-semibold uppercase tracking-wide text-amber-400 leading-tight">
                     Refeito
                   </span>
                 )}
