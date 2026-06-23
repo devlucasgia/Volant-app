@@ -393,7 +393,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
                 </div>
                 <div className="text-[11px] text-muted-foreground transition-colors duration-300">
                   {viewLiquida
-                    ? "zerados nesta visão — esse dinheiro é só seu"
+                    ? "zerados nesta visão, esse dinheiro é só seu"
                     : `${fmtBRL(s.consideredCosts)} empurraram seu bruto pra cima`}
                 </div>
               </div>
