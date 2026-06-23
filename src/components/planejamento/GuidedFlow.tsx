@@ -605,13 +605,24 @@ function Step4({
             </li>
             <li className="flex items-center justify-between gap-2">
               <span className="text-muted-foreground">Faturamento necessário</span>
-              <span className="font-semibold tabular-nums text-foreground/95">
+              <span className="font-semibold tabular-nums text-blue-400">
                 {plan.faturamentoNecessario > 0 ? fmtBRL(plan.faturamentoNecessario) : "—"}
               </span>
             </li>
-            <li className="flex items-center justify-between gap-2 border-t border-border/40 pt-1.5">
-              <span className="text-muted-foreground">R$/KM mínimo necessário</span>
-              <span className="font-bold tabular-nums text-primary">
+            <li className="mt-1 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                R$/KM mínimo necessário
+              </span>
+              <span
+                className={cn(
+                  "text-[18px] font-bold tabular-nums",
+                  plan.requiredRpk != null && plan.requiredRpk > 5
+                    ? "text-rose-400"
+                    : plan.requiredRpk != null && plan.requiredRpk > 3.5
+                      ? "text-amber-400"
+                      : "text-primary",
+                )}
+              >
                 {plan.requiredRpk != null ? `${fmtRpk(plan.requiredRpk)}/km` : "—"}
               </span>
             </li>
@@ -635,10 +646,6 @@ function Step4({
               : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
           </div>
         )}
-
-        <p className="px-1 text-[10.5px] leading-snug text-muted-foreground/75">
-          Com o tempo, seus registros de ganhos, gastos e KM ajudam o Volant a mostrar referências mais próximas da sua realidade.
-        </p>
       </div>
     </div>
   );
