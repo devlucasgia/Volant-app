@@ -300,7 +300,7 @@ export function GuidedFlow({
       </header>
 
       <div
-        className="mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col justify-center px-4 py-3 pb-20"
+        className="mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col justify-start px-4 pt-6 pb-20"
         key={`${step}-${stepIdx}`}
       >
         {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
