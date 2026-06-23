@@ -339,7 +339,7 @@ export function GuidedFlow({
         key={`${step}-${stepIdx}`}
       >
         {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
-        {step === 2 && <Step2 draft={draft} setDraft={setDraft} />}
+        {step === 2 && <Step2 draft={draft} setDraft={setDraft} isRedo={isRedo} currentGoal={settings.monthlyGoal} />}
         {step === 3 && <Step3 draft={draft} setDraft={setDraft} />}
         {step === 4 && <Step4 draft={draft} setDraft={setDraft} plan={plan} />}
         {step === 5 && (
