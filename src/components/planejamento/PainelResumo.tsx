@@ -249,9 +249,9 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
           <GitCompare className="h-3 w-3" /> Plano vs realizado
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 items-stretch">
           <div>
-            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5">
+            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5 h-full">
               <div className="mb-3 flex items-center gap-1.5">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
                   Plano de {mesLabel}
@@ -291,7 +291,7 @@ export function PainelResumo({ onAdjust, onRedo }: Props) {
           </div>
 
           <div>
-            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5">
+            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5 h-full">
               <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                 <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 Até agora

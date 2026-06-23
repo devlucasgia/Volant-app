@@ -929,7 +929,11 @@ function Step6({
       <StepHeader
         icon={Gauge}
         title="Aqui estão seus objetivos."
-        subtitle="Esses são os dois números que vão guiar seu mês."
+        subtitle={
+          temDados && diasFuturos.length > 0
+            ? `Esses são os seus objetivos para os próximos ${diasFuturos.length} ${diasFuturos.length === 1 ? "dia" : "dias"}.`
+            : "Esses são os dois números que vão guiar seu mês."
+        }
       />
 
       {/* Herói — espelha o PainelResumo */}
@@ -980,24 +984,29 @@ function Step6({
 
       {/* Já realizado este mês (apenas em Refazer com dados) */}
       {temDados && (
-        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-          <div className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
-            Já realizado este mês
+        <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-4">
+          <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Até agora
           </div>
           <div className="space-y-1.5 text-[13px]">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Faturamento</span>
-              <span className="font-semibold text-emerald-400">{fmtBRL(currentGross)}</span>
+              <span className="font-bold text-[15px] text-primary">
+                {fmtBRL(currentGross)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">KM rodado</span>
-              <span className="font-semibold text-foreground/90">{fmtKm(currentKm)}</span>
+              <span className="font-semibold text-foreground/90">
+                {fmtKm(currentKm)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Dias trabalhados</span>
               <span className="font-semibold text-foreground/90">{daysWorked}</span>
             </div>
-            <div className="mt-1 flex justify-between border-t border-border/40 pt-2">
+            <div className="flex justify-between border-t border-border/40 pt-2 mt-1">
               <span className="text-muted-foreground">Ainda falta faturar</span>
               <span className="font-bold text-blue-400">{fmtBRL(faltaFaturar)}</span>
             </div>
