@@ -8,7 +8,7 @@ import {
   Target,
   CalendarDays,
   Car as CarIcon,
-  TrendingUp,
+  Route,
   Route,
   Gauge,
   AlertTriangle,
