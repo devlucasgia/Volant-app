@@ -27,7 +27,10 @@ import {
   computePlan,
   DEFAULT_AVG_KM_PER_DAY,
   ShortcutKey,
+  toIsoDate,
+  startOfDay,
 } from "@/lib/planejamento";
+import { getCurrentMonthRealData } from "@/lib/smartKm";
 import type { GoalType } from "@/types";
 import { CalendarGrid } from "./CalendarGrid";
 import { useDraftPersistence } from "@/hooks/useDraftPersistence";
