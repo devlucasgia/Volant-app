@@ -254,6 +254,64 @@ export function GuidedFlow({
     }
   };
 
+  // ── Dados reais do mês atual (usados no Step6 quando há Refazer em mês em andamento) ──
+  const currentGrossReal = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        const d = new Date(e.date);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          ? sum + (e.gross ?? 0)
+          : sum;
+      }, 0),
+    [entries],
+  );
+  const currentKmReal = useMemo(
+    () =>
+      entries.reduce((sum, e) => {
+        if (e.type !== "earning") return sum;
+        const d = new Date(e.date);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          ? sum + (e.km ?? 0)
+          : sum;
+      }, 0),
+    [entries],
+  );
+  const daysWorkedReal = useMemo(() => {
+    const dates = new Set<string>();
+    const now = new Date();
+    entries.forEach((e) => {
+      if (e.type !== "earning") return;
+      const d = new Date(e.date);
+      if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+        dates.add(d.toISOString().split("T")[0]);
+      }
+    });
+    return dates.size;
+  }, [entries]);
+
+  // ── Texto contextual do botão final ──
+  const hoje = new Date();
+  const mesAtualNome = hoje.toLocaleDateString("pt-BR", { month: "long" });
+  const originalCreatedAt = settings.planningOriginalCreatedAt
+    ? new Date(settings.planningOriginalCreatedAt)
+    : null;
+  const isPrimeiroPlano = !originalCreatedAt && !settings.planningStatus;
+  const isMesNovo = originalCreatedAt
+    ? originalCreatedAt.getMonth() !== hoje.getMonth() ||
+      originalCreatedAt.getFullYear() !== hoje.getFullYear()
+    : false;
+  const botaoTexto = isEdit
+    ? "Salvar alteração"
+    : isPrimeiroPlano
+      ? "Criar meu plano"
+      : isMesNovo
+        ? `Planejar ${mesAtualNome}`
+        : "Refazer planejamento";
+
+
   return (
     <div className="flex min-h-[100dvh] flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur-lg">
