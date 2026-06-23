@@ -31,6 +31,7 @@ interface FlowConfig {
     avgKmPerDay: number;
   }>;
   editSteps?: number[];
+  isRedo?: boolean;
 }
 
 interface PlanningResumeState {
