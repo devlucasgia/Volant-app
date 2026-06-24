@@ -489,7 +489,7 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
               <div className="text-[13px] font-semibold text-foreground">
                 Já pensou no próximo mês?
               </div>
-              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground capitalize-first">
+              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
                 Configure <span className="capitalize">{proxMes}</span> agora e ele entra em vigor automaticamente na virada.
               </p>
               <button
