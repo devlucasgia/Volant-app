@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
 
     const targetUserId = scopedUserId ?? bodyUserId; // user → seu próprio id; service-role → opcional
 
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+    // admin client já criado acima durante a validação de auth.
 
     let query = admin
       .from("user_settings")
