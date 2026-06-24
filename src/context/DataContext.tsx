@@ -271,49 +271,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       await Promise.all([loadCars(user.id), loadCategories(user.id)]);
       if (!active) return;
       setEntries((rows || []).map(rowToEntry));
-      if (sRow) {
-        const dw = (sRow as any).dashboard_widgets || {};
-        const gt = ((sRow as any).goal_type as "liquido" | "bruto" | undefined) || "bruto";
-        const wd = (sRow as any).working_days_per_month;
-        const rwd = (sRow as any).remaining_working_days;
-        const km = (sRow as any).km_planned_month;
-        const kmOv = (sRow as any).km_remaining_override;
-        const ps = ((sRow as any).planning_status as "not_configured" | "configured" | undefined) || "not_configured";
-        const psd = (sRow as any).planning_selected_dates;
-        const rpk = (sRow as any).rpk_base;
-        const avgKm = (sRow as any).planning_avg_km_per_day;
-        const poGoal = (sRow as any).planning_original_goal;
-        const poGoalType = (sRow as any).planning_original_goal_type;
-        const poAvgKm = (sRow as any).planning_original_avg_km;
-        const poDates = (sRow as any).planning_original_dates;
-        const poCreatedAt = (sRow as any).planning_original_created_at;
-        setSettings({
-          dailyGoal: Number(sRow.daily_goal) || 0,
-          monthlyGoal: Number((sRow as any).monthly_goal) || 0,
-          maintenanceIntervalKm: Number(sRow.maintenance_interval_km) || 0,
-          lastMaintenanceKm: Number(sRow.last_maintenance_km) || 0,
-          theme: (sRow.theme as "light" | "dark") || "dark",
-          dashboardWidgets: { ...DEFAULT_WIDGETS, ...dw },
-          goalType: gt,
-          workingDaysPerMonth: wd == null ? null : Number(wd),
-          remainingWorkingDays: rwd == null ? null : Number(rwd),
-          kmPlannedMonth: km == null ? null : Number(km),
-          kmRemainingOverride: kmOv == null ? null : Number(kmOv),
-          planningStatus: ps,
-          planningSelectedDates: Array.isArray(psd) ? (psd as string[]) : null,
-          rpkBase: rpk == null ? null : Number(rpk),
-          planningAvgKmPerDay: avgKm == null ? null : Number(avgKm),
-          planningOriginalGoal: poGoal == null ? null : Number(poGoal),
-          planningOriginalGoalType: (poGoalType as any) ?? null,
-          planningOriginalAvgKm: poAvgKm == null ? null : Number(poAvgKm),
-          planningOriginalDates: Array.isArray(poDates) ? (poDates as string[]) : null,
-          planningOriginalCreatedAt: poCreatedAt ?? null,
-        });
-      }
+      if (sRow) setSettings(mapSettingsRow(sRow));
       setLoading(false);
     })();
     return () => { active = false; };
   }, [user, loadCars, loadCategories]);
+
+  const refreshSettings = useCallback(async () => {
+    if (!user) return;
+    const { data: sRow } = await supabase
+      .from("user_settings").select("*").eq("user_id", user.id).maybeSingle();
+    if (sRow) setSettings(mapSettingsRow(sRow));
+  }, [user]);
 
   const shouldTriggerMaintFor = (e: Entry) => {
     if (e.type === "earning") return Number((e as any).km || 0) > 0;
