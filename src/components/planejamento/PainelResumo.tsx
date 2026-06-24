@@ -204,8 +204,99 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
     info: "border-border/50 bg-card/50 text-muted-foreground",
   };
 
+  // ── Banner de ativação reutilizado em qualquer estado do painel ──
+  const banner = showActivatedBanner ? (
+    <div className="rounded-2xl border border-primary/30 bg-primary/[0.08] p-3.5 flex items-start gap-3">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+        <Sparkles className="h-3.5 w-3.5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[13px] font-semibold text-foreground capitalize">
+          {mesAtual} entrou em vigor 💰
+        </div>
+        <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
+          Seu plano do mês já está valendo.
+        </p>
+      </div>
+      <button
+        type="button"
+        aria-label="Fechar"
+        onClick={() => updateSettings({ nextPlanActivatedAt: null })}
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/40"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  ) : null;
+
+  // ── (d) Fallback: plano vencido + sem plano futuro ──
+  if (planExpired && !hasNextPlan) {
+    return (
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5 pb-28 animate-fade-in">
+        {banner}
+        <div className="rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.10] via-primary/[0.03] to-transparent p-5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+            <CalendarDays className="h-4 w-4" />
+          </span>
+          <h2 className="mt-3 text-[18px] font-bold leading-tight text-foreground capitalize">
+            {mesAnterior} acabou. Bora planejar {mesAtual}!
+          </h2>
+          <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">
+            Comece um plano novo do zero ou aproveite a meta e o KM do mês anterior pra ir mais rápido.
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-2">
+            <button
+              type="button"
+              onClick={onRedo}
+              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-[13.5px] font-semibold text-primary-foreground transition-all active:scale-[0.98] hover:bg-primary/90"
+            >
+              Começar do zero
+            </button>
+            <button
+              type="button"
+              onClick={onReplicate}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/60 px-4 py-3 text-[13.5px] font-semibold transition-all active:scale-[0.98] hover:bg-muted/40 capitalize"
+            >
+              Replicar {mesAnterior}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── (c) Splash de ativação: plano vencido + tem next, enquanto a edge function roda ──
+  if (planExpired && hasNextPlan) {
+    return (
+      <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5 pb-28 animate-fade-in">
+        {banner}
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-6 text-center">
+          {activating ? (
+            <>
+              <Loader2 className="mx-auto h-5 w-5 animate-spin text-primary" />
+              <p className="mt-3 text-[13px] font-semibold text-foreground capitalize">
+                Ativando seu plano de {mesAtual}...
+              </p>
+              <p className="mt-1 text-[11.5px] text-muted-foreground">
+                Só um instante.
+              </p>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="mx-auto h-5 w-5 text-primary" />
+              <p className="mt-3 text-[13px] font-semibold text-foreground">
+                Quase lá! Atualize a página se nada acontecer.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-md space-y-4 px-4 py-5 pb-28 animate-fade-in">
+      {banner}
       {/* ============ 1. Timeline ============ */}
       <div className="flex items-center gap-2.5 px-1 text-[11.5px] text-muted-foreground">
         <span>
