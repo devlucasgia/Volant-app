@@ -373,6 +373,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       planning_original_avg_km: next.planningOriginalAvgKm ?? null,
       planning_original_dates: (next.planningOriginalDates ?? null) as any,
       planning_original_created_at: next.planningOriginalCreatedAt ?? null,
+      next_plan_goal: next.nextPlanGoal ?? null,
+      next_plan_goal_type: next.nextPlanGoalType ?? null,
+      next_plan_avg_km: next.nextPlanAvgKm ?? null,
+      next_plan_dates: (next.nextPlanDates ?? null) as any,
+      next_plan_created_at: next.nextPlanCreatedAt ?? null,
+      next_plan_activated_at: next.nextPlanActivatedAt ?? null,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.
@@ -487,11 +493,11 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<DataCtx>(
     () => ({ entries, settings, cars, activeCar, carInitialKm, loading,
-      addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
+      addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor,
       earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory }),
-    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
+    [entries, settings, cars, activeCar, carInitialKm, loading, addEntry, addEntries, updateEntry, removeEntry, removeGroup, updateSettings, refreshSettings, refreshProfile, refreshCars, setActiveCar, updateCarKmAdjustment,
       earningCategories, expenseCategories, expenseMetaFor, earningPlatforms, platformMetaFor, isSimplePlatform,
       addCategory, updateCategory, deleteCategory]
   );
