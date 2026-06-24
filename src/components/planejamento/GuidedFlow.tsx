@@ -229,7 +229,15 @@ export function GuidedFlow({
     try {
       const patch: Parameters<typeof updateSettings>[0] = {};
 
-      if (isEdit) {
+      if (isNext) {
+        // Slot do próximo mês: grava APENAS em next_plan_*. Não toca no plano ativo
+        // nem no snapshot original. Entra em vigor pela edge function ao virar o mês.
+        patch.nextPlanGoal = draft.monthlyGoal;
+        patch.nextPlanGoalType = draft.goalType;
+        patch.nextPlanAvgKm = draft.avgKmPerDay;
+        patch.nextPlanDates = draft.selectedDates;
+        patch.nextPlanCreatedAt = new Date().toISOString();
+      } else if (isEdit) {
         if (stepsList.includes(1) || stepsList.includes(2)) {
           patch.monthlyGoal = draft.monthlyGoal;
           // Modelo atual: meta cadastrada representa SEMPRE o líquido desejado.
@@ -271,7 +279,13 @@ export function GuidedFlow({
 
       await updateSettings(patch);
       planningDraft.clear();
-      toast.success(isEdit ? "Alteração salva" : "Planejamento concluído");
+      toast.success(
+        isNext
+          ? "Plano do próximo mês salvo"
+          : isEdit
+            ? "Alteração salva"
+            : "Planejamento concluído",
+      );
       onDone();
     } catch {
       toast.error("Não foi possível salvar");
@@ -287,6 +301,9 @@ export function GuidedFlow({
   // ── Texto contextual do botão final ──
   const hoje = new Date();
   const mesAtualNome = hoje.toLocaleDateString("pt-BR", { month: "long" });
+  const mesAlvoNome = targetMonth
+    ? targetMonth.toLocaleDateString("pt-BR", { month: "long" })
+    : "";
   const originalCreatedAt = settings.planningOriginalCreatedAt
     ? new Date(settings.planningOriginalCreatedAt)
     : null;
@@ -297,13 +314,15 @@ export function GuidedFlow({
     ? originalCreatedAt.getMonth() !== hoje.getMonth() ||
       originalCreatedAt.getFullYear() !== hoje.getFullYear()
     : false;
-  const botaoTexto = isEdit
-    ? "Salvar alteração"
-    : isPrimeiroPlano
-      ? "Criar meu plano"
-      : isMesNovo
-        ? `Planejar ${mesAtualNome}`
-        : "Refazer planejamento";
+  const botaoTexto = isNext
+    ? `Salvar plano de ${mesAlvoNome}`
+    : isEdit
+      ? "Salvar alteração"
+      : isPrimeiroPlano
+        ? "Criar meu plano"
+        : isMesNovo
+          ? `Planejar ${mesAtualNome}`
+          : "Refazer planejamento";
 
 
   return (
