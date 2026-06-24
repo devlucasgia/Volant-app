@@ -112,7 +112,7 @@ export function GuidedFlow({
   // ── Persistência de rascunho (apenas para o fluxo "fresh" — sem editMode/initialStep/initialDraft) ──
   // Permite voltar exatamente para o mesmo passo + valores depois de um reload
   // ou volta-de-outro-app, sem perder progresso do wizard.
-  const draftPersistenceEnabled = !isEdit && initialStep == null && !initialDraft;
+  const draftPersistenceEnabled = !isEdit && !isNext && initialStep == null && !initialDraft;
   // Hidratação síncrona (no primeiro render) — evita "piscar" passo 1 antes de pular para o salvo.
   const hydratedSnapshot = useRef<PlanningDraftSnapshot | null>(null);
   if (draftPersistenceEnabled && hydratedSnapshot.current === null) {
@@ -138,20 +138,29 @@ export function GuidedFlow({
   const isLast = stepIdx === stepsList.length - 1;
 
   const [draft, setDraft] = useState<Draft>(() => {
-    const base: Draft = {
-      // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
-      goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
-      monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
-      selectedDates:
-        (prefill || isEdit) && settings.planningSelectedDates
-          ? settings.planningSelectedDates
-          : [],
-      avgKmPerDay:
-        (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
-          ? settings.planningAvgKmPerDay
-          : DEFAULT_AVG_KM_PER_DAY,
-      ...(initialDraft ?? {}),
-    };
+    // Modo next: sempre parte em branco (igual ao fresh). Não herda do slot ativo.
+    const base: Draft = isNext
+      ? {
+          goalType: "liquido",
+          monthlyGoal: 0,
+          selectedDates: [],
+          avgKmPerDay: DEFAULT_AVG_KM_PER_DAY,
+          ...(initialDraft ?? {}),
+        }
+      : {
+          // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
+          goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
+          monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
+          selectedDates:
+            (prefill || isEdit) && settings.planningSelectedDates
+              ? settings.planningSelectedDates
+              : [],
+          avgKmPerDay:
+            (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
+              ? settings.planningAvgKmPerDay
+              : DEFAULT_AVG_KM_PER_DAY,
+          ...(initialDraft ?? {}),
+        };
     const saved = hydratedSnapshot.current?.draft;
     return saved ? { ...base, ...saved } : base;
   });
