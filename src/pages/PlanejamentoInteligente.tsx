@@ -204,6 +204,9 @@ export default function PlanejamentoInteligente() {
           <PainelResumo
             onAdjust={() => setAdjustOpen(true)}
             onRedo={() => setConfirmRedo(true)}
+            onPlanNext={handlePlanNext}
+            onCancelNext={handleCancelNext}
+            onReplicate={handleReplicate}
           />
 
           <div className="pb-28" />
