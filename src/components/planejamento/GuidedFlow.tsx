@@ -59,6 +59,11 @@ interface Props {
   editMode?: { steps: number[] };
   /** Sinaliza fluxo "Refazer" — habilita a trava de meta igual no passo 1. */
   isRedo?: boolean;
+  /**
+   * Quando definido, é o "modo next": calendário/atalhos passam a operar no mês alvo
+   * e o salvamento grava apenas no slot `next_plan_*` (sem tocar no plano ativo).
+   */
+  targetMonth?: Date;
 }
 
 interface Draft {
@@ -86,7 +91,9 @@ export function GuidedFlow({
   initialDraft,
   editMode,
   isRedo = false,
+  targetMonth,
 }: Props) {
+  const isNext = targetMonth != null;
   const navigate = useNavigate();
   const { settings, cars, updateSettings, entries } = useData();
   const { useHideChrome } = useUI();
