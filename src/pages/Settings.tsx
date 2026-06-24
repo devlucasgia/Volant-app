@@ -111,7 +111,7 @@ function SettingsCard({
         <div className="flex flex-1 items-center gap-2.5">
           <span className={cn(
             "flex h-7 w-7 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]",
-            iconTone || "bg-primary/10 text-primary",
+            iconTone || "bg-muted/50 text-foreground/70",
           )}>
             {icon}
           </span>
@@ -740,7 +740,7 @@ export default function SettingsPage() {
               managing={portalLoading}
             />
 
-            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil" iconTone="bg-amber-300/10 text-amber-200/90">
+            <SettingsCard value="profile" icon={<UserIcon className="h-4 w-4" />} title="Perfil">
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
                   <Avatar className="h-14 w-14 ring-2 ring-border">
@@ -873,7 +873,7 @@ export default function SettingsPage() {
               })()}
             </SettingsCard>
 
-            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Dados" iconTone="bg-amber-300/10 text-amber-200/90">
+            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Dados">
 
 
               <div className="rounded-xl border border-border bg-muted/30 p-3.5">
@@ -916,7 +916,7 @@ export default function SettingsPage() {
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-3 flex items-center gap-2.5">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-400/10 text-slate-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
               <MessageSquare className="h-4 w-4" />
             </span>
             <div>
@@ -1035,11 +1035,11 @@ function HubRow({
     <button
       type="button"
       onClick={() => navigate(to)}
-      className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border/80 hover:shadow-[0_1px_0_0_hsl(var(--border)),0_10px_26px_-18px_rgba(0,0,0,0.48)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 animate-fade-in"
+      className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border hover:shadow-[0_1px_0_0_hsl(var(--border)),0_10px_26px_-18px_rgba(0,0,0,0.48)] active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25 animate-fade-in"
     >
       <span className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor] transition-colors",
-        iconTone || "bg-primary/10 text-primary",
+        iconTone || "bg-muted/50 text-foreground/70",
       )}>
         {icon}
       </span>
@@ -1059,6 +1059,7 @@ function PlanejamentoInteligenteRow() {
       icon={<Brain className="h-4 w-4" />}
       title="Planejamento Inteligente"
       subtitle="Meta, dias de trabalho e R$/km ideal."
+      iconTone="bg-muted/50 text-foreground/70"
     />
   );
 }
@@ -1070,7 +1071,7 @@ function CentralVeiculosRow() {
       icon={<Warehouse className="h-4 w-4" />}
       title="Central de Veículos"
       subtitle="Organize seus carros, custos e manutenções."
-      iconTone="bg-cyan-500/10 text-cyan-300"
+      iconTone="bg-muted/50 text-foreground/70"
     />
   );
 }
@@ -1082,7 +1083,7 @@ function PersonalizacaoRow() {
       icon={<Paintbrush className="h-4 w-4" />}
       title="Personalização"
       subtitle="Aparência, saudação e organização dos cards."
-      iconTone="bg-violet-400/10 text-violet-300"
+      iconTone="bg-muted/50 text-foreground/70"
     />
   );
 }
@@ -1094,6 +1095,7 @@ function CategoriasRow() {
       icon={<Tags className="h-4 w-4" />}
       title="Categorias"
       subtitle="Gerencie suas fontes de ganho e categorias de gasto."
+      iconTone="bg-muted/50 text-foreground/70"
     />
   );
 }
