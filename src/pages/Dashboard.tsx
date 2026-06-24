@@ -893,7 +893,7 @@ export default function Dashboard() {
           </DrawerContent>
         </Drawer>
 
-        <PlanningChangeNoticeBanner enabled={plan.isPlanningConfigured} className="mt-4" />
+        
 
         {/* Hero highlight — user can switch between Lucro líquido (default) and Bruto */}
         <div className="mt-5">
