@@ -566,7 +566,15 @@ function Step2({
   );
 }
 
-function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+function Step3({
+  draft,
+  setDraft,
+  reference,
+}: {
+  draft: Draft;
+  setDraft: (u: (d: Draft) => Draft) => void;
+  reference?: Date;
+}) {
   const shortcuts: { key: ShortcutKey; label: string }[] = [
     { key: "all", label: "Todos os dias" },
     { key: "weekdays", label: "Seg a sex" },
@@ -592,13 +600,15 @@ function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
         subtitle="Toque nos dias para selecionar. Dias passados ficam indisponíveis."
       />
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-        <CalendarGrid selected={draft.selectedDates} onToggle={toggle} />
+        <CalendarGrid selected={draft.selectedDates} onToggle={toggle} reference={reference} />
         <div className="mt-4 flex flex-wrap gap-1.5">
           {shortcuts.map((s) => (
             <button
               key={s.key}
               type="button"
-              onClick={() => setDraft((d) => ({ ...d, selectedDates: applyShortcut(s.key) }))}
+              onClick={() =>
+                setDraft((d) => ({ ...d, selectedDates: applyShortcut(s.key, reference) }))
+              }
               className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-muted/50"
             >
               {s.label}
