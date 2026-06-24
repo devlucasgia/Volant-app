@@ -35,19 +35,30 @@ Deno.serve(async (req) => {
   }
 
   const auth = req.headers.get("Authorization") ?? "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
   let scopedUserId: string | null = null;
 
   try {
-    // Aceita 2 formas de auth: service-role (cron) OU JWT de usuário (on-demand).
-    const isServiceRole = auth === `Bearer ${SERVICE_ROLE}`;
-    if (!isServiceRole) {
-      if (!auth.startsWith("Bearer ")) {
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+    // Auth aceita 3 formas (em ordem de tentativa):
+    //  1. Service-role direto via env (cron interno / outra edge function).
+    //  2. Vault shared secret (cron pg_net usa esse).
+    //  3. JWT de usuário logado (disparo on-demand do frontend).
+    let authorized = !!token && token === SERVICE_ROLE;
+    if (!authorized && token) {
+      const { data: shared } = await admin.rpc("get_notify_shared_secret");
+      if (typeof shared === "string" && shared.length > 0 && token === shared) {
+        authorized = true;
+      }
+    }
+    if (!authorized) {
+      if (!token) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const token = auth.slice("Bearer ".length);
       const userClient = createClient(SUPABASE_URL, ANON_KEY, {
         global: { headers: { Authorization: auth } },
       });
