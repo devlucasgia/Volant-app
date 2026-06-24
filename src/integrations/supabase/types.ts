@@ -578,6 +578,12 @@ export type Database = {
           last_maintenance_km: number
           maintenance_interval_km: number
           monthly_goal: number
+          next_plan_activated_at: string | null
+          next_plan_avg_km: number | null
+          next_plan_created_at: string | null
+          next_plan_dates: Json | null
+          next_plan_goal: number | null
+          next_plan_goal_type: string | null
           planning_avg_km_per_day: number | null
           planning_original_avg_km: number | null
           planning_original_created_at: string | null
@@ -602,6 +608,12 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          next_plan_activated_at?: string | null
+          next_plan_avg_km?: number | null
+          next_plan_created_at?: string | null
+          next_plan_dates?: Json | null
+          next_plan_goal?: number | null
+          next_plan_goal_type?: string | null
           planning_avg_km_per_day?: number | null
           planning_original_avg_km?: number | null
           planning_original_created_at?: string | null
@@ -626,6 +638,12 @@ export type Database = {
           last_maintenance_km?: number
           maintenance_interval_km?: number
           monthly_goal?: number
+          next_plan_activated_at?: string | null
+          next_plan_avg_km?: number | null
+          next_plan_created_at?: string | null
+          next_plan_dates?: Json | null
+          next_plan_goal?: number | null
+          next_plan_goal_type?: string | null
           planning_avg_km_per_day?: number | null
           planning_original_avg_km?: number | null
           planning_original_created_at?: string | null

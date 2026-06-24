@@ -59,6 +59,11 @@ interface Props {
   editMode?: { steps: number[] };
   /** Sinaliza fluxo "Refazer" — habilita a trava de meta igual no passo 1. */
   isRedo?: boolean;
+  /**
+   * Quando definido, é o "modo next": calendário/atalhos passam a operar no mês alvo
+   * e o salvamento grava apenas no slot `next_plan_*` (sem tocar no plano ativo).
+   */
+  targetMonth?: Date;
 }
 
 interface Draft {
@@ -86,7 +91,9 @@ export function GuidedFlow({
   initialDraft,
   editMode,
   isRedo = false,
+  targetMonth,
 }: Props) {
+  const isNext = targetMonth != null;
   const navigate = useNavigate();
   const { settings, cars, updateSettings, entries } = useData();
   const { useHideChrome } = useUI();
@@ -105,7 +112,7 @@ export function GuidedFlow({
   // ── Persistência de rascunho (apenas para o fluxo "fresh" — sem editMode/initialStep/initialDraft) ──
   // Permite voltar exatamente para o mesmo passo + valores depois de um reload
   // ou volta-de-outro-app, sem perder progresso do wizard.
-  const draftPersistenceEnabled = !isEdit && initialStep == null && !initialDraft;
+  const draftPersistenceEnabled = !isEdit && !isNext && initialStep == null && !initialDraft;
   // Hidratação síncrona (no primeiro render) — evita "piscar" passo 1 antes de pular para o salvo.
   const hydratedSnapshot = useRef<PlanningDraftSnapshot | null>(null);
   if (draftPersistenceEnabled && hydratedSnapshot.current === null) {
@@ -131,20 +138,29 @@ export function GuidedFlow({
   const isLast = stepIdx === stepsList.length - 1;
 
   const [draft, setDraft] = useState<Draft>(() => {
-    const base: Draft = {
-      // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
-      goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
-      monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
-      selectedDates:
-        (prefill || isEdit) && settings.planningSelectedDates
-          ? settings.planningSelectedDates
-          : [],
-      avgKmPerDay:
-        (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
-          ? settings.planningAvgKmPerDay
-          : DEFAULT_AVG_KM_PER_DAY,
-      ...(initialDraft ?? {}),
-    };
+    // Modo next: sempre parte em branco (igual ao fresh). Não herda do slot ativo.
+    const base: Draft = isNext
+      ? {
+          goalType: "liquido",
+          monthlyGoal: 0,
+          selectedDates: [],
+          avgKmPerDay: DEFAULT_AVG_KM_PER_DAY,
+          ...(initialDraft ?? {}),
+        }
+      : {
+          // Novo modelo sempre líquido. Edit-mode legado pode sobrescrever via initialDraft.
+          goalType: prefill || isEdit ? settings.goalType ?? "liquido" : "liquido",
+          monthlyGoal: prefill || isEdit ? settings.monthlyGoal : 0,
+          selectedDates:
+            (prefill || isEdit) && settings.planningSelectedDates
+              ? settings.planningSelectedDates
+              : [],
+          avgKmPerDay:
+            (prefill || isEdit) && settings.planningAvgKmPerDay && settings.planningAvgKmPerDay > 0
+              ? settings.planningAvgKmPerDay
+              : DEFAULT_AVG_KM_PER_DAY,
+          ...(initialDraft ?? {}),
+        };
     const saved = hydratedSnapshot.current?.draft;
     return saved ? { ...base, ...saved } : base;
   });
@@ -213,7 +229,15 @@ export function GuidedFlow({
     try {
       const patch: Parameters<typeof updateSettings>[0] = {};
 
-      if (isEdit) {
+      if (isNext) {
+        // Slot do próximo mês: grava APENAS em next_plan_*. Não toca no plano ativo
+        // nem no snapshot original. Entra em vigor pela edge function ao virar o mês.
+        patch.nextPlanGoal = draft.monthlyGoal;
+        patch.nextPlanGoalType = draft.goalType;
+        patch.nextPlanAvgKm = draft.avgKmPerDay;
+        patch.nextPlanDates = draft.selectedDates;
+        patch.nextPlanCreatedAt = new Date().toISOString();
+      } else if (isEdit) {
         if (stepsList.includes(1) || stepsList.includes(2)) {
           patch.monthlyGoal = draft.monthlyGoal;
           // Modelo atual: meta cadastrada representa SEMPRE o líquido desejado.
@@ -255,7 +279,13 @@ export function GuidedFlow({
 
       await updateSettings(patch);
       planningDraft.clear();
-      toast.success(isEdit ? "Alteração salva" : "Planejamento concluído");
+      toast.success(
+        isNext
+          ? "Plano do próximo mês salvo"
+          : isEdit
+            ? "Alteração salva"
+            : "Planejamento concluído",
+      );
       onDone();
     } catch {
       toast.error("Não foi possível salvar");
@@ -271,6 +301,9 @@ export function GuidedFlow({
   // ── Texto contextual do botão final ──
   const hoje = new Date();
   const mesAtualNome = hoje.toLocaleDateString("pt-BR", { month: "long" });
+  const mesAlvoNome = targetMonth
+    ? targetMonth.toLocaleDateString("pt-BR", { month: "long" })
+    : "";
   const originalCreatedAt = settings.planningOriginalCreatedAt
     ? new Date(settings.planningOriginalCreatedAt)
     : null;
@@ -281,13 +314,15 @@ export function GuidedFlow({
     ? originalCreatedAt.getMonth() !== hoje.getMonth() ||
       originalCreatedAt.getFullYear() !== hoje.getFullYear()
     : false;
-  const botaoTexto = isEdit
-    ? "Salvar alteração"
-    : isPrimeiroPlano
-      ? "Criar meu plano"
-      : isMesNovo
-        ? `Planejar ${mesAtualNome}`
-        : "Refazer planejamento";
+  const botaoTexto = isNext
+    ? `Salvar plano de ${mesAlvoNome}`
+    : isEdit
+      ? "Salvar alteração"
+      : isPrimeiroPlano
+        ? "Criar meu plano"
+        : isMesNovo
+          ? `Planejar ${mesAtualNome}`
+          : "Refazer planejamento";
 
 
   return (
@@ -340,7 +375,7 @@ export function GuidedFlow({
       >
         {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
         {step === 2 && <Step2 draft={draft} setDraft={setDraft} isRedo={isRedo} currentGoal={settings.monthlyGoal} />}
-        {step === 3 && <Step3 draft={draft} setDraft={setDraft} />}
+        {step === 3 && <Step3 draft={draft} setDraft={setDraft} reference={targetMonth} />}
         {step === 4 && <Step4 draft={draft} setDraft={setDraft} plan={plan} />}
         {step === 5 && (
           <Step5
@@ -378,7 +413,7 @@ export function GuidedFlow({
             currentGross={realMes.grossThisMonth}
             currentKm={realMes.kmThisMonth}
             daysWorked={realMes.daysWorkedThisMonth}
-            isRefazer={!isEdit && settings.planningOriginalCreatedAt != null}
+            isRefazer={!isNext && !isEdit && settings.planningOriginalCreatedAt != null}
           />
         )}
       </div>
@@ -531,7 +566,15 @@ function Step2({
   );
 }
 
-function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => Draft) => void }) {
+function Step3({
+  draft,
+  setDraft,
+  reference,
+}: {
+  draft: Draft;
+  setDraft: (u: (d: Draft) => Draft) => void;
+  reference?: Date;
+}) {
   const shortcuts: { key: ShortcutKey; label: string }[] = [
     { key: "all", label: "Todos os dias" },
     { key: "weekdays", label: "Seg a sex" },
@@ -557,13 +600,15 @@ function Step3({ draft, setDraft }: { draft: Draft; setDraft: (u: (d: Draft) => 
         subtitle="Toque nos dias para selecionar. Dias passados ficam indisponíveis."
       />
       <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
-        <CalendarGrid selected={draft.selectedDates} onToggle={toggle} />
+        <CalendarGrid selected={draft.selectedDates} onToggle={toggle} reference={reference} />
         <div className="mt-4 flex flex-wrap gap-1.5">
           {shortcuts.map((s) => (
             <button
               key={s.key}
               type="button"
-              onClick={() => setDraft((d) => ({ ...d, selectedDates: applyShortcut(s.key) }))}
+              onClick={() =>
+                setDraft((d) => ({ ...d, selectedDates: applyShortcut(s.key, reference) }))
+              }
               className="rounded-full border border-border/60 bg-muted/30 px-3 py-1.5 text-[11px] font-medium text-foreground/85 transition-all active:scale-[0.97] hover:bg-muted/50"
             >
               {s.label}

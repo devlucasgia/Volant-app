@@ -32,6 +32,8 @@ interface FlowConfig {
   }>;
   editSteps?: number[];
   isRedo?: boolean;
+  /** Quando definido, GuidedFlow opera no "modo next" (grava no slot next_plan_*). */
+  targetMonth?: Date;
 }
 
 interface PlanningResumeState {
@@ -82,7 +84,7 @@ export default function PlanejamentoInteligente() {
   const returnTo = state?.returnTo;
   const planningResume = state?.planningResume;
 
-  const { settings, loading } = useData();
+  const { settings, loading, updateSettings } = useData();
   const [mode, setMode] = useState<Mode>("panel");
   const [flowConfig, setFlowConfig] = useState<FlowConfig>({ variant: "fresh" });
   const [confirmRedo, setConfirmRedo] = useState(false);
@@ -139,6 +141,29 @@ export default function PlanejamentoInteligente() {
     setMode("flow");
   };
 
+  const handlePlanNext = () => {
+    const now = new Date();
+    const targetMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    setFlowConfig({ variant: "fresh", targetMonth });
+    setMode("flow");
+  };
+
+  const handleCancelNext = async () => {
+    await updateSettings({
+      nextPlanGoal: null,
+      nextPlanGoalType: null,
+      nextPlanAvgKm: null,
+      nextPlanDates: null,
+      nextPlanCreatedAt: null,
+    });
+  };
+
+  const handleReplicate = () => {
+    // Mantém meta/km do plano anterior, mas zera os dias (são do mês passado).
+    setFlowConfig({ variant: "prefill", initialDraft: { selectedDates: [] } });
+    setMode("flow");
+  };
+
   if (mode === "flow") {
     return (
       <GuidedFlow
@@ -154,6 +179,7 @@ export default function PlanejamentoInteligente() {
         onDone={() => setMode("panel")}
         returnTo={returnTo}
         isRedo={flowConfig.isRedo}
+        targetMonth={flowConfig.targetMonth}
       />
     );
   }
@@ -178,6 +204,9 @@ export default function PlanejamentoInteligente() {
           <PainelResumo
             onAdjust={() => setAdjustOpen(true)}
             onRedo={() => setConfirmRedo(true)}
+            onPlanNext={handlePlanNext}
+            onCancelNext={handleCancelNext}
+            onReplicate={handleReplicate}
           />
 
           <div className="pb-28" />

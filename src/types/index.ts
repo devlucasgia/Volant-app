@@ -155,6 +155,14 @@ export interface Settings {
   planningOriginalAvgKm?: number | null;
   planningOriginalDates?: string[] | null;
   planningOriginalCreatedAt?: string | null;
+  /** Slot do plano do PRÓXIMO mês — entra em vigor automaticamente na virada. */
+  nextPlanGoal?: number | null;
+  nextPlanGoalType?: GoalType | null;
+  nextPlanAvgKm?: number | null;
+  nextPlanDates?: string[] | null;
+  nextPlanCreatedAt?: string | null;
+  /** Marcado pelo edge function quando o slot futuro entra em vigor — usado para mostrar o banner "entrou em vigor". */
+  nextPlanActivatedAt?: string | null;
 }
 
 export interface CustomCategory {
