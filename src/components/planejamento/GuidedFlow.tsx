@@ -375,7 +375,7 @@ export function GuidedFlow({
       >
         {step === 1 && <Step1 draft={draft} setDraft={setDraft} />}
         {step === 2 && <Step2 draft={draft} setDraft={setDraft} isRedo={isRedo} currentGoal={settings.monthlyGoal} />}
-        {step === 3 && <Step3 draft={draft} setDraft={setDraft} />}
+        {step === 3 && <Step3 draft={draft} setDraft={setDraft} reference={targetMonth} />}
         {step === 4 && <Step4 draft={draft} setDraft={setDraft} plan={plan} />}
         {step === 5 && (
           <Step5
@@ -413,7 +413,7 @@ export function GuidedFlow({
             currentGross={realMes.grossThisMonth}
             currentKm={realMes.kmThisMonth}
             daysWorked={realMes.daysWorkedThisMonth}
-            isRefazer={!isEdit && settings.planningOriginalCreatedAt != null}
+            isRefazer={!isNext && !isEdit && settings.planningOriginalCreatedAt != null}
           />
         )}
       </div>
