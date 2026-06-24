@@ -1,78 +1,159 @@
-# Sprint H — Refino do card de plano futuro + neutralização dos Ajustes
+# Sprint I — refeita em 2 recortes
 
-Sprint cosmética, risco baixo. Só JSX/Tailwind — nenhuma lógica, query, estado, fluxo, migration ou edge function foi alterada.
-
-## Arquivos alterados
-- `src/components/planejamento/PainelResumo.tsx` — card de plano futuro (estados A e B).
-- `src/pages/Settings.tsx` — neutralização dos ícones da lista de Ajustes.
-- `src/pages/CentralVeiculos.tsx`, `src/pages/MeusCarros.tsx`, `src/pages/CustosVeiculo.tsx`, `src/pages/ManutencaoPreventiva.tsx` — neutralização dos headers/itens de veículos.
-- `src/pages/Personalizacao.tsx`, `src/pages/PersonalizacaoAparencia.tsx`, `src/pages/PersonalizacaoSaudacao.tsx`, `src/pages/OrganizacaoCards.tsx` — neutralização dos headers/itens de personalização.
-- `src/pages/Categorias.tsx`, `src/pages/CategoriasGanhos.tsx`, `src/pages/CategoriasGastos.tsx` — neutralização dos headers de categorias.
-
-## NÃO alterados
-`planningEngine.ts`, `planejamento.ts`, `smartKm.ts`, `DataContext`, edge functions, hooks DnD, `stats.ts`, painel admin, fluxos de Refazer/Ajustar/plano novo, cores semânticas da Home/Relatórios (verde lucro, azul bruto, vermelho gasto, laranja atenção).
-
-A Assinatura mantém o tratamento dourado/âmbar atual (accent, glow, badge). É a única exceção proposital no campo neutro.
+Substitui o plano anterior. Executar **Recorte 1 primeiro** e só depois **Recorte 2**. Dentro do Recorte 1, o bloco 1.4 (lazy loading) é o último.
 
 ---
 
-## Parte 1 — Card de plano futuro
+## RECORTE 1 — Banner + card compacto + cron + lazy loading
 
-O card de plano futuro virou uma composição **centralizada**, mais **enxuta**, com **acento verde vivo** no ícone e nos botões principais.
+Blocos 1.1–1.3 são baixo risco. 1.4 (lazy loading) é o único que mexe no roteador — vai por último, com proteções.
 
-Anatomia (ambos os estados):
-- Container: `rounded-2xl border border-border/50 bg-card/60 p-4 text-center`.
-- Ícone num quadradinho verde, centralizado:
-  - `mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]`
-  - Estado A: `CalendarPlus`.
-  - Estado B: `CalendarCheck`.
-- Título 15px semibold, sem `capitalize`.
-- Linha de info 12.5px `text-muted-foreground`.
-- Botões centralizados: `mt-3 flex justify-center gap-2`.
+### Arquivos que ALTERA
+- `src/pages/Dashboard.tsx`
+- `src/components/PlanningChangeNoticeBanner.tsx` (deletar)
+- `src/components/planejamento/PainelResumo.tsx`
+- `src/App.tsx` (+ `RouteFallback` e `ChunkErrorBoundary`)
+- Apêndice SQL (cron, fora do repo)
 
-**Estado A — sem plano futuro:**
-- Título: `Já pensou no próximo mês?`
-- Info: `Planeje {proxMes} agora e ele entra sozinho na virada.` — mês em **minúsculo** (como vem de `toLocaleDateString`).
-- Botão: `bg-primary/15 text-primary border border-primary/30`, ícone `CalendarPlus`, texto `Planejar {proxMes}`.
+### NÃO ALTERA
+Lógica de cálculo, DataContext, AuthContext, queries, hooks DnD, painel admin, cores semânticas da Home/Relatórios. **Nada dos Ajustes** (fica para o Recorte 2). 1.4 mexe só no roteamento de `App.tsx`.
 
-**Estado B — já planejado:**
-- Título: `{ProxMes} já está planejado` — só a **primeira letra do mês maiúscula** (`proxMes.charAt(0).toUpperCase() + proxMes.slice(1)`), sem classe `capitalize`.
-- Info: `{fmtBRL(nextPlanGoal)} líquido · {nextPlanDates.length} dias · {nextPlanAvgKm} km/dia` — valor líquido formatado pelo `fmtBRL` existente.
-- Ativação: `Entra em vigor sozinho em 01/{MM}.`
-- Botões: `Editar` (verde leve, ícone `Pencil`) + `Cancelar` (ghost neutro).
+### 1.1 — Aposentar o banner
+- `Dashboard.tsx`: remover `<PlanningChangeNoticeBanner ... />` (~linha 896) e o import.
+- Deletar `src/components/PlanningChangeNoticeBanner.tsx`.
+- `rg PlanningChangeNoticeBanner` deve retornar vazio.
 
-## Parte 2 — Neutralização das cores dos Ajustes
+### 1.2 — Card de plano futuro compacto (`PainelResumo.tsx`)
+Substituir o bloco centralizado por linha horizontal compacta. Estados, handlers e dados (`onPlanNext`, `onCancelNext`, `settings.nextPlan*`, `proxMes`) intocados.
 
-Tom neutro padrão aplicado em todos os ícones de seção (exceto Assinatura):
-- `bg-{cor}/10 text-{cor}` → `bg-muted/50 text-foreground/70`
-- `ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]` mantido.
-- `hover:border-{cor}/35` → `hover:border-border`
-- `focus-visible:ring-{cor}/40` → `focus-visible:ring-foreground/25`
+- Container: `flex items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-3 py-2.5`.
+- Ícone (esq.): `h-9 w-9 shrink-0 rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]`; `CalendarPlus` (A) / `CalendarCheck` (B).
+- Texto (centro, `flex-1 min-w-0`): título 13px semibold + info 11.5px `text-muted-foreground` com `truncate`.
+- Ação (dir.):
+  - **A**: botão "Planejar" (`bg-primary/15 text-primary border border-primary/30`, `h-8 px-3 text-xs`).
+  - **B**: `Pencil` (→ onPlanNext) e `X` (→ onCancelNext), `h-8 w-8`, primary/muted.
+- Textos:
+  - A título: "Planejar próximo mês"
+  - A info: `Planeje ${proxMes} agora e ele entra sozinho na virada.` (mês minúsculo)
+  - B título: `${capFirst(proxMes)} já está planejado` (capitalização via JS, sem classe `capitalize`)
+  - B info: `${fmtBRL(nextPlanGoal)} líquido · entra 01/${MM}` (formatador existente; `MM` = mês de ativação)
 
-### 2.1 `Settings.tsx`
-- `SettingsCard` default iconTone: neutro.
-- Perfil e Dados: âmbar → neutro.
-- Planejamento Inteligente, Categorias, Feedback: verde-padrão → neutro.
-- Central de Veículos: ciano → neutro.
-- Personalização: violeta → neutro.
-- Item Feedback com `bg-slate-400/10`: alinhado a `bg-muted/50 text-foreground/70`.
-- `HubRow` default iconTone, hover e focus: neutro.
-- Assinatura: **inalterada** (dourado/âmbar).
+### 1.3 — Apêndice SQL: cron de email para 50s
+Job não está versionado. Preservar o `command` (URL + header), trocar só o intervalo:
 
-### 2.2 Sub-páginas de Veículos
-Headers e itens com ciano → neutro; hover/focus neutros.
+1. `SELECT jobname, schedule, command FROM cron.job WHERE jobname = 'process-email-queue';`
+2. ```sql
+   SELECT cron.unschedule('process-email-queue');
+   SELECT cron.schedule('process-email-queue', '50 seconds', $$ <MESMO COMMAND DO PASSO 1> $$);
+   ```
+3. `SELECT schedule FROM cron.job WHERE jobname='process-email-queue';` → `50 seconds`.
 
-### 2.3 Sub-páginas de Personalização
-Violeta e teal → neutro; hover/focus neutros.
+Não reescrever o body do zero.
 
-### 2.4 Sub-páginas de Categorias
-Headers verde-padrão → neutro.
+### 1.4 — Lazy loading (`App.tsx`)
+Mexe só no roteamento.
+
+**Eager (boot crítico):** providers, `AppLayout`, `RequireAuth`, `RequirePremium`, `RequireAdmin`, `ScrollToTop`, `Landing`, `Auth`, `Dashboard` (rota mais visitada — evita flash em `/app`).
+
+**Lazy (`React.lazy`):** as outras ~23 rotas (`History`, `Reports`, `Settings`, `PlanejamentoInteligente`, `MetasInteligentes`, `KmInteligente`, `CentralVeiculos`, `MeusCarros`, `CustosVeiculo`, `ManutencaoPreventiva`, `Personalizacao`, `PersonalizacaoAparencia`, `PersonalizacaoSaudacao`, `OrganizacaoCards`, `Categorias`, `CategoriasGanhos`, `CategoriasGastos`, `CheckoutReturn`, `Unsubscribe`, `NotFound`, `AdminMetrics`, `AdminHome`, `AdminAccess`, `AdminSubscribers`, `AdminLogin`, `Termos`, `Privacidade`, `ResetPassword`).
+
+**Proteções obrigatórias:**
+
+- `<Suspense fallback={<RouteFallback />}>` ao redor do `<Routes>`. `RouteFallback` = skeleton discreto na área do `<main>` (caixa cinza fina, não spinner cheio). Como `AppLayout` é eager, header/BottomNav continuam visíveis.
+
+- **`ChunkErrorBoundary`** global ao redor do `<Routes>`, com **anti-loop de reload via `sessionStorage`** (chave `volant_chunk_reloaded`):
+
+  - `componentDidCatch(error)` — detecta `error.name === "ChunkLoadError"` ou `/Loading chunk/.test(error.message)`.
+  - Se for chunk error:
+    - Se `sessionStorage.getItem("volant_chunk_reloaded")` **não existe**: `sessionStorage.setItem("volant_chunk_reloaded", "1")` e `window.location.reload()` (cobre o caso de aba antiga após deploy novo).
+    - Se **já existe** (já recarregou uma vez e o erro persistiu): **não recarregar de novo**. Renderizar fallback simples: mensagem "Não foi possível carregar esta parte." + botão "Tentar de novo" que faz `sessionStorage.removeItem("volant_chunk_reloaded")` e `window.location.reload()`.
+  - Para erros que **não** são chunk errors: deixar propagar (não engolir; manter comportamento atual).
+  - **Limpeza da flag em caso de sucesso:** efeito leve no `AppLayout` (ou um `<ChunkReloadFlagCleaner />` montado dentro do boundary) que faz `sessionStorage.removeItem("volant_chunk_reloaded")` no primeiro mount bem-sucedido após o boot. Assim um segundo deploy na mesma sessão volta a poder fazer o reload automático uma vez.
+  - Embrulhar tudo em `try/catch` (sessionStorage pode lançar em modo privado de alguns browsers); falha silenciosa cai no fallback manual.
+
+**Validação:** navegar uma vez por **todas as 26 rotas** (públicas, app, admin); fallback aparece brevemente, rota carrega, nenhuma tela branca. Simular chunk error (forçar import quebrado em dev) e conferir: 1ª ocorrência → reload automático; 2ª ocorrência consecutiva → fallback com botão, sem loop.
 
 ---
 
-## Validação manual
-1. Card de plano futuro centralizado, ícone num quadradinho verde com glow, título em caixa de sentença (`Julho já está planejado`).
-2. Estado A com mês minúsculo (`Planejar julho`) e Estado B com mês capitalizado no início da frase.
-3. Valores do Estado B formatados em moeda via `fmtBRL`.
-4. Ajustes — lista: todos os ícones cinza-neutros, só Assinatura dourada com glow.
-5. Sub-páginas de Ajustes: headers e itens neutros, hover/focus sem realce colorido.
+## RECORTE 2 — Reorganização dos Ajustes + cores + início de semana
+
+Uma passada só nos mesmos arquivos. Início de semana nasce já no lugar definitivo.
+
+### Arquivos que ALTERA
+- `src/components/BottomNav.tsx` (label + ícone da aba)
+- `src/pages/Settings.tsx` (reordenação, nova seção, mover "Dados", neutralização)
+- `src/pages/Categorias.tsx`, `CategoriasGanhos.tsx`, `CategoriasGastos.tsx` (cores semânticas)
+- `src/pages/CentralVeiculos.tsx`, `MeusCarros.tsx`, `CustosVeiculo.tsx`, `ManutencaoPreventiva.tsx`, `Personalizacao.tsx`, `PersonalizacaoAparencia.tsx`, `PersonalizacaoSaudacao.tsx`, `OrganizacaoCards.tsx` (neutralização, se restar algo)
+- **Migration** (`user_settings`), `src/types/index.ts`, `src/context/DataContext.tsx`, `src/components/planejamento/CalendarGrid.tsx` (início de semana)
+
+### NÃO ALTERA
+Lógica de cálculo, AuthContext, queries de entries, hooks DnD, painel admin, cores semânticas da Home/Relatórios. Rota continua `/ajustes` (só muda label/ícone da aba).
+
+### 2.1 — Aba "Ajustes" vira "Mais"
+`BottomNav.tsx`: trocar `label` de "Ajustes" para **"Mais"** e o ícone `Settings` por `MoreHorizontal` (lucide). Rota `/ajustes` **inalterada** — não renomear, não quebrar links.
+
+### 2.2 — Reordenar seções e criar "Configurações"
+`Settings.tsx` — nova ordem:
+
+1. **Conta** → Assinatura, Perfil (sem "Dados")
+2. **Financeiro** → Categorias, Planejamento Inteligente
+3. **Veículos** → Carros, Custos, Manutenção
+4. **Personalização** → Aparência, Saudação, Organização dos cards
+5. **Configurações** (nova) → Início da semana, Refazer tour
+6. **Feedback** (rodapé)
+
+Seção "Configurações" usa o mesmo padrão visual (eyebrow + cards). "Refazer tour" sai do Perfil e vem pra cá.
+
+### 2.3 — "Apagar dados" no rodapé do Perfil
+Card/seção "Dados" (apagar dados, com alertas) sai da seção Conta e vira **rodapé do Perfil** (zona de perigo). Manter exatamente os mesmos alertas/confirmações, só reposicionar.
+
+### 2.4 — Cores: neutro geral, 3 exceções semânticas
+Regra neutra para ícones de seção:
+- `bg-{cor}/10 text-{cor}-300` ou `bg-primary/10 text-primary` → `bg-muted/50 text-foreground/70` (manter `ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]`).
+- `hover:border-{cor}/35` → `hover:border-border`; `focus-visible:ring-{cor}/40` → `focus-visible:ring-foreground/25`.
+- Aplicar em Veículos (ciano), Personalização (violet/teal) e itens neutros restantes.
+
+**Exceções:**
+- **Assinatura:** mantém âmbar/dourado/glow/badge (não tocar).
+- **Ganhos** (item em `Categorias.tsx` + header de `CategoriasGanhos.tsx`): `bg-info/10 text-info`.
+- **Gastos** (item em `Categorias.tsx` + header de `CategoriasGastos.tsx`): `bg-destructive/10 text-destructive`.
+
+Se `text-info`/`text-destructive` não forem utilitários disponíveis, usar as cores semânticas equivalentes já usadas na Home.
+
+### 2.5 — Início de semana (nasce em Configurações)
+
+**Migration** (tabela `user_settings`, **não** `profiles`):
+```sql
+ALTER TABLE public.user_settings
+  ADD COLUMN IF NOT EXISTS week_starts_on smallint NOT NULL DEFAULT 0
+  CHECK (week_starts_on IN (0, 1));
+```
+
+**`types/index.ts`:** `weekStartsOn?: 0 | 1` em `Settings` (default 0).
+
+**`DataContext.tsx`:** mapear `week_starts_on ↔ weekStartsOn` no load e em `updateSettings`, espelhando o padrão dos outros campos.
+
+**UI** — em `Settings.tsx`, na nova seção "Configurações": item "Início da semana" com `Segmented` Domingo/Segunda → `updateSettings({ weekStartsOn: 0 | 1 })`. Ícone neutro `Calendar`.
+
+**`CalendarGrid.tsx`:** ler `weekStartsOn` (prop ou `useData().settings`) e:
+- Rotacionar `DOW` quando `weekStartsOn === 1` (de `["D","S","T","Q","Q","S","S"]` para `["S","T","Q","Q","S","S","D"]`).
+- `firstDow = (days[0].getDay() - weekStartsOn + 7) % 7`; padding usa esse `firstDow`.
+- Conferir no `GuidedFlow` que alternar o toggle re-renderiza a grade.
+
+---
+
+## Critérios de aceite
+
+**Recorte 1:**
+- Banner sumiu da Home, componente deletado.
+- Card de plano futuro virou linha compacta nos dois estados; Editar/Cancelar continuam funcionando; valores formatados com `fmtBRL`; mês minúsculo no Estado A e maiúsculo no início de frase no Estado B.
+- `SELECT schedule FROM cron.job WHERE jobname='process-email-queue'` retorna `50 seconds`; `command` preservado.
+- Navegação por todas as 26 rotas sem tela branca; fallback é skeleton (não spinner).
+- Chunk error: 1ª vez na sessão → reload automático único; 2ª vez consecutiva → fallback "Não foi possível carregar esta parte." com botão que limpa a flag e recarrega; sem loop infinito. Flag é limpa quando uma rota carrega com sucesso.
+
+**Recorte 2:**
+- Aba do `/ajustes` mostra "Mais" com ícone `MoreHorizontal`; rota inalterada.
+- Ordem das seções: Conta → Financeiro → Veículos → Personalização → Configurações → Feedback.
+- "Apagar dados" só aparece no rodapé do Perfil, com os alertas atuais.
+- Ícones neutros em toda Ajustes, exceto Assinatura (dourado), Ganhos (azul) e Gastos (vermelho).
+- Toggle Domingo/Segunda em Configurações persiste em `user_settings.week_starts_on` e altera a grade do calendário do planejamento.
