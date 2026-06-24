@@ -28,7 +28,7 @@ import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { useHeroMetric } from "@/lib/heroMetric";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 import { NotificationsSheet } from "@/components/NotificationsSheet";
-import { PlanningChangeNoticeBanner } from "@/components/PlanningChangeNoticeBanner";
+
 import { useNotifications } from "@/hooks/useNotifications";
 import { ensureMaintenanceNotifications } from "@/lib/notifications";
 
@@ -893,7 +893,7 @@ export default function Dashboard() {
           </DrawerContent>
         </Drawer>
 
-        <PlanningChangeNoticeBanner enabled={plan.isPlanningConfigured} className="mt-4" />
+        
 
         {/* Hero highlight — user can switch between Lucro líquido (default) and Bruto */}
         <div className="mt-5">
