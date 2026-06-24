@@ -10,6 +10,8 @@ import {
   Pencil,
   RotateCcw,
   CalendarDays,
+  CalendarPlus,
+  CalendarCheck,
   CheckCircle2,
   X,
   Loader2,
@@ -480,63 +482,57 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
 
       {/* ============ 4.5. Plano do próximo mês ============ */}
       {!hasNextPlan ? (
-        <div className="rounded-2xl border border-border/50 bg-card/60 ring-1 ring-border/40 p-4">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-muted/40 text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-foreground">
-                Já pensou no próximo mês?
-              </div>
-              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
-                Configure <span className="capitalize">{proxMes}</span> agora e ele entra em vigor automaticamente na virada.
-              </p>
-              <button
-                type="button"
-                onClick={onPlanNext}
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary/15 px-3 py-1.5 text-[12px] font-semibold text-primary transition-all active:scale-[0.97] hover:bg-primary/20 capitalize"
-              >
-                Planejar {proxMes}
-              </button>
-            </div>
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-4 text-center">
+          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+            <CalendarPlus className="h-5 w-5" />
+          </span>
+          <h3 className="mt-3 text-[15px] font-semibold leading-tight text-foreground">
+            Já pensou no próximo mês?
+          </h3>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-muted-foreground">
+            Planeje {proxMes} agora e ele entra sozinho na virada.
+          </p>
+          <div className="mt-3 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={onPlanNext}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/15 px-3 py-1.5 text-[12px] font-semibold text-primary transition-all active:scale-[0.97] hover:bg-primary/20"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> Planejar {proxMes}
+            </button>
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-4">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <CheckCircle2 className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-foreground capitalize">
-                {proxMes} já está planejado
-              </div>
-              <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
-                Meta líquida {fmtBRL(Number(settings.nextPlanGoal ?? 0))} ·{" "}
-                {settings.nextPlanDates?.length ?? 0} dias ·{" "}
-                {Number(settings.nextPlanAvgKm ?? 0)} km/dia
-              </p>
-              <p className="mt-1 text-[11px] leading-snug text-muted-foreground/80">
-                Entra em vigor automaticamente em 01/{proxMesMM}.
-              </p>
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={onPlanNext}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-card/60 px-3 py-1.5 text-[12px] font-semibold text-foreground transition-all active:scale-[0.97] hover:bg-muted/40"
-                >
-                  <Pencil className="h-3 w-3" /> Editar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onCancelNext()}
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-4 text-center">
+          <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_14px_-6px_currentColor]">
+            <CalendarCheck className="h-5 w-5" />
+          </span>
+          <h3 className="mt-3 text-[15px] font-semibold leading-tight text-foreground">
+            {proxMes.charAt(0).toUpperCase() + proxMes.slice(1)} já está planejado
+          </h3>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-muted-foreground">
+            {fmtBRL(Number(settings.nextPlanGoal ?? 0))} líquido ·{" "}
+            {settings.nextPlanDates?.length ?? 0} dias ·{" "}
+            {Number(settings.nextPlanAvgKm ?? 0)} km/dia
+          </p>
+          <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground/80">
+            Entra em vigor sozinho em 01/{proxMesMM}.
+          </p>
+          <div className="mt-3 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={onPlanNext}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/15 px-3 py-1.5 text-[12px] font-semibold text-primary transition-all active:scale-[0.97] hover:bg-primary/20"
+            >
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </button>
+            <button
+              type="button"
+              onClick={() => onCancelNext()}
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}

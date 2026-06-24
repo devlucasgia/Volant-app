@@ -15,7 +15,7 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-cyan-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
           <Warehouse className="h-4 w-4" />
         </span>
         <div className="min-w-0">
@@ -50,11 +50,11 @@ function HubCard({ to, icon, title, description, delayMs = 0 }: HubCardProps) {
         "group flex w-full cursor-pointer items-center gap-3.5 rounded-2xl border border-border bg-card p-4 text-left",
         "shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]",
         "transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
-        "animate-fade-in active:scale-[0.985] hover:bg-card/95 hover:border-cyan-500/35",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/40",
+        "animate-fade-in active:scale-[0.985] hover:bg-card/95 hover:border-border",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25",
       )}
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
         {icon}
       </span>
       <div className="min-w-0 flex-1">

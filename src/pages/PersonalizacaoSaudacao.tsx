@@ -27,7 +27,7 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-400/10 text-teal-300 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
           <MessageSquare className="h-4 w-4" />
         </span>
         <div className="min-w-0">
