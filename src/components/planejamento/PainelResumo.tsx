@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import {
@@ -9,10 +9,17 @@ import {
   Target,
   Pencil,
   RotateCcw,
+  CalendarDays,
+  CheckCircle2,
+  X,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
 import { useData } from "@/context/DataContext";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { computePlanningInsights } from "@/lib/planningInsights";
 import { cn } from "@/lib/utils";
 
@@ -31,13 +38,76 @@ const fmtKm = (v: number) =>
 interface Props {
   onAdjust: () => void;
   onRedo: () => void;
+  onPlanNext: () => void;
+  onCancelNext: () => void | Promise<void>;
+  onReplicate: () => void;
 }
 
-export function PainelResumo({ onAdjust, onRedo }: Props) {
+export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onReplicate }: Props) {
   const navigate = useNavigate();
   const s = usePlanningSnapshot();
-  const { entries } = useData();
+  const { entries, settings, updateSettings, refreshSettings } = useData();
+  const { user } = useAuth();
   const [viewLiquida, setViewLiquida] = useState(false);
+
+  // ── Derivações de "plano futuro" / "mês virado" ──────────────────────────
+  const now = useMemo(() => new Date(), []);
+  const inicioDoMes = useMemo(() => startOfMonth(now), [now]);
+  const proxMesData = useMemo(() => new Date(now.getFullYear(), now.getMonth() + 1, 1), [now]);
+  const mesAnteriorData = useMemo(() => new Date(now.getFullYear(), now.getMonth() - 1, 1), [now]);
+  const proxMes = proxMesData.toLocaleDateString("pt-BR", { month: "long" });
+  const mesAtual = now.toLocaleDateString("pt-BR", { month: "long" });
+  const mesAnterior = mesAnteriorData.toLocaleDateString("pt-BR", { month: "long" });
+  const proxMesMM = String(proxMesData.getMonth() + 1).padStart(2, "0");
+
+  const hasNextPlan = !!settings.nextPlanDates && settings.nextPlanDates.length > 0;
+
+  // Plano "vencido": todas as datas selecionadas estão estritamente antes do mês atual.
+  const planExpired = useMemo(() => {
+    const dates = settings.planningSelectedDates;
+    if (!dates || dates.length === 0) return false;
+    const inicioIso = `${inicioDoMes.getFullYear()}-${String(inicioDoMes.getMonth() + 1).padStart(2, "0")}-${String(inicioDoMes.getDate()).padStart(2, "0")}`;
+    return dates.every((d) => d < inicioIso);
+  }, [settings.planningSelectedDates, inicioDoMes]);
+
+  // Banner de ativação: mostra só quando next_plan_activated_at é do mês atual.
+  const showActivatedBanner = useMemo(() => {
+    const at = settings.nextPlanActivatedAt ? new Date(settings.nextPlanActivatedAt) : null;
+    if (!at) return false;
+    return at.getFullYear() === now.getFullYear() && at.getMonth() === now.getMonth();
+  }, [settings.nextPlanActivatedAt, now]);
+
+  // Guarda de ativação on-demand (plano vencido + tem next): cobre a janela
+  // entre meia-noite local e o cron das 03:00 UTC. Uma única invocação por sessão.
+  const activateAttemptedRef = useRef(false);
+  const [activating, setActivating] = useState(false);
+  useEffect(() => {
+    if (!planExpired || !hasNextPlan) return;
+    if (activateAttemptedRef.current) return;
+    if (!user) return;
+    activateAttemptedRef.current = true;
+    let cancelled = false;
+    (async () => {
+      setActivating(true);
+      try {
+        await supabase.functions.invoke("activate-next-plans", {
+          body: { user_id: user.id },
+        });
+        await refreshSettings();
+      } catch (err) {
+        console.warn("[activate-next-plans] invoke failed", err);
+      } finally {
+        if (!cancelled) setActivating(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [planExpired, hasNextPlan, user, refreshSettings]);
+
+  const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
+  const daysWorkedThisMonth = realData.daysWorkedThisMonth;
+
 
   const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
   const daysWorkedThisMonth = realData.daysWorkedThisMonth;
