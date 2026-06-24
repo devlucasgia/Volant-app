@@ -109,9 +109,6 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
   const daysWorkedThisMonth = realData.daysWorkedThisMonth;
 
 
-  const realData = useMemo(() => getCurrentMonthRealData(entries), [entries]);
-  const daysWorkedThisMonth = realData.daysWorkedThisMonth;
-
   // Dias trabalhados apenas após a criação do plano atual (usado em timeline e insights)
   const planStartDate = s.originalCreatedAt
     ? new Date(s.originalCreatedAt)
@@ -141,7 +138,6 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
     .toUpperCase();
 
   // Detectar se o plano foi refeito (originalCreatedAt > início do mês atual)
-  const inicioDoMes = startOfMonth(new Date());
   const foiRefeito = s.originalCreatedAt
     ? new Date(s.originalCreatedAt) > inicioDoMes
     : false;
