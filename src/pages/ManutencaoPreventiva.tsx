@@ -185,7 +185,7 @@ function KmAdjustmentBlock({
   return (
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start gap-3">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
           <Gauge className="h-4 w-4" />
         </span>
         <div className="min-w-0 flex-1">

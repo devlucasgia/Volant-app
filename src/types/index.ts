@@ -163,6 +163,8 @@ export interface Settings {
   nextPlanCreatedAt?: string | null;
   /** Marcado pelo edge function quando o slot futuro entra em vigor — usado para mostrar o banner "entrou em vigor". */
   nextPlanActivatedAt?: string | null;
+  /** Início da semana usado no calendário do Planejamento (0 = domingo, 1 = segunda). */
+  weekStartsOn?: 0 | 1;
 }
 
 export interface CustomCategory {

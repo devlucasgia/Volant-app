@@ -31,15 +31,15 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
 }
 
 function HubCard({
-  to, icon, title, subtitle, onClick,
-}: { to: string; icon: React.ReactNode; title: string; subtitle: string; onClick: () => void }) {
+  to, icon, title, subtitle, onClick, iconTone,
+}: { to: string; icon: React.ReactNode; title: string; subtitle: string; onClick: () => void; iconTone?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-primary/35 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+      className="group flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-card/95 hover:border-border active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/25"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor] ${iconTone ?? "bg-muted/50 text-foreground/70"}`}>
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -66,6 +66,7 @@ export default function Categorias() {
           title="Ganhos"
           subtitle="Gerencie os apps e fontes de ganho."
           onClick={() => navigate("/ajustes/categorias/ganhos")}
+          iconTone="bg-info/10 text-info"
         />
         <HubCard
           to="/ajustes/categorias/gastos"
@@ -73,6 +74,7 @@ export default function Categorias() {
           title="Gastos"
           subtitle="Gerencie suas categorias de despesas."
           onClick={() => navigate("/ajustes/categorias/gastos")}
+          iconTone="bg-destructive/10 text-destructive"
         />
         <p className="pt-2 text-center text-[10.5px] text-muted-foreground/60">
           Toque em um item para abrir.
