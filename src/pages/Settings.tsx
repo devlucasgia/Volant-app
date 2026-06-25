@@ -20,7 +20,7 @@ import { totalKmAllTime, deriveGoals } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
-  CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
+  CheckCircle2, Wrench, Target, Palette, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
   Calendar as CalendarIcon,
