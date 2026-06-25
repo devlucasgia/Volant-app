@@ -480,59 +480,9 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
         </div>
       </div>
 
-      {/* ============ 4.5. Plano do próximo mês (linha compacta) ============ */}
-      {!hasNextPlan ? (
-        <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-3 py-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
-            <CalendarPlus className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold leading-tight text-foreground">
-              Planejar próximo mês
-            </div>
-            <div className="truncate text-[11.5px] leading-snug text-muted-foreground">
-              Planeje {proxMes} agora e ele entra sozinho na virada.
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onPlanNext}
-            className="inline-flex h-8 shrink-0 items-center rounded-lg border border-primary/30 bg-primary/15 px-3 text-xs font-semibold text-primary transition-all active:scale-[0.97] hover:bg-primary/20"
-          >
-            Planejar
-          </button>
-        </div>
-      ) : (
-        <div className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card/60 px-3 py-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15 shadow-[0_0_12px_-6px_currentColor]">
-            <CalendarCheck className="h-4 w-4" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="truncate text-[13px] font-semibold leading-tight text-foreground">
-              {proxMes.charAt(0).toUpperCase() + proxMes.slice(1)} já está planejado
-            </div>
-            <div className="truncate text-[11.5px] leading-snug text-muted-foreground">
-              {fmtBRL(Number(settings.nextPlanGoal ?? 0))} líquido · entra 01/{proxMesMM}
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onPlanNext}
-            aria-label="Editar plano do próximo mês"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10"
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onCancelNext()}
-            aria-label="Cancelar plano do próximo mês"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      )}
+      {/* (Card do próximo mês movido para o fim do painel, após a nota de rodapé.) */}
+
+
 
 
       {/* ============ 5. Meta do Mês · Composição ============ */}
@@ -711,6 +661,87 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           <span className="font-semibold text-foreground/70">Refazer</span>{" "}
           começa um plano novo e substitui o atual.
         </p>
+      </div>
+
+      {/* ============ 8. Próximo mês — bloco dedicado, sempre por último ============ */}
+      <div className="border-t border-border/30 mt-6 pt-5">
+        <div className="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          <CalendarDays className="h-3 w-3" /> Próximo mês
+        </div>
+
+        {!hasNextPlan ? (
+          <div className="rounded-2xl border border-border/50 bg-card/60 p-4 text-center ring-1 ring-border/50">
+            <span className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary/12 text-primary ring-1 ring-inset ring-current/15">
+              <CalendarPlus className="h-4 w-4" />
+            </span>
+            <div className="text-[14px] font-semibold text-foreground">
+              Já pensou no próximo mês?
+            </div>
+            <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+              Planeje {proxMes} agora e ele entra em vigor sozinho na virada.
+            </p>
+            <button
+              type="button"
+              onClick={onPlanNext}
+              className="mt-3 inline-flex items-center justify-center rounded-xl border border-primary/30 bg-primary/15 px-5 py-2 text-[13px] font-semibold text-primary transition-all active:scale-[0.97] hover:bg-primary/20"
+            >
+              Planejar {proxMes}
+            </button>
+          </div>
+        ) : (
+          (() => {
+            const npDates = settings.nextPlanDates ?? [];
+            const npAvgKm = Number(settings.nextPlanAvgKm ?? 0);
+            const npGoal = Number(settings.nextPlanGoal ?? 0);
+            const nextKmTotal = npAvgKm * npDates.length;
+            const nextRpk =
+              nextKmTotal > 0 ? (npGoal + s.consideredCosts) / nextKmTotal : 0;
+            const capProxMes = proxMes.charAt(0).toUpperCase() + proxMes.slice(1);
+            return (
+              <div className="rounded-2xl border border-border/50 bg-card/60 p-4 ring-1 ring-border/50">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary">
+                    <CalendarCheck className="h-4 w-4" />
+                  </span>
+                  <div className="flex-1 text-[14px] font-semibold leading-tight text-foreground">
+                    {capProxMes} já está planejado
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onPlanNext}
+                    aria-label="Editar plano do próximo mês"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-primary transition-colors hover:bg-primary/10"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onCancelNext()}
+                    aria-label="Cancelar plano do próximo mês"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <PlanoLine label="Meta líquida" value={fmtBRL(npGoal)} />
+                <PlanoLine label="Dias" value={`${npDates.length}`} />
+                <PlanoLine
+                  label="KM estimado"
+                  value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
+                />
+                <PlanoLine
+                  label="R$/km alvo"
+                  value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
+                />
+
+                <div className="mt-2 text-center text-[11px] leading-snug text-muted-foreground/70">
+                  Entra em vigor automaticamente em 01/{proxMesMM}.
+                </div>
+              </div>
+            );
+          })()
+        )}
       </div>
     </div>
   );

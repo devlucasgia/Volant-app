@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { datesOfMonth, startOfDay, toIsoDate } from "@/lib/planejamento";
+import { useData } from "@/context/DataContext";
 
 interface Props {
   selected: string[];
@@ -8,13 +9,24 @@ interface Props {
   reference?: Date;
 }
 
-const DOW = ["D", "S", "T", "Q", "Q", "S", "S"];
+const DOW_BASE = ["D", "S", "T", "Q", "Q", "S", "S"]; // index = Date.getDay()
 
 export function CalendarGrid({ selected, onToggle, reference = new Date() }: Props) {
+  // Reactive read — updateSettings é otimista, então mudar o toggle re-renderiza
+  // a grade automaticamente sem flags manuais.
+  const weekStartsOn = (useData().settings.weekStartsOn ?? 0) as 0 | 1;
+
   const today = startOfDay(reference);
   const selSet = useMemo(() => new Set(selected), [selected]);
   const days = datesOfMonth(reference);
-  const firstDow = days[0].getDay(); // 0..6
+
+  // Apenas apresentação: rotaciona rótulos e ajusta o offset da 1ª linha.
+  // As datas selecionadas e os ISOs por célula NÃO são alterados.
+  const DOW = useMemo(
+    () => (weekStartsOn === 1 ? [...DOW_BASE.slice(1), DOW_BASE[0]] : DOW_BASE),
+    [weekStartsOn],
+  );
+  const firstDow = (days[0].getDay() - weekStartsOn + 7) % 7;
   const padding = Array.from({ length: firstDow });
 
   return (

@@ -20,13 +20,15 @@ import { totalKmAllTime, deriveGoals } from "@/lib/stats";
 import { num } from "@/lib/format";
 import {
   Moon, Sun, AlertTriangle, LogOut, User as UserIcon, Car, Plus, Pencil, Trash2,
-  CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
+  CheckCircle2, Wrench, Target, Palette, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
+  Calendar as CalendarIcon,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
-  Brain, Warehouse, Paintbrush,
+  Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
 } from "lucide-react";
+import { Segmented } from "@/components/Segmented";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
@@ -812,16 +814,7 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Replay onboarding tour */}
-              <div className="pt-1">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
-                >
-                  <Sparkles className="mr-2 h-4 w-4 text-primary" /> Refazer tour de boas-vindas
-                </Button>
-              </div>
+              {/* Tour replay moved to "Configurações" section. */}
 
               {/* Sign out */}
               <div className="pt-1">
@@ -871,12 +864,9 @@ export default function SettingsPage() {
                   </div>
                 );
               })()}
-            </SettingsCard>
 
-            <SettingsCard value="account" icon={<Database className="h-4 w-4" />} title="Dados">
-
-
-              <div className="rounded-xl border border-border bg-muted/30 p-3.5">
+              {/* Zona de perigo — apagar dados (movida de "Dados") */}
+              <div className="mt-3 rounded-xl border border-border bg-muted/30 p-3.5">
                 <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
                   <AlertTriangle className="h-3.5 w-3.5" /> Zona de perigo
                 </div>
@@ -895,22 +885,66 @@ export default function SettingsPage() {
           </Accordion>
         </SectionGroup>
 
-        {/* ============== EXPERIÊNCIA ============== */}
-        <SectionGroup title="Experiência">
-          <PersonalizacaoRow />
-        </SectionGroup>
-
-
-        <SectionGroup title="Veículo">
-          <CentralVeiculosRow />
-        </SectionGroup>
-
-
         {/* ============== FINANCEIRO ============== */}
         <SectionGroup title="Financeiro">
           <CategoriasRow />
           <PlanejamentoInteligenteRow />
         </SectionGroup>
+
+        {/* ============== VEÍCULOS ============== */}
+        <SectionGroup title="Veículos">
+          <CentralVeiculosRow />
+        </SectionGroup>
+
+        {/* ============== PERSONALIZAÇÃO ============== */}
+        <SectionGroup title="Personalização">
+          <PersonalizacaoRow />
+        </SectionGroup>
+
+        {/* ============== CONFIGURAÇÕES ============== */}
+        <SectionGroup title="Configurações">
+          <Accordion type="multiple" className="space-y-2.5">
+            <SettingsCard
+              value="config"
+              icon={<SettingsIcon className="h-4 w-4" />}
+              title="Configurações"
+            >
+              <div className="space-y-2">
+                <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/50 text-foreground/70 ring-1 ring-inset ring-current/15">
+                    <CalendarIcon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold">Início da semana</div>
+                    <p className="mb-2 text-[11px] text-muted-foreground">
+                      Define o primeiro dia da grade do calendário do Planejamento.
+                    </p>
+                    <Segmented
+                      size="sm"
+                      options={[
+                        { key: "0", label: "Domingo" },
+                        { key: "1", label: "Segunda" },
+                      ]}
+                      value={String((settings.weekStartsOn ?? 0) as 0 | 1) as "0" | "1"}
+                      onChange={(v) =>
+                        void autoSave({ weekStartsOn: (Number(v) as 0 | 1) })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
+                >
+                  <Sparkles className="h-4 w-4 text-primary" /> Refazer tour de boas-vindas
+                </Button>
+              </div>
+            </SettingsCard>
+          </Accordion>
+        </SectionGroup>
+
 
         {/* ============== FEEDBACK ============== */}
         <SectionGroup title="Feedback">

@@ -597,6 +597,7 @@ export type Database = {
           theme: string
           updated_at: string
           user_id: string
+          week_starts_on: number
           working_days_per_month: number | null
         }
         Insert: {
@@ -627,6 +628,7 @@ export type Database = {
           theme?: string
           updated_at?: string
           user_id: string
+          week_starts_on?: number
           working_days_per_month?: number | null
         }
         Update: {
@@ -657,6 +659,7 @@ export type Database = {
           theme?: string
           updated_at?: string
           user_id?: string
+          week_starts_on?: number
           working_days_per_month?: number | null
         }
         Relationships: []
