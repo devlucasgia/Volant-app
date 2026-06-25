@@ -23,10 +23,12 @@ import {
   CheckCircle2, Wrench, Target, Palette, Database, Tags, Loader2,
   KeyRound, Type, ChevronRight, MessageSquare, Bug, Lightbulb,
   Home as HomeIcon, BarChart3, Receipt, Gauge, Wallet, CalendarDays,
+  Calendar as CalendarIcon,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
-  Brain, Warehouse, Paintbrush,
+  Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
 } from "lucide-react";
+import { Segmented } from "@/components/Segmented";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
 import { UpgradeToYearlyDialog } from "@/components/account/UpgradeToYearlyDialog";
