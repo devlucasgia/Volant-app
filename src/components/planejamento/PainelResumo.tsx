@@ -724,16 +724,18 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
                   </button>
                 </div>
 
-                <PlanoLine label="Meta líquida" value={fmtBRL(npGoal)} />
-                <PlanoLine label="Dias" value={`${npDates.length}`} />
-                <PlanoLine
-                  label="KM estimado"
-                  value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
-                />
-                <PlanoLine
-                  label="R$/km alvo"
-                  value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <NextStat label="Meta" value={fmtBRL(npGoal)} />
+                  <NextStat label="Dias" value={`${npDates.length}`} />
+                  <NextStat
+                    label="KM"
+                    value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
+                  />
+                  <NextStat
+                    label="R$/km"
+                    value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
+                  />
+                </div>
 
                 <div className="mt-2 text-center text-[11px] leading-snug text-muted-foreground/70">
                   Entra em vigor automaticamente em 01/{proxMesMM}.
