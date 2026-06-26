@@ -5,7 +5,12 @@ export type Period = "day" | "week" | "month" | "all" | "custom";
 
 export interface CustomRange { from: Date; to: Date }
 
-export function filterByPeriod(entries: Entry[], period: Period, customRange?: CustomRange): Entry[] {
+export function filterByPeriod(
+  entries: Entry[],
+  period: Period,
+  customRange?: CustomRange,
+  weekStartsOn: 0 | 1 = 1,
+): Entry[] {
   if (period === "all") return entries;
   if (period === "custom" && customRange) {
     const from = +startOfDay(customRange.from);
@@ -17,7 +22,7 @@ export function filterByPeriod(entries: Entry[], period: Period, customRange?: C
   }
   const now = new Date();
   const start =
-    period === "day" ? startOfDay(now) : period === "week" ? startOfWeek(now, { weekStartsOn: 1 }) : startOfMonth(now);
+    period === "day" ? startOfDay(now) : period === "week" ? startOfWeek(now, { weekStartsOn }) : startOfMonth(now);
   return entries.filter((e) => isAfter(new Date(e.date), start) || +new Date(e.date) === +start);
 }
 
@@ -81,6 +86,8 @@ export interface DeriveGoalsOptions {
   dailyOverride?: number | null;
   /** Datas (ISO yyyy-MM-dd) planejadas pelo Planejamento Inteligente — usadas para metas semanais e por período. */
   plannedDates?: string[] | null;
+  /** Início da semana (0=Domingo, 1=Segunda). Default 1. */
+  weekStartsOn?: 0 | 1;
 }
 
 export function deriveGoals(
@@ -170,7 +177,8 @@ export function goalForPeriod(
   if (period === "week") {
     if (planDaily) {
       const now = new Date();
-      const ws = startOfWeek(now, { weekStartsOn: 1 });
+      const wso = (opts.weekStartsOn ?? 1) as 0 | 1;
+      const ws = startOfWeek(now, { weekStartsOn: wso });
       const we = new Date(ws); we.setDate(we.getDate() + 6);
       const daysInWeek = countPlannedInRange(ws, we);
       const fallback = Math.min(7, opts.remainingWorkingDays ?? 7);
