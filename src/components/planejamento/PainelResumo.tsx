@@ -772,3 +772,17 @@ function PlanoLine({
     </div>
   );
 }
+
+function NextStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border/40 bg-card/40 px-3 py-2">
+      <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+        {label}
+      </div>
+      <div className="mt-0.5 tabular-nums text-[13px] font-semibold text-foreground/90">
+        {value}
+      </div>
+    </div>
+  );
+}
+
