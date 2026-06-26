@@ -75,7 +75,7 @@ const DEFAULT_SETTINGS: Settings = {
   nextPlanDates: null,
   nextPlanCreatedAt: null,
   nextPlanActivatedAt: null,
-  weekStartsOn: 0,
+  weekStartsOn: 1,
 };
 
 function mapSettingsRow(sRow: any): Settings {
@@ -128,7 +128,7 @@ function mapSettingsRow(sRow: any): Settings {
     nextPlanDates: Array.isArray(npDates) ? (npDates as string[]) : null,
     nextPlanCreatedAt: npCreatedAt ?? null,
     nextPlanActivatedAt: npActivatedAt ?? null,
-    weekStartsOn: (wso === 1 ? 1 : 0) as 0 | 1,
+    weekStartsOn: (wso === 0 ? 0 : 1) as 0 | 1,
   };
 }
 
@@ -382,7 +382,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       next_plan_dates: (next.nextPlanDates ?? null) as any,
       next_plan_created_at: next.nextPlanCreatedAt ?? null,
       next_plan_activated_at: next.nextPlanActivatedAt ?? null,
-      week_starts_on: next.weekStartsOn ?? 0,
+      week_starts_on: next.weekStartsOn ?? 1,
     } as any);
     if (error) {
       // Revert optimistic state on failure so the UI does not lie.
