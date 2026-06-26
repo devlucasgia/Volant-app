@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUI } from "@/context/UIContext";
+import { prefetchRoute, routeForPath } from "@/lib/prefetchRoute";
 
 const navItems = [
   { to: "/app", label: "Início", icon: Home, end: true },
@@ -51,27 +52,34 @@ export function BottomNav() {
       {/* Bottom navigation — 4 items + center slot reserved for the FAB */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur-lg safe-bottom">
         <ul className="mx-auto grid max-w-md grid-cols-5">
-          {navItems.map(({ to, label, icon: Icon, end }, i) => (
-            <li key={to} className={cn(i === 2 && "col-start-4")}>
-              <NavLink
-                to={to}
-                end={end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-all duration-200 active:scale-95",
-                    isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                  )
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    <Icon className={cn("h-5 w-5 transition-transform duration-200 ease-premium", isActive && "scale-110")} />
-                    <span>{label}</span>
-                  </>
-                )}
-              </NavLink>
-            </li>
-          ))}
+          {navItems.map(({ to, label, icon: Icon, end }, i) => {
+            const prefetchKey = routeForPath(to);
+            const onPrefetch = prefetchKey ? () => prefetchRoute(prefetchKey) : undefined;
+            return (
+              <li key={to} className={cn(i === 2 && "col-start-4")}>
+                <NavLink
+                  to={to}
+                  end={end}
+                  onPointerDown={onPrefetch}
+                  onPointerEnter={onPrefetch}
+                  onFocus={onPrefetch}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex flex-col items-center gap-1 py-2.5 text-xs font-medium transition-all duration-200 active:scale-95",
+                      isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon className={cn("h-5 w-5 transition-transform duration-200 ease-premium", isActive && "scale-110")} />
+                      <span>{label}</span>
+                    </>
+                  )}
+                </NavLink>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 

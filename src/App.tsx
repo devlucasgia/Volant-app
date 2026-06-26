@@ -106,6 +106,7 @@ const App = () => (
               <BrowserRouter>
                 <ScrollToTop />
                 <ChunkReloadFlagCleaner />
+                <RoutePrefetcher />
                 <ChunkErrorBoundary>
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>
