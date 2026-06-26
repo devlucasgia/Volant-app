@@ -925,7 +925,7 @@ export default function SettingsPage() {
                         { key: "0", label: "Domingo" },
                         { key: "1", label: "Segunda" },
                       ]}
-                      value={String((settings.weekStartsOn ?? 0) as 0 | 1) as "0" | "1"}
+                      value={String((settings.weekStartsOn ?? 1) as 0 | 1) as "0" | "1"}
                       onChange={(v) =>
                         void autoSave({ weekStartsOn: (Number(v) as 0 | 1) })
                       }

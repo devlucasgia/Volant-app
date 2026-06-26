@@ -112,8 +112,9 @@ export default function Dashboard() {
       return cap(format(now, "EEEE, d 'de' MMMM", { locale: ptBR }));
     }
     if (period === "week") {
-      const s = startOfWeek(now, { weekStartsOn: 1 });
-      const e = endOfWeek(now, { weekStartsOn: 1 });
+      const wso = (settings.weekStartsOn ?? 1) as 0 | 1;
+      const s = startOfWeek(now, { weekStartsOn: wso });
+      const e = endOfWeek(now, { weekStartsOn: wso });
       const sameMonth = s.getMonth() === e.getMonth();
       if (sameMonth) {
         return `${format(s, "d", { locale: ptBR })} a ${format(e, "d 'de' MMMM", { locale: ptBR })}`;
@@ -133,11 +134,11 @@ export default function Dashboard() {
       return `${format(from, "d 'de' MMM", { locale: ptBR })} a ${format(to, "d 'de' MMM", { locale: ptBR })}`;
     }
     return "";
-  }, [period, customRange]);
+  }, [period, customRange, settings.weekStartsOn]);
 
   const filtered = useMemo(
-    () => filterByPeriod(entries, period, customRange ?? undefined),
-    [entries, period, customRange]
+    () => filterByPeriod(entries, period, customRange ?? undefined, (settings.weekStartsOn ?? 1) as 0 | 1),
+    [entries, period, customRange, settings.weekStartsOn]
   );
   const s = useMemo(() => summarize(filtered, isSimplePlatform), [filtered, isSimplePlatform]);
   // Animated hero value — count-up between Líquido/Bruto swaps.
@@ -189,8 +190,9 @@ export default function Dashboard() {
       remainingWorkingDays: plan.isPlanningConfigured ? plan.remainingWorkdaysCount : settings.remainingWorkingDays,
       dailyOverride: dailyForView,
       plannedDates: settings.planningSelectedDates,
+      weekStartsOn: (settings.weekStartsOn ?? 1) as 0 | 1,
     }),
-    [showGrossView, settings.workingDaysPerMonth, settings.remainingWorkingDays, settings.planningSelectedDates, dailyForView, plan.isPlanningConfigured, plan.remainingWorkdaysCount],
+    [showGrossView, settings.workingDaysPerMonth, settings.remainingWorkingDays, settings.planningSelectedDates, settings.weekStartsOn, dailyForView, plan.isPlanningConfigured, plan.remainingWorkdaysCount],
   );
   const periodGoal = useMemo(
     () => goalForPeriod(period, monthlyTargetForView, entries, customRange ?? undefined, journeyDailyOverride, goalOpts),
@@ -310,8 +312,9 @@ export default function Dashboard() {
     if (period === "day") return dailyKm;
     if (period === "week") {
       const now = new Date();
-      const ws = startOfWeek(now, { weekStartsOn: 1 });
-      const we = endOfWeek(now, { weekStartsOn: 1 });
+      const wso = (settings.weekStartsOn ?? 1) as 0 | 1;
+      const ws = startOfWeek(now, { weekStartsOn: wso });
+      const we = endOfWeek(now, { weekStartsOn: wso });
       const n = countInRange(ws, we);
       return dailyKm * (n > 0 ? n : 7);
     }
@@ -322,7 +325,7 @@ export default function Dashboard() {
       return dailyKm * (n > 0 ? n : days);
     }
     return plan.plannedKmTotal;
-  }, [plan.isPlanningConfigured, plan.averageKmPerDay, plan.plannedKmTotal, settings.planningSelectedDates, period, customRange]);
+  }, [plan.isPlanningConfigured, plan.averageKmPerDay, plan.plannedKmTotal, settings.planningSelectedDates, settings.weekStartsOn, period, customRange]);
 
 
   const totalKmDriven = totalKmAllTime(entries);

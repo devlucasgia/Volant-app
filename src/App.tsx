@@ -15,6 +15,7 @@ import { RequireAdmin } from "@/components/RequireAdmin";
 import ScrollToTop from "@/components/ScrollToTop";
 import { RouteFallback } from "@/components/RouteFallback";
 import { ChunkErrorBoundary, clearChunkReloadFlag } from "@/components/ChunkErrorBoundary";
+import { prefetchRoute, routeLoaders } from "@/lib/prefetchRoute";
 
 // Eager: boot crítico (Landing, Auth) e Dashboard (rota mais visitada — evita flash em /app)
 import Landing from "./pages/Landing";
@@ -25,9 +26,9 @@ import Dashboard from "./pages/Dashboard";
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Termos = lazy(() => import("./pages/Termos"));
 const Privacidade = lazy(() => import("./pages/Privacidade"));
-const History = lazy(() => import("./pages/History"));
-const Reports = lazy(() => import("./pages/Reports"));
-const SettingsPage = lazy(() => import("./pages/Settings"));
+const History = lazy(() => routeLoaders.history());
+const Reports = lazy(() => routeLoaders.reports());
+const SettingsPage = lazy(() => routeLoaders.settings());
 const PlanejamentoInteligente = lazy(() => import("./pages/PlanejamentoInteligente"));
 const MetasInteligentes = lazy(() => import("./pages/MetasInteligentes"));
 const KmInteligente = lazy(() => import("./pages/KmInteligente"));
@@ -75,6 +76,24 @@ function ChunkReloadFlagCleaner() {
   return null;
 }
 
+/**
+ * Prefetch das rotas mais usadas do app logo após o boot, em idle.
+ * Garante que ao clicar em Histórico/Relatórios/Mais o chunk já esteja em cache.
+ */
+function RoutePrefetcher() {
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    const run = () => {
+      prefetchRoute("history");
+      prefetchRoute("reports");
+      prefetchRoute("settings");
+    };
+    if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(run);
+    else setTimeout(run, 1500);
+  }, []);
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -87,6 +106,7 @@ const App = () => (
               <BrowserRouter>
                 <ScrollToTop />
                 <ChunkReloadFlagCleaner />
+                <RoutePrefetcher />
                 <ChunkErrorBoundary>
                   <Suspense fallback={<RouteFallback />}>
                     <Routes>

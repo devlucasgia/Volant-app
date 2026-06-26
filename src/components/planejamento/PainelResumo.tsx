@@ -724,16 +724,18 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
                   </button>
                 </div>
 
-                <PlanoLine label="Meta líquida" value={fmtBRL(npGoal)} />
-                <PlanoLine label="Dias" value={`${npDates.length}`} />
-                <PlanoLine
-                  label="KM estimado"
-                  value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
-                />
-                <PlanoLine
-                  label="R$/km alvo"
-                  value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
-                />
+                <div className="grid grid-cols-2 gap-2">
+                  <NextStat label="Meta" value={fmtBRL(npGoal)} />
+                  <NextStat label="Dias" value={`${npDates.length}`} />
+                  <NextStat
+                    label="KM"
+                    value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
+                  />
+                  <NextStat
+                    label="R$/km"
+                    value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
+                  />
+                </div>
 
                 <div className="mt-2 text-center text-[11px] leading-snug text-muted-foreground/70">
                   Entra em vigor automaticamente em 01/{proxMesMM}.
@@ -770,3 +772,17 @@ function PlanoLine({
     </div>
   );
 }
+
+function NextStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border/40 bg-card/40 px-3 py-2">
+      <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+        {label}
+      </div>
+      <div className="mt-0.5 tabular-nums text-[13px] font-semibold text-foreground/90">
+        {value}
+      </div>
+    </div>
+  );
+}
+
