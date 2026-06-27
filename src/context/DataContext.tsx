@@ -355,8 +355,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback(async (patch: Partial<Settings>) => {
     if (!user) return;
-    const prev = settings;
-    const next = { ...settings, ...patch };
+    const prev = settingsRef.current;
+    const next = { ...prev, ...patch };
     setSettings(next);
     const { error } = await supabase.from("user_settings").upsert({
       user_id: user.id, daily_goal: next.dailyGoal,
@@ -391,7 +391,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setSettings(prev);
       throw error;
     }
-  }, [user, settings]);
+  }, [user]);
 
   // ---- Categories
   const expenseOverrides = useMemo(() => {
