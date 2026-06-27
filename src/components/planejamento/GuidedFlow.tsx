@@ -1011,100 +1011,70 @@ function Step6({
         }
       />
 
-      {/* Herói — espelha o PainelResumo */}
-      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.14] via-primary/[0.04] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.6)]">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-44 w-44 rounded-full bg-primary/[0.12] blur-2xl" />
-        <div className="mb-3 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          Objetivos do dia
-        </div>
-        <div className="grid grid-cols-2 divide-x divide-border/40">
-          <div className="pr-4">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
-              Meta
-            </div>
-            <div className="flex items-baseline gap-0.5">
-              <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
-                R$
-              </span>
-              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {metaDiariaExibida != null && metaDiariaExibida > 0
-                  ? metaDiariaExibida.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
-                  : "—"}
-              </span>
-            </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground/60">pra faturar</div>
+      {/* Herói + alerta de viabilidade — lidos como um bloco contíguo */}
+      <div className="space-y-2">
+        {/* Herói — espelha o PainelResumo */}
+        <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-gradient-to-br from-primary/[0.14] via-primary/[0.04] to-transparent p-5 shadow-[0_18px_40px_-20px_hsl(var(--primary)/0.6)]">
+          <div className="pointer-events-none absolute -right-6 -top-6 h-44 w-44 rounded-full bg-primary/[0.12] blur-2xl" />
+          <div className="mb-3 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary/90">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+            Objetivos do dia
           </div>
-          <div className="pl-4">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
-              R$/KM mínimo
+          <div className="grid grid-cols-2 divide-x divide-border/40">
+            <div className="pr-4">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                Meta
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
+                  R$
+                </span>
+                <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
+                  {metaDiariaExibida != null && metaDiariaExibida > 0
+                    ? metaDiariaExibida.toLocaleString("pt-BR", { maximumFractionDigits: 0 })
+                    : "—"}
+                </span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground/60">pra faturar</div>
             </div>
-            <div className="flex items-baseline gap-0.5">
-              <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
-                {rpkExibido != null && rpkExibido > 0
-                  ? rpkExibido.toLocaleString("pt-BR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  : "—"}
-              </span>
-              <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
-                /km
-              </span>
+            <div className="pl-4">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+                R$/KM mínimo
+              </div>
+              <div className="flex items-baseline gap-0.5">
+                <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-3xl font-bold leading-none tabular-nums text-transparent">
+                  {rpkExibido != null && rpkExibido > 0
+                    ? rpkExibido.toLocaleString("pt-BR", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "—"}
+                </span>
+                <span className="mb-0.5 self-end text-base font-semibold text-emerald-200/70">
+                  /km
+                </span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground/60">por corrida</div>
             </div>
-            <div className="mt-0.5 text-[11px] text-muted-foreground/60">por corrida</div>
           </div>
         </div>
+
+        {/* Alerta de viabilidade */}
+        {rpkExibido != null && rpkExibido > 3.5 && (
+          <div
+            className={cn(
+              "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
+              metaImpossivel
+                ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
+                : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
+            )}
+          >
+            {metaImpossivel
+              ? `⚠️ R$ ${rpkExibido.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
+              : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
+          </div>
+        )}
       </div>
-
-      {/* Alerta de viabilidade */}
-      {rpkExibido != null && rpkExibido > 3.5 && (
-        <div
-          className={cn(
-            "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
-            metaImpossivel
-              ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
-              : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
-          )}
-        >
-          {metaImpossivel
-            ? `⚠️ R$ ${rpkExibido.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
-            : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
-        </div>
-      )}
-
-      {/* Já realizado este mês (apenas em Refazer com dados) */}
-      {temDados && (
-        <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-4">
-          <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            Até agora
-          </div>
-          <div className="space-y-1.5 text-[13px]">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Faturamento</span>
-              <span className="font-bold text-[15px] text-primary">
-                {fmtBRL(currentGross)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">KM rodado</span>
-              <span className="font-semibold text-foreground/90">
-                {fmtKm(currentKm)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Dias trabalhados</span>
-              <span className="font-semibold text-foreground/90">{daysWorked}</span>
-            </div>
-            <div className="flex justify-between border-t border-border/40 pt-2 mt-1">
-              <span className="text-muted-foreground">Ainda falta faturar</span>
-              <span className="font-bold text-blue-400">{fmtBRL(faltaFaturar)}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
 
       {/* Seu plano — parâmetros configurados */}
       <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
@@ -1195,7 +1165,40 @@ function Step6({
           </div>
         )}
       </div>
+
+      {/* Já realizado este mês (apenas em Refazer com dados) */}
+      {temDados && (
+        <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-4">
+          <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            Até agora
+          </div>
+          <div className="space-y-1.5 text-[13px]">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Faturamento</span>
+              <span className="font-bold text-[15px] text-primary">
+                {fmtBRL(currentGross)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">KM rodado</span>
+              <span className="font-semibold text-foreground/90">
+                {fmtKm(currentKm)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Dias trabalhados</span>
+              <span className="font-semibold text-foreground/90">{daysWorked}</span>
+            </div>
+            <div className="flex justify-between border-t border-border/40 pt-2 mt-1">
+              <span className="text-muted-foreground">Ainda falta faturar</span>
+              <span className="font-bold text-blue-400">{fmtBRL(faltaFaturar)}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
