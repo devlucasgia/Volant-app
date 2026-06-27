@@ -101,7 +101,7 @@ export default function CustosVeiculo() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 backdrop-blur"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="px-4 py-3">
+        <div className="mx-auto w-full max-w-md px-4 py-3">
           <Button
             onClick={handleSave}
             disabled={!dirty || saving}
