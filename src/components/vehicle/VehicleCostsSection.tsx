@@ -48,7 +48,8 @@ export const EMPTY_VEHICLE_COSTS: VehicleCosts = {
 interface Props {
   value: VehicleCosts;
   onChange: (next: VehicleCosts) => void;
-  tab: "fixos" | "variaveis";
+  /** Quando omitido, renderiza fixos + variáveis (uso no onboarding). */
+  tab?: "fixos" | "variaveis";
 }
 
 /** Premium block card matching Settings > "Destaque do card principal" pattern. */
@@ -89,8 +90,8 @@ export function VehicleCostsSection({ value, onChange, tab }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value.rental_weekly, value.rental_monthly]);
 
-  const showFixos = tab === "fixos";
-  const showVariaveis = tab === "variaveis";
+  const showFixos = !tab || tab === "fixos";
+  const showVariaveis = !tab || tab === "variaveis";
 
   return (
     <div className="space-y-3">
