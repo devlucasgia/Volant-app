@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Wallet } from "lucide-react";
 import { VehicleCostsCard } from "@/components/vehicle/VehicleCostsCard";
 import { Button } from "@/components/ui/button";
+import { useUI } from "@/context/UIContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,8 @@ import {
 export default function CustosVeiculo() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { useHideChrome } = useUI();
+  useHideChrome();
   const state = location.state as
     | { returnTo?: string; planningResume?: unknown }
     | null;
