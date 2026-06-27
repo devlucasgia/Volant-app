@@ -1105,36 +1105,89 @@ function Step6({
         </div>
       )}
 
-      {/* Composição com cores semânticas */}
+      {/* Seu plano — parâmetros configurados */}
+      <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Seu plano
+        </div>
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted-foreground">Dias de trabalho</span>
+          <span className="font-semibold tabular-nums text-foreground/90">
+            {draft.selectedDates.length} {draft.selectedDates.length === 1 ? "dia" : "dias"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted-foreground">KM por dia</span>
+          <span className="font-semibold tabular-nums text-foreground/90">
+            {draft.avgKmPerDay > 0 ? fmtKm(draft.avgKmPerDay) : "—"}
+          </span>
+        </div>
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted-foreground">KM total no mês</span>
+          <span className="font-semibold tabular-nums text-foreground/90">
+            {plan.plannedKmTotal > 0
+              ? fmtKm(plan.plannedKmTotal)
+              : draft.avgKmPerDay > 0 && draft.selectedDates.length > 0
+                ? fmtKm(draft.avgKmPerDay * draft.selectedDates.length)
+                : "—"}
+          </span>
+        </div>
+      </div>
+
+      {/* Composição do plano — parte do líquido e soma custos até o bruto-alvo */}
       <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           Composição do plano
         </div>
-        <div className="flex items-center justify-between text-[13px]">
-          <span className="text-muted-foreground">Faturamento bruto necessário</span>
-          <span className="font-bold tabular-nums text-blue-400">
-            {fmtBRL(plan.faturamentoNecessario)}
-          </span>
-        </div>
-        {fixedTotal > 0 && (
-          <div className="flex items-center justify-between text-[13px]">
-            <span className="text-muted-foreground">Custos do carro na meta</span>
-            <span className="font-semibold tabular-nums text-rose-400">
-              − {fmtBRL(fixedTotal)}
-            </span>
-          </div>
+
+        {draft.goalType === "liquido" ? (
+          <>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-muted-foreground">Seu lucro líquido (o que você quer tirar)</span>
+              <span className="font-semibold tabular-nums text-emerald-400">
+                {fmtBRL(draft.monthlyGoal)}
+              </span>
+            </div>
+            {fixedTotal > 0 && (
+              <div className="flex items-center justify-between text-[13px]">
+                <span className="text-muted-foreground">+ Custos do carro no mês</span>
+                <span className="font-semibold tabular-nums text-foreground/80">
+                  {fmtBRL(fixedTotal)}
+                </span>
+              </div>
+            )}
+            <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-2 text-[13px]">
+              <span className="font-semibold text-foreground/90">= Faturamento bruto necessário</span>
+              <span className="font-bold tabular-nums text-blue-400">
+                {fmtBRL(plan.faturamentoNecessario)}
+              </span>
+            </div>
+            <div className="text-[11px] leading-snug text-muted-foreground/80">
+              É quanto você precisa faturar pra sobrar {fmtBRL(draft.monthlyGoal)} no fim do mês.
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="font-semibold text-foreground/90">Faturamento bruto (sua meta)</span>
+              <span className="font-bold tabular-nums text-blue-400">
+                {fmtBRL(plan.faturamentoNecessario)}
+              </span>
+            </div>
+            {fixedTotal > 0 && (
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-muted-foreground/80">Custos do carro no mês (informativo)</span>
+                <span className="tabular-nums text-muted-foreground/80">
+                  {fmtBRL(fixedTotal)}
+                </span>
+              </div>
+            )}
+          </>
         )}
-        <div className="mt-1 flex items-center justify-between border-t border-border/40 pt-2 text-[13px]">
-          <span className="font-semibold text-foreground/90">
-            {draft.goalType === "liquido" ? "Seu lucro líquido" : "Meta de faturamento"}
-          </span>
-          <span className="font-bold tabular-nums text-emerald-400">
-            {fmtBRL(draft.monthlyGoal)}
-          </span>
-        </div>
+
         {variableTotal > 0 && (
           <div className="mt-0.5 flex items-center justify-between border-t border-border/30 pt-2 text-[12px]">
-            <span className="text-muted-foreground/70">Combustível estimado (referência)</span>
+            <span className="text-muted-foreground/70">Combustível estimado (referência, fora da meta)</span>
             <span className="tabular-nums text-muted-foreground/70">
               {fmtBRL(variableTotal)}
             </span>
