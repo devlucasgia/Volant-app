@@ -3,20 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Segmented } from "@/components/Segmented";
 import { supabase } from "@/integrations/supabase/client";
 import { useData } from "@/context/DataContext";
 import { useAccess } from "@/context/AccessContext";
 import { VehicleCostsSection, EMPTY_VEHICLE_COSTS, type VehicleCosts } from "@/components/vehicle/VehicleCostsSection";
 import type { Car as CarType } from "@/types";
 import { toast } from "sonner";
-import { Car as CarIcon, Plus } from "lucide-react";
+import { Car as CarIcon, Plus, Info } from "lucide-react";
+
+type Tab = "fixos" | "variaveis";
 
 function carLabel(c: CarType) {
   const parts = [c.brand, c.model].filter(Boolean).join(" ");
   return parts || "Carro sem nome";
 }
 
-export function VehicleCostsCard() {
+interface Props {
+  onDirtyChange?: (dirty: boolean) => void;
+  registerSave?: (fn: (() => Promise<boolean>) | null) => void;
+  onSavingChange?: (saving: boolean) => void;
+}
+
+export function VehicleCostsCard({ onDirtyChange, registerSave, onSavingChange }: Props = {}) {
   const { cars, activeCar, refreshCars } = useData();
   const navigate = useNavigate();
   const { requirePremium } = useAccess();
@@ -24,6 +33,7 @@ export function VehicleCostsCard() {
   const [costs, setCosts] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
   const [baseline, setBaseline] = useState<VehicleCosts>(EMPTY_VEHICLE_COSTS);
   const [saving, setSaving] = useState(false);
+  const [tab, setTab] = useState<Tab>("fixos");
 
   // Auto-select active car or the only car available
   useEffect(() => {
@@ -67,21 +77,36 @@ export function VehicleCostsCard() {
     [costs, baseline],
   );
 
-  const save = async () => {
-    if (!selectedId) return;
-    // Custos do veículo é função operacional Premium.
-    if (!requirePremium()) return;
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    onSavingChange?.(saving);
+  }, [saving, onSavingChange]);
+
+  const save = async (): Promise<boolean> => {
+    if (!selectedId) return false;
+    if (!requirePremium()) return false;
     setSaving(true);
     const { error } = await supabase.from("cars").update(costs as any).eq("id", selectedId);
     setSaving(false);
     if (error) {
       toast.error("Não foi possível salvar os custos");
-      return;
+      return false;
     }
     setBaseline(costs);
     await refreshCars();
     toast.success("Custos salvos");
+    return true;
   };
+
+  useEffect(() => {
+    if (!registerSave) return;
+    registerSave(selectedId ? save : null);
+    return () => registerSave(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, costs, registerSave]);
 
   if (cars.length === 0) {
     return (
@@ -128,14 +153,37 @@ export function VehicleCostsCard() {
 
       {selectedId && (
         <>
-          <VehicleCostsSection value={costs} onChange={setCosts} />
-          <Button
-            onClick={save}
-            disabled={!dirty || saving}
-            className="w-full gradient-success text-primary-foreground"
-          >
-            {saving ? "Salvando..." : "Salvar custos"}
-          </Button>
+          <Segmented<Tab>
+            options={[
+              { key: "fixos", label: "Fixos" },
+              { key: "variaveis", label: "Variáveis" },
+            ]}
+            value={tab}
+            onChange={setTab}
+            size="sm"
+            tone="flat"
+          />
+
+          <div className="rounded-xl border border-border/60 bg-muted/50 p-3 flex items-start gap-2.5">
+            <Info className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+            <p className="text-[12px] leading-snug text-muted-foreground">
+              {tab === "fixos" ? (
+                <>
+                  Custos que existem mesmo sem rodar. O{" "}
+                  <span className="font-semibold text-foreground">Planejamento Inteligente</span>{" "}
+                  usa esses valores como base mensal fixa.
+                </>
+              ) : (
+                <>
+                  Custos que variam conforme você roda. O{" "}
+                  <span className="font-semibold text-foreground">Planejamento Inteligente</span>{" "}
+                  usa esses valores para calcular o custo por km e por dia trabalhado.
+                </>
+              )}
+            </p>
+          </div>
+
+          <VehicleCostsSection value={costs} onChange={setCosts} tab={tab} />
         </>
       )}
     </div>
