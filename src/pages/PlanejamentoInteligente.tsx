@@ -88,6 +88,7 @@ export default function PlanejamentoInteligente() {
   const [mode, setMode] = useState<Mode>("panel");
   const [flowConfig, setFlowConfig] = useState<FlowConfig>({ variant: "fresh" });
   const [confirmRedo, setConfirmRedo] = useState(false);
+  const [confirmCancelNext, setConfirmCancelNext] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
 
   // Restaurar contexto vindo da Central de Veículos
