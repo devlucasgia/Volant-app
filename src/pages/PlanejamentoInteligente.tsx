@@ -206,7 +206,7 @@ export default function PlanejamentoInteligente() {
             onAdjust={() => setAdjustOpen(true)}
             onRedo={() => setConfirmRedo(true)}
             onPlanNext={handlePlanNext}
-            onCancelNext={handleCancelNext}
+            onCancelNext={() => setConfirmCancelNext(true)}
             onReplicate={handleReplicate}
           />
 
