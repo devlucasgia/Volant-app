@@ -171,6 +171,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const settingsRef = useRef(settings);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
   const [cars, setCars] = useState<Car[]>([]);
   const [categories, setCategories] = useState<CustomCategory[]>([]);
   const [loading, setLoading] = useState(true);
