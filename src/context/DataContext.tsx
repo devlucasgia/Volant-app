@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, ReactNode, useCallback } from "react";
 import { Entry, Settings, AppName, ExpenseCategory, MaintenanceType, Car, CustomCategory, BUILTIN_EXPENSE_META, BUILTIN_PLATFORM_META, CategoryMeta, PlatformMeta, PlatformType, DashboardWidgets } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -171,6 +171,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const settingsRef = useRef(settings);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
   const [cars, setCars] = useState<Car[]>([]);
   const [categories, setCategories] = useState<CustomCategory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -353,8 +355,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const updateSettings = useCallback(async (patch: Partial<Settings>) => {
     if (!user) return;
-    const prev = settings;
-    const next = { ...settings, ...patch };
+    const prev = settingsRef.current;
+    const next = { ...prev, ...patch };
     setSettings(next);
     const { error } = await supabase.from("user_settings").upsert({
       user_id: user.id, daily_goal: next.dailyGoal,
@@ -389,7 +391,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       setSettings(prev);
       throw error;
     }
-  }, [user, settings]);
+  }, [user]);
 
   // ---- Categories
   const expenseOverrides = useMemo(() => {
