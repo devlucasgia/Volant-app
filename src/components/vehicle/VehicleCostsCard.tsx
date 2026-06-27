@@ -175,9 +175,9 @@ export function VehicleCostsCard({ onDirtyChange, registerSave, onSavingChange }
                 </>
               ) : (
                 <>
-                  Custos que variam conforme você roda. O{" "}
+                  Isso aqui é só uma referência e não entra na meta. Aparece no{" "}
                   <span className="font-semibold text-foreground">Planejamento Inteligente</span>{" "}
-                  usa esses valores para calcular o custo por km e por dia trabalhado.
+                  como informativo.
                 </>
               )}
             </p>
