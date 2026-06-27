@@ -1057,6 +1057,22 @@ function Step6({
         </div>
       </div>
 
+      {/* Alerta de viabilidade */}
+      {rpkExibido != null && rpkExibido > 3.5 && (
+        <div
+          className={cn(
+            "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
+            metaImpossivel
+              ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
+              : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
+          )}
+        >
+          {metaImpossivel
+            ? `⚠️ R$ ${rpkExibido.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
+            : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
+        </div>
+      )}
+
       {/* Já realizado este mês (apenas em Refazer com dados) */}
       {temDados && (
         <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-4">
@@ -1089,21 +1105,6 @@ function Step6({
         </div>
       )}
 
-      {/* Alerta de viabilidade */}
-      {rpkExibido != null && rpkExibido > 3.5 && (
-        <div
-          className={cn(
-            "rounded-xl border px-3.5 py-2.5 text-[12px] leading-snug",
-            metaImpossivel
-              ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
-              : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
-          )}
-        >
-          {metaImpossivel
-            ? `⚠️ R$ ${rpkExibido.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
-            : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
-        </div>
-      )}
 
       {/* Seu plano — parâmetros configurados */}
       <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">

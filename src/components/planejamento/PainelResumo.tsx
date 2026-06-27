@@ -186,7 +186,7 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
 
   const insights = computePlanningInsights({
     rpkAtual,
-    rpkMinimo: s.requiredRpk,
+    rpkMinimo: s.homeSmartRpkGross,
     homeRemainingGross: s.homeRemainingGross,
     homeDailyGross: s.homeDailyGross,
     remainingWorkdaysCount: s.remainingWorkdaysCount,
