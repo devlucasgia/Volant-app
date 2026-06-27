@@ -724,20 +724,25 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <NextStat label="Meta" value={fmtBRL(npGoal)} />
-                  <NextStat label="Dias" value={`${npDates.length}`} />
-                  <NextStat
-                    label="KM"
-                    value={nextKmTotal > 0 ? `${nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 })} km` : "—"}
+                <div className="relative grid grid-cols-2 gap-x-4 gap-y-3.5 px-1">
+                  <div
+                    className="pointer-events-none absolute left-1/2 top-1.5 bottom-1.5 w-px bg-border/40"
+                    aria-hidden
                   />
-                  <NextStat
-                    label="R$/km"
+                  <NextCell label="Meta líquida" value={fmtBRL(npGoal)} />
+                  <NextCell
+                    label="KM estimado"
+                    value={nextKmTotal > 0 ? nextKmTotal.toLocaleString("pt-BR", { maximumFractionDigits: 0 }) : "—"}
+                    unit={nextKmTotal > 0 ? "km" : undefined}
+                  />
+                  <NextCell label="Dias" value={`${npDates.length}`} />
+                  <NextCell
+                    label="R$/km alvo"
                     value={nextRpk > 0 ? fmtBRL2(nextRpk) : "—"}
                   />
                 </div>
 
-                <div className="mt-2 text-center text-[11px] leading-snug text-muted-foreground/70">
+                <div className="mt-3 text-center text-[11px] leading-snug text-muted-foreground/70">
                   Entra em vigor automaticamente em 01/{proxMesMM}.
                 </div>
               </div>
@@ -745,6 +750,22 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           })()
         )}
       </div>
+    </div>
+  );
+}
+
+function NextCell({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  return (
+    <div>
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+        {label}
+      </p>
+      <p className="text-[17px] font-semibold leading-none tabular-nums text-foreground">
+        {value}
+        {unit ? (
+          <span className="ml-1 text-xs font-medium text-muted-foreground">{unit}</span>
+        ) : null}
+      </p>
     </div>
   );
 }
@@ -769,19 +790,6 @@ function PlanoLine({
       >
         {value}
       </span>
-    </div>
-  );
-}
-
-function NextStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-border/40 bg-card/40 px-3 py-2">
-      <div className="text-[9.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-        {label}
-      </div>
-      <div className="mt-0.5 tabular-nums text-[13px] font-semibold text-foreground/90">
-        {value}
-      </div>
     </div>
   );
 }

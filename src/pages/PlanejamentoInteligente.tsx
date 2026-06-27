@@ -88,6 +88,7 @@ export default function PlanejamentoInteligente() {
   const [mode, setMode] = useState<Mode>("panel");
   const [flowConfig, setFlowConfig] = useState<FlowConfig>({ variant: "fresh" });
   const [confirmRedo, setConfirmRedo] = useState(false);
+  const [confirmCancelNext, setConfirmCancelNext] = useState(false);
   const [adjustOpen, setAdjustOpen] = useState(false);
 
   // Restaurar contexto vindo da Central de Veículos
@@ -205,7 +206,7 @@ export default function PlanejamentoInteligente() {
             onAdjust={() => setAdjustOpen(true)}
             onRedo={() => setConfirmRedo(true)}
             onPlanNext={handlePlanNext}
-            onCancelNext={handleCancelNext}
+            onCancelNext={() => setConfirmCancelNext(true)}
             onReplicate={handleReplicate}
           />
 
@@ -250,6 +251,38 @@ export default function PlanejamentoInteligente() {
               }}
             >
               Sim, refazer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={confirmCancelNext} onOpenChange={setConfirmCancelNext}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {(() => {
+                const proxMes = new Date(
+                  new Date().getFullYear(),
+                  new Date().getMonth() + 1,
+                  1,
+                ).toLocaleDateString("pt-BR", { month: "long" });
+                return `Cancelar o plano de ${proxMes.charAt(0).toUpperCase()}${proxMes.slice(1)}?`;
+              })()}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Você vai precisar montar o planejamento de novo do zero se quiser planejar esse mês outra vez.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                setConfirmCancelNext(false);
+                await handleCancelNext();
+              }}
+            >
+              Sim, cancelar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -134,7 +134,7 @@ export function computePlan(params: {
     plannedKmTotal > 0 && faturamentoNecessario > 0
       ? faturamentoNecessario / plannedKmTotal
       : null;
-  const metaDiaria = diasSelecionados > 0 ? monthlyGoal / diasSelecionados : null;
+  const metaDiaria = diasSelecionados > 0 ? faturamentoNecessario / diasSelecionados : null;
   const lucroEstimado = goalType === "bruto" ? monthlyGoal - custosFixos : null;
   return {
     diasSelecionados,
