@@ -1,67 +1,54 @@
-# Sprint K — Plano futuro: cálculo + card + alerta
 
-Três mudanças localizadas, na ordem fonte → visual → UX. Sem tocar em `planningEngine.ts`, na Home, em auth, queries ou cores.
+## Item 1 — Tela de Custos em duas abas
 
-## Bloco 1 — Corrigir meta diária (`src/lib/planejamento.ts`)
+### `src/components/vehicle/VehicleCostsSection.tsx`
+- Adicionar prop `tab: "fixos" | "variaveis"` (controlada pelo pai) e renderizar apenas os blocos da aba ativa:
+  - **Fixos**: Situação do veículo, Óleo, Pneus, Custos fixos.
+  - **Variáveis**: Combustível/Energia, Alimentação.
+- Remover os dois `<h3>` de seção ("Custos" / "Custos variáveis") — abas cumprem o papel.
+- **Fix do aluguel** (estado próprio, sem inferir do valor):
+  - Novo `useState<"mensal" | "semanal">` com inicializador derivado: `value.rental_weekly && value.rental_weekly > 0 ? "semanal" : "mensal"` (default mensal quando ambos vazios).
+  - `useEffect` que re-deriva `rentalPeriod` sempre que o carro/valor carregado muda (dependência no valor de `rental_weekly`/`rental_monthly` vindos via prop `value`) — evita mostrar o período do carro anterior ao trocar de carro.
+  - `Segmented` lê/escreve esse estado. Ao trocar para "mensal" → zera `rental_weekly`; para "semanal" → zera `rental_monthly`.
+  - O campo exibido (Aluguel mensal vs Aluguel semanal) passa a depender apenas de `rentalPeriod` (não mais da condição contraditória atual). Com tudo vazio, toggle e campo ficam coerentes.
 
-Em `computePlan`, trocar a base de `metaDiaria` de líquido para bruto, alinhando com `requiredRpk`:
+### Conversão semanal→mensal (confirmada, não altera)
+Já existe em `src/lib/planejamento.ts` (linhas 28-32): `rental_monthly` tem prioridade; senão `rental_weekly * 4.33`. Mesma fórmula em `src/lib/smartKm.ts`. Mantenho exatamente como está — nenhuma mudança em arquivos de cálculo.
 
-```ts
-// antes
-const metaDiaria = diasSelecionados > 0 ? monthlyGoal / diasSelecionados : null;
-// depois
-const metaDiaria = diasSelecionados > 0 ? faturamentoNecessario / diasSelecionados : null;
-```
+### `src/components/vehicle/VehicleCostsCard.tsx`
+- Adicionar estado `tab` e renderizar `Segmented` (tone="flat", padrão de `OrganizacaoCards`) com Fixos/Variáveis.
+- Logo abaixo, card informativo neutro (`bg-muted/50`, `border-border/60`, `rounded-xl`, ícone `Info` em `text-muted-foreground`) com texto contextual por aba; "Planejamento Inteligente" em `font-semibold text-foreground`.
+- Manter o select de carro vinculado no topo (acima das abas).
+- Remover o botão "Salvar custos" daqui (vai para a página) e expor via props:
+  - `onDirtyChange(dirty: boolean)` — notifica o pai.
+  - Mecanismo para o pai disparar o save (ex.: `registerSave: (fn: () => Promise<void> | null) => void`) e flag de `saving`.
+- Continuar salvando o objeto `costs` inteiro de uma vez.
 
-- Modo bruto: `faturamentoNecessario === monthlyGoal`, nada muda.
-- Modo líquido: meta diária passa a incluir custos fixos diluídos, batendo com o R$/km mínimo.
-- Único consumidor: Step6 do `GuidedFlow.tsx` (~linha 997). Home usa `planningEngine.ts`, intocado.
-- Borda `diasSelecionados === 0` continua retornando `null`.
+### `src/pages/CustosVeiculo.tsx`
+- Armazenar `dirty`, `saving` e função `save` recebidas do `VehicleCostsCard`.
+- Rodapé sticky (`sticky bottom-0 bg-background/90 backdrop-blur` com borda superior e respeito a `safe-area-inset-bottom`) com o botão "Salvar custos" visível em ambas as abas, desabilitado se `!dirty || saving`.
+- Interceptar `handleBack`: se `dirty`, abrir `AlertDialog`:
+  - Título "Sair sem salvar?"
+  - Descrição "Você tem alterações que ainda não foram salvas. Se sair agora, elas serão perdidas."
+  - Cancel "Continuar editando" / Action "Sair sem salvar" → executa `handleBack` original.
+- Sem alterações → voltar direto. Após save bem-sucedido, `baseline` é atualizado (comportamento já existente), `dirty` volta a `false`.
 
-## Bloco 2 — Card do plano futuro repaginado (`PainelResumo.tsx`, estado B)
+## Item 2 — Step 3 enxuto (`src/components/planejamento/GuidedFlow.tsx`)
 
-Substituir o grid 2×2 atual (caixinhas com bg/border) por grid limpo só de texto, com hairline vertical central. Header (CalendarCheck, título, Pencil/X) e linha de ativação ficam iguais.
+No bloco "Com sua rotina planejada" (linhas ~688-748):
+- Remover `<li>` "Faturamento necessário" (706-711).
+- Remover `<li>` "R$/KM mínimo necessário" (712-728).
+- Remover o bloco de alerta inteiro (735-748).
+- Manter "Dias selecionados", "KM planejado no período" e o parágrafo educativo final; ajustar `border-t`/padding do `<p>` para não ficar divisória solta.
+- Nenhuma mudança em `plan` ou cálculos; Step 5 inalterado.
 
-Ordem das células (preenchimento por linha):
+## Não altera
+`planejamento.ts`, `planningEngine.ts`, `smartKm.ts`, schema do banco, `DataContext`, `AuthContext`, hooks DnD, admin, Home, Relatórios.
 
-```text
-Meta líquida    |   KM estimado
-Dias            |   R$/km alvo
-```
-
-Anatomia:
-
-```tsx
-<div className="grid grid-cols-2 gap-x-4 gap-y-3.5 px-1 relative">
-  <div className="absolute left-1/2 top-1.5 bottom-1.5 w-px bg-border/40" aria-hidden />
-  <div>
-    <p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground font-semibold mb-1">Meta líquida</p>
-    <p className="text-[17px] font-semibold tabular-nums text-foreground">{fmtBRL(settings.nextPlanGoal)}</p>
-  </div>
-  {/* KM estimado, Dias, R$/km alvo — mesmo padrão */}
-</div>
-```
-
-- Sem `bg-*`, `border-*` ou `ring-*` nas células.
-- Unidade `km` em `<span className="text-xs font-medium text-muted-foreground">`.
-- Valores: Meta = `fmtBRL(settings.nextPlanGoal)`; KM = `${(avgKm × dates.length).toLocaleString("pt-BR")} km`; Dias = `dates.length`; R$/km = `nextKmTotal > 0 ? fmtBRL2((nextPlanGoal + consideredCosts) / nextKmTotal) : "—"` (reaproveitar o cálculo já existente no card).
-- Bordas: R$/km → "—" quando `nextKmTotal <= 0`.
-
-## Bloco 3 — Confirmação ao cancelar plano futuro
-
-Replicar o padrão do `AlertDialog` de "Refazer" já existente em `PlanejamentoInteligente.tsx`.
-
-- Novo estado `confirmCancelNext`.
-- `onCancelNext` passado ao `PainelResumo` vira `() => setConfirmCancelNext(true)`; o `handleCancelNext` atual (que limpa `nextPlan*` via `updateSettings`) só roda no botão destrutivo do dialog.
-- Texto:
-  - Título: `Cancelar o plano de ${capFirst(proxMes)}?` (mês dinâmico, mesma fonte do nome usada hoje no card/banner).
-  - Descrição: "Você vai precisar montar o planejamento de novo do zero se quiser planejar esse mês outra vez."
-  - Cancel: "Voltar". Action destrutivo: "Sim, cancelar".
-- Fechar por ESC / clicar fora / Voltar não altera nada. Erro de rede no `updateSettings` já é tratado pelo await; só garantir que o dialog feche sem deixar estado pendurado.
-
-## Critérios de aceite
-
-- Step6 modo líquido: META "pra faturar" = `faturamentoNecessario / dias`, coerente com R$/km mínimo. Modo bruto e Home inalterados.
-- Card futuro: 2×2 sem caixinhas, ordem Meta/KM em cima e Dias/R$/km embaixo, hairline central sutil, altura visivelmente menor.
-- Cancelar abre confirmação; "Voltar" preserva, "Sim, cancelar" apaga; nome do mês dinâmico.
-- `tsgo --noEmit` passa.
+## Validação
+- Trocar abas mostra blocos corretos; informativo neutro muda texto.
+- Aluguel: campos vazios + toggle coerentes; troca efetiva; trocar de carro re-deriva o período corretamente; conversão semanal→mensal (`* 4.33`) preservada.
+- Salvar sticky funciona nas duas abas; salva tudo de uma vez.
+- Voltar com `dirty` mostra dialog; sem `dirty` sai direto.
+- Step 3 mostra só Dias + KM planejado + texto educativo; Step 5 segue com R$/km e faturamento.
+- `tsgo --noEmit` limpo.

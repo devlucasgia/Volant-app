@@ -703,49 +703,12 @@ function Step4({
                 {plan.plannedKmTotal > 0 ? fmtKm(plan.plannedKmTotal) : "—"}
               </span>
             </li>
-            <li className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground">Faturamento necessário</span>
-              <span className="font-semibold tabular-nums text-blue-400">
-                {plan.faturamentoNecessario > 0 ? fmtBRL(plan.faturamentoNecessario) : "—"}
-              </span>
-            </li>
-            <li className="mt-1 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                R$/KM mínimo necessário
-              </span>
-              <span
-                className={cn(
-                  "text-[18px] font-bold tabular-nums",
-                  plan.requiredRpk != null && plan.requiredRpk > 5
-                    ? "text-rose-400"
-                    : plan.requiredRpk != null && plan.requiredRpk > 3.5
-                      ? "text-amber-400"
-                      : "text-primary",
-                )}
-              >
-                {plan.requiredRpk != null ? `${fmtRpk(plan.requiredRpk)}/km` : "—"}
-              </span>
-            </li>
           </ul>
-          <p className="mt-2.5 border-t border-border/40 pt-2 text-[11px] leading-snug text-muted-foreground">
+          <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
             Quanto mais km você consegue rodar, menor tende a ser o R$/KM necessário. Quanto menos km, maior precisa ser o rendimento por km.
           </p>
         </div>
 
-        {plan.requiredRpk != null && plan.requiredRpk > 3.5 && (
-          <div
-            className={cn(
-              "rounded-2xl border p-3 text-[12px] leading-snug",
-              plan.requiredRpk > 5
-                ? "border-rose-500/30 bg-rose-500/[0.07] text-rose-300"
-                : "border-amber-500/30 bg-amber-500/[0.07] text-amber-300",
-            )}
-          >
-            {plan.requiredRpk > 5
-              ? `⚠️ R$ ${plan.requiredRpk.toFixed(2)}/km é muito difícil de atingir. Considere aumentar os dias de trabalho ou reduzir a meta para um plano mais realista.`
-              : `💡 R$ ${plan.requiredRpk.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
-          </div>
-        )}
       </div>
     </div>
   );
