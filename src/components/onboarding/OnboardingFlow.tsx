@@ -4,8 +4,8 @@ import confetti from "canvas-confetti";
 import {
   ArrowRight, ArrowLeft, X, Plus, Play, StopCircle, Target,
   Clock, BarChart3, Sliders, GripVertical, CheckCircle2, Sparkles,
-  TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge, ChevronDown,
-  Brain, Route, Wrench,
+  TrendingUp, TrendingDown, Calendar, Wallet, Receipt, Gauge,
+  Brain, Route, Home, History, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -64,7 +64,6 @@ export function OnboardingFlow() {
   // Manual reopen via Settings
   useEffect(() => {
     const handler = () => {
-      // Reopen sem o passo de instalação (já viu / não relevante)
       setSteps(BASE_STEPS);
       setStepIdx(0);
       setOpen(true);
@@ -82,11 +81,9 @@ export function OnboardingFlow() {
         install_prompt_seen: true,
       } as any);
     }
-    // Notify other dialogs (e.g. car onboarding) that the tour is done
     window.dispatchEvent(new CustomEvent("volant:onboarding-finished"));
   };
 
-  /** Marca o passo de instalação como visto (sem fechar o onboarding). */
   const markInstallSeen = async () => {
     if (user) {
       await supabase.from("profiles").upsert({
@@ -143,7 +140,6 @@ export function OnboardingFlow() {
               <ArrowLeft className="h-4 w-4" />
             </button>
 
-            {/* Progress dots — only during tour steps */}
             <div className="flex items-center gap-1.5">
               {steps.map((_, i) => (
                 <span
@@ -198,7 +194,6 @@ export function OnboardingFlow() {
               </AnimatePresence>
             </div>
 
-            {/* Footer CTA — always visible, respects iOS safe area. Suprimido no passo de instalação (tem CTA próprio). */}
             {!isInstallStep && (
               <div
                 className="shrink-0 pt-3"
@@ -302,7 +297,6 @@ function WelcomeStep() {
  *  STEP 2 — Registro rápido
  * ============================================================ */
 function RegistroStep() {
-  // Looped scenario: idle → radial open → drawer with prefilled fields
   const PHASES = ["idle", "radial", "drawer"] as const;
   type Phase = typeof PHASES[number];
   const [phase, setPhase] = useState<Phase>("idle");
@@ -318,20 +312,20 @@ function RegistroStep() {
     <StepShell
       eyebrow="Registro rápido"
       title="Lance um ganho em segundos"
-      description="Toque no + verde, escolha ganho ou gasto e preencha — leva poucos segundos."
+      description="Toque no + verde, escolha ganho ou gasto e preencha. Leva poucos segundos."
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col bg-background">
           {/* Mock home content */}
           <div className="flex-1 space-y-1.5 p-2.5 opacity-90">
             <div className="text-[10px] font-semibold">Olá, Lucas 👋</div>
-            <div className="rounded-lg gradient-success/30 border border-success/30 bg-success/10 p-2">
+            <div className="rounded-lg border border-success/30 bg-success/10 p-2">
               <div className="text-[8px] font-semibold uppercase tracking-wider text-success/80">Lucro líquido</div>
               <div className="text-base font-bold tabular-nums text-success">R$ 142,30</div>
             </div>
             <div className="grid grid-cols-2 gap-1.5">
               <div className="rounded-lg border border-border bg-card p-1.5">
-                <div className="text-[8px] uppercase text-success/80">Bruto</div>
+                <div className="text-[8px] uppercase text-info/80">Bruto</div>
                 <div className="text-[11px] font-bold tabular-nums">R$ 184,50</div>
               </div>
               <div className="rounded-lg border border-border bg-card p-1.5">
@@ -341,16 +335,7 @@ function RegistroStep() {
             </div>
           </div>
 
-          {/* Bottom nav mock — real layout with center FAB */}
-          <div className="relative border-t border-border bg-card/80 px-2 pt-2 pb-1.5">
-            <div className="grid grid-cols-5 items-center text-[8px] text-muted-foreground">
-              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-primary/60" /><span className="text-primary">Início</span></div>
-              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Histórico</span></div>
-              <div aria-hidden />
-              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Relatórios</span></div>
-              <div className="flex flex-col items-center gap-0.5"><div className="h-3 w-3 rounded-sm bg-muted-foreground/30" /><span>Ajustes</span></div>
-            </div>
-          </div>
+          <MockBottomNav activeKey="inicio" />
 
           {/* Backdrop when radial/drawer open */}
           <AnimatePresence>
@@ -362,7 +347,7 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Radial actions — float above FAB */}
+          {/* Radial actions */}
           <AnimatePresence>
             {phase === "radial" && (
               <motion.div
@@ -385,7 +370,7 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Center FAB — anchored to nav center via flex centering for pixel-perfect alignment */}
+          {/* Center FAB */}
           <AnimatePresence>
             {phase !== "drawer" && (
               <motion.div
@@ -414,70 +399,15 @@ function RegistroStep() {
             )}
           </AnimatePresence>
 
-          {/* Drawer mock — mirrors real "Novo registro" form */}
+          {/* Drawer — mirrors real EntryDrawer (Novo ganho) */}
           <AnimatePresence>
             {phase === "drawer" && (
               <motion.div
                 initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                 transition={{ type: "spring", damping: 24, stiffness: 240 }}
-                className="absolute inset-x-0 bottom-0 max-h-[88%] overflow-hidden rounded-t-2xl border-t border-border bg-card p-3 shadow-elevated"
+                className="absolute inset-x-0 bottom-0 max-h-[92%] overflow-hidden rounded-t-2xl border-t border-border bg-card shadow-elevated"
               >
-                <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-muted-foreground/30" />
-                <div className="mb-2 text-center text-[11px] font-semibold">Novo registro</div>
-
-                <div className="space-y-2">
-                  <div>
-                    <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Data do registro</div>
-                    <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px]">
-                      <Calendar className="h-3 w-3 text-muted-foreground" />
-                      15 de maio de 2026
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-0.5 rounded-md border border-border bg-muted/30 p-0.5">
-                    <div className="flex items-center justify-center gap-1 rounded bg-card py-1 text-[10px] font-semibold">
-                      <TrendingUp className="h-2.5 w-2.5 text-success" /> Lucro
-                    </div>
-                    <div className="flex items-center justify-center gap-1 py-1 text-[10px] text-muted-foreground">
-                      <TrendingDown className="h-2.5 w-2.5" /> Gasto
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold">
-                      <span className="text-muted-foreground">Plataforma</span>
-                      <span className="text-primary">+ Nova plataforma</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px]">
-                      <div className="flex items-center gap-1.5">
-                        <div className="grid h-4 w-4 place-items-center rounded-full bg-foreground text-[6px] font-bold text-background">U</div>
-                        Uber
-                      </div>
-                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Horas trabalhadas</div>
-                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1.5 text-[10px] text-muted-foreground/70">Ex: 6.5</div>
-                    </div>
-                    <div>
-                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Valor recebido</div>
-                      <motion.div
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-                        className="rounded-md border border-success/40 bg-success/10 px-2 py-1.5 text-[10px] font-bold tabular-nums text-success"
-                      >
-                        R$ 80,00
-                      </motion.div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <div className="flex-1 rounded-md border border-border py-1.5 text-center text-[10px]">Cancelar</div>
-                    <div className="flex-1 rounded-md gradient-success py-1.5 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
-                  </div>
-                </div>
+                <MockNovoGanhoDrawer />
               </motion.div>
             )}
           </AnimatePresence>
@@ -488,10 +418,10 @@ function RegistroStep() {
 }
 
 /* ============================================================
- *  STEP 3 — Jornada (fictional scenario)
+ *  STEP 3 — Jornada
  * ============================================================ */
 function JornadaStep() {
-  // Looped: idle → goal → running → resting → running → ended (drawer)
+  const reduce = useReducedMotion();
   const PHASES = ["idle", "goal", "running", "resting", "running2", "ended"] as const;
   type Phase = typeof PHASES[number];
   const [phase, setPhase] = useState<Phase>("idle");
@@ -526,7 +456,7 @@ function JornadaStep() {
     const s = String(sec % 60).padStart(2, "0");
     return `${h}:${m}:${s}`;
   };
-  const hoursDecimal = (workSec / 3600).toFixed(2).replace(".", ",");
+  const hoursDecimal = workSec / 3600;
 
   const isRunning = phase === "running" || phase === "running2";
   const isResting = phase === "resting";
@@ -562,22 +492,30 @@ function JornadaStep() {
                 </span>
               </div>
 
-              <div className="mt-2 grid grid-cols-2 gap-1.5">
-                <div className="rounded-md bg-muted/50 px-2 py-1">
+              <div className="mt-2 grid grid-cols-3 gap-1.5">
+                <div className="rounded-md bg-muted/50 px-1.5 py-1 text-center">
                   <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Trabalhado</div>
                   <div className="text-[10px] font-bold tabular-nums">{fmt(workSec)}</div>
                 </div>
-                <div className="rounded-md bg-muted/50 px-2 py-1">
+                <div className="rounded-md bg-muted/50 px-1.5 py-1 text-center">
                   <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Descanso</div>
                   <div className="text-[10px] font-bold tabular-nums">{fmt(restSec)}</div>
+                </div>
+                <div className="rounded-md bg-muted/50 px-1.5 py-1 text-center">
+                  <div className="text-[7px] uppercase tracking-wider text-muted-foreground">KM</div>
+                  <div className="text-[10px] font-bold tabular-nums">12 km</div>
                 </div>
               </div>
 
               <div className="mt-2.5 space-y-1.5">
                 {phase === "idle" && (
-                  <div className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
+                  <motion.div
+                    animate={reduce ? undefined : { scale: [1, 1.04, 1] }}
+                    transition={reduce ? undefined : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                    className="flex h-8 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground shadow-fab"
+                  >
                     <Play className="h-3 w-3" /> Iniciar jornada
-                  </div>
+                  </motion.div>
                 )}
                 {isRunning && (
                   <>
@@ -608,7 +546,7 @@ function JornadaStep() {
             </div>
           </div>
 
-          {/* Goal modal overlay */}
+          {/* Goal modal */}
           <AnimatePresence>
             {phase === "goal" && (
               <motion.div
@@ -628,14 +566,14 @@ function JornadaStep() {
                     R$ 250,00
                   </div>
                   <div className="mt-2 flex h-7 w-full items-center justify-center gap-1.5 rounded-md gradient-success text-[11px] font-semibold text-primary-foreground">
-                    <Play className="h-3 w-3" /> Iniciar
+                    <Play className="h-3 w-3" /> Iniciar jornada
                   </div>
                 </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Earning drawer mirroring the real "Novo registro" form */}
+          {/* Earning drawer with prefilled hours */}
           <AnimatePresence>
             {phase === "ended" && (
               <motion.div
@@ -645,81 +583,9 @@ function JornadaStep() {
                 <motion.div
                   initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                   transition={{ type: "spring", damping: 22, stiffness: 220, delay: 0.2 }}
-                  className="max-h-[92%] w-full overflow-hidden rounded-t-2xl border-t border-border bg-card p-2.5 shadow-elevated"
+                  className="max-h-[92%] w-full overflow-hidden rounded-t-2xl border-t border-border bg-card shadow-elevated"
                 >
-                  <div className="mx-auto mb-1.5 h-1 w-8 rounded-full bg-muted-foreground/30" />
-                  <div className="mb-2 text-center text-[11px] font-semibold">Novo registro</div>
-
-                  <div className="space-y-1.5">
-                    <div>
-                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Data do registro</div>
-                      <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
-                        <Calendar className="h-2.5 w-2.5 text-muted-foreground" />
-                        16 de maio de 2026
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-0.5 rounded-md border border-border bg-muted/30 p-0.5">
-                      <div className="flex items-center justify-center gap-1 rounded bg-card py-0.5 text-[9px] font-semibold">
-                        <TrendingUp className="h-2.5 w-2.5 text-success" /> Lucro
-                      </div>
-                      <div className="flex items-center justify-center gap-1 py-0.5 text-[9px] text-muted-foreground">
-                        <TrendingDown className="h-2.5 w-2.5" /> Gasto
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold">
-                        <span className="text-muted-foreground">Plataforma</span>
-                        <span className="text-primary">+ Nova plataforma</span>
-                      </div>
-                      <div className="flex items-center justify-between rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px]">
-                        <div className="flex items-center gap-1.5">
-                          <div className="grid h-3.5 w-3.5 place-items-center rounded-full bg-foreground text-[5px] font-bold text-background">U</div>
-                          Uber
-                        </div>
-                        <ChevronDown className="h-2.5 w-2.5 text-muted-foreground" />
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="mb-0.5 flex items-center justify-between text-[8px] font-semibold text-muted-foreground">
-                        <span>Quilometragem</span>
-                        <span className="flex gap-0.5 rounded-full bg-muted/40 p-0.5">
-                          <span className="rounded-full bg-card px-1.5 py-0 text-[7px] text-foreground">Total</span>
-                          <span className="px-1.5 py-0 text-[7px]">Ini/Fim</span>
-                        </span>
-                      </div>
-                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Km rodados</div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <div>
-                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Horas trabalhadas</div>
-                        <motion.div
-                          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                          className="rounded-md border-2 border-success bg-success/10 px-2 py-1 text-[10px] font-bold tabular-nums text-success"
-                        >
-                          {hoursDecimal}
-                        </motion.div>
-                      </div>
-                      <div>
-                        <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Valor recebido</div>
-                        <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">R$ 0,00</div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <div className="mb-0.5 text-[8px] font-semibold text-muted-foreground">Quantidade de corridas</div>
-                      <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">Opcional</div>
-                    </div>
-
-                    <div className="flex gap-1.5 pt-1">
-                      <div className="flex-1 rounded-md border border-border py-1 text-center text-[10px]">Cancelar</div>
-                      <div className="flex-1 rounded-md gradient-success py-1 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
-                    </div>
-                  </div>
+                  <MockNovoGanhoDrawer prefillHours={hoursDecimal} />
                 </motion.div>
               </motion.div>
             )}
@@ -741,11 +607,12 @@ function JornadaStep() {
  *  STEP 4 — Histórico & Relatórios
  * ============================================================ */
 function RelatoriosStep() {
+  const reduce = useReducedMotion();
   return (
     <StepShell
       eyebrow="Histórico & Relatórios"
       title="Veja para onde seu dinheiro vai"
-      description="Bruto, gastos, líquido e performance por hora, km, dia e corrida."
+      description="Lucro líquido em destaque, insights inteligentes e sua performance por hora, dia, km e corrida."
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
@@ -762,102 +629,95 @@ function RelatoriosStep() {
             <div className="py-1 text-center text-muted-foreground">Person.</div>
           </div>
 
-          {/* Lucro líquido big card with chart */}
+          {/* Hero: Lucro líquido */}
           <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="mb-1.5 rounded-xl border border-success/40 bg-success/5 p-2"
+            initial={reduce ? {} : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+            className="mb-1.5 rounded-xl border border-success/40 bg-success/5 p-2.5 text-center"
           >
-            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
-              <Wallet className="h-2.5 w-2.5" /> Lucro líquido
+            <div className="text-[7px] font-semibold uppercase tracking-[0.18em] text-success/80">
+              Lucro líquido
             </div>
-            <div className="mt-0.5 text-base font-bold tabular-nums">R$ 1.112,67</div>
-            <svg viewBox="0 0 120 28" className="mt-1 h-6 w-full">
+            <div className="mt-0.5 text-xl font-bold tabular-nums text-success leading-none">
+              R$ 1.112,67
+            </div>
+            <div className="mt-1 flex items-center justify-center gap-1.5 text-[8px] text-muted-foreground">
+              <span><span className="text-info font-semibold">Bruto</span> R$ 1.427,01</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span><span className="text-destructive font-semibold">Gastos</span> R$ 314,34</span>
+            </div>
+          </motion.div>
+
+          {/* Insights inteligentes */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="mb-1.5 flex items-start gap-1.5 rounded-xl border border-border bg-card p-2"
+          >
+            <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Sparkles className="h-2.5 w-2.5" />
+            </span>
+            <div className="min-w-0">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Insights inteligentes
+              </div>
+              <div className="text-[9px] leading-snug text-foreground/90">
+                Quarta foi seu melhor dia: R$ 312,40 líquidos.
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Visão geral — lista */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="mb-1.5 rounded-xl border border-border bg-card"
+          >
+            <div className="border-b border-border/60 px-2 py-1 text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Visão geral
+            </div>
+            <ul className="divide-y divide-border/60 text-[9px]">
+              {[
+                { icon: <Gauge className="h-2.5 w-2.5" />, label: "Média por hora", value: "R$ 59,46" },
+                { icon: <Calendar className="h-2.5 w-2.5" />, label: "Média por dia", value: "R$ 326,13" },
+                { icon: <Route className="h-2.5 w-2.5" />, label: "R$/km", value: "R$ 2,52" },
+                { icon: <Wallet className="h-2.5 w-2.5" />, label: "R$/corrida", value: "R$ 44,59" },
+              ].map((row) => (
+                <li key={row.label} className="flex items-center justify-between px-2 py-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                      {row.icon}
+                    </span>
+                    <span className="text-foreground/90">{row.label}</span>
+                  </div>
+                  <span className="font-bold tabular-nums">{row.value}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+
+          {/* Evolução diária */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+            className="mb-1 rounded-xl border border-border bg-card p-2"
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Evolução diária
+              </div>
+            </div>
+            <div className="mb-1 flex gap-0.5 text-[7px]">
+              <span className="rounded-full bg-success/15 px-1.5 py-0.5 font-semibold text-success">Lucro</span>
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">Gastos</span>
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">KM</span>
+              <span className="rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground">Horas</span>
+            </div>
+            <svg viewBox="0 0 120 32" className="h-8 w-full">
               <motion.path
-                d="M2 24 Q14 22 22 22 T40 16 Q46 6 52 7 Q58 8 64 22 T120 22"
+                d="M2 26 Q14 22 22 22 T40 14 Q46 6 52 8 Q58 10 64 22 T120 18"
                 fill="none" stroke="hsl(var(--success))" strokeWidth="1.8" strokeLinecap="round"
-                initial={{ pathLength: 0 }} animate={{ pathLength: 1 }}
-                transition={{ delay: 0.4, duration: 1.2, ease: "easeOut" }}
+                initial={reduce ? { pathLength: 1 } : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
               />
             </svg>
-          </motion.div>
-
-          {/* Média por hora */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="mb-1.5 rounded-xl border border-success/30 bg-success/5 p-2"
-          >
-            <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
-              <Gauge className="h-2.5 w-2.5" /> Média por hora
-            </div>
-            <div className="mt-0.5 text-sm font-bold tabular-nums">R$ 59,46</div>
-            <div className="text-[8px] text-muted-foreground">com 24,0h trabalhadas</div>
-          </motion.div>
-
-          {/* Bruto / Gastos side by side */}
-          <div className="grid grid-cols-2 gap-1.5">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="rounded-xl border border-info/30 bg-info/5 p-2"
-            >
-              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-info">
-                <Wallet className="h-2.5 w-2.5" /> Bruto
-              </div>
-              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 1.427,01</div>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-              className="rounded-xl border border-destructive/30 bg-destructive/5 p-2"
-            >
-              <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-destructive">
-                <Receipt className="h-2.5 w-2.5" /> Gastos
-              </div>
-              <div className="mt-0.5 text-[11px] font-bold tabular-nums">R$ 314,34</div>
-            </motion.div>
-          </div>
-
-          {/* Dias / Média dia */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
-            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-success/30 bg-card p-2 text-center"
-          >
-            <div>
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">📅 Dias ativos</div>
-              <div className="mt-0.5 text-[10px] font-bold">4 dias</div>
-            </div>
-            <div className="border-l border-border">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-success">Média / dia</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 326,13</div>
-            </div>
-          </motion.div>
-
-          {/* KM total / Média km */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
-            className="mt-1.5 grid grid-cols-2 gap-2 rounded-xl border border-info/30 bg-card p-2 text-center"
-          >
-            <div>
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">KM total</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">690 km</div>
-            </div>
-            <div className="border-l border-border">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-info">Média / km</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 2,52</div>
-            </div>
-          </motion.div>
-
-          {/* Corridas / R$ por corrida */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}
-            className="mt-1.5 mb-1 grid grid-cols-2 gap-2 rounded-xl border border-[hsl(280_70%_60%/0.3)] bg-card p-2 text-center"
-          >
-            <div>
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">🏁 Corridas</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">39</div>
-            </div>
-            <div className="border-l border-border">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-[hsl(280_70%_70%)]">R$ / corrida</div>
-              <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 44,59</div>
-            </div>
           </motion.div>
         </div>
       </PhoneFrame>
@@ -866,15 +726,13 @@ function RelatoriosStep() {
 }
 
 /* ============================================================
- *  STEP 5 — Customização (real)
+ *  STEP 5 — Customização
  * ============================================================ */
 function CustomizacaoStep() {
-  // Real settings: tap the whole card to toggle on/off. No switches.
   const [home, setHome] = useState<Record<string, boolean>>({
     meta: true, performance: true, byApp: true, gastos: false, jornada: true,
   });
 
-  // Animate toggle to suggest tap-to-activate
   useEffect(() => {
     const t1 = setTimeout(() => setHome((h) => ({ ...h, gastos: true })), 900);
     const t2 = setTimeout(() => setHome((h) => ({ ...h, byApp: false })), 1900);
@@ -886,11 +744,11 @@ function CustomizacaoStep() {
     <StepShell
       eyebrow="Personalização"
       title="Monte a tela do seu jeito"
-      description="Em Ajustes, toque no card para ativar ou desativar. Reordene pela alça ou pelas setas."
+      description="Na aba Mais, toque no card para ativar ou desativar. Reordene pela alça ou pelas setas."
     >
       <MiniSettingsCard icon={<Sliders className="h-3.5 w-3.5" />} title="Tela inicial">
         <p className="-mt-1 mb-1.5 text-[10px] leading-snug text-muted-foreground">
-          Toque no card para ativar/desativar. Arraste pela alça ou use as setas para reordenar.
+          Toque no card para ativar ou desativar. Arraste pela alça ou use as setas para reordenar.
         </p>
         <CardToggleRow label="Meta" icon={<Target className="h-3 w-3" />} active={home.meta} />
         <CardToggleRow label="Performance" icon={<Gauge className="h-3 w-3" />} active={home.performance} />
@@ -923,45 +781,41 @@ function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
 }
 
 /* ============================================================
- *  STEP 6 — Planejamento Inteligente (meta + R$/km unificados)
+ *  STEP 6 — Planejamento Inteligente
  * ============================================================ */
 function PlanejamentoStep() {
   const reduce = useReducedMotion();
 
-  const MONTHLY = 6000;
-  const TARGET_EARNED = 2240;
-  const TARGET_RPK = 2.45;
+  const MONTHLY_GROSS = 6000;
+  const MONTHLY_NET = 4720;
+  const FIXED_COSTS = 1280;
+  const EARNED = 2240;
+  const DAILY_TARGET = 224;
+  const MIN_RPK = 2.45;
 
   const [earned, setEarned] = useState(0);
   const [smartValue, setSmartValue] = useState(0);
-  const [showInputs, setShowInputs] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
   useEffect(() => {
     if (reduce) {
-      setEarned(TARGET_EARNED);
-      setSmartValue(TARGET_RPK);
-      setShowInputs(true);
+      setEarned(EARNED);
+      setSmartValue(MIN_RPK);
       setShowResult(true);
       return;
     }
 
-    // 1) Conta a meta
     const start = performance.now();
     const duration = 1200;
     let raf = 0;
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
       const eased = 1 - Math.pow(1 - p, 3);
-      setEarned(Math.round(TARGET_EARNED * eased));
+      setEarned(Math.round(EARNED * eased));
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     const startDelay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 350);
 
-    // 2) Mostra inputs convergindo
-    const t1 = setTimeout(() => setShowInputs(true), 1500);
-
-    // 3) Anima o R$/km final
     const t2 = setTimeout(() => {
       setShowResult(true);
       const s = performance.now();
@@ -970,32 +824,30 @@ function PlanejamentoStep() {
       const tick2 = (t: number) => {
         const p = Math.min(1, (t - s) / dur);
         const eased = 1 - Math.pow(1 - p, 3);
-        setSmartValue(TARGET_RPK * eased);
+        setSmartValue(MIN_RPK * eased);
         if (p < 1) raf2 = requestAnimationFrame(tick2);
       };
       raf2 = requestAnimationFrame(tick2);
-    }, 2400);
+    }, 1700);
 
     return () => {
       clearTimeout(startDelay);
-      clearTimeout(t1);
       clearTimeout(t2);
       cancelAnimationFrame(raf);
     };
   }, [reduce]);
 
-  const pct = Math.min(100, (earned / MONTHLY) * 100);
-  const remaining = Math.max(0, MONTHLY - earned);
+  const pct = Math.min(100, (earned / MONTHLY_GROSS) * 100);
 
   return (
     <StepShell
       eyebrow="Planejamento Inteligente"
       title="Sua meta e o R$/km ideal num só lugar"
-      description="Meta mensal, custos do carro e ritmo do mês: o Volant cruza tudo e te diz quanto vale aceitar a próxima corrida."
+      description="Meta diária e R$/km mínimo, calculados a partir do seu plano mensal e dos custos do carro."
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
-          {/* Header espelhando o painel real */}
+          {/* Header */}
           <div className="mb-1.5 flex items-center gap-1.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Brain className="h-3 w-3" />
@@ -1006,137 +858,123 @@ function PlanejamentoStep() {
             </div>
           </div>
 
-          {/* Meta mensal com progresso animado */}
+          {/* Objetivos do dia */}
           <motion.div
-            initial={reduce ? {} : { y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-            className="relative mb-1.5 overflow-hidden rounded-xl border border-success/40 bg-success/5 p-2"
+            initial={reduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="mb-1.5 rounded-xl border border-border bg-card p-2"
           >
-            <motion.div
-              aria-hidden
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0.0, 0.3, 0.0] }}
-              transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-              className="pointer-events-none absolute -inset-2 rounded-2xl bg-success/15 blur-2xl"
-            />
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-success">
-                  <Target className="h-2.5 w-2.5" /> Meta mensal
-                </div>
-                <div className="text-[8px] tabular-nums text-muted-foreground">
-                  R$ {MONTHLY.toLocaleString("pt-BR")}
-                </div>
-              </div>
-              <div className="mt-1 flex items-baseline gap-1.5">
-                <span className="text-base font-bold tabular-nums text-success leading-none">
-                  R$ {earned.toLocaleString("pt-BR")}
+            <div className="mb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Objetivos do dia
+            </div>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 rounded-lg border border-success/30 bg-success/5 px-1.5 py-1.5">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-success/15 text-success">
+                  <Target className="h-2.5 w-2.5" />
                 </span>
-                <span className="text-[8px] text-muted-foreground">conquistados</span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[7px] uppercase tracking-wider text-success/80">Meta de hoje</div>
+                  <div className="text-[11px] font-bold tabular-nums text-success leading-tight">
+                    R$ {DAILY_TARGET.toLocaleString("pt-BR")} pra faturar
+                  </div>
+                </div>
               </div>
-              <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 1.2, ease: "easeOut" }}
-                  className="h-full rounded-full gradient-success"
-                />
-              </div>
-              <div className="mt-0.5 flex items-center justify-between text-[7px] text-muted-foreground tabular-nums">
-                <span>{pct.toFixed(0)}%</span>
-                <span>Faltam R$ {remaining.toLocaleString("pt-BR")}</span>
+              <div className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-1.5 py-1.5">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+                  <Gauge className="h-2.5 w-2.5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[7px] uppercase tracking-wider text-primary/80">R$/km mínimo pra aceitar corrida</div>
+                  <AnimatePresence>
+                    {showResult && (
+                      <motion.div
+                        initial={reduce ? {} : { opacity: 0 }} animate={{ opacity: 1 }}
+                        className="text-[11px] font-bold tabular-nums text-primary leading-tight"
+                      >
+                        R$ {smartValue.toFixed(2).replace(".", ",")} / km
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           </motion.div>
 
-          {/* Inputs convergindo (custos + ritmo) */}
-          <AnimatePresence>
-            {showInputs && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.35 }}
-                className="space-y-1 overflow-hidden"
-              >
-                <div className="grid grid-cols-2 gap-1">
-                  <motion.div
-                    initial={reduce ? {} : { opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.05 }}
-                    className="rounded-lg border border-border bg-card p-1.5"
-                  >
-                    <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-amber-500">
-                      <Wrench className="h-2 w-2" /> Custos
-                    </div>
-                    <div className="mt-0.5 text-[10px] font-bold tabular-nums">R$ 1.280</div>
-                  </motion.div>
-                  <motion.div
-                    initial={reduce ? {} : { opacity: 0, x: 6 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.15 }}
-                    className="rounded-lg border border-border bg-card p-1.5"
-                  >
-                    <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-primary">
-                      <Route className="h-2 w-2" /> Ritmo
-                    </div>
-                    <div className="mt-0.5 text-[10px] font-bold tabular-nums">62%</div>
-                  </motion.div>
+          {/* Composição da meta */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.4 }}
+            className="mb-1.5 rounded-xl border border-border bg-card p-2"
+          >
+            <div className="mb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              Composição da meta
+            </div>
+            <div className="rounded-lg border border-info/30 bg-info/5 px-1.5 py-1 mb-1">
+              <div className="text-[7px] uppercase tracking-wider text-info/80">Meta bruta</div>
+              <div className="text-[12px] font-bold tabular-nums text-info leading-tight">
+                R$ {MONTHLY_GROSS.toLocaleString("pt-BR")}
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-[8px]">
+              <span className="text-muted-foreground">=</span>
+              <div className="flex-1 rounded-md border border-success/30 bg-success/5 px-1.5 py-1">
+                <div className="text-[6.5px] uppercase tracking-wider text-success/80">Líquida</div>
+                <div className="text-[10px] font-bold tabular-nums text-success leading-tight">
+                  R$ {MONTHLY_NET.toLocaleString("pt-BR")}
                 </div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center justify-center py-0.5"
-                >
-                  <ChevronDown className="h-3 w-3 text-primary animate-pulse" />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* R$/km inteligente */}
-          <AnimatePresence>
-            {showResult && (
-              <motion.div
-                initial={reduce ? {} : { opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="relative overflow-hidden rounded-xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-2 shadow-[0_0_24px_-12px_hsl(var(--primary)/0.6)]"
-              >
-                <motion.div
-                  aria-hidden
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0.0, 0.4, 0.0] }}
-                  transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-                  className="pointer-events-none absolute -inset-2 rounded-2xl bg-primary/15 blur-2xl"
-                />
-                <div className="relative">
-                  <div className="flex items-center gap-1 text-[8px] font-semibold uppercase tracking-wider text-primary">
-                    <Gauge className="h-2.5 w-2.5" /> R$/km inteligente
-                  </div>
-                  <div className="mt-0.5 flex items-baseline gap-1">
-                    <span className="text-[18px] font-bold tabular-nums text-foreground leading-none">
-                      R$ {smartValue.toFixed(2).replace(".", ",")}
-                    </span>
-                    <span className="text-[8px] text-muted-foreground">/ km</span>
-                  </div>
-                  <p className="mt-0.5 text-[8px] leading-snug text-muted-foreground">
-                    Priorize corridas a partir desse valor para fechar a meta.
-                  </p>
+              </div>
+              <span className="text-muted-foreground">+</span>
+              <div className="flex-1 rounded-md border border-border bg-muted/40 px-1.5 py-1">
+                <div className="text-[6.5px] uppercase tracking-wider text-muted-foreground">Custos fixos</div>
+                <div className="text-[10px] font-bold tabular-nums text-foreground leading-tight">
+                  R$ {FIXED_COSTS.toLocaleString("pt-BR")}
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </div>
+            <p className="mt-1.5 text-[7px] leading-snug text-muted-foreground">
+              Combustível e alimentação não entram na meta, são custos variáveis.
+            </p>
+          </motion.div>
+
+          {/* Progresso do mês */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="rounded-xl border border-border bg-card p-2"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Faturado no mês
+              </div>
+              <div className="text-[8px] tabular-nums text-muted-foreground">
+                de R$ {MONTHLY_GROSS.toLocaleString("pt-BR")}
+              </div>
+            </div>
+            <div className="mt-0.5 text-[11px] font-bold tabular-nums">
+              R$ {earned.toLocaleString("pt-BR")}
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="h-full rounded-full gradient-success"
+              />
+            </div>
+            <div className="mt-0.5 text-right text-[7px] text-muted-foreground tabular-nums">
+              {pct.toFixed(0)}%
+            </div>
+          </motion.div>
         </div>
       </PhoneFrame>
 
       <div className="mt-3 space-y-1.5">
-        <HighlightRow delay={0.6} text="Meta semanal e diária calculadas sozinhas a partir do mensal." />
-        <HighlightRow delay={0.75} text="O R$/km ideal se ajusta conforme você roda." />
-        <HighlightRow delay={0.9} text="Ajustável em Ajustes → Planejamento Inteligente." />
+        <HighlightRow delay={0.6} text="Meta diária e R$/km mínimo calculados a partir do seu plano mensal." />
+        <HighlightRow delay={0.75} text="O R$/km mínimo se ajusta conforme você faturar ao longo do mês." />
+        <HighlightRow delay={0.9} text="Ajustável em Mais → Planejamento Inteligente." />
       </div>
     </StepShell>
   );
@@ -1145,7 +983,7 @@ function PlanejamentoStep() {
 
 
 /* ============================================================
- *  STEP 8 — Final
+ *  STEP — Final
  * ============================================================ */
 function FinalStep({ onMount }: { onMount: () => void }) {
   const { user } = useAuth();
@@ -1225,16 +1063,133 @@ function PhoneFrame({ children, compact }: { children: React.ReactNode; compact?
   );
 }
 
-function MockCard({
-  label, value, tone,
-}: { label: string; value: string; tone: "default" | "success" | "destructive" }) {
-  const toneClass =
-    tone === "success" ? "text-success" :
-    tone === "destructive" ? "text-destructive" : "text-foreground";
+/** Mock da BottomNav real: Início · Histórico · (FAB) · Relatórios · Mais (•••). */
+function MockBottomNav({ activeKey = "inicio" }: { activeKey?: "inicio" | "historico" | "relatorios" | "mais" }) {
+  const items = [
+    { key: "inicio", label: "Início", Icon: Home },
+    { key: "historico", label: "Histórico", Icon: History },
+    { key: "relatorios", label: "Relatórios", Icon: BarChart3 },
+    { key: "mais", label: "Mais", Icon: MoreHorizontal },
+  ] as const;
   return (
-    <div className="rounded-lg border border-border bg-card p-2">
-      <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className={cn("mt-0.5 text-sm font-bold tabular-nums", toneClass)}>{value}</div>
+    <div className="relative border-t border-border bg-card/80 px-2 pt-2 pb-1.5">
+      <div className="grid grid-cols-5 items-center text-[8px] text-muted-foreground">
+        {items.slice(0, 2).map(({ key, label, Icon }) => (
+          <div key={key} className={cn(
+            "flex flex-col items-center gap-0.5",
+            activeKey === key && "text-primary"
+          )}>
+            <Icon className="h-3 w-3" />
+            <span>{label}</span>
+          </div>
+        ))}
+        <div aria-hidden />
+        {items.slice(2).map(({ key, label, Icon }) => (
+          <div key={key} className={cn(
+            "flex flex-col items-center gap-0.5",
+            activeKey === key && "text-primary"
+          )}>
+            <Icon className="h-3 w-3" />
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Réplica visual enxuta do EntryDrawer real (Novo ganho).
+ * Sem interação — usado nos passos 2 e 3 do tour.
+ */
+function MockNovoGanhoDrawer({ prefillHours }: { prefillHours?: number }) {
+  const h = prefillHours != null && prefillHours > 0 ? Math.floor(prefillHours) : 0;
+  const m = prefillHours != null && prefillHours > 0
+    ? Math.round((prefillHours - h) * 60)
+    : 0;
+  const prefilled = prefillHours != null && prefillHours > 0;
+
+  return (
+    <div className="flex max-h-full flex-col">
+      <div className="mx-auto mt-1.5 h-1 w-8 shrink-0 rounded-full bg-muted-foreground/30" />
+      <div className="shrink-0 px-2.5 pt-1.5 pb-1 text-center text-[11px] font-semibold">Novo ganho</div>
+
+      <div className="flex-1 space-y-2 overflow-hidden px-2.5 pb-2.5">
+        {/* A jornada — Horas trabalhadas (mock visual da roda) */}
+        <div>
+          <div className="mb-0.5 flex items-center justify-between text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>A jornada · Horas trabalhadas</span>
+          </div>
+          <div className="relative overflow-hidden rounded-md border border-border/60 bg-muted/30">
+            <div className="pointer-events-none absolute left-0 right-0 top-1/2 z-0 h-[20px] -translate-y-1/2 border-y border-border/60 bg-card/70" />
+            <div className="relative z-10 flex items-center justify-center gap-2 py-1.5 text-[12px] font-bold tabular-nums">
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[7px] text-muted-foreground/60">{Math.max(0, h - 1)}h</span>
+                <span className={cn("text-[12px]", prefilled ? "text-success" : "text-foreground")}>{h}h</span>
+                <span className="text-[7px] text-muted-foreground/60">{h + 1}h</span>
+              </div>
+              <span className="text-muted-foreground/60">:</span>
+              <div className="flex flex-col items-center leading-none">
+                <span className="text-[7px] text-muted-foreground/60">{String((m + 59) % 60).padStart(2, "0")}</span>
+                <span className={cn("text-[12px]", prefilled ? "text-success" : "text-foreground")}>{String(m).padStart(2, "0")}</span>
+                <span className="text-[7px] text-muted-foreground/60">{String((m + 1) % 60).padStart(2, "0")}</span>
+              </div>
+            </div>
+          </div>
+          {prefilled && (
+            <div className="mt-0.5 text-[7px] text-success">
+              Preenchido pela jornada
+            </div>
+          )}
+        </div>
+
+        {/* Quilometragem */}
+        <div>
+          <div className="mb-0.5 flex items-center justify-between text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>Quilometragem</span>
+            <span className="flex gap-0.5 rounded-full bg-muted/40 p-0.5 normal-case tracking-normal">
+              <span className="rounded-full bg-card px-1.5 py-0 text-[7px] font-semibold text-foreground">Total</span>
+              <span className="px-1.5 py-0 text-[7px]">Inicial-Final</span>
+            </span>
+          </div>
+          <div className="rounded-md border border-border bg-muted/30 px-2 py-1 text-[9px] text-muted-foreground/60">
+            Km rodados
+          </div>
+        </div>
+
+        {/* Plataformas */}
+        <div>
+          <div className="mb-0.5 text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Em quais apps você rodou hoje?
+          </div>
+          <div className="rounded-md border border-border bg-card p-1.5">
+            <div className="mb-1 flex items-center gap-1.5">
+              <div className="grid h-4 w-4 place-items-center rounded-full bg-foreground text-[6px] font-bold text-background">U</div>
+              <span className="text-[9px] font-semibold">Uber</span>
+            </div>
+            <div className="grid grid-cols-[1fr_56px] gap-1.5">
+              <div>
+                <div className="text-[6.5px] text-muted-foreground">Valor recebido</div>
+                <div className="rounded border border-success/40 bg-success/10 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-success">
+                  R$ 80,00
+                </div>
+              </div>
+              <div>
+                <div className="text-[6.5px] text-muted-foreground">Corridas</div>
+                <div className="rounded border border-border bg-muted/30 px-1.5 py-0.5 text-center text-[10px] font-bold tabular-nums">
+                  8
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-1 text-center text-[8px] font-semibold text-primary">+ Adicionar plataforma</div>
+        </div>
+
+        <div className="flex gap-1.5 pt-0.5">
+          <div className="flex-1 rounded-md border border-border py-1 text-center text-[10px]">Cancelar</div>
+          <div className="flex-1 rounded-md gradient-success py-1 text-center text-[10px] font-semibold text-primary-foreground">Salvar</div>
+        </div>
+      </div>
     </div>
   );
 }
