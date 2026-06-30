@@ -799,58 +799,24 @@ function HighlightRow({ text, delay = 0 }: { text: string; delay?: number }) {
 function PlanejamentoStep() {
   const reduce = useReducedMotion();
 
-  const MONTHLY_GROSS = 6000;
-  const MONTHLY_NET = 4720;
-  const FIXED_COSTS = 1280;
-  const EARNED = 2240;
-  const DAILY_TARGET = 224;
-  const MIN_RPK = 2.45;
+  // Plano de 31 dias — snapshot validado
+  const DIAS_TOTAL = 31;
+  const DIAS_RODADOS = 11;
+  const DIAS_RESTANTES = 20;
+  const META_DIARIA = 650;
+  const RPK_MINIMO = 2.20;
+  const META_LIQUIDA = 14000;
+  const META_BRUTA = 20000;
+  const FIXOS = 6000;
+  const KM_ESTIMADO = 8800;
+  const RPK_ALVO = 2.27;
+  const JA_FIZ = 7000;
+  const KM_RODADO = 2900;
+  const RPK_ATUAL = 2.41;
 
-  const [earned, setEarned] = useState(0);
-  const [smartValue, setSmartValue] = useState(0);
-  const [showResult, setShowResult] = useState(false);
-
-  useEffect(() => {
-    if (reduce) {
-      setEarned(EARNED);
-      setSmartValue(MIN_RPK);
-      setShowResult(true);
-      return;
-    }
-
-    const start = performance.now();
-    const duration = 1200;
-    let raf = 0;
-    const tick = (t: number) => {
-      const p = Math.min(1, (t - start) / duration);
-      const eased = 1 - Math.pow(1 - p, 3);
-      setEarned(Math.round(EARNED * eased));
-      if (p < 1) raf = requestAnimationFrame(tick);
-    };
-    const startDelay = setTimeout(() => { raf = requestAnimationFrame(tick); }, 350);
-
-    const t2 = setTimeout(() => {
-      setShowResult(true);
-      const s = performance.now();
-      const dur = 900;
-      let raf2 = 0;
-      const tick2 = (t: number) => {
-        const p = Math.min(1, (t - s) / dur);
-        const eased = 1 - Math.pow(1 - p, 3);
-        setSmartValue(MIN_RPK * eased);
-        if (p < 1) raf2 = requestAnimationFrame(tick2);
-      };
-      raf2 = requestAnimationFrame(tick2);
-    }, 1700);
-
-    return () => {
-      clearTimeout(startDelay);
-      clearTimeout(t2);
-      cancelAnimationFrame(raf);
-    };
-  }, [reduce]);
-
-  const pct = Math.min(100, (earned / MONTHLY_GROSS) * 100);
+  const progressPct = Math.round((DIAS_RODADOS / DIAS_TOTAL) * 100);
+  const fmtBR = (n: number) => n.toLocaleString("pt-BR");
+  const fmt2 = (n: number) => n.toFixed(2).replace(".", ",");
 
   return (
     <StepShell
@@ -862,53 +828,145 @@ function PlanejamentoStep() {
         <div className="absolute inset-0 flex flex-col overflow-y-auto bg-background p-2.5">
           {/* Header */}
           <div className="mb-1.5 flex items-center gap-1.5">
-            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-success/15 text-success">
               <Brain className="h-3 w-3" />
             </span>
             <div className="min-w-0">
               <div className="text-[10px] font-bold leading-tight">Planejamento Inteligente</div>
-              <div className="text-[7px] text-muted-foreground">maio de 2026</div>
+              <div className="text-[7px] text-muted-foreground">Seus objetivos e acompanhamento do mês</div>
             </div>
           </div>
 
-          {/* Objetivos do dia */}
+          {/* Linha de dias + barra */}
+          <div className="mb-1.5">
+            <div className="flex items-center justify-between text-[8px]">
+              <span className="font-semibold text-foreground">{DIAS_RODADOS} de {DIAS_TOTAL} dias</span>
+              <span className="text-muted-foreground">{DIAS_RESTANTES} dias restantes</span>
+            </div>
+            <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted">
+              <motion.div
+                initial={reduce ? { width: `${progressPct}%` } : { width: 0 }}
+                animate={{ width: `${progressPct}%` }}
+                transition={{ duration: 1.0, ease: "easeOut" }}
+                className="h-full rounded-full gradient-success"
+              />
+            </div>
+          </div>
+
+          {/* OBJETIVOS DO DIA — duas colunas com divisor + números grandes */}
           <motion.div
             initial={reduce ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mb-1.5 rounded-xl border border-border bg-card p-2"
+            className="mb-1.5 rounded-xl border border-success/30 bg-success/5 p-2 shadow-[0_0_0_1px_hsl(var(--success)/0.15)]"
           >
-            <div className="mb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="mb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-success/80">
               Objetivos do dia
             </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 rounded-lg border border-success/30 bg-success/5 px-1.5 py-1.5">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-success/15 text-success">
-                  <Target className="h-2.5 w-2.5" />
+            <div className="grid grid-cols-2 divide-x divide-border/60">
+              <div className="pr-1.5">
+                <div className="text-[7px] uppercase tracking-wider text-muted-foreground">Meta</div>
+                <div className="mt-0.5 leading-none">
+                  <span className="text-[8px] font-semibold text-success">R$ </span>
+                  <span className="text-[16px] font-bold tabular-nums text-success">{fmtBR(META_DIARIA)}</span>
+                </div>
+                <div className="mt-0.5 text-[7px] text-muted-foreground">pra faturar</div>
+              </div>
+              <div className="pl-1.5">
+                <div className="text-[7px] uppercase tracking-wider text-muted-foreground">R$/km mínimo</div>
+                <div className="mt-0.5 leading-none">
+                  <span className="text-[16px] font-bold tabular-nums text-success">{fmt2(RPK_MINIMO)}</span>
+                  <span className="text-[8px] font-semibold text-success"> /km</span>
+                </div>
+                <div className="mt-0.5 text-[7px] text-muted-foreground">por corrida</div>
+              </div>
+            </div>
+            <div className="mt-1.5 border-t border-border/60 pt-1 text-[7px] leading-snug text-muted-foreground">
+              Fixos até você lançar novos registros. Aí recalculam.
+            </div>
+          </motion.div>
+
+          {/* Insight positivo (estático) */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.12, duration: 0.4 }}
+            className="mb-1.5 flex items-start gap-1.5 rounded-xl border border-border bg-card p-2"
+          >
+            <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-success/15 text-[9px] text-success">
+              ⚡
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[7px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Insights inteligentes
+              </div>
+              <p className="mt-0.5 text-[8px] leading-snug text-foreground/85">
+                Seu R$/km está em <span className="font-semibold text-success">2,41</span> — acima do mínimo. Se mantiver esse ritmo nos {DIAS_RESTANTES} dias restantes, você fecha o mês no alvo.
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Plano vs Realizado */}
+          <motion.div
+            initial={reduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.4 }}
+            className="mb-1.5 grid grid-cols-2 gap-1.5"
+          >
+            {/* Plano */}
+            <div className="rounded-xl border border-border bg-card p-1.5">
+              <div className="mb-1 flex items-center justify-between gap-1">
+                <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Plano de junho
+                </div>
+                <span className="rounded-full bg-amber-500/15 px-1 py-[1px] text-[6px] font-bold uppercase tracking-wider text-amber-500">
+                  Refeito
                 </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[7px] uppercase tracking-wider text-success/80">Meta de hoje</div>
-                  <div className="text-[11px] font-bold tabular-nums text-success leading-tight">
-                    R$ {DAILY_TARGET.toLocaleString("pt-BR")} pra faturar
-                  </div>
+              </div>
+              <div className="space-y-0.5 text-[7px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Meta líquida</span>
+                  <span className="font-semibold tabular-nums text-foreground">R$ {fmtBR(META_LIQUIDA)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Dias</span>
+                  <span className="font-semibold tabular-nums text-foreground">{DIAS_TOTAL}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>KM estimado</span>
+                  <span className="font-semibold tabular-nums text-foreground">{fmtBR(KM_ESTIMADO)} km</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>R$/km alvo</span>
+                  <span className="font-semibold tabular-nums text-foreground">R$ {fmt2(RPK_ALVO)}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 px-1.5 py-1.5">
-                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
-                  <Gauge className="h-2.5 w-2.5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="text-[7px] uppercase tracking-wider text-primary/80">R$/km mínimo pra aceitar corrida</div>
-                  <AnimatePresence>
-                    {showResult && (
-                      <motion.div
-                        initial={reduce ? {} : { opacity: 0 }} animate={{ opacity: 1 }}
-                        className="text-[11px] font-bold tabular-nums text-primary leading-tight"
-                      >
-                        R$ {smartValue.toFixed(2).replace(".", ",")} / km
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+            </div>
+
+            {/* Até agora */}
+            <div className="rounded-xl border border-border bg-card p-1.5">
+              <div className="mb-1 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Até agora
+                </div>
+              </div>
+              <div className="space-y-0.5 text-[7px] text-muted-foreground">
+                <div className="flex items-center justify-between">
+                  <span>Já fiz</span>
+                  <span className="font-bold tabular-nums text-success">R$ {fmtBR(JA_FIZ)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Dias rodados</span>
+                  <span className="font-semibold tabular-nums text-foreground">{DIAS_RODADOS}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>KM rodado</span>
+                  <span className="font-semibold tabular-nums text-foreground">{fmtBR(KM_RODADO)} km</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>R$/km atual</span>
+                  <span className="font-bold tabular-nums text-success">R$ {fmt2(RPK_ATUAL)}</span>
                 </div>
               </div>
             </div>
@@ -918,16 +976,16 @@ function PlanejamentoStep() {
           <motion.div
             initial={reduce ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
-            className="mb-1.5 rounded-xl border border-border bg-card p-2"
+            transition={{ delay: 0.3, duration: 0.4 }}
+            className="rounded-xl border border-border bg-card p-2"
           >
             <div className="mb-1.5 text-[7px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              Composição da meta
+              Meta do mês · Composição
             </div>
             <div className="rounded-lg border border-info/30 bg-info/5 px-1.5 py-1 mb-1">
               <div className="text-[7px] uppercase tracking-wider text-info/80">Meta bruta</div>
               <div className="text-[12px] font-bold tabular-nums text-info leading-tight">
-                R$ {MONTHLY_GROSS.toLocaleString("pt-BR")}
+                R$ {fmtBR(META_BRUTA)}
               </div>
             </div>
             <div className="flex items-center gap-1 text-[8px]">
@@ -935,51 +993,20 @@ function PlanejamentoStep() {
               <div className="flex-1 rounded-md border border-success/30 bg-success/5 px-1.5 py-1">
                 <div className="text-[6.5px] uppercase tracking-wider text-success/80">Líquida</div>
                 <div className="text-[10px] font-bold tabular-nums text-success leading-tight">
-                  R$ {MONTHLY_NET.toLocaleString("pt-BR")}
+                  R$ {fmtBR(META_LIQUIDA)}
                 </div>
               </div>
               <span className="text-muted-foreground">+</span>
               <div className="flex-1 rounded-md border border-border bg-muted/40 px-1.5 py-1">
                 <div className="text-[6.5px] uppercase tracking-wider text-muted-foreground">Custos fixos</div>
                 <div className="text-[10px] font-bold tabular-nums text-foreground leading-tight">
-                  R$ {FIXED_COSTS.toLocaleString("pt-BR")}
+                  R$ {fmtBR(FIXOS)}
                 </div>
               </div>
             </div>
             <p className="mt-1.5 text-[7px] leading-snug text-muted-foreground">
               Combustível e alimentação não entram na meta, são custos variáveis.
             </p>
-          </motion.div>
-
-          {/* Progresso do mês */}
-          <motion.div
-            initial={reduce ? {} : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-            className="rounded-xl border border-border bg-card p-2"
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Faturado no mês
-              </div>
-              <div className="text-[8px] tabular-nums text-muted-foreground">
-                de R$ {MONTHLY_GROSS.toLocaleString("pt-BR")}
-              </div>
-            </div>
-            <div className="mt-0.5 text-[11px] font-bold tabular-nums">
-              R$ {earned.toLocaleString("pt-BR")}
-            </div>
-            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${pct}%` }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
-                className="h-full rounded-full gradient-success"
-              />
-            </div>
-            <div className="mt-0.5 text-right text-[7px] text-muted-foreground tabular-nums">
-              {pct.toFixed(0)}%
-            </div>
           </motion.div>
         </div>
       </PhoneFrame>
