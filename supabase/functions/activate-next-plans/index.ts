@@ -9,6 +9,16 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+interface NextCostFields {
+  ownership_status: string | null;
+  financing_monthly: number | null;
+  rental_monthly: number | null;
+  rental_weekly: number | null;
+  ipva_yearly: number | null;
+  insurance_monthly: number | null;
+  other_monthly_costs: number | null;
+}
+
 interface SettingsRow {
   user_id: string;
   next_plan_goal: number | null;
@@ -16,6 +26,9 @@ interface SettingsRow {
   next_plan_avg_km: number | null;
   next_plan_dates: string[] | null;
   next_plan_created_at: string | null;
+  next_plan_fixed_applied: number | null;
+  next_plan_fixed_items: Array<{ label: string; value: number }> | null;
+  next_plan_cost_fields: NextCostFields | null;
 }
 
 function firstDayOfMonth(iso: string): Date {
