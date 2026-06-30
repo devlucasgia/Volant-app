@@ -134,9 +134,7 @@ Deno.serve(async (req) => {
       const daysCount = dates.length;
       const kmPlanned = avgKm > 0 ? Math.round(avgKm * daysCount) : null;
 
-      const { error: updErr } = await admin
-        .from("user_settings")
-        .update({
+      const update: Record<string, unknown> = {
           monthly_goal: goal,
           goal_type: goalType,
           planning_avg_km_per_day: avgKm,
@@ -158,7 +156,30 @@ Deno.serve(async (req) => {
           next_plan_avg_km: null,
           next_plan_dates: null,
           next_plan_created_at: null,
-        })
+          next_plan_fixed_applied: null,
+          next_plan_fixed_items: null,
+          next_plan_cost_fields: null,
+      };
+
+      // Snapshot do custo do plano futuro (sprint Custos): copia para o slot
+      // original e sobrescreve o carro ativo. Compat: planos antigos (snapshot
+      // nulo) ativam como antes, sem sobrescrita — engine cai no fallback ao vivo.
+      if (r.next_plan_fixed_applied != null) {
+        update.planning_original_fixed_applied = r.next_plan_fixed_applied;
+        update.planning_original_fixed_items = r.next_plan_fixed_items;
+        if (r.next_plan_cost_fields) {
+          const { error: carErr } = await admin
+            .from("cars")
+            .update(r.next_plan_cost_fields)
+            .eq("user_id", r.user_id)
+            .eq("is_active", true);
+          if (carErr) console.error("[activate-next-plans] car overwrite failed", r.user_id, carErr);
+        }
+      }
+
+      const { error: updErr } = await admin
+        .from("user_settings")
+        .update(update)
         .eq("user_id", r.user_id);
 
       if (updErr) {
