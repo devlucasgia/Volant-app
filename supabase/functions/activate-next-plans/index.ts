@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
     let query = admin
       .from("user_settings")
       .select(
-        "user_id, next_plan_goal, next_plan_goal_type, next_plan_avg_km, next_plan_dates, next_plan_created_at",
+        "user_id, next_plan_goal, next_plan_goal_type, next_plan_avg_km, next_plan_dates, next_plan_created_at, next_plan_fixed_applied, next_plan_fixed_items, next_plan_cost_fields",
       )
       .not("next_plan_dates", "is", null);
 
