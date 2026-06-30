@@ -69,11 +69,16 @@ const DEFAULT_SETTINGS: Settings = {
   planningOriginalAvgKm: null,
   planningOriginalDates: null,
   planningOriginalCreatedAt: null,
+  planningOriginalFixedApplied: null,
+  planningOriginalFixedItems: null,
   nextPlanGoal: null,
   nextPlanGoalType: null,
   nextPlanAvgKm: null,
   nextPlanDates: null,
   nextPlanCreatedAt: null,
+  nextPlanFixedApplied: null,
+  nextPlanFixedItems: null,
+  nextPlanCostFields: null,
   nextPlanActivatedAt: null,
   weekStartsOn: 1,
 };
@@ -94,12 +99,17 @@ function mapSettingsRow(sRow: any): Settings {
   const poAvgKm = (sRow as any).planning_original_avg_km;
   const poDates = (sRow as any).planning_original_dates;
   const poCreatedAt = (sRow as any).planning_original_created_at;
+  const poFixedApplied = (sRow as any).planning_original_fixed_applied;
+  const poFixedItems = (sRow as any).planning_original_fixed_items;
   const npGoal = (sRow as any).next_plan_goal;
   const npGoalType = (sRow as any).next_plan_goal_type;
   const npAvgKm = (sRow as any).next_plan_avg_km;
   const npDates = (sRow as any).next_plan_dates;
   const npCreatedAt = (sRow as any).next_plan_created_at;
   const npActivatedAt = (sRow as any).next_plan_activated_at;
+  const npFixedApplied = (sRow as any).next_plan_fixed_applied;
+  const npFixedItems = (sRow as any).next_plan_fixed_items;
+  const npCostFields = (sRow as any).next_plan_cost_fields;
   const wso = (sRow as any).week_starts_on;
   return {
     dailyGoal: Number(sRow.daily_goal) || 0,
@@ -122,12 +132,17 @@ function mapSettingsRow(sRow: any): Settings {
     planningOriginalAvgKm: poAvgKm == null ? null : Number(poAvgKm),
     planningOriginalDates: Array.isArray(poDates) ? (poDates as string[]) : null,
     planningOriginalCreatedAt: poCreatedAt ?? null,
+    planningOriginalFixedApplied: poFixedApplied == null ? null : Number(poFixedApplied),
+    planningOriginalFixedItems: Array.isArray(poFixedItems) ? (poFixedItems as any) : null,
     nextPlanGoal: npGoal == null ? null : Number(npGoal),
     nextPlanGoalType: (npGoalType as any) ?? null,
     nextPlanAvgKm: npAvgKm == null ? null : Number(npAvgKm),
     nextPlanDates: Array.isArray(npDates) ? (npDates as string[]) : null,
     nextPlanCreatedAt: npCreatedAt ?? null,
     nextPlanActivatedAt: npActivatedAt ?? null,
+    nextPlanFixedApplied: npFixedApplied == null ? null : Number(npFixedApplied),
+    nextPlanFixedItems: Array.isArray(npFixedItems) ? (npFixedItems as any) : null,
+    nextPlanCostFields: (npCostFields && typeof npCostFields === "object") ? (npCostFields as any) : null,
     weekStartsOn: (wso === 0 ? 0 : 1) as 0 | 1,
   };
 }
@@ -378,12 +393,17 @@ export function DataProvider({ children }: { children: ReactNode }) {
       planning_original_avg_km: next.planningOriginalAvgKm ?? null,
       planning_original_dates: (next.planningOriginalDates ?? null) as any,
       planning_original_created_at: next.planningOriginalCreatedAt ?? null,
+      planning_original_fixed_applied: next.planningOriginalFixedApplied ?? null,
+      planning_original_fixed_items: (next.planningOriginalFixedItems ?? null) as any,
       next_plan_goal: next.nextPlanGoal ?? null,
       next_plan_goal_type: next.nextPlanGoalType ?? null,
       next_plan_avg_km: next.nextPlanAvgKm ?? null,
       next_plan_dates: (next.nextPlanDates ?? null) as any,
       next_plan_created_at: next.nextPlanCreatedAt ?? null,
       next_plan_activated_at: next.nextPlanActivatedAt ?? null,
+      next_plan_fixed_applied: next.nextPlanFixedApplied ?? null,
+      next_plan_fixed_items: (next.nextPlanFixedItems ?? null) as any,
+      next_plan_cost_fields: (next.nextPlanCostFields ?? null) as any,
       week_starts_on: next.weekStartsOn ?? 1,
     } as any);
     if (error) {

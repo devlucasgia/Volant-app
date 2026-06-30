@@ -580,14 +580,19 @@ export type Database = {
           monthly_goal: number
           next_plan_activated_at: string | null
           next_plan_avg_km: number | null
+          next_plan_cost_fields: Json | null
           next_plan_created_at: string | null
           next_plan_dates: Json | null
+          next_plan_fixed_applied: number | null
+          next_plan_fixed_items: Json | null
           next_plan_goal: number | null
           next_plan_goal_type: string | null
           planning_avg_km_per_day: number | null
           planning_original_avg_km: number | null
           planning_original_created_at: string | null
           planning_original_dates: Json | null
+          planning_original_fixed_applied: number | null
+          planning_original_fixed_items: Json | null
           planning_original_goal: number | null
           planning_original_goal_type: string | null
           planning_selected_dates: Json | null
@@ -611,14 +616,19 @@ export type Database = {
           monthly_goal?: number
           next_plan_activated_at?: string | null
           next_plan_avg_km?: number | null
+          next_plan_cost_fields?: Json | null
           next_plan_created_at?: string | null
           next_plan_dates?: Json | null
+          next_plan_fixed_applied?: number | null
+          next_plan_fixed_items?: Json | null
           next_plan_goal?: number | null
           next_plan_goal_type?: string | null
           planning_avg_km_per_day?: number | null
           planning_original_avg_km?: number | null
           planning_original_created_at?: string | null
           planning_original_dates?: Json | null
+          planning_original_fixed_applied?: number | null
+          planning_original_fixed_items?: Json | null
           planning_original_goal?: number | null
           planning_original_goal_type?: string | null
           planning_selected_dates?: Json | null
@@ -642,14 +652,19 @@ export type Database = {
           monthly_goal?: number
           next_plan_activated_at?: string | null
           next_plan_avg_km?: number | null
+          next_plan_cost_fields?: Json | null
           next_plan_created_at?: string | null
           next_plan_dates?: Json | null
+          next_plan_fixed_applied?: number | null
+          next_plan_fixed_items?: Json | null
           next_plan_goal?: number | null
           next_plan_goal_type?: string | null
           planning_avg_km_per_day?: number | null
           planning_original_avg_km?: number | null
           planning_original_created_at?: string | null
           planning_original_dates?: Json | null
+          planning_original_fixed_applied?: number | null
+          planning_original_fixed_items?: Json | null
           planning_original_goal?: number | null
           planning_original_goal_type?: string | null
           planning_selected_dates?: Json | null

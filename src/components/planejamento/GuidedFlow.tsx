@@ -26,12 +26,13 @@ import {
   computeVariableMonthlyCosts,
   computePlan,
   DEFAULT_AVG_KM_PER_DAY,
+  isUsageCostLabel,
   ShortcutKey,
   toIsoDate,
   startOfDay,
 } from "@/lib/planejamento";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
-import type { GoalType } from "@/types";
+import type { Entry, GoalType, NextPlanCostFields } from "@/types";
 import { CalendarGrid } from "./CalendarGrid";
 import { useDraftPersistence } from "@/hooks/useDraftPersistence";
 
@@ -71,6 +72,54 @@ interface Draft {
   monthlyGoal: number;
   selectedDates: string[];
   avgKmPerDay: number;
+  /** Custos fixos editados no fluxo "next" — só preenchido quando isNext. */
+  nextCostFields?: NextPlanCostFields;
+}
+
+/** Dias distintos do mês corrente com pelo menos um ganho lançado (ISO local). */
+function distinctEarningDaysInMonth(entries: Entry[], ref: Date): string[] {
+  const y = ref.getFullYear();
+  const m = ref.getMonth();
+  const set = new Set<string>();
+  for (const e of entries) {
+    if (e.type !== "earning") continue;
+    const d = new Date(e.date);
+    if (d.getFullYear() !== y || d.getMonth() !== m) continue;
+    set.add(toIsoDate(d));
+  }
+  return Array.from(set);
+}
+
+/** Snapshot dos campos brutos de custo fixo do carro ativo. */
+function extractCostFields(car: ReturnType<typeof useData>["cars"][number] | null): NextPlanCostFields {
+  if (!car) {
+    return {
+      ownership_status: null,
+      financing_monthly: null,
+      rental_monthly: null,
+      rental_weekly: null,
+      ipva_yearly: null,
+      insurance_monthly: null,
+      other_monthly_costs: null,
+    };
+  }
+  return {
+    ownership_status: car.ownership_status ?? null,
+    financing_monthly: car.financing_monthly ?? null,
+    rental_monthly: car.rental_monthly ?? null,
+    rental_weekly: car.rental_weekly ?? null,
+    ipva_yearly: car.ipva_yearly ?? null,
+    insurance_monthly: car.insurance_monthly ?? null,
+    other_monthly_costs: car.other_monthly_costs ?? null,
+  };
+}
+
+function costFieldsDiffer(a: NextPlanCostFields, b: NextPlanCostFields): boolean {
+  const keys: (keyof NextPlanCostFields)[] = [
+    "ownership_status", "financing_monthly", "rental_monthly",
+    "rental_weekly", "ipva_yearly", "insurance_monthly", "other_monthly_costs",
+  ];
+  return keys.some((k) => (a[k] ?? null) !== (b[k] ?? null));
 }
 
 const TOTAL_STEPS = 6;
@@ -145,6 +194,9 @@ export function GuidedFlow({
           monthlyGoal: 0,
           selectedDates: [],
           avgKmPerDay: DEFAULT_AVG_KM_PER_DAY,
+          nextCostFields:
+            (settings.nextPlanCostFields as NextPlanCostFields | null) ??
+            extractCostFields(cars.find((c) => c.is_active) || cars[0] || null),
           ...(initialDraft ?? {}),
         }
       : {
@@ -180,14 +232,33 @@ export function GuidedFlow({
     () => (draft.avgKmPerDay > 0 ? draft.avgKmPerDay * draft.selectedDates.length : 0),
     [draft.avgKmPerDay, draft.selectedDates.length],
   );
+  // No fluxo "next" os custos são lidos dos campos editados (carro sintético).
+  const carForCosts = useMemo(() => {
+    if (isNext && activeCar) return { ...activeCar, ...(draft.nextCostFields ?? {}) } as typeof activeCar;
+    return activeCar;
+  }, [isNext, activeCar, draft.nextCostFields]);
   const costs = useMemo(
-    () => computeFixedMonthlyCosts(activeCar, draftPlannedKm),
-    [activeCar, draftPlannedKm],
+    () => computeFixedMonthlyCosts(carForCosts, draftPlannedKm),
+    [carForCosts, draftPlannedKm],
   );
   const variable = useMemo(
     () => computeVariableMonthlyCosts(activeCar, draft.avgKmPerDay, draft.selectedDates.length),
     [activeCar, draft.avgKmPerDay, draft.selectedDates.length],
   );
+
+  // ── Refazer em mês em andamento: rateia custo fixo MENSAL PURO pelos dias do
+  // novo plano em relação ao total de dias de esforço do mês (trabalhados ∪
+  // selecionados). Óleo/pneus NÃO recebem fator (já são rateados por km).
+  const isRefazerEmAndamento =
+    !isNext && !isEdit && settings.planningOriginalCreatedAt != null;
+  const fatorRateio = useMemo(() => {
+    if (!isRefazerEmAndamento) return 1;
+    const trabalhados = distinctEarningDaysInMonth(entries, new Date());
+    const denom = new Set([...trabalhados, ...draft.selectedDates]).size;
+    if (denom <= 0) return 1;
+    return Math.min(1, draft.selectedDates.length / denom);
+  }, [isRefazerEmAndamento, entries, draft.selectedDates]);
+  const effectiveFixed = costs.monthlyPureTotal * fatorRateio + costs.usageTotal;
 
   // No modelo novo, a meta cadastrada representa o LÍQUIDO desejado (sobra).
   // Para o cálculo do faturamento necessário (BRUTO), somamos fixos + variáveis.
@@ -197,10 +268,10 @@ export function GuidedFlow({
         monthlyGoal: draft.monthlyGoal,
         goalType: draft.goalType,
         diasSelecionados: draft.selectedDates.length,
-        custosFixos: costs.total,
+        custosFixos: effectiveFixed,
         avgKmPerDay: draft.avgKmPerDay,
       }),
-    [draft, costs.total, variable.total],
+    [draft, effectiveFixed],
   );
 
 
@@ -228,6 +299,7 @@ export function GuidedFlow({
     setSaving(true);
     try {
       const patch: Parameters<typeof updateSettings>[0] = {};
+      let showNextCostNotice = false;
 
       if (isNext) {
         // Slot do próximo mês: grava APENAS em next_plan_*. Não toca no plano ativo
@@ -237,6 +309,16 @@ export function GuidedFlow({
         patch.nextPlanAvgKm = draft.avgKmPerDay;
         patch.nextPlanDates = draft.selectedDates;
         patch.nextPlanCreatedAt = new Date().toISOString();
+        // Snapshot do custo do mês futuro (fator 1 — mês cheio).
+        const nextFields = draft.nextCostFields ?? extractCostFields(activeCar);
+        const cFut = computeFixedMonthlyCosts(
+          activeCar ? ({ ...activeCar, ...nextFields } as typeof activeCar) : null,
+          draftPlannedKm,
+        );
+        patch.nextPlanFixedApplied = cFut.total;
+        patch.nextPlanFixedItems = cFut.items;
+        patch.nextPlanCostFields = nextFields;
+        showNextCostNotice = costFieldsDiffer(nextFields, extractCostFields(activeCar));
       } else if (isEdit) {
         if (stepsList.includes(1) || stepsList.includes(2)) {
           patch.monthlyGoal = draft.monthlyGoal;
@@ -257,6 +339,7 @@ export function GuidedFlow({
             patch.kmPlannedMonth = Math.round(plan.plannedKmTotal);
           }
         }
+        // Ajustar NÃO grava snapshot de custo — o custo congelado permanece.
       } else {
         patch.planningStatus = "configured";
         patch.planningSelectedDates = draft.selectedDates;
@@ -275,6 +358,13 @@ export function GuidedFlow({
         patch.planningOriginalAvgKm = draft.avgKmPerDay;
         patch.planningOriginalDates = draft.selectedDates;
         patch.planningOriginalCreatedAt = new Date().toISOString();
+        // Snapshot do custo fixo aplicado (já rateado em Refazer no meio do mês).
+        const fixoAplicado = costs.monthlyPureTotal * fatorRateio + costs.usageTotal;
+        const fixoItens = costs.items.map((it) =>
+          isUsageCostLabel(it.label) ? it : { ...it, value: it.value * fatorRateio },
+        );
+        patch.planningOriginalFixedApplied = fixoAplicado;
+        patch.planningOriginalFixedItems = fixoItens;
       }
 
       await updateSettings(patch);
@@ -286,6 +376,9 @@ export function GuidedFlow({
             ? "Alteração salva"
             : "Planejamento concluído",
       );
+      if (showNextCostNotice && mesAlvoNome) {
+        toast.message(`Os novos custos passam a valer quando ${mesAlvoNome} começar.`);
+      }
       onDone();
     } catch {
       toast.error("Não foi possível salvar");
@@ -409,11 +502,21 @@ export function GuidedFlow({
             costsItems={costs.items}
             variableItems={variable.items}
             variableTotal={variable.total}
-            fixedTotal={costs.total}
+            fixedTotal={effectiveFixed}
             currentGross={realMes.grossThisMonth}
             currentKm={realMes.kmThisMonth}
             daysWorked={realMes.daysWorkedThisMonth}
             isRefazer={!isNext && !isEdit && settings.planningOriginalCreatedAt != null}
+            rateioNotice={
+              fatorRateio < 1
+                ? `Faltam ${draft.selectedDates.length} dias no mês. Os custos fixos entram proporcionais a esses dias.`
+                : null
+            }
+            isNext={isNext}
+            nextCostFields={draft.nextCostFields ?? null}
+            onChangeNextCostFields={(f) => setDraft((d) => ({ ...d, nextCostFields: f }))}
+            nextMonthLabel={mesAlvoNome}
+            currentMonthLabel={mesAtualNome}
           />
         )}
       </div>
@@ -930,6 +1033,12 @@ function Step6({
   currentKm,
   daysWorked,
   isRefazer,
+  rateioNotice,
+  isNext,
+  nextCostFields,
+  onChangeNextCostFields,
+  nextMonthLabel,
+  currentMonthLabel,
 }: {
   draft: Draft;
   plan: ReturnType<typeof computePlan>;
@@ -941,6 +1050,12 @@ function Step6({
   currentKm: number;
   daysWorked: number;
   isRefazer: boolean;
+  rateioNotice?: string | null;
+  isNext?: boolean;
+  nextCostFields?: NextPlanCostFields | null;
+  onChangeNextCostFields?: (f: NextPlanCostFields) => void;
+  nextMonthLabel?: string;
+  currentMonthLabel?: string;
 }) {
   const temDados = currentGross > 0 && isRefazer;
 
@@ -1037,7 +1152,23 @@ function Step6({
               : `💡 R$ ${rpkExibido.toFixed(2)}/km é exigente. É possível, mas vai exigir corridas bem selecionadas e consistência.`}
           </div>
         )}
+
+        {rateioNotice && (
+          <p className="px-1 text-[11.5px] leading-snug text-muted-foreground">
+            {rateioNotice}
+          </p>
+        )}
       </div>
+
+      {isNext && nextCostFields && onChangeNextCostFields && (
+        <NextCostsEditor
+          fields={nextCostFields}
+          onChange={onChangeNextCostFields}
+          nextMonthLabel={nextMonthLabel}
+          currentMonthLabel={currentMonthLabel}
+        />
+      )}
+
 
       {/* Seu plano — parâmetros configurados */}
       <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
@@ -1163,5 +1294,92 @@ function Step6({
     </div>
   );
 }
+
+function NextCostsEditor({
+  fields,
+  onChange,
+  nextMonthLabel,
+  currentMonthLabel,
+}: {
+  fields: NextPlanCostFields;
+  onChange: (f: NextPlanCostFields) => void;
+  nextMonthLabel?: string;
+  currentMonthLabel?: string;
+}) {
+  const set = <K extends keyof NextPlanCostFields>(k: K, v: NextPlanCostFields[K]) =>
+    onChange({ ...fields, [k]: v });
+  const status = fields.ownership_status ?? "proprio";
+  const numInput = (
+    value: number | null,
+    onVal: (n: number | null) => void,
+    placeholder = "0",
+  ) => (
+    <input
+      type="number"
+      inputMode="decimal"
+      min={0}
+      value={value ?? ""}
+      onChange={(e) => onVal(e.target.value === "" ? null : Number(e.target.value))}
+      placeholder={placeholder}
+      className="w-28 rounded-md border border-border bg-background px-2 py-1 text-right text-[13px] tabular-nums"
+    />
+  );
+  return (
+    <div className="space-y-2 rounded-2xl border border-border/60 bg-card/60 p-4">
+      <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+        Custos do próximo mês
+      </div>
+      <p className="text-[11.5px] leading-snug text-muted-foreground">
+        Valem a partir de {nextMonthLabel || "o próximo mês"}. Seu plano de {currentMonthLabel || "este mês"} não muda.
+      </p>
+
+      <div className="mt-2 flex items-center justify-between text-[13px]">
+        <span className="text-muted-foreground">Situação do veículo</span>
+        <select
+          value={status}
+          onChange={(e) => set("ownership_status", e.target.value as NextPlanCostFields["ownership_status"])}
+          className="rounded-md border border-border bg-background px-2 py-1 text-[12.5px]"
+        >
+          <option value="proprio">Próprio</option>
+          <option value="financiado">Financiado</option>
+          <option value="alugado">Alugado</option>
+        </select>
+      </div>
+
+      {status === "financiado" && (
+        <div className="flex items-center justify-between text-[13px]">
+          <span className="text-muted-foreground">Financiamento (mês)</span>
+          {numInput(fields.financing_monthly, (n) => set("financing_monthly", n))}
+        </div>
+      )}
+      {status === "alugado" && (
+        <>
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="text-muted-foreground">Aluguel mensal</span>
+            {numInput(fields.rental_monthly, (n) => set("rental_monthly", n))}
+          </div>
+          <div className="flex items-center justify-between text-[13px]">
+            <span className="text-muted-foreground">Aluguel semanal</span>
+            {numInput(fields.rental_weekly, (n) => set("rental_weekly", n))}
+          </div>
+        </>
+      )}
+
+      <div className="flex items-center justify-between text-[13px]">
+        <span className="text-muted-foreground">IPVA (ano)</span>
+        {numInput(fields.ipva_yearly, (n) => set("ipva_yearly", n))}
+      </div>
+      <div className="flex items-center justify-between text-[13px]">
+        <span className="text-muted-foreground">Seguro (mês)</span>
+        {numInput(fields.insurance_monthly, (n) => set("insurance_monthly", n))}
+      </div>
+      <div className="flex items-center justify-between text-[13px]">
+        <span className="text-muted-foreground">Outros custos (mês)</span>
+        {numInput(fields.other_monthly_costs, (n) => set("other_monthly_costs", n))}
+      </div>
+    </div>
+  );
+}
+
 
 

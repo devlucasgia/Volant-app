@@ -155,16 +155,36 @@ export interface Settings {
   planningOriginalAvgKm?: number | null;
   planningOriginalDates?: string[] | null;
   planningOriginalCreatedAt?: string | null;
+  /** Snapshot do custo fixo já aplicado (pós-rateio) do plano vigente. */
+  planningOriginalFixedApplied?: number | null;
+  /** Quebra dos itens de custo fixo do plano vigente, para exibição. */
+  planningOriginalFixedItems?: { label: string; value: number }[] | null;
   /** Slot do plano do PRÓXIMO mês — entra em vigor automaticamente na virada. */
   nextPlanGoal?: number | null;
   nextPlanGoalType?: GoalType | null;
   nextPlanAvgKm?: number | null;
   nextPlanDates?: string[] | null;
   nextPlanCreatedAt?: string | null;
+  /** Snapshot do custo fixo (cheio, fator 1) do plano do próximo mês. */
+  nextPlanFixedApplied?: number | null;
+  nextPlanFixedItems?: { label: string; value: number }[] | null;
+  /** Campos brutos de custo fixo editados no fluxo futuro — usados para
+   * sobrescrever o carro ativo na virada do mês. */
+  nextPlanCostFields?: NextPlanCostFields | null;
   /** Marcado pelo edge function quando o slot futuro entra em vigor — usado para mostrar o banner "entrou em vigor". */
   nextPlanActivatedAt?: string | null;
   /** Início da semana usado no calendário do Planejamento (0 = domingo, 1 = segunda). */
   weekStartsOn?: 0 | 1;
+}
+
+export interface NextPlanCostFields {
+  ownership_status?: "quitado" | "financiado" | "alugado" | null;
+  financing_monthly?: number | null;
+  rental_monthly?: number | null;
+  rental_weekly?: number | null;
+  ipva_yearly?: number | null;
+  insurance_monthly?: number | null;
+  other_monthly_costs?: number | null;
 }
 
 export interface CustomCategory {
