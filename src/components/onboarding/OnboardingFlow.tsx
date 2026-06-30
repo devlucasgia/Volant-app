@@ -316,13 +316,15 @@ function RegistroStep() {
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col bg-background">
-          {/* Mock home content — herói real (LUCRO LÍQUIDO + toggle + linha Bruto · Gastos) */}
-          <div className="flex-1 space-y-2 p-2.5 opacity-90">
+          {/* Mock home content — hero + Meta + KM Inteligente + Performance */}
+          <div className="flex-1 space-y-1.5 overflow-hidden p-2 opacity-90">
             <div className="flex items-center justify-between">
               <div className="text-[10px] font-semibold">Olá, Motorista 👋</div>
               <div className="h-4 w-4 rounded-full bg-muted" />
             </div>
-            <div className="rounded-xl border border-success/30 bg-success/10 p-2.5">
+
+            {/* Hero: LUCRO LÍQUIDO */}
+            <div className="rounded-xl border border-success/30 bg-success/10 p-2">
               <div className="flex items-center justify-between">
                 <div className="text-[8px] font-semibold uppercase tracking-wider text-success/80">
                   Lucro líquido
@@ -337,13 +339,55 @@ function RegistroStep() {
                 </div>
               </div>
               <div className="mt-0.5 text-[7px] text-muted-foreground">depois dos gastos</div>
-              <div className="mt-1 text-xl font-bold tabular-nums leading-none text-success">
+              <div className="mt-0.5 text-lg font-bold tabular-nums leading-none text-success">
                 R$ 142,30
               </div>
-              <div className="mt-1.5 text-[8px] text-muted-foreground">
+              <div className="mt-1 text-[8px] text-muted-foreground">
                 <span className="text-info">Bruto R$ 184,50</span>
                 <span className="px-1 text-muted-foreground/60">·</span>
                 <span className="text-destructive">Gastos R$ 42,20</span>
+              </div>
+            </div>
+
+            {/* Meta do dia */}
+            <div className="rounded-xl border border-border bg-card p-2">
+              <div className="flex items-center justify-between text-[8px]">
+                <span className="font-semibold uppercase tracking-wider text-muted-foreground">
+                  Meta do dia
+                </span>
+                <span className="font-semibold tabular-nums text-success">62%</span>
+              </div>
+              <div className="mt-1 flex items-baseline justify-between">
+                <div className="text-[10px] font-bold tabular-nums text-foreground">R$ 142,30</div>
+                <div className="text-[8px] text-muted-foreground tabular-nums">de R$ 230,00</div>
+              </div>
+              <div className="mt-1 h-1 overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-[62%] rounded-full bg-success" />
+              </div>
+            </div>
+
+            {/* KM Inteligente + Performance lado a lado */}
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="rounded-xl border border-border bg-card p-2">
+                <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Route className="h-2.5 w-2.5 text-info" /> KM Inteligente
+                </div>
+                <div className="mt-1 text-sm font-bold tabular-nums leading-none text-info">
+                  R$ 2,18
+                </div>
+                <div className="mt-0.5 text-[7px] text-muted-foreground">mínimo / km</div>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-2">
+                <div className="flex items-center gap-1 text-[7px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Gauge className="h-2.5 w-2.5 text-foreground" /> Performance
+                </div>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-sm font-bold tabular-nums leading-none text-foreground">R$ 28,40</span>
+                  <span className="text-[7px] text-muted-foreground">/h</span>
+                </div>
+                <div className="mt-0.5 text-[7px] tabular-nums text-muted-foreground">
+                  R$ 2,41 /km
+                </div>
               </div>
             </div>
           </div>
