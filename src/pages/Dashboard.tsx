@@ -224,9 +224,10 @@ export default function Dashboard() {
     if (!activeDayIso) return false;
     if (!plan.isPlanningConfigured) return false;
     if (plan.selectedWorkdaysCount <= 0) return false;
+    if (s.gross > 0 || s.count > 0) return false; // trabalhou -> nunca é folga
     const dates = settings.planningSelectedDates ?? [];
     return !dates.includes(activeDayIso);
-  }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates]);
+  }, [activeDayIso, plan.isPlanningConfigured, plan.selectedWorkdaysCount, settings.planningSelectedDates, s.gross, s.count]);
   const isFolgaToday = isFolga && activeDayIso === todayIsoStr;
 
   // Item 4 — flag de sessão: motorista decidiu trabalhar num dia de folga.
