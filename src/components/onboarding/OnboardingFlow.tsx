@@ -316,21 +316,34 @@ function RegistroStep() {
     >
       <PhoneFrame>
         <div className="absolute inset-0 flex flex-col bg-background">
-          {/* Mock home content */}
-          <div className="flex-1 space-y-1.5 p-2.5 opacity-90">
-            <div className="text-[10px] font-semibold">Olá, Lucas 👋</div>
-            <div className="rounded-lg border border-success/30 bg-success/10 p-2">
-              <div className="text-[8px] font-semibold uppercase tracking-wider text-success/80">Lucro líquido</div>
-              <div className="text-base font-bold tabular-nums text-success">R$ 142,30</div>
+          {/* Mock home content — herói real (LUCRO LÍQUIDO + toggle + linha Bruto · Gastos) */}
+          <div className="flex-1 space-y-2 p-2.5 opacity-90">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] font-semibold">Olá, Motorista 👋</div>
+              <div className="h-4 w-4 rounded-full bg-muted" />
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="rounded-lg border border-border bg-card p-1.5">
-                <div className="text-[8px] uppercase text-info/80">Bruto</div>
-                <div className="text-[11px] font-bold tabular-nums">R$ 184,50</div>
+            <div className="rounded-xl border border-success/30 bg-success/10 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="text-[8px] font-semibold uppercase tracking-wider text-success/80">
+                  Lucro líquido
+                </div>
+                <div className="flex items-center gap-0.5 rounded-full border border-border/60 bg-card/70 p-[1px]">
+                  <span className="rounded-full bg-success/20 px-1.5 py-[1px] text-[7px] font-semibold text-success">
+                    Líquido
+                  </span>
+                  <span className="px-1.5 py-[1px] text-[7px] font-medium text-muted-foreground">
+                    Bruto
+                  </span>
+                </div>
               </div>
-              <div className="rounded-lg border border-border bg-card p-1.5">
-                <div className="text-[8px] uppercase text-destructive/80">Gastos</div>
-                <div className="text-[11px] font-bold tabular-nums">R$ 42,20</div>
+              <div className="mt-0.5 text-[7px] text-muted-foreground">depois dos gastos</div>
+              <div className="mt-1 text-xl font-bold tabular-nums leading-none text-success">
+                R$ 142,30
+              </div>
+              <div className="mt-1.5 text-[8px] text-muted-foreground">
+                <span className="text-info">Bruto R$ 184,50</span>
+                <span className="px-1 text-muted-foreground/60">·</span>
+                <span className="text-destructive">Gastos R$ 42,20</span>
               </div>
             </div>
           </div>
