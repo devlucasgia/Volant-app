@@ -16,6 +16,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import { RouteFallback } from "@/components/RouteFallback";
 import { ChunkErrorBoundary, clearChunkReloadFlag } from "@/components/ChunkErrorBoundary";
 import { prefetchRoute, routeLoaders } from "@/lib/prefetchRoute";
+import { UpdateAvailableModal } from "@/components/UpdateAvailableModal";
 
 // Eager: boot crítico (Landing, Auth) e Dashboard (rota mais visitada — evita flash em /app)
 import Landing from "./pages/Landing";
@@ -103,6 +104,7 @@ const App = () => (
             <UIProvider>
               <Toaster />
               <Sonner />
+              <UpdateAvailableModal />
               <BrowserRouter>
                 <ScrollToTop />
                 <ChunkReloadFlagCleaner />
