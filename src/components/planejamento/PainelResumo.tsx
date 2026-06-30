@@ -694,8 +694,11 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
             const npAvgKm = Number(settings.nextPlanAvgKm ?? 0);
             const npGoal = Number(settings.nextPlanGoal ?? 0);
             const nextKmTotal = npAvgKm * npDates.length;
+            const nextFixed = settings.nextPlanFixedApplied != null
+              ? Number(settings.nextPlanFixedApplied)
+              : s.consideredCosts;
             const nextRpk =
-              nextKmTotal > 0 ? (npGoal + s.consideredCosts) / nextKmTotal : 0;
+              nextKmTotal > 0 ? (npGoal + nextFixed) / nextKmTotal : 0;
             const capProxMes = proxMes.charAt(0).toUpperCase() + proxMes.slice(1);
             return (
               <div className="rounded-2xl border border-border/50 bg-card/60 p-4 ring-1 ring-border/50">

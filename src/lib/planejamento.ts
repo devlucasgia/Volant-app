@@ -16,29 +16,44 @@ export function computeFixedMonthlyCosts(
 ): {
   total: number;
   items: { label: string; value: number }[];
+  /** Mensal puro: financiamento/aluguel + IPVA + seguro + outros. */
+  monthlyPureTotal: number;
+  /** Uso/desgaste rateado por KM: óleo + pneus. */
+  usageTotal: number;
 } {
   const items: { label: string; value: number }[] = [];
-  if (!car) return { total: 0, items };
+  let monthlyPureTotal = 0;
+  let usageTotal = 0;
+  const pushMonthly = (label: string, value: number) => {
+    items.push({ label, value });
+    monthlyPureTotal += value;
+  };
+  const pushUsage = (label: string, value: number) => {
+    items.push({ label, value });
+    usageTotal += value;
+  };
+
+  if (!car) return { total: 0, items, monthlyPureTotal: 0, usageTotal: 0 };
 
   const status = car.ownership_status;
   if (status === "financiado" && (car.financing_monthly ?? 0) > 0) {
-    items.push({ label: "Financiamento", value: Number(car.financing_monthly) });
+    pushMonthly("Financiamento", Number(car.financing_monthly));
   } else if (status === "alugado") {
     // Mensal tem prioridade sobre semanal para evitar duplicidade.
     if ((car.rental_monthly ?? 0) > 0) {
-      items.push({ label: "Aluguel", value: Number(car.rental_monthly) });
+      pushMonthly("Aluguel", Number(car.rental_monthly));
     } else if ((car.rental_weekly ?? 0) > 0) {
-      items.push({ label: "Aluguel", value: Number(car.rental_weekly) * 4.33 });
+      pushMonthly("Aluguel", Number(car.rental_weekly) * 4.33);
     }
   }
   if ((car.ipva_yearly ?? 0) > 0) {
-    items.push({ label: "IPVA estimado", value: Number(car.ipva_yearly) / 12 });
+    pushMonthly("IPVA estimado", Number(car.ipva_yearly) / 12);
   }
   if ((car.insurance_monthly ?? 0) > 0) {
-    items.push({ label: "Seguro", value: Number(car.insurance_monthly) });
+    pushMonthly("Seguro", Number(car.insurance_monthly));
   }
   if ((car.other_monthly_costs ?? 0) > 0) {
-    items.push({ label: "Outros custos", value: Number(car.other_monthly_costs) });
+    pushMonthly("Outros custos", Number(car.other_monthly_costs));
   }
 
   // Prorrateio por KM planejado (somente quando há plano definido).
@@ -46,23 +61,22 @@ export function computeFixedMonthlyCosts(
     const oilCost = Number(car.oil_change_cost ?? 0);
     const oilInterval = Number(car.oil_change_interval_km ?? 0);
     if (oilCost > 0 && oilInterval > 0) {
-      items.push({
-        label: "Óleo estimado",
-        value: (plannedKmTotal / oilInterval) * oilCost,
-      });
+      pushUsage("Óleo estimado", (plannedKmTotal / oilInterval) * oilCost);
     }
     const tiresCost = Number(car.tires_cost ?? 0);
     const tiresInterval = Number(car.tires_interval_km ?? 0);
     if (tiresCost > 0 && tiresInterval > 0) {
-      items.push({
-        label: "Pneus estimados",
-        value: (plannedKmTotal / tiresInterval) * tiresCost,
-      });
+      pushUsage("Pneus estimados", (plannedKmTotal / tiresInterval) * tiresCost);
     }
   }
 
-  const total = items.reduce((s, i) => s + i.value, 0);
-  return { total, items };
+  const total = monthlyPureTotal + usageTotal;
+  return { total, items, monthlyPureTotal, usageTotal };
+}
+
+/** True quando o item de custo fixo é do tipo uso (rateado por km). */
+export function isUsageCostLabel(label: string): boolean {
+  return /óleo|oleo|pneu/i.test(label);
 }
 
 /**

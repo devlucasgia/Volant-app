@@ -9,6 +9,16 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+interface NextCostFields {
+  ownership_status: string | null;
+  financing_monthly: number | null;
+  rental_monthly: number | null;
+  rental_weekly: number | null;
+  ipva_yearly: number | null;
+  insurance_monthly: number | null;
+  other_monthly_costs: number | null;
+}
+
 interface SettingsRow {
   user_id: string;
   next_plan_goal: number | null;
@@ -16,6 +26,9 @@ interface SettingsRow {
   next_plan_avg_km: number | null;
   next_plan_dates: string[] | null;
   next_plan_created_at: string | null;
+  next_plan_fixed_applied: number | null;
+  next_plan_fixed_items: Array<{ label: string; value: number }> | null;
+  next_plan_cost_fields: NextCostFields | null;
 }
 
 function firstDayOfMonth(iso: string): Date {
@@ -88,7 +101,7 @@ Deno.serve(async (req) => {
     let query = admin
       .from("user_settings")
       .select(
-        "user_id, next_plan_goal, next_plan_goal_type, next_plan_avg_km, next_plan_dates, next_plan_created_at",
+        "user_id, next_plan_goal, next_plan_goal_type, next_plan_avg_km, next_plan_dates, next_plan_created_at, next_plan_fixed_applied, next_plan_fixed_items, next_plan_cost_fields",
       )
       .not("next_plan_dates", "is", null);
 
@@ -121,9 +134,7 @@ Deno.serve(async (req) => {
       const daysCount = dates.length;
       const kmPlanned = avgKm > 0 ? Math.round(avgKm * daysCount) : null;
 
-      const { error: updErr } = await admin
-        .from("user_settings")
-        .update({
+      const update: Record<string, unknown> = {
           monthly_goal: goal,
           goal_type: goalType,
           planning_avg_km_per_day: avgKm,
@@ -145,7 +156,30 @@ Deno.serve(async (req) => {
           next_plan_avg_km: null,
           next_plan_dates: null,
           next_plan_created_at: null,
-        })
+          next_plan_fixed_applied: null,
+          next_plan_fixed_items: null,
+          next_plan_cost_fields: null,
+      };
+
+      // Snapshot do custo do plano futuro (sprint Custos): copia para o slot
+      // original e sobrescreve o carro ativo. Compat: planos antigos (snapshot
+      // nulo) ativam como antes, sem sobrescrita — engine cai no fallback ao vivo.
+      if (r.next_plan_fixed_applied != null) {
+        update.planning_original_fixed_applied = r.next_plan_fixed_applied;
+        update.planning_original_fixed_items = r.next_plan_fixed_items;
+        if (r.next_plan_cost_fields) {
+          const { error: carErr } = await admin
+            .from("cars")
+            .update(r.next_plan_cost_fields)
+            .eq("user_id", r.user_id)
+            .eq("is_active", true);
+          if (carErr) console.error("[activate-next-plans] car overwrite failed", r.user_id, carErr);
+        }
+      }
+
+      const { error: updErr } = await admin
+        .from("user_settings")
+        .update(update)
         .eq("user_id", r.user_id);
 
       if (updErr) {

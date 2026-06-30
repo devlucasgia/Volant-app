@@ -159,9 +159,18 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     ? averageKmPerDay * selectedWorkdaysCount
     : 0;
 
-  // Custos considerados (fixos + óleo/pneus prorrateados pelo KM planejado)
-  const costs = computeFixedMonthlyCosts(activeCar, plannedKmTotal);
-  const consideredCosts = costs.total;
+  // Custos considerados (fixos + óleo/pneus prorrateados pelo KM planejado).
+  // Quando o plano vigente tem snapshot congelado (planningOriginalFixedApplied),
+  // usamos o snapshot — editar Custos NÃO altera o plano vigente; só um Refazer
+  // grava um novo snapshot. Fallback ao cálculo ao vivo para planos antigos.
+  const costsLive = computeFixedMonthlyCosts(activeCar, plannedKmTotal);
+  const hasFixedSnapshot = settings.planningOriginalFixedApplied != null;
+  const consideredCosts = hasFixedSnapshot
+    ? Number(settings.planningOriginalFixedApplied)
+    : costsLive.total;
+  const fixedCostItems = hasFixedSnapshot && Array.isArray(settings.planningOriginalFixedItems)
+    ? (settings.planningOriginalFixedItems as { label: string; value: number }[])
+    : costsLive.items;
   // Custos variáveis estimados (combustível + alimentação) — só compõem o alvo BRUTO da home.
   const variable = computeVariableMonthlyCosts(activeCar, averageKmPerDay, selectedWorkdaysCount);
 
@@ -316,9 +325,9 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
     requiredGrossRevenue: clampPos(requiredGrossRevenue),
     estimatedNetProfit: safe(estimatedNetProfit),
     consideredCosts,
-    costItems: costs.items,
+    costItems: fixedCostItems,
     fixedCosts: consideredCosts,
-    fixedCostItems: costs.items,
+    fixedCostItems,
     variableCosts: variable.total,
     variableCostItems: variable.items,
     currentGross,
