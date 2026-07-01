@@ -493,6 +493,11 @@ export function GuidedFlow({
                 },
               })
             }
+            isNext={isNext}
+            nextCostFields={draft.nextCostFields ?? null}
+            onChangeNextCostFields={(f) => setDraft((d) => ({ ...d, nextCostFields: f }))}
+            nextMonthLabel={mesAlvoNome}
+            currentMonthLabel={mesAtualNome}
           />
         )}
         {step === 6 && (
