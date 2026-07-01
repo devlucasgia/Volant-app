@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   X,
   Loader2,
-  Sparkles,
+  
   Pencil,
 } from "lucide-react";
 import { usePlanningSnapshot } from "@/lib/planningEngine";
@@ -192,11 +192,11 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
   const banner = showActivatedBanner ? (
     <div className="rounded-2xl border border-primary/30 bg-primary/[0.08] p-3.5 flex items-start gap-3">
       <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-        <Sparkles className="h-3.5 w-3.5" />
+        <CalendarCheck className="h-3.5 w-3.5" />
       </span>
       <div className="min-w-0 flex-1">
         <div className="text-[13px] font-semibold text-foreground capitalize">
-          {mesAtual} entrou em vigor 💰
+          {mesAtual} entrou em vigor
         </div>
         <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
           Seu plano do mês já está valendo.

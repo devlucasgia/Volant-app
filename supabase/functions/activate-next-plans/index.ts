@@ -31,10 +31,9 @@ interface SettingsRow {
   next_plan_cost_fields: NextCostFields | null;
 }
 
-function firstDayOfMonth(iso: string): Date {
-  // iso = yyyy-MM-dd (gravado em fuso local, mesmo padrão de planningSelectedDates).
-  const [y, m] = iso.split("-").map((x) => Number(x));
-  return new Date(y, (m ?? 1) - 1, 1);
+function firstDayOfMonthIso(iso: string): string {
+  const [y, m] = iso.split("-");
+  return `${y}-${m}-01`;
 }
 
 function pickEarliestDate(dates: string[]): string | null {
@@ -118,6 +117,7 @@ Deno.serve(async (req) => {
 
     const now = new Date();
     const nowIso = now.toISOString();
+    const todayIso = nowIso.slice(0, 10);
     let activated = 0;
 
     for (const r of (rows ?? []) as SettingsRow[]) {
@@ -125,8 +125,7 @@ Deno.serve(async (req) => {
       if (!dates || dates.length === 0) continue;
       const earliest = pickEarliestDate(dates);
       if (!earliest) continue;
-      const targetMonthStart = firstDayOfMonth(earliest);
-      if (now < targetMonthStart) continue; // ainda não é o mês alvo
+      if (todayIso < firstDayOfMonthIso(earliest)) continue; // ainda não é o mês alvo
 
       const goal = Number(r.next_plan_goal ?? 0);
       const goalType = r.next_plan_goal_type ?? "liquido";
