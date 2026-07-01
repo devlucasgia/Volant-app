@@ -173,10 +173,7 @@ export function computePlanningInsights(
   if (!rpkAbaixo && rpkAtual > 0 && remainingWorkdaysCount > 0) {
     const projecao = currentGross + homeDailyGross * remainingWorkdaysCount;
     if (projecao >= homeGrossTarget) {
-      const diffRpk = rpkAtual - rpkMinimo;
-      const diffFmt = diffRpk.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
+      const diffNum = (rpkAtual - rpkMinimo).toLocaleString("pt-BR", {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
@@ -184,7 +181,7 @@ export function computePlanningInsights(
         ? "no dia restante"
         : `nos ${remainingWorkdaysCount} dias restantes`;
       good.push({ icon: "⚡", tone: "good",
-        text: `Seu R$/km está em ${fmt2(rpkAtual)}, ${diffFmt} acima do mínimo. Se mantiver esse resultado ${diasLabel}, você fecha o mês no alvo.`,
+        text: `Você está ${diffNum}/km acima do mínimo. Mantendo esse ritmo ${diasLabel}, você fecha o mês no alvo.`,
       });
     }
   }
