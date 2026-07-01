@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import {
   Lightbulb,
   GitCompare,
-  Route,
-  ArrowLeftRight,
-  Target,
-  Pencil,
   RotateCcw,
   CalendarDays,
   CalendarPlus,
   CalendarCheck,
+  CalendarArrowUp,
   CheckCircle2,
   X,
   Loader2,
   Sparkles,
+  Pencil,
 } from "lucide-react";
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
