@@ -1160,14 +1160,8 @@ function Step6({
         )}
       </div>
 
-      {isNext && nextCostFields && onChangeNextCostFields && (
-        <NextCostsEditor
-          fields={nextCostFields}
-          onChange={onChangeNextCostFields}
-          nextMonthLabel={nextMonthLabel}
-          currentMonthLabel={currentMonthLabel}
-        />
-      )}
+
+
 
 
       {/* Seu plano — parâmetros configurados */}
