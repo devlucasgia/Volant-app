@@ -609,7 +609,7 @@ function NextCell({ label, value, unit }: { label: string; value: string; unit?:
   );
 }
 
-function PlanoLine({
+function PvRLine({
   label,
   value,
   valueClass,
@@ -619,11 +619,11 @@ function PlanoLine({
   valueClass?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1 first:pt-0 last:pb-0">
-      <span className="text-[11.5px] text-muted-foreground">{label}</span>
+    <div className="flex items-baseline justify-between gap-2 py-[3.5px] border-b border-border/30 last:border-b-0 last:pb-0">
+      <span className="shrink-0 text-[10.5px] text-muted-foreground">{label}</span>
       <span
         className={cn(
-          "tabular-nums text-[12px] font-semibold text-foreground/90",
+          "shrink-0 tabular-nums text-right text-[11px] font-medium text-foreground/80",
           valueClass,
         )}
       >
