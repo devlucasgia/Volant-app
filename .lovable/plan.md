@@ -1,142 +1,58 @@
-Sprint (pequena) — Fix virada prematura do plano futuro + texto do insight R$/km + banner de ativação
+## Objetivo
 
-### Escopo
+Garantir que o herói da tela de Relatórios seja **sempre** "Lucro líquido" ou "Bruto e Gastos" — nunca Insights, R$/hora, Gráfico etc. Reset controlado para que todo usuário (novo ou existente vindo do update) veja **Líquido como herói** por padrão, podendo trocar apenas entre esses dois.
 
-Três arquivos:
+## Diagnóstico
 
-1. `supabase/functions/activate-next-plans/index.ts`
-2. `src/lib/planningInsights.ts`
-3. `src/components/planejamento/PainelResumo.tsx` (bloco do banner de plano futuro ativado, linhas ~210–232)
+Hoje, em `src/pages/Reports.tsx` (linha 1209), o herói é `reportOrder[0]` — mas só vira herói visual se for `net` ou `grossExpenses`; senão, nenhum herói é renderizado e o primeiro card da lista (ex.: Insights) ocupa o topo. Como `Mais > Organização de cards` deixa o usuário arrastar qualquer card para a posição 0, é possível "quebrar" o herói. Precisamos travar isso no modelo e na UI.
 
-Sem migrations, DataContext, stats, auth, planningEngine ou outros.
+## Mudanças
 
----
+### 1. `src/lib/reportOrder.ts` — herói fixo e migração v3
+- Novo storage key `volant.reportOrder.v3` (mantém migração idempotente lendo v2 antigo e descartando).
+- Introduzir helper `HERO_KEYS = ["net", "grossExpenses"]`.
+- Ao ler/normalizar:
+  - Garantir que **posição 0 seja um HERO_KEY**. Se não for, mover o primeiro HERO_KEY encontrado para o índice 0; se nenhum estiver presente, inserir `"net"` no início.
+  - Preservar ordem escolhida dos demais cards.
+- Na migração v2→v3: forçar `net` como primeiro item (independente do que o usuário tinha), preservando a ordem relativa do restante. Isso satisfaz o critério de aceite #2 (todo usuário do update passa a ver Líquido no herói na primeira abertura pós-atualização).
+- `move` e `reorder`: bloquear operações que
+  - tirariam ambos HERO_KEYS da posição 0, ou
+  - moveriam um card não-herói para o índice 0, ou
+  - trocariam a ordem relativa de forma que resulte num não-herói em posição 0.
+  Em caso de bloqueio, retornar `prev` (no-op silencioso — a UI já vai desabilitar os controles inválidos).
 
-### 1. Fix virada prematura no edge function
+### 2. `src/lib/reportWidgets.ts` — herói nunca oculto
+- Garantir invariante: pelo menos um de `net` ou `grossExpenses` está ativo. Se o usuário tentar desligar o que estiver no herói, ignorar (no-op). A UI vai refletir isso via `disabled` no toggle.
 
-**Problema:** `firstDayOfMonth` constrói um `Date` com `new Date(y, m-1, 1)`, que no runtime Deno/UTC cria meia-noite UTC. Meia-noite UTC do dia 1 = 21:00 BRT do dia anterior. Isso faz o plano do mês seguinte ativar às 21:00 BRT do último dia do mês atual, três horas antes da virada real.
+### 3. `src/pages/OrganizacaoCards.tsx` — ReportsOrganizer em duas seções
 
-**Solução:** substituir a comparação de objetos `Date` por comparação de strings `yyyy-MM-dd`, que é fuso-independente.
+Reformatar a aba "Relatórios" para deixar a regra visualmente óbvia:
 
-```ts
-// REMOVER
-function firstDayOfMonth(iso: string): Date {
-  const [y, m] = iso.split("-").map((x) => Number(x));
-  return new Date(y, (m ?? 1) - 1, 1);
-}
+**Seção "Card em destaque (herói)"** — no topo
+- Segmented control com duas opções: `Lucro líquido` / `Bruto e Gastos`.
+- Selecionar troca qual dos dois ocupa `reportOrder[0]` (o outro vai para o topo da lista abaixo, mantendo visibilidade). Toast "Alterações salvas".
+- Texto auxiliar curto: "Escolha o valor principal exibido no topo da tela de Relatórios."
 
-// ADICIONAR
-function firstDayOfMonthIso(iso: string): string {
-  const [y, m] = iso.split("-");
-  return `${y}-${m}-01`;
-}
-```
+**Seção "Demais cards"** — abaixo
+- Renderiza os itens de `reportOrder` a partir do índice 1 (todos os não-herói + o herói alternativo).
+- Setas ↑/↓ e drag continuam funcionando, mas:
+  - Setas do primeiro item da lista têm `↑` desabilitada (não pode subir para o herói se não for HERO_KEY).
+  - Drag-and-drop: `onDragEnd` valida com a lógica travada de `reorder`; se o destino final quebraria a regra, ignora.
+- HERO_KEYS que estão nesta lista (o "não escolhido") ficam com um pequeno chip `Pode ir para o herói` e permitem "promover" via um botão dedicado (equivalente ao segmented acima).
+- Toggle de visibilidade do herói (`net` ou `grossExpenses` quando estiver ocupando a posição 0) fica desabilitado com tooltip curto "O card em destaque não pode ser ocultado."
 
-No loop de ativação:
+### 4. `src/pages/Reports.tsx` — simplificação do herói
+- Como agora `reportOrder[0]` é garantidamente `net` ou `grossExpenses`, remover o `heroKey = null` fallback. `heroKey = reportOrder[0]` diretamente.
+- Não muda a renderização visual dos heróis (mantém tipografia e composição atuais).
 
-```ts
-// ANTES
-const targetMonthStart = firstDayOfMonth(earliest);
-if (now < targetMonthStart) continue;
+## Critérios de aceite atendidos
 
-// DEPOIS
-const todayIso = now.toISOString().slice(0, 10); // "yyyy-MM-dd" em UTC
-if (todayIso < firstDayOfMonthIso(earliest)) continue;
-```
+1. Impossível colocar qualquer card que não seja Líquido ou Bruto/Gastos no herói — travado no modelo (`reportOrder`) + UI (segmented dedicado + validação de drag/setas).
+2. Todo usuário (novo ou vindo do update) abre Relatórios com Líquido no herói graças à migração v2→v3 forçando `net` na posição 0.
+3. Todos os demais cards continuam livremente reordenáveis entre si.
 
-**Validação lógica:**
+## Observações
 
-- 23:00 BRT do dia 30 = 02:00 UTC do dia 1 → `todayIso = "2026-07-01"`. `firstDayOfMonthIso("2026-07-01") = "2026-07-01"`. `"2026-07-01" < "2026-07-01"` → false → não ativa.
-- 00:00 BRT do dia 1 = 03:00 UTC → `todayIso = "2026-07-01"` → ativa.
-- Meio do mês anterior → `todayIso = "2026-06-15"`, `firstDayOfMonthIso = "2026-07-01"` → true → não ativa.
-
-A guarda on-demand do frontend (`planExpired`) não muda; ela usa fuso local do browser e não era o problema.
-
----
-
-### 2. Fix texto do insight GOOD 2 (R$/km acima do mínimo)
-
-**Problema:** o texto atual (`"Seu R$/km está em R$ 3,03 — acima do mínimo..."`) deixa dois números adjacentes quando se tenta mostrar o delta (`"R$ 3,03, R$ 0,81"` fica ruim de ler).
-
-**Solução:** reformular para um único número na frase, usando `/km` para ancorar a unidade.
-
-```ts
-// ANTES
-const diffRpk = rpkAtual - rpkMinimo;
-const diffFmt = diffRpk.toLocaleString("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-const diasLabel = remainingWorkdaysCount === 1
-  ? "no dia restante"
-  : `nos ${remainingWorkdaysCount} dias restantes`;
-good.push({ icon: "⚡", tone: "good",
-  text: `Seu R$/km está em ${fmt2(rpkAtual)}, ${diffFmt} acima do mínimo. Se mantiver esse resultado ${diasLabel}, você fecha o mês no alvo.`,
-});
-
-// DEPOIS
-const diffNum = (rpkAtual - rpkMinimo).toLocaleString("pt-BR", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-const diasLabel = remainingWorkdaysCount === 1
-  ? "no dia restante"
-  : `nos ${remainingWorkdaysCount} dias restantes`;
-good.push({ icon: "⚡", tone: "good",
-  text: `Você está ${diffNum}/km acima do mínimo. Mantendo esse ritmo ${diasLabel}, você fecha o mês no alvo.`,
-});
-```
-
-**Resultado:** `"Você está 0,81/km acima do mínimo. Mantendo esse ritmo no dia restante, você fecha o mês no alvo."`
-
-- Apenas um número na frase.
-- `/km` substitui o `R$` antes do delta, mantendo a unidade clara.
-- O valor absoluto (R$ 3,03) e o mínimo já estão visíveis no card de R$/km acima; o insight não precisa repetí-los.
-- `diffRpk` é sempre positivo neste bloco (`!rpkAbaixo && rpkAtual > 0`), então não precisa de `Math.abs`.
-
----
-
-### 3. Banner de ativação do plano futuro (PainelResumo.tsx)
-
-**Local:** bloco do banner, linhas ~210–232.
-
-**Capitalização:**
-
-```tsx
-// ANTES
-{nextMonthLabel} Entrou Em Vigor 💰
-
-// DEPOIS
-{nextMonthLabel} entrou em vigor
-```
-
-- Só a primeira letra do mês fica maiúscula (já vem assim do `toLocaleDateString`).
-- As demais palavras em minúsculo.
-- Remover o emoji `💰`.
-
-**Ícone:**
-
-```tsx
-// ANTES
-<Sparkles className="..." />
-
-// DEPOIS
-<CalendarCheck className="..." />
-```
-
-- Usar `CalendarCheck` do `lucide-react`, já importado no arquivo.
-- Manter a cor `text-primary` (verde) no container do ícone.
-
----
-
-### Roteiro de validação
-
-1. **Virada:** abrir o app às 23:00 BRT (com plano futuro do mês seguinte cadastrado) e confirmar que o banner e a ativação não aparecem. Após meia-noite BRT, confirmar que ativam normalmente.
-2. **Insight:** com R$/km acima do mínimo e projeção cobrindo a meta, o card exibe `"Você está X/km acima do mínimo. Mantendo esse ritmo..."` sem dois números adjacentes. O valor bate: `rpkAtual − rpkMinimo` formatado em pt-BR.
-3. **Banner:** quando um plano futuro acabou de ativar, o banner exibe `"Julho entrou em vigor"` (ou mês correspondente) com ícone `CalendarCheck` verde, sem emoji e sem maiúsculas fora do nome do mês.
-4. **Demais insights:** os outros textos de `planningInsights.ts` não mudam.
-5. **Typecheck:** garantir que o TypeScript compila após as alterações.
-
-Se surgir necessidade de tocar em qualquer arquivo fora dos três listados, sinalizarei antes de executar.
+- Nenhuma mudança em cálculos, banco, filtros ou navegação.
+- Sem alterações em Home/Personalização fora da aba "Relatórios" de Organização de cards.
+- Sem impacto em plano/planejamento/edge functions.
