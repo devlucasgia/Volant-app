@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import {
   Lightbulb,
   GitCompare,
-  Route,
-  ArrowLeftRight,
-  Target,
-  Pencil,
   RotateCcw,
   CalendarDays,
   CalendarPlus,
   CalendarCheck,
+  CalendarArrowUp,
   CheckCircle2,
   X,
   Loader2,
   Sparkles,
+  Pencil,
 } from "lucide-react";
 import { usePlanningSnapshot } from "@/lib/planningEngine";
 import { getCurrentMonthRealData } from "@/lib/smartKm";
@@ -46,11 +43,9 @@ interface Props {
 }
 
 export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onReplicate }: Props) {
-  const navigate = useNavigate();
   const s = usePlanningSnapshot();
   const { entries, settings, updateSettings, refreshSettings } = useData();
   const { user } = useAuth();
-  const [viewLiquida, setViewLiquida] = useState(false);
 
   // ── Derivações de "plano futuro" / "mês virado" ──────────────────────────
   const now = useMemo(() => new Date(), []);
@@ -156,22 +151,9 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           : "text-rose-300";
 
   const isDesgaste = (label: string) => /óleo|oleo|pneu/i.test(label);
-  const parcelasTotal = s.fixedCostItems
-    .filter((i) => !isDesgaste(i.label))
-    .reduce((a, b) => a + b.value, 0);
-  const desgasteTotal = s.fixedCostItems
-    .filter((i) => isDesgaste(i.label))
-    .reduce((a, b) => a + b.value, 0);
-  const fixosSoma = parcelasTotal + desgasteTotal;
-  const parcelasPct = fixosSoma > 0 ? (parcelasTotal / fixosSoma) * 100 : 0;
-  const desgastePct = fixosSoma > 0 ? (desgasteTotal / fixosSoma) * 100 : 0;
+  void isDesgaste; // reservado; usado no card removido de composição
 
-  const combustivelItem = s.variableCostItems.find((i) => /combust/i.test(i.label));
 
-  const metaProgressPct =
-    s.homeGrossTarget > 0
-      ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
-      : 0;
 
   const plannedKmProportional = s.averageKmPerDay * daysWorkedInPlan;
   const totalHoursWorked = useMemo(
@@ -341,9 +323,7 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
                 R$
               </span>
               <span className="bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent text-4xl font-bold tabular-nums leading-none">
-                {fmtBRL(viewLiquida ? s.homeDailyNet : s.homeDailyGross)
-                  .replace("R$", "")
-                  .trim()}
+                {fmtBRL(s.homeDailyGross).replace("R$", "").trim()}
               </span>
             </div>
             <div className="mt-1 text-[11px] text-muted-foreground">pra faturar</div>
@@ -408,76 +388,79 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           <GitCompare className="h-3 w-3" /> Plano vs realizado
         </div>
 
-        <div className="grid grid-cols-2 gap-2 items-stretch">
-          <div>
-            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5 h-full">
-              <div className="mb-3 flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
-                  Plano de {mesLabel}
-                </span>
-                {foiRefeito && (
-                  <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[7px] font-semibold uppercase tracking-wide text-amber-400 leading-tight">
-                    Refeito
+        {(() => {
+          const planMetaBruta = s.hasOriginalPlan
+            ? (s.originalGoal ?? 0) + s.consideredCosts
+            : s.homeGrossTarget;
+          const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
+          const planKmTotal = s.hasOriginalPlan
+            ? (s.originalAvgKm ?? 0) * s.originalDaysCount
+            : s.plannedKmTotal;
+          const planRpk = planKmTotal > 0 ? planMetaBruta / planKmTotal : 0;
+          const planCustos = s.consideredCosts;
+          const dim = "text-muted-foreground/70 font-normal";
+          return (
+            <div className="grid grid-cols-2 gap-2 items-stretch">
+              <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5 h-full">
+                <div className="mb-3 flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+                    Plano de {mesLabel}
                   </span>
-                )}
+                  {foiRefeito && (
+                    <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[7px] font-semibold uppercase tracking-wide text-amber-400 leading-tight">
+                      Refeito
+                    </span>
+                  )}
+                </div>
+                <PvRLine label="Meta bruta" value={fmtBRL(planMetaBruta)} valueClass={dim} />
+                <PvRLine label="Dias" value={`${planDays}`} valueClass={dim} />
+                <PvRLine
+                  label="KM est."
+                  value={planKmTotal > 0 ? fmtKm(planKmTotal) : "—"}
+                  valueClass={dim}
+                />
+                <PvRLine
+                  label="R$/km alvo"
+                  value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
+                  valueClass={dim}
+                />
+                <PvRLine label="Custos" value={fmtBRL(planCustos)} valueClass={dim} />
               </div>
-              {(() => {
-                const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
-                const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
-                const planKmDay = s.hasOriginalPlan ? (s.originalAvgKm ?? 0) : s.averageKmPerDay;
-                const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
-                  ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
-                  : s.requiredRpk;
-                const dimClass = "text-muted-foreground/60 font-normal";
-                return (
-                  <>
-                    <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} valueClass={dimClass} />
-                    <PlanoLine label="Dias" value={`${planDays}`} valueClass={dimClass} />
-                    <PlanoLine
-                      label="KM estimado"
-                      value={planKmDay > 0 ? fmtKm(planKmDay * planDays) : "—"}
-                      valueClass={dimClass}
-                    />
-                    <PlanoLine
-                      label="R$/km alvo"
-                      value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
-                      valueClass={dimClass}
-                    />
-                  </>
-                );
-              })()}
-            </div>
-          </div>
 
-          <div>
-            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5 h-full">
-              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                Até agora
+              <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5 h-full">
+                <div className="mb-3 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  Até agora
+                </div>
+                <PvRLine
+                  label="Já fiz"
+                  value={fmtBRL(s.currentGross)}
+                  valueClass="text-primary font-bold text-[14px]"
+                />
+                <PvRLine
+                  label="Dias"
+                  value={`${daysWorkedThisMonth}`}
+                  valueClass="text-foreground font-semibold"
+                />
+                <PvRLine
+                  label="KM"
+                  value={fmtKm(s.currentKm)}
+                  valueClass="text-foreground font-semibold"
+                />
+                <PvRLine
+                  label="R$/km"
+                  value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}
+                  valueClass={rpkColor}
+                />
+                <PvRLine
+                  label="Falta"
+                  value={fmtBRL(s.homeRemainingGross)}
+                  valueClass="text-sky-400 font-semibold"
+                />
               </div>
-              <PlanoLine
-                label="Já fiz"
-                value={fmtBRL(s.currentGross)}
-                valueClass="text-primary font-bold text-[15px]"
-              />
-              <PlanoLine
-                label="Dias rodados"
-                value={`${daysWorkedThisMonth}`}
-                valueClass="text-foreground font-semibold"
-              />
-              <PlanoLine
-                label="KM rodado"
-                value={fmtKm(s.currentKm)}
-                valueClass="text-foreground font-semibold"
-              />
-              <PlanoLine
-                label="R$/km atual"
-                value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}
-                valueClass={rpkColor}
-              />
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* (Card do próximo mês movido para o fim do painel, após a nota de rodapé.) */}
@@ -485,153 +468,6 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
 
 
 
-      {/* ============ 5. Meta do Mês · Composição ============ */}
-      <div className="mt-7">
-        <div className="mb-2 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <Target className="h-3 w-3" /> Meta do mês · composição
-        </div>
-
-        {/* Card de meta clicável */}
-        <button
-          type="button"
-          onClick={() => setViewLiquida((v) => !v)}
-          className="block w-full rounded-2xl border border-border/60 bg-card/60 p-4 text-left transition-transform active:scale-[0.99]"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
-                Meta {viewLiquida ? "líquida" : "bruta"} do mês
-                <ArrowLeftRight className="h-3 w-3 opacity-60" />
-              </div>
-              <div className="mt-1 text-2xl font-bold tabular-nums leading-none text-foreground transition-colors duration-300">
-                {fmtBRL(viewLiquida ? s.homeNetTarget : s.homeGrossTarget)}
-              </div>
-            </div>
-            {!viewLiquida && s.homeRemainingGross > 0 && (
-              <div className="shrink-0 text-right">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Falta faturar
-                </div>
-                <div className="mt-0.5 text-[13px] font-bold tabular-nums text-primary">
-                  {fmtBRL(s.homeRemainingGross)}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-2 text-[11.5px] leading-snug text-muted-foreground">
-            {viewLiquida ? (
-              <span className="text-primary">
-                Seu lucro até agora: {fmtBRL(s.currentNet)}
-              </span>
-            ) : (
-              <>
-                {fmtBRL(s.homeNetTarget)} líquida + {fmtBRL(s.consideredCosts)} custos
-              </>
-            )}
-          </div>
-
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full bg-primary transition-all duration-500"
-              style={{ width: `${metaProgressPct}%` }}
-            />
-          </div>
-        </button>
-
-        {/* Card de custos */}
-        {(s.fixedCostItems.length > 0 || combustivelItem) && (
-          <div
-            className={cn(
-              "mt-2 rounded-2xl border border-border/60 bg-card/60 p-4 transition-opacity duration-500",
-              viewLiquida && "opacity-30",
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-muted/40 text-muted-foreground">
-                <Route className="h-3.5 w-3.5" />
-              </span>
-              <div className="min-w-0">
-                <div className="text-[13px] font-semibold text-foreground/90">
-                  Custos do carro na sua meta
-                </div>
-                <div className="text-[11px] text-muted-foreground transition-colors duration-300">
-                  {viewLiquida
-                    ? "zerados nesta visão, esse dinheiro é só seu"
-                    : `${fmtBRL(s.consideredCosts)} empurraram seu bruto pra cima`}
-                </div>
-              </div>
-            </div>
-
-            {fixosSoma > 0 && (
-              <>
-                <div className="mt-3 flex h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full bg-sky-500/70 transition-[width] duration-500"
-                    style={{ width: viewLiquida ? "0%" : `${parcelasPct}%` }}
-                  />
-                  <div
-                    className="h-full bg-primary/70 transition-[width] duration-500"
-                    style={{ width: viewLiquida ? "0%" : `${desgastePct}%` }}
-                  />
-                </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-sky-500/70" />
-                    Financiamento {Math.round(parcelasPct)}%
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
-                    Desgaste {Math.round(desgastePct)}%
-                  </span>
-                </div>
-              </>
-            )}
-
-            {s.fixedCostItems.length > 0 && (
-              <ul className="mt-3 space-y-1.5">
-                {s.fixedCostItems.map((it, i) => (
-                  <li
-                    key={`f-${i}`}
-                    className="flex items-center justify-between text-[12px] text-muted-foreground"
-                  >
-                    <span>{it.label}</span>
-                    <span className="font-medium tabular-nums text-foreground/85 transition-colors duration-300">
-                      {fmtBRL(viewLiquida ? 0 : it.value)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {combustivelItem && (
-              <div className="mt-3 border-t border-border/40 pt-2.5">
-                <div className="flex items-center justify-between text-[12px] text-muted-foreground">
-                  <span>{combustivelItem.label}</span>
-                  <span className="font-medium tabular-nums text-foreground/70">
-                    {fmtBRL(combustivelItem.value)}
-                  </span>
-                </div>
-                <div className="mt-0.5 text-[10.5px] text-muted-foreground/80">
-                  fora da meta, só referência
-                </div>
-              </div>
-            )}
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/ajustes/veiculos/custos", {
-                  state: { returnTo: "/ajustes/planejamento" },
-                })
-              }
-              className="mt-3 inline-flex items-center gap-1.5 text-[11.5px] font-semibold text-primary hover:underline"
-            >
-              <Pencil className="h-3 w-3" /> Editar custos
-            </button>
-          </div>
-        )}
-      </div>
 
       {/* ============ 6. Botões ============ */}
       <div className="grid grid-cols-2 gap-2.5 pt-1 mt-7">
@@ -666,7 +502,7 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
       {/* ============ 8. Próximo mês — bloco dedicado, sempre por último ============ */}
       <div className="border-t border-border/30 mt-6 pt-5">
         <div className="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <CalendarDays className="h-3 w-3" /> Próximo mês
+          <CalendarArrowUp className="h-3 w-3" /> Planejamento futuro
         </div>
 
         {!hasNextPlan ? (
@@ -773,7 +609,7 @@ function NextCell({ label, value, unit }: { label: string; value: string; unit?:
   );
 }
 
-function PlanoLine({
+function PvRLine({
   label,
   value,
   valueClass,
@@ -783,11 +619,11 @@ function PlanoLine({
   valueClass?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1 first:pt-0 last:pb-0">
-      <span className="text-[11.5px] text-muted-foreground">{label}</span>
+    <div className="flex items-baseline justify-between gap-2 py-[3.5px] border-b border-border/30 last:border-b-0 last:pb-0">
+      <span className="shrink-0 text-[10.5px] text-muted-foreground">{label}</span>
       <span
         className={cn(
-          "tabular-nums text-[12px] font-semibold text-foreground/90",
+          "shrink-0 tabular-nums text-right text-[11px] font-medium text-foreground/80",
           valueClass,
         )}
       >

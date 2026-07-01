@@ -244,7 +244,7 @@ export function computePlanning(input: ComputeInput): PlanningSnapshot {
   const homeGrossTarget = monthlyGoal + consideredCosts;
   const homeNetTarget = monthlyGoal;
   const homeRemainingGross = clampPos(homeGrossTarget - currentGross);
-  const homeRemainingNet = clampPos(homeNetTarget - currentGross);
+  const homeRemainingNet = clampPos(homeNetTarget - currentNet);
   const homeDailyGross =
     remainingWorkdaysCount > 0 ? homeRemainingGross / remainingWorkdaysCount : 0;
   const homeDailyNet =

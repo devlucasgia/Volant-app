@@ -493,6 +493,11 @@ export function GuidedFlow({
                 },
               })
             }
+            isNext={isNext}
+            nextCostFields={draft.nextCostFields ?? null}
+            onChangeNextCostFields={(f) => setDraft((d) => ({ ...d, nextCostFields: f }))}
+            nextMonthLabel={mesAlvoNome}
+            currentMonthLabel={mesAtualNome}
           />
         )}
         {step === 6 && (
@@ -825,6 +830,11 @@ function Step5({
   variableItems,
   onAddCar,
   onEditCosts,
+  isNext,
+  nextCostFields,
+  onChangeNextCostFields,
+  nextMonthLabel,
+  currentMonthLabel,
 }: {
   car: ReturnType<typeof useData>["cars"][number] | null;
   costsTotal: number;
@@ -833,7 +843,16 @@ function Step5({
   variableItems: { label: string; value: number }[];
   onAddCar: () => void;
   onEditCosts: () => void;
+  isNext?: boolean;
+  nextCostFields?: NextPlanCostFields | null;
+  onChangeNextCostFields?: (f: NextPlanCostFields) => void;
+  nextMonthLabel?: string;
+  currentMonthLabel?: string;
 }) {
+  // Pré-preenchimento no fluxo isNext: se ainda não existe, inicializa a partir do carro ativo
+  const editorFields = isNext
+    ? (nextCostFields ?? extractCostFields(car))
+    : null;
   if (!car) {
     return (
       <div>
@@ -882,6 +901,32 @@ function Step5({
 
   const combustivelItem = variableItems.find((i) => /combust/i.test(i.label));
   const outrosVariaveis = variableItems.filter((i) => !/combust/i.test(i.label));
+
+  if (isNext && editorFields && onChangeNextCostFields) {
+    return (
+      <div>
+        <StepHeader
+          icon={CarIcon}
+          title="Custos do próximo mês"
+          subtitle={
+            nextMonthLabel && currentMonthLabel
+              ? `Valem a partir de ${nextMonthLabel}. Seu plano de ${currentMonthLabel} não muda.`
+              : "Ajuste os custos fixos que valem no próximo mês."
+          }
+        />
+        <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.08] px-3 py-1.5">
+          <CarIcon className="h-3.5 w-3.5 text-primary" />
+          <span className="text-[12.5px] font-semibold text-foreground/95">{carName}</span>
+        </div>
+        <NextCostsEditor
+          fields={editorFields}
+          onChange={onChangeNextCostFields}
+          nextMonthLabel={nextMonthLabel ?? ""}
+          currentMonthLabel={currentMonthLabel ?? ""}
+        />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -1160,14 +1205,8 @@ function Step6({
         )}
       </div>
 
-      {isNext && nextCostFields && onChangeNextCostFields && (
-        <NextCostsEditor
-          fields={nextCostFields}
-          onChange={onChangeNextCostFields}
-          nextMonthLabel={nextMonthLabel}
-          currentMonthLabel={currentMonthLabel}
-        />
-      )}
+
+
 
 
       {/* Seu plano — parâmetros configurados */}
