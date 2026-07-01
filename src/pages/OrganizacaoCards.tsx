@@ -206,7 +206,7 @@ function ReportsOrganizer() {
 
   const labels: Record<ReportCardKey, { label: string; icon: React.ReactNode }> = {
     net:           { label: "Lucro líquido",              icon: <Wallet className="h-4 w-4" /> },
-    insights:      { label: "Insights Inteligentes",      icon: <Sparkles className="h-4 w-4" /> },
+    insights:      { label: "Insights Inteligentes",      icon: <Lightbulb className="h-4 w-4" /> },
     perHour:       { label: "R$ / hora",                  icon: <Gauge className="h-4 w-4" /> },
     grossExpenses: { label: "Bruto e Gastos",             icon: <Wallet className="h-4 w-4" /> },
     daysGroup:     { label: "Dias ativos + Média / dia",  icon: <CalendarDays className="h-4 w-4" /> },
