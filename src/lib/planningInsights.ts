@@ -173,11 +173,22 @@ export function computePlanningInsights(
   if (!rpkAbaixo && rpkAtual > 0 && remainingWorkdaysCount > 0) {
     const projecao = currentGross + homeDailyGross * remainingWorkdaysCount;
     if (projecao >= homeGrossTarget) {
+      const diffRpk = rpkAtual - rpkMinimo;
+      const diffFmt = diffRpk.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      const diasLabel = remainingWorkdaysCount === 1
+        ? "no dia restante"
+        : `nos ${remainingWorkdaysCount} dias restantes`;
       good.push({ icon: "⚡", tone: "good",
-        text: `Seu R$/km está em ${fmt2(rpkAtual)} — acima do mínimo. Se mantiver esse ritmo nos ${remainingWorkdaysCount} ${remainingWorkdaysCount === 1 ? "dia restante" : "dias restantes"}, você fecha o mês no alvo.`,
+        text: `Seu R$/km está em ${fmt2(rpkAtual)}, ${diffFmt} acima do mínimo. Se mantiver esse resultado ${diasLabel}, você fecha o mês no alvo.`,
       });
     }
   }
+
 
   // Pegar grupo mais crítico e rotacionar dentro dele (24h)
   const grupo = bad.length > 0 ? bad : warn.length > 0 ? warn : good;
