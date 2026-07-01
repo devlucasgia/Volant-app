@@ -151,22 +151,9 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           : "text-rose-300";
 
   const isDesgaste = (label: string) => /óleo|oleo|pneu/i.test(label);
-  const parcelasTotal = s.fixedCostItems
-    .filter((i) => !isDesgaste(i.label))
-    .reduce((a, b) => a + b.value, 0);
-  const desgasteTotal = s.fixedCostItems
-    .filter((i) => isDesgaste(i.label))
-    .reduce((a, b) => a + b.value, 0);
-  const fixosSoma = parcelasTotal + desgasteTotal;
-  const parcelasPct = fixosSoma > 0 ? (parcelasTotal / fixosSoma) * 100 : 0;
-  const desgastePct = fixosSoma > 0 ? (desgasteTotal / fixosSoma) * 100 : 0;
+  void isDesgaste; // reservado; usado no card removido de composição
 
-  const combustivelItem = s.variableCostItems.find((i) => /combust/i.test(i.label));
 
-  const metaProgressPct =
-    s.homeGrossTarget > 0
-      ? Math.min(100, (s.currentGross / s.homeGrossTarget) * 100)
-      : 0;
 
   const plannedKmProportional = s.averageKmPerDay * daysWorkedInPlan;
   const totalHoursWorked = useMemo(
