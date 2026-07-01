@@ -830,6 +830,11 @@ function Step5({
   variableItems,
   onAddCar,
   onEditCosts,
+  isNext,
+  nextCostFields,
+  onChangeNextCostFields,
+  nextMonthLabel,
+  currentMonthLabel,
 }: {
   car: ReturnType<typeof useData>["cars"][number] | null;
   costsTotal: number;
@@ -838,7 +843,16 @@ function Step5({
   variableItems: { label: string; value: number }[];
   onAddCar: () => void;
   onEditCosts: () => void;
+  isNext?: boolean;
+  nextCostFields?: NextPlanCostFields | null;
+  onChangeNextCostFields?: (f: NextPlanCostFields) => void;
+  nextMonthLabel?: string;
+  currentMonthLabel?: string;
 }) {
+  // Pré-preenchimento no fluxo isNext: se ainda não existe, inicializa a partir do carro ativo
+  const editorFields = isNext
+    ? (nextCostFields ?? extractCostFields(car))
+    : null;
   if (!car) {
     return (
       <div>
