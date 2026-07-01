@@ -239,14 +239,31 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
           <>
             <span className={cn("h-2 w-2 shrink-0 rounded-full", statusDot)} />
             <div className="min-w-0">
-              <div className={cn("font-mono tabular-nums text-xl font-semibold leading-none", accentText)}>
+              <div className={cn(
+                "font-mono tabular-nums text-xl font-semibold leading-none",
+                state === "running" ? accentText : "text-foreground",
+              )}>
                 {formatHMS(workMs)}
               </div>
               <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground leading-none">
-                {state === "running" ? "Ao vivo" : "Em descanso"}
+                {state === "running" ? "Ao vivo" : "Trabalhado"}
               </div>
             </div>
           </>
+        )}
+
+        {state === "resting" && (
+          <div className="ml-1 flex flex-col items-center leading-none">
+            <div className="flex items-center gap-1.5 rounded-full bg-warning/10 px-2.5 py-1 text-warning">
+              <span className="text-sm leading-none" aria-hidden>☕</span>
+              <span className="font-mono tabular-nums text-[13px] font-semibold leading-none">
+                {formatHMS(restMs)}
+              </span>
+            </div>
+            <div className="mt-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+              Descanso
+            </div>
+          </div>
         )}
 
         {isEnded && (
@@ -271,7 +288,7 @@ export function JourneyModule({ isFolgaToday = false }: JourneyModuleProps) {
         {state === "running" && (
           <>
             <Button onClick={pauseRest} variant="outline" size="icon" className="h-10 w-10 text-warning" aria-label="Pausar jornada">
-              <Coffee className="h-5 w-5" />
+              <span className="text-lg leading-none" aria-hidden>☕</span>
             </Button>
             <Button
               onClick={() => setConfirmEnd(true)}
