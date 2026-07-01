@@ -32,7 +32,7 @@ import {
 } from "@/lib/insightPhrases";
 import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
-import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
+import { useReportOrder, isHeroKey, type ReportCardKey } from "@/lib/reportOrder";
 import { useAccess } from "@/context/AccessContext";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import {
@@ -1205,10 +1205,11 @@ export default function Reports() {
             - "chart" → standalone block with no border.
             - All other items → continuous list rows grouped in a single subtle container. */}
         {(() => {
-          const visibleKeys = reportOrder.filter((k) => widgets[k]);
-          const heroKey = (visibleKeys[0] === "net" || visibleKeys[0] === "grossExpenses")
-            ? visibleKeys[0]
-            : null;
+          // Hero is always the first hero-eligible key in the order, and
+          // is always rendered — even if the user toggled its widget off —
+          // because the Reports screen requires a hero at the top.
+          const heroKey: ReportCardKey = isHeroKey(reportOrder[0]) ? reportOrder[0] : "net";
+          const visibleKeys = reportOrder.filter((k) => widgets[k] || k === heroKey);
 
           const renderHero = (k: ReportCardKey) => {
             if (k === "net") {
