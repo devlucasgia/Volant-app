@@ -388,76 +388,79 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
           <GitCompare className="h-3 w-3" /> Plano vs realizado
         </div>
 
-        <div className="grid grid-cols-2 gap-2 items-stretch">
-          <div>
-            <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5 h-full">
-              <div className="mb-3 flex items-center gap-1.5">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/50">
-                  Plano de {mesLabel}
-                </span>
-                {foiRefeito && (
-                  <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[7px] font-semibold uppercase tracking-wide text-amber-400 leading-tight">
-                    Refeito
+        {(() => {
+          const planMetaBruta = s.hasOriginalPlan
+            ? (s.originalGoal ?? 0) + s.consideredCosts
+            : s.homeGrossTarget;
+          const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
+          const planKmTotal = s.hasOriginalPlan
+            ? (s.originalAvgKm ?? 0) * s.originalDaysCount
+            : s.plannedKmTotal;
+          const planRpk = planKmTotal > 0 ? planMetaBruta / planKmTotal : 0;
+          const planCustos = s.consideredCosts;
+          const dim = "text-muted-foreground/70 font-normal";
+          return (
+            <div className="grid grid-cols-2 gap-2 items-stretch">
+              <div className="rounded-2xl border border-dashed border-border/30 bg-muted/[0.06] p-3.5 h-full">
+                <div className="mb-3 flex items-center gap-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/60">
+                    Plano de {mesLabel}
                   </span>
-                )}
+                  {foiRefeito && (
+                    <span className="flex-shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-1 py-px text-[7px] font-semibold uppercase tracking-wide text-amber-400 leading-tight">
+                      Refeito
+                    </span>
+                  )}
+                </div>
+                <PvRLine label="Meta bruta" value={fmtBRL(planMetaBruta)} valueClass={dim} />
+                <PvRLine label="Dias" value={`${planDays}`} valueClass={dim} />
+                <PvRLine
+                  label="KM est."
+                  value={planKmTotal > 0 ? fmtKm(planKmTotal) : "—"}
+                  valueClass={dim}
+                />
+                <PvRLine
+                  label="R$/km alvo"
+                  value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
+                  valueClass={dim}
+                />
+                <PvRLine label="Custos" value={fmtBRL(planCustos)} valueClass={dim} />
               </div>
-              {(() => {
-                const planGoal = s.hasOriginalPlan ? s.originalGoal! : s.homeNetTarget;
-                const planDays = s.hasOriginalPlan ? s.originalDaysCount : s.selectedWorkdaysCount;
-                const planKmDay = s.hasOriginalPlan ? (s.originalAvgKm ?? 0) : s.averageKmPerDay;
-                const planRpk = s.hasOriginalPlan && s.originalKmTotal > 0
-                  ? (s.originalGoal! + s.consideredCosts) / s.originalKmTotal
-                  : s.requiredRpk;
-                const dimClass = "text-muted-foreground/60 font-normal";
-                return (
-                  <>
-                    <PlanoLine label="Meta líquida" value={fmtBRL(planGoal)} valueClass={dimClass} />
-                    <PlanoLine label="Dias" value={`${planDays}`} valueClass={dimClass} />
-                    <PlanoLine
-                      label="KM estimado"
-                      value={planKmDay > 0 ? fmtKm(planKmDay * planDays) : "—"}
-                      valueClass={dimClass}
-                    />
-                    <PlanoLine
-                      label="R$/km alvo"
-                      value={planRpk > 0 ? fmtBRL2(planRpk) : "—"}
-                      valueClass={dimClass}
-                    />
-                  </>
-                );
-              })()}
-            </div>
-          </div>
 
-          <div>
-            <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5 h-full">
-              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                Até agora
+              <div className="rounded-2xl border border-primary/30 bg-primary/[0.05] p-3.5 h-full">
+                <div className="mb-3 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                  Até agora
+                </div>
+                <PvRLine
+                  label="Já fiz"
+                  value={fmtBRL(s.currentGross)}
+                  valueClass="text-primary font-bold text-[14px]"
+                />
+                <PvRLine
+                  label="Dias"
+                  value={`${daysWorkedThisMonth}`}
+                  valueClass="text-foreground font-semibold"
+                />
+                <PvRLine
+                  label="KM"
+                  value={fmtKm(s.currentKm)}
+                  valueClass="text-foreground font-semibold"
+                />
+                <PvRLine
+                  label="R$/km"
+                  value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}
+                  valueClass={rpkColor}
+                />
+                <PvRLine
+                  label="Falta"
+                  value={fmtBRL(s.homeRemainingGross)}
+                  valueClass="text-sky-400 font-semibold"
+                />
               </div>
-              <PlanoLine
-                label="Já fiz"
-                value={fmtBRL(s.currentGross)}
-                valueClass="text-primary font-bold text-[15px]"
-              />
-              <PlanoLine
-                label="Dias rodados"
-                value={`${daysWorkedThisMonth}`}
-                valueClass="text-foreground font-semibold"
-              />
-              <PlanoLine
-                label="KM rodado"
-                value={fmtKm(s.currentKm)}
-                valueClass="text-foreground font-semibold"
-              />
-              <PlanoLine
-                label="R$/km atual"
-                value={rpkAtual > 0 ? fmtBRL2(rpkAtual) : "—"}
-                valueClass={rpkColor}
-              />
             </div>
-          </div>
-        </div>
+          );
+        })()}
       </div>
 
       {/* (Card do próximo mês movido para o fim do painel, após a nota de rodapé.) */}
