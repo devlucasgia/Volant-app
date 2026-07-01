@@ -502,7 +502,7 @@ export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onRep
       {/* ============ 8. Próximo mês — bloco dedicado, sempre por último ============ */}
       <div className="border-t border-border/30 mt-6 pt-5">
         <div className="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          <CalendarDays className="h-3 w-3" /> Próximo mês
+          <CalendarArrowUp className="h-3 w-3" /> Planejamento futuro
         </div>
 
         {!hasNextPlan ? (
