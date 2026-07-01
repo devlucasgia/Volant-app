@@ -43,11 +43,9 @@ interface Props {
 }
 
 export function PainelResumo({ onAdjust, onRedo, onPlanNext, onCancelNext, onReplicate }: Props) {
-  const navigate = useNavigate();
   const s = usePlanningSnapshot();
   const { entries, settings, updateSettings, refreshSettings } = useData();
   const { user } = useAuth();
-  const [viewLiquida, setViewLiquida] = useState(false);
 
   // ── Derivações de "plano futuro" / "mês virado" ──────────────────────────
   const now = useMemo(() => new Date(), []);
