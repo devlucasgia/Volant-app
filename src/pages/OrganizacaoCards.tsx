@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useData } from "@/context/DataContext";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
-import { useReportOrder, type ReportCardKey } from "@/lib/reportOrder";
+import { useReportOrder, isHeroKey, type ReportCardKey } from "@/lib/reportOrder";
 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -197,7 +197,7 @@ function HomeOrganizer() {
 
 function ReportsOrganizer() {
   const [reportWidgets, toggleReportWidget] = useReportWidgets();
-  const [reportOrder, moveReport, reorderReport] = useReportOrder();
+  const [reportOrder, moveReport, reorderReport, setReportHero] = useReportOrder();
 
   const dndSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -215,30 +215,79 @@ function ReportsOrganizer() {
     chart:         { label: "Gráfico",                    icon: <LineChart className="h-4 w-4" /> },
   };
 
+  const heroKey: ReportCardKey = isHeroKey(reportOrder[0]) ? reportOrder[0] : "net";
+  const restOrder = reportOrder.slice(1);
+
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    reorderReport(active.id as ReportCardKey, over.id as ReportCardKey);
+    const fromKey = active.id as ReportCardKey;
+    const toKey = over.id as ReportCardKey;
+    // Guard against dropping a non-hero into the hero slot (position 0).
+    // Since we only render items after the hero in this list, dropping
+    // above the topmost restOrder item is fine — it lands at index 1.
+    reorderReport(fromKey, toKey);
     notifySaved();
   };
 
   const toggle = (k: keyof ReportWidgets) => {
+    // Prevent hiding the current hero.
+    if (k === heroKey) return;
     toggleReportWidget(k);
     notifySaved();
   };
 
+  const changeHero = (next: ReportCardKey) => {
+    if (next === heroKey) return;
+    setReportHero(next);
+    // Also make sure both hero-eligible widgets stay visible so the
+    // Reports screen never has to fall back silently.
+    if (!reportWidgets[next]) toggleReportWidget(next);
+    notifySaved();
+  };
+
   return (
-    <div className="space-y-4">
-      <p className="px-1 text-[11px] leading-snug text-muted-foreground">
-        Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
-      </p>
+    <div className="space-y-5">
+      {/* HERO PICKER */}
       <div className="space-y-2">
+        <div className="px-1">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+            Card em destaque
+          </div>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            Escolha o valor principal exibido no topo da tela de Relatórios.
+          </p>
+        </div>
+        <Segmented<ReportCardKey>
+          options={[
+            { key: "net", label: "Lucro líquido" },
+            { key: "grossExpenses", label: "Bruto e Gastos" },
+          ]}
+          value={heroKey}
+          onChange={changeHero}
+          size="sm"
+        />
+      </div>
+
+      {/* OTHER CARDS */}
+      <div className="space-y-2">
+        <div className="px-1">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+            Demais cards
+          </div>
+          <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
+            Toque no card para ativar/desativar. Arraste pela alça <GripVertical className="inline h-3 w-3 align-text-bottom" /> ou use as setas para reordenar.
+          </p>
+        </div>
         <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-          <SortableContext items={reportOrder} strategy={verticalListSortingStrategy}>
-            {reportOrder.map((k, i) => {
+          <SortableContext items={restOrder} strategy={verticalListSortingStrategy}>
+            {restOrder.map((k, i) => {
               const meta = labels[k];
               const active = reportWidgets[k];
-              const isLast = i === reportOrder.length - 1;
+              const isLast = i === restOrder.length - 1;
+              // Up arrow on the first item would move it into the hero
+              // slot — blocked unless the item is hero-eligible.
+              const upDisabled = i === 0 && !isHeroKey(k);
               return (
                 <SortableHomeRow key={k} id={k} active={active}>
                   <div className="flex items-center gap-1">
@@ -264,7 +313,7 @@ function ReportsOrganizer() {
                     </button>
                     <div className="flex shrink-0 items-center gap-0.5 pl-1">
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
-                        disabled={i === 0}
+                        disabled={upDisabled}
                         onClick={() => { moveReport(k, -1); notifySaved(); }}
                         aria-label={`Mover ${meta.label} para cima`}>
                         <ArrowUp className="h-3.5 w-3.5" />
