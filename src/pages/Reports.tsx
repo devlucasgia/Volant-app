@@ -9,6 +9,8 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { EnrichedCalendar } from "@/components/ui/EnrichedCalendar";
+import { buildDailyStats } from "@/lib/calendarDayStats";
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription,
 } from "@/components/ui/drawer";
@@ -78,7 +80,7 @@ function AnimatedNumber({ value, format, duration = 500 }: { value: number; form
 
 
 export default function Reports() {
-  const { entries, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
+  const { entries, settings, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isLimited } = useAccess();
   const [widgets] = useReportWidgets();
   const [reportOrder] = useReportOrder();
@@ -90,6 +92,10 @@ export default function Reports() {
   const [chart, setChart] = useState<ChartKey>("net");
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+  const calDailyStats = useMemo(
+    () => buildDailyStats(entries, calDraft?.from ?? from),
+    [entries, calDraft?.from, from],
+  );
 
   const interval = useMemo(() => {
     if (mode === "month") return { start: startOfDay(startOfMonth(monthRef)), end: endOfDay(endOfMonth(monthRef)) };
