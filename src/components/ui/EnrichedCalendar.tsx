@@ -13,13 +13,12 @@ import {
   type DayStats,
 } from "@/lib/calendarDayStats";
 
-export interface EnrichedCalendarProps
-  extends React.ComponentProps<typeof DayPicker> {
+export type EnrichedCalendarProps = React.ComponentProps<typeof DayPicker> & {
   dailyStats: DayStats;
   goalType: GoalType;
   plannedDates?: string[];
   showPlanSemantics?: boolean;
-}
+};
 
 interface CalendarCtx {
   stats: DayStats;
