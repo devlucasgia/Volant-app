@@ -49,6 +49,11 @@ export default function Dashboard() {
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+  const calMonthRef = calDraft?.from ?? new Date();
+  const calDailyStats = useMemo(
+    () => buildDailyStats(entries, calMonthRef),
+    [entries, calMonthRef],
+  );
   const [hideValues, setHideValues] = useState(() => {
     if (typeof window === "undefined") return false;
     try { return window.localStorage.getItem("volant.hideValues") === "1"; } catch { return false; }
