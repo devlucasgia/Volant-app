@@ -865,13 +865,17 @@ export default function Dashboard() {
                 <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
               </DrawerHeader>
               <div className="flex justify-center px-2">
-                <Calendar
+                <EnrichedCalendar
                   mode="range"
                   selected={calDraft}
                   onSelect={setCalDraft}
                   numberOfMonths={1}
                   locale={ptBR}
                   className="pointer-events-auto"
+                  dailyStats={calDailyStats}
+                  goalType={settings.goalType}
+                  plannedDates={settings.planningSelectedDates ?? []}
+                  showPlanSemantics
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
