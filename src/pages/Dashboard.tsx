@@ -19,6 +19,8 @@ import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
+import { EnrichedCalendar } from "@/components/ui/EnrichedCalendar";
+import { buildDailyStats } from "@/lib/calendarDayStats";
 import { Button } from "@/components/ui/button";
 import type { DateRange } from "react-day-picker";
 import { useAccess } from "@/context/AccessContext";
@@ -47,6 +49,11 @@ export default function Dashboard() {
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+  const calMonthRef = calDraft?.from ?? new Date();
+  const calDailyStats = useMemo(
+    () => buildDailyStats(entries, calMonthRef),
+    [entries, calMonthRef],
+  );
   const [hideValues, setHideValues] = useState(() => {
     if (typeof window === "undefined") return false;
     try { return window.localStorage.getItem("volant.hideValues") === "1"; } catch { return false; }
@@ -865,13 +872,17 @@ export default function Dashboard() {
                 <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
               </DrawerHeader>
               <div className="flex justify-center px-2">
-                <Calendar
+                <EnrichedCalendar
                   mode="range"
                   selected={calDraft}
                   onSelect={setCalDraft}
                   numberOfMonths={1}
                   locale={ptBR}
                   className="pointer-events-auto"
+                  dailyStats={calDailyStats}
+                  goalType={settings.goalType}
+                  plannedDates={settings.planningSelectedDates ?? []}
+                  showPlanSemantics
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
