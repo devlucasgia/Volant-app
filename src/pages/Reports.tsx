@@ -1172,7 +1172,7 @@ export default function Reports() {
                 <DrawerDescription>Toque uma vez para um dia ou duas para um intervalo.</DrawerDescription>
               </DrawerHeader>
               <div className="flex justify-center px-2">
-                <Calendar
+                <EnrichedCalendar
                   mode="range"
                   selected={calDraft}
                   onSelect={setCalDraft}
@@ -1180,6 +1180,8 @@ export default function Reports() {
                   locale={ptBR}
                   disabled={(d) => d > new Date()}
                   className="pointer-events-auto"
+                  dailyStats={calDailyStats}
+                  goalType={settings.goalType}
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
