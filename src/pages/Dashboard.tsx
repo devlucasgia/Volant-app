@@ -884,8 +884,6 @@ export default function Dashboard() {
                   className="pointer-events-auto"
                   dailyStats={calDailyStats}
                   goalType={settings.goalType}
-                  plannedDates={settings.planningSelectedDates ?? []}
-                  showPlanSemantics
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
