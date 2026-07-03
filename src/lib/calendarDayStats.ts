@@ -1,5 +1,14 @@
-import { format, isSameMonth, startOfDay } from "date-fns";
-import type { Entry, EarningEntry, ExpenseEntry, GoalType } from "@/types";
+import { format, startOfDay } from "date-fns";
+import type { Entry, EarningEntry, ExpenseEntry } from "@/types";
+
+/**
+ * Contrato do calendário enriquecido:
+ * - Dias com registro (ganho/gasto) sempre aparecem, com valor.
+ * - Semântica de plano ("folga" / "miss") só dispara nos meses que
+ *   pertencem ao plano ativo (via `plannedSet`). Usuário sem plano →
+ *   plannedSet vazio → o calendário mostra apenas fatos registrados,
+ *   sem folgas nem faltas.
+ */
 
 export interface DayStat {
   gross: number;
@@ -14,10 +23,11 @@ export type DayStats = Map<string, DayStat>;
 /** Constrói stats por dia (ISO yyyy-MM-dd) para o mês de referência. */
 export function buildDailyStats(entries: Entry[], monthRef: Date): DayStats {
   const out: DayStats = new Map();
+  const refKey = format(monthRef, "yyyy-MM");
   for (const e of entries) {
     const d = new Date(e.date);
-    if (!isSameMonth(d, monthRef)) continue;
     const iso = format(d, "yyyy-MM-dd");
+    if (!iso.startsWith(refKey)) continue;
     const cur =
       out.get(iso) ?? { gross: 0, expenses: 0, net: 0, hasEarnings: false, hasAnyEntry: false };
     if (e.type === "earning") {
@@ -36,6 +46,7 @@ export function buildDailyStats(entries: Entry[], monthRef: Date): DayStats {
 export type DayClass =
   | "work-profit"
   | "work-loss"
+  | "work-gross"
   | "miss"
   | "off"
   | "future"
@@ -43,7 +54,8 @@ export type DayClass =
 
 export interface ClassifyOpts {
   today: Date;
-  goalType: GoalType;
+  /** Lente de exibição do calendário: líquido (verde/vermelho) ou bruto (azul). */
+  valueMode?: "net" | "gross";
   plannedSet?: Set<string>;
   showPlanSemantics?: boolean;
 }
@@ -55,18 +67,28 @@ export function classifyDay(date: Date, stats: DayStats, opts: ClassifyOpts): Da
   const day = startOfDay(date);
   const isPast = day.getTime() < today.getTime();
   const stat = stats.get(iso);
+  const valueMode = opts.valueMode ?? "net";
 
   if (stat && stat.hasAnyEntry) {
-    const shownValue = opts.goalType === "liquido" ? stat.net : stat.gross;
-    return shownValue >= 0 ? "work-profit" : "work-loss";
+    if (valueMode === "gross") return "work-gross";
+    return stat.net >= 0 ? "work-profit" : "work-loss";
   }
-  if (!isPast) return "future";
-  if (opts.showPlanSemantics && opts.plannedSet) {
-    const belongsToPlanMonth = Array.from(opts.plannedSet).some((d) => d.startsWith(monthKey));
-    if (!belongsToPlanMonth) return "none";
-    if (opts.plannedSet.has(iso)) return "miss";
+
+  const planActive = !!(opts.showPlanSemantics && opts.plannedSet && opts.plannedSet.size > 0);
+  const belongsToPlanMonth =
+    planActive && Array.from(opts.plannedSet!).some((d) => d.startsWith(monthKey));
+
+  if (belongsToPlanMonth) {
+    const isPlanned = opts.plannedSet!.has(iso);
+    if (isPlanned) {
+      // dia planejado sem registro: passado = miss, futuro = neutro
+      return isPast ? "miss" : "future";
+    }
+    // dia NÃO planejado dentro do mês do plano → folga (passado ou futuro)
+    return "off";
   }
-  return "none";
+
+  return isPast ? "none" : "future";
 }
 
 /** Formato compacto para caber na célula: "R$ 342", "R$ 1,2k", "-R$ 89". */
