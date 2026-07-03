@@ -2058,10 +2058,10 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
         <CalendarRange className="absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
       </div>
 
-      <div className="space-y-2.5 px-4 pb-20 pt-2.5">
+      <div className="px-4 pt-1.5 pb-[52px]">
         {/* Card herói */}
         <div
-          className="relative overflow-hidden rounded-2xl border p-3 transition-colors duration-500"
+          className="relative overflow-hidden rounded-2xl border px-2.5 py-2.5 transition-colors duration-500"
           style={{
             borderColor: themeSoft,
             background: `linear-gradient(160deg, ${isLiq ? "hsl(var(--primary) / 0.25)" : "hsl(var(--goal-gross) / 0.25)"} 0%, ${isLiq ? "hsl(var(--primary) / 0.12)" : "hsl(var(--goal-gross) / 0.12)"} 50%, ${isLiq ? "hsl(var(--primary) / 0.05)" : "hsl(var(--goal-gross) / 0.05)"} 100%)`,
@@ -2113,7 +2113,7 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
             </div>
           </div>
 
-          <div className="relative mt-2 text-[28px] font-extrabold leading-none tabular-nums">
+          <div className="relative mt-1.5 text-[25px] font-extrabold leading-none tabular-nums">
             {hidden ? (
               <span>R$ •••••</span>
             ) : (
@@ -2122,7 +2122,7 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
           </div>
 
           <div
-            className="relative mt-3 border-t pt-2 flex items-center justify-center gap-3 text-[10px]"
+            className="relative mt-1.5 border-t pt-1.5 flex items-center justify-center gap-3 text-[10px]"
             style={{ borderColor: `${themeSoft.replace("0.6", "0.25")}` }}
           >
             {isLiq ? (
@@ -2147,84 +2147,87 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
         </div>
 
         {/* Eyebrow Planejamento */}
-        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+        <div className="mt-2 mb-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           Planejamento inteligente
         </div>
 
-        {/* Meta */}
-        <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="flex items-center gap-1 font-semibold" style={{ color: themeVar }}>
-              <Target className="h-2.5 w-2.5" /> {metaLabel}
-            </span>
-            <span className="flex items-center gap-1 tabular-nums">
-              <span className="text-foreground font-semibold">
-                <AnimatedNumber value={metaCurrent} format={fmtBRL} />
+        {/* Agrupamento Meta + conector + KM (sem espaçamento vertical) */}
+        <div className="flex flex-col items-stretch">
+          {/* Meta */}
+          <div className="rounded-2xl border border-border/50 bg-card/60 px-3 py-2.5">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="flex items-center gap-1 font-semibold" style={{ color: themeVar }}>
+                <Target className="h-2.5 w-2.5" /> {metaLabel}
               </span>
-              <span className="text-muted-foreground/50">/</span>
+              <span className="flex items-center gap-1 tabular-nums">
+                <span className="text-foreground font-semibold">
+                  <AnimatedNumber value={metaCurrent} format={fmtBRL} />
+                </span>
+                <span className="text-muted-foreground/50">/</span>
+                <span className="text-muted-foreground">
+                  <AnimatedNumber value={metaTarget} format={fmtBRL} />
+                </span>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+              </span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                key={mode}
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${metaPct}%`, backgroundColor: themeVar }}
+              />
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[10px]">
               <span className="text-muted-foreground">
-                <AnimatedNumber value={metaTarget} format={fmtBRL} />
+                Faltam <AnimatedNumber value={metaRemaining} format={fmtBRL} />
               </span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-            </span>
+              <span className="font-semibold" style={{ color: themeVar }}>
+                <AnimatedNumber value={metaPct} format={(n) => `${Math.round(n)}%`} />
+              </span>
+            </div>
           </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              key={mode}
-              className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${metaPct}%`, backgroundColor: themeVar }}
-            />
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10px]">
-            <span className="text-muted-foreground">
-              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRL} />
-            </span>
-            <span className="font-semibold" style={{ color: themeVar }}>
-              <AnimatedNumber value={metaPct} format={(n) => `${Math.round(n)}%`} />
-            </span>
-          </div>
-        </div>
 
-        {/* Conector vertical */}
-        <div className="mx-auto h-2 w-[1px] bg-border/40" />
+          {/* Conector idêntico ao app real */}
+          <span aria-hidden className="mx-auto h-0.5 w-px bg-border/40" />
 
-        {/* R$/km Inteligente — sempre verde */}
-        <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="flex items-center gap-1 font-semibold text-success">
-              <Gauge className="h-2.5 w-2.5 animate-pulse" /> R$/km mínimo
-            </span>
-            <span className="flex items-center gap-1 tabular-nums">
-              <span className="text-foreground font-semibold">R$ 1,74</span>
-              <span className="text-[9px] text-muted-foreground">/km</span>
-              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
-            </span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-success transition-all duration-700" style={{ width: "89%" }} />
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10px]">
-            <span className="text-muted-foreground">182 km rodados · Meta 205 km</span>
-            <span className="font-semibold text-success">89%</span>
+          {/* R$/km Inteligente — sempre verde */}
+          <div className="rounded-2xl border border-border/50 bg-card/60 px-3 py-2.5">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="flex items-center gap-1 font-semibold text-success">
+                <Gauge className="h-2.5 w-2.5 animate-pulse" /> R$/km mínimo
+              </span>
+              <span className="flex items-center gap-1 tabular-nums">
+                <span className="text-foreground font-semibold">R$ 1,74</span>
+                <span className="text-[9px] text-muted-foreground">/km</span>
+                <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+              </span>
+            </div>
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-success transition-all duration-700" style={{ width: "89%" }} />
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[10px]">
+              <span className="text-muted-foreground">182 km rodados · Meta 205 km</span>
+              <span className="font-semibold text-success">89%</span>
+            </div>
           </div>
         </div>
 
         {/* Eyebrow Performance */}
-        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+        <div className="mt-2 mb-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
           Performance
         </div>
 
         {/* Card único de Performance com 2 colunas */}
         <div className="rounded-2xl border border-border/50 bg-card/60">
           <div className="grid grid-cols-2 divide-x divide-border/60">
-            <div className="p-2.5">
+            <div className="px-2.5 py-2">
               <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
                 <Clock className="h-2.5 w-2.5" /> R$ / hora
               </div>
               <div className="mt-0.5 text-[14px] font-extrabold tabular-nums">R$ 50,25</div>
               <div className="text-[9px] text-muted-foreground">8,0h trabalhadas</div>
             </div>
-            <div className="p-2.5">
+            <div className="px-2.5 py-2">
               <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
                 <Route className="h-2.5 w-2.5" /> R$ / km
               </div>
