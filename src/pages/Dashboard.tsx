@@ -18,7 +18,6 @@ import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 
 import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
-import { Calendar } from "@/components/ui/calendar";
 import { EnrichedCalendar } from "@/components/ui/EnrichedCalendar";
 import { buildDailyStats } from "@/lib/calendarDayStats";
 import { Button } from "@/components/ui/button";
