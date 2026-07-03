@@ -102,7 +102,7 @@ function CustomDay(props: DayProps) {
       {labelBelow ? (
         <span
           className={cn(
-            "text-[8px] leading-none tabular-nums font-medium",
+            "whitespace-nowrap text-[8px] leading-none tabular-nums font-medium",
             labelBelow.cls,
             (isSelected || isDisabled) && "opacity-70",
           )}
