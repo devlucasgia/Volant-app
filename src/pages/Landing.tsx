@@ -2011,10 +2011,6 @@ function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
   const bruto = 402;
   const gastos = 87.5;
   const liquido = 314.5;
-  const rphora = 50.25;
-  const rpkmReal = 2.21;
-  const rpkmMin = 1.74;
-  const rpkmDelta = 0.47;
 
   const mainValue = isLiq ? liquido : bruto;
   const mainLabel = isLiq ? "LUCRO LÍQUIDO" : "GANHO BRUTO";
