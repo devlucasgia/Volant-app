@@ -18,7 +18,6 @@ import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 
 import { useGreetingStyle, greetingStyleClass, useGreetingEmoji } from "@/lib/greetingStyle";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
-import { Calendar } from "@/components/ui/calendar";
 import { EnrichedCalendar } from "@/components/ui/EnrichedCalendar";
 import { buildDailyStats } from "@/lib/calendarDayStats";
 import { Button } from "@/components/ui/button";
@@ -49,10 +48,10 @@ export default function Dashboard() {
   const [customRange, setCustomRange] = useState<CustomRange | null>(null);
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
-  const calMonthRef = calDraft?.from ?? new Date();
+  const [calVisibleMonth, setCalVisibleMonth] = useState<Date>(() => startOfMonth(new Date()));
   const calDailyStats = useMemo(
-    () => buildDailyStats(entries, calMonthRef),
-    [entries, calMonthRef],
+    () => buildDailyStats(entries, calVisibleMonth),
+    [entries, calVisibleMonth],
   );
   const [hideValues, setHideValues] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -858,6 +857,7 @@ export default function Dashboard() {
           onSelect={(p) => { setPeriod(p); setCustomRange(null); }}
           onCalendarClick={() => {
             setCalDraft(customRange ? { from: customRange.from, to: customRange.to } : undefined);
+            setCalVisibleMonth(startOfMonth(customRange?.from ?? new Date()));
             setCalOpen(true);
           }}
         />
@@ -876,13 +876,13 @@ export default function Dashboard() {
                   mode="range"
                   selected={calDraft}
                   onSelect={setCalDraft}
+                  month={calVisibleMonth}
+                  onMonthChange={setCalVisibleMonth}
                   numberOfMonths={1}
                   locale={ptBR}
                   className="pointer-events-auto"
                   dailyStats={calDailyStats}
                   goalType={settings.goalType}
-                  plannedDates={settings.planningSelectedDates ?? []}
-                  showPlanSemantics
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
