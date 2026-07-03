@@ -383,8 +383,7 @@ function Hero({ mode }: { mode: HeroMode }) {
           </h1>
 
           <p className="hero-anim hero-anim-3 mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground md:mx-0 md:text-lg">
-            Controle sua rotina, entenda seus números e tome decisões melhores com uma ferramenta
-            feita para a realidade de quem dirige todos os dias.
+            Meta do dia calculada sozinha e o R$/km mínimo pra corrida valer a pena. Você dirige, o Volant faz as contas.
           </p>
 
         </div>
