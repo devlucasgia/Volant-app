@@ -5,7 +5,6 @@ import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import type { GoalType } from "@/types";
 import {
   classifyDay,
   compactBRL,
@@ -15,14 +14,15 @@ import {
 
 export type EnrichedCalendarProps = React.ComponentProps<typeof DayPicker> & {
   dailyStats: DayStats;
-  goalType: GoalType;
+  /** Lente de exibição do calendário: "net" (verde/vermelho) ou "gross" (azul). */
+  valueMode?: "net" | "gross";
   plannedDates?: string[];
   showPlanSemantics?: boolean;
 };
 
 interface CalendarCtx {
   stats: DayStats;
-  goalType: GoalType;
+  valueMode: "net" | "gross";
   plannedSet: Set<string>;
   showPlanSemantics: boolean;
   today: Date;
@@ -42,7 +42,7 @@ function CustomDay(props: DayProps) {
   const kind: DayClass = ctx
     ? classifyDay(props.date, ctx.stats, {
         today: ctx.today,
-        goalType: ctx.goalType,
+        valueMode: ctx.valueMode,
         plannedSet: ctx.plannedSet,
         showPlanSemantics: ctx.showPlanSemantics,
       })
@@ -51,9 +51,9 @@ function CustomDay(props: DayProps) {
   const iso = format(props.date, "yyyy-MM-dd");
   const stat = ctx?.stats.get(iso);
   const value = stat
-    ? ctx?.goalType === "liquido"
-      ? stat.net
-      : stat.gross
+    ? ctx?.valueMode === "gross"
+      ? stat.gross
+      : stat.net
     : 0;
 
   const isSelected = dr.activeModifiers.selected;
@@ -68,6 +68,8 @@ function CustomDay(props: DayProps) {
         return "ring-1 ring-inset ring-success/40 bg-success/[0.08]";
       case "work-loss":
         return "ring-1 ring-inset ring-destructive/40 bg-destructive/[0.06]";
+      case "work-gross":
+        return "ring-1 ring-inset ring-primary/40 bg-primary/[0.08]";
       case "miss":
         return "border border-dashed border-destructive/50";
       case "off":
@@ -83,6 +85,8 @@ function CustomDay(props: DayProps) {
       return { text: compactBRL(value), cls: "text-success" };
     if (kind === "work-loss")
       return { text: compactBRL(value), cls: "text-destructive" };
+    if (kind === "work-gross")
+      return { text: compactBRL(value), cls: "text-primary" };
     if (kind === "off" && ctx?.showPlanSemantics)
       return { text: "folga", cls: "text-muted-foreground/60" };
     return null;
@@ -121,7 +125,7 @@ export function EnrichedCalendar({
   classNames,
   showOutsideDays = true,
   dailyStats,
-  goalType,
+  valueMode = "net",
   plannedDates,
   showPlanSemantics = false,
   ...props
@@ -136,7 +140,7 @@ export function EnrichedCalendar({
     <Ctx.Provider
       value={{
         stats: dailyStats,
-        goalType,
+        valueMode,
         plannedSet,
         showPlanSemantics,
         today,

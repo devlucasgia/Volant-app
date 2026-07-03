@@ -882,7 +882,9 @@ export default function Dashboard() {
                   locale={ptBR}
                   className="pointer-events-auto"
                   dailyStats={calDailyStats}
-                  goalType={settings.goalType}
+                  valueMode={heroView === "gross" ? "gross" : "net"}
+                  plannedDates={settings.planningSelectedDates ?? []}
+                  showPlanSemantics
                 />
               </div>
               <div className="flex gap-2 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
