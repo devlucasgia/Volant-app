@@ -50,6 +50,7 @@ export interface ClassifyOpts {
 
 export function classifyDay(date: Date, stats: DayStats, opts: ClassifyOpts): DayClass {
   const iso = format(date, "yyyy-MM-dd");
+  const monthKey = format(date, "yyyy-MM");
   const today = startOfDay(opts.today);
   const day = startOfDay(date);
   const isPast = day.getTime() < today.getTime();
@@ -61,20 +62,22 @@ export function classifyDay(date: Date, stats: DayStats, opts: ClassifyOpts): Da
   }
   if (!isPast) return "future";
   if (opts.showPlanSemantics && opts.plannedSet) {
+    const belongsToPlanMonth = Array.from(opts.plannedSet).some((d) => d.startsWith(monthKey));
+    if (!belongsToPlanMonth) return "none";
     if (opts.plannedSet.has(iso)) return "miss";
     if (opts.plannedSet.size > 0) return "off";
   }
   return "none";
 }
 
-/** Formato compacto para caber na célula: "342", "1,2k", "-89". */
+/** Formato compacto para caber na célula: "R$ 342", "R$ 1,2k", "-R$ 89". */
 export function compactBRL(v: number): string {
   const abs = Math.abs(v);
-  const sign = v < 0 ? "-" : "";
-  if (abs >= 10000) return `${sign}${Math.round(abs / 1000)}k`;
+  const prefix = v < 0 ? "-R$ " : "R$ ";
+  if (abs >= 10000) return `${prefix}${Math.round(abs / 1000)}k`;
   if (abs >= 1000) {
     const k = (abs / 1000).toFixed(1).replace(".", ",");
-    return `${sign}${k}k`;
+    return `${prefix}${k}k`;
   }
-  return `${sign}${Math.round(abs)}`;
+  return `${prefix}${Math.round(abs)}`;
 }
