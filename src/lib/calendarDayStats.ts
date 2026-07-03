@@ -65,7 +65,6 @@ export function classifyDay(date: Date, stats: DayStats, opts: ClassifyOpts): Da
     const belongsToPlanMonth = Array.from(opts.plannedSet).some((d) => d.startsWith(monthKey));
     if (!belongsToPlanMonth) return "none";
     if (opts.plannedSet.has(iso)) return "miss";
-    if (opts.plannedSet.size > 0) return "off";
   }
   return "none";
 }
