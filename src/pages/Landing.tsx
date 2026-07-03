@@ -1605,11 +1605,11 @@ function Pricing() {
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
           {/* -------- Card Mensal -------- */}
-          <article className="pricing-card pricing-card-monthly group relative rounded-3xl border border-border/60 bg-card/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[hsl(214,90%,60%)]/50 md:p-8">
+          <article className="pricing-card pricing-card-monthly group relative rounded-3xl border border-border/60 bg-card/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-border md:p-8">
             <header>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">Mensal</h3>
-                <span className="rounded-full border border-[hsl(214,90%,60%)]/40 bg-[hsl(214,90%,55%)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(214,90%,75%)]">
+                <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Flexível
                 </span>
               </div>
@@ -1623,7 +1623,7 @@ function Pricing() {
             <ul className="mt-6 space-y-2.5 text-sm">
               {monthlyBenefits.map((b) => (
                 <li key={b} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(214,90%,70%)]" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 accent-text" />
                   <span>{b}</span>
                 </li>
               ))}
@@ -1632,13 +1632,13 @@ function Pricing() {
             <div className="mt-7">
               <Link
                 to="/auth"
-                className="group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-border/60 bg-card/80 px-6 text-sm font-semibold text-foreground transition hover:border-[hsl(214,90%,60%)]/60 hover:bg-card"
+                className="group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-border/60 bg-card/80 px-6 text-sm font-semibold text-foreground transition hover:border-border hover:bg-card"
               >
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
               <div className="mt-3 flex justify-center">
-                <span className="trust-pill trust-pill-blue">
+                <span className="trust-pill">
                   <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
                 </span>
               </div>
