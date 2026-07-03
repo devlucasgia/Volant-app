@@ -23,17 +23,18 @@ import {
   Wallet,
   Hourglass,
   Brain,
-  Star,
-  Quote,
   X as XIcon,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
   Menu,
   ArrowUp,
-  
+  Bell,
+  Eye,
+  EyeOff,
+  Route,
+  CalendarRange,
 } from "lucide-react";
-import useEmblaCarousel from "embla-carousel-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -106,7 +107,6 @@ export default function Landing() {
         <FeatureMetas />
         <FeaturePersonalizacao />
         <SecondaryFeatures />
-        <Testimonials />
         <Comparison />
         <Pricing />
         <Faq />
@@ -383,8 +383,7 @@ function Hero({ mode }: { mode: HeroMode }) {
           </h1>
 
           <p className="hero-anim hero-anim-3 mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted-foreground md:mx-0 md:text-lg">
-            Controle sua rotina, entenda seus números e tome decisões melhores com uma ferramenta
-            feita para a realidade de quem dirige todos os dias.
+            Meta do dia calculada sozinha e o R$/km mínimo pra corrida valer a pena. Você dirige, o Volant faz as contas.
           </p>
 
         </div>
@@ -1606,11 +1605,11 @@ function Pricing() {
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 md:gap-6">
           {/* -------- Card Mensal -------- */}
-          <article className="pricing-card pricing-card-monthly group relative rounded-3xl border border-border/60 bg-card/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-[hsl(214,90%,60%)]/50 md:p-8">
+          <article className="pricing-card pricing-card-monthly group relative rounded-3xl border border-border/60 bg-card/70 p-6 backdrop-blur transition hover:-translate-y-0.5 hover:border-border md:p-8">
             <header>
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold tracking-tight">Mensal</h3>
-                <span className="rounded-full border border-[hsl(214,90%,60%)]/40 bg-[hsl(214,90%,55%)]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[hsl(214,90%,75%)]">
+                <span className="rounded-full border border-border/60 bg-muted/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Flexível
                 </span>
               </div>
@@ -1624,7 +1623,7 @@ function Pricing() {
             <ul className="mt-6 space-y-2.5 text-sm">
               {monthlyBenefits.map((b) => (
                 <li key={b} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-[hsl(214,90%,70%)]" />
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 accent-text" />
                   <span>{b}</span>
                 </li>
               ))}
@@ -1633,13 +1632,13 @@ function Pricing() {
             <div className="mt-7">
               <Link
                 to="/auth"
-                className="group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-border/60 bg-card/80 px-6 text-sm font-semibold text-foreground transition hover:border-[hsl(214,90%,60%)]/60 hover:bg-card"
+                className="group/btn relative inline-flex h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-full border border-border/60 bg-card/80 px-6 text-sm font-semibold text-foreground transition hover:border-border hover:bg-card"
               >
                 Começar teste grátis
                 <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
               </Link>
               <div className="mt-3 flex justify-center">
-                <span className="trust-pill trust-pill-blue">
+                <span className="trust-pill">
                   <Check className="h-3 w-3" /> Sem cartão · 7 dias grátis
                 </span>
               </div>
@@ -2006,120 +2005,231 @@ function MockBottomNav({ active = "Início" }: { active?: string }) {
 
 function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
   const isLiq = mode === "liquido";
-  // Valores reativos ao modo
-  const mainValue = isLiq ? 350 : 600;
-  const mainLabel = isLiq ? "Lucro Líquido" : "Faturamento Bruto";
-  const mainTag = isLiq ? "LUCRO LÍQUIDO" : "FATURAMENTO BRUTO";
+  const [hidden, setHidden] = useState(false);
 
-  const metaLabel = isLiq ? "Meta líquida do dia" : "Meta bruta do dia";
-  const metaCurrent = isLiq ? 350 : 600;
-  const metaTarget = isLiq ? 714 : 1000;
-  const metaPct = isLiq ? 49 : 60;
-  const metaRemaining = isLiq ? 364 : 400;
+  // Números fixos, coerentes entre herói e meta
+  const bruto = 402;
+  const gastos = 87.5;
+  const liquido = 314.5;
 
-  const kmLabel = isLiq ? "R$/KM Inteligente" : "R$/KM Bruto";
-  const kmValue = isLiq ? 2.42 : 4.15;
+  const mainValue = isLiq ? liquido : bruto;
+  const mainLabel = isLiq ? "LUCRO LÍQUIDO" : "GANHO BRUTO";
+  const mainSub = isLiq ? "DEPOIS DOS GASTOS" : "ANTES DOS GASTOS";
+
+  const metaLabel = isLiq ? "Meta líquida" : "Meta bruta";
+  const metaCurrent = isLiq ? liquido : bruto;
+  const metaTarget = isLiq ? 350 : 460;
+  const metaPct = isLiq ? 90 : 87;
+  const metaRemaining = isLiq ? 35.5 : 58;
+
+  const themeVar = isLiq ? "hsl(var(--primary))" : "hsl(var(--goal-gross))";
+  const themeSoft = isLiq ? "hsl(var(--primary) / 0.6)" : "hsl(var(--goal-gross) / 0.6)";
 
   return (
     <div data-mode={mode} className="contents">
-      <MockHeader title="Olá, Motorista 👋" subtitle="Foco, disciplina e constância!" />
-
-      {/* Toggle Líquido / Bruto (decorativo, alterna sozinho) */}
-      <div className="px-4 pt-3">
-        <div className="mode-toggle w-full">
-          <span className="mode-toggle__pill" aria-hidden />
-          <span className="mode-toggle__option" data-opt="liquido">Líquido</span>
-          <span className="mode-toggle__option" data-opt="bruto">Bruto</span>
+      {/* Header local */}
+      <div className="flex items-center gap-2 border-b border-border/40 bg-card/60 px-4 pt-7 pb-2.5">
+        <img src={volantSymbol} alt="" className="h-6 w-6 rounded-full" />
+        <div className="min-w-0 flex-1">
+          <div className="text-[12.5px] font-bold leading-tight">Olá, Motorista 👋</div>
+          <div className="text-[8px] text-muted-foreground/70 leading-tight">Quinta-feira, 2 de julho</div>
         </div>
+        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
 
-      <div className="space-y-3 px-4 pb-20 pt-3">
-        {/* Card principal — alterna Líquido / Bruto */}
-        <div className="mode-card mode-card--primary rounded-2xl border p-3">
-          <div className="mode-text flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider" aria-label={mainTag}>
-            <Gauge className="h-2.5 w-2.5" /> {mainLabel}
+      {/* Barra de período local — flat com underline */}
+      <div className="relative border-b border-border/30 bg-card/30">
+        <div className="flex items-center justify-center gap-6 px-4 py-1.5 text-[10px] font-semibold">
+          {["Hoje", "Semana", "Mês"].map((t) => {
+            const active = t === "Hoje";
+            return (
+              <span key={t} className="relative py-1">
+                <span className={cn(active ? "text-foreground" : "text-muted-foreground/70")}>{t}</span>
+                {active && (
+                  <span
+                    className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full transition-colors duration-500"
+                    style={{ backgroundColor: themeVar }}
+                  />
+                )}
+              </span>
+            );
+          })}
+        </div>
+        <CalendarRange className="absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+      </div>
+
+      <div className="space-y-2.5 px-4 pb-20 pt-2.5">
+        {/* Card herói */}
+        <div
+          className="relative overflow-hidden rounded-2xl border p-3 transition-colors duration-500"
+          style={{
+            borderColor: themeSoft,
+            background: `linear-gradient(160deg, ${isLiq ? "hsl(var(--primary) / 0.25)" : "hsl(var(--goal-gross) / 0.25)"} 0%, ${isLiq ? "hsl(var(--primary) / 0.12)" : "hsl(var(--goal-gross) / 0.12)"} 50%, ${isLiq ? "hsl(var(--primary) / 0.05)" : "hsl(var(--goal-gross) / 0.05)"} 100%)`,
+          }}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl transition-colors duration-500"
+            style={{ backgroundColor: isLiq ? "hsl(var(--primary) / 0.35)" : "hsl(var(--goal-gross) / 0.35)" }}
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -left-4 -bottom-6 h-16 w-16 rounded-full blur-2xl"
+            style={{ backgroundColor: "hsl(var(--primary-glow) / 0.15)" }}
+          />
+
+          <div className="relative flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: themeVar }}>
+                <Gauge className="h-2.5 w-2.5" /> {mainLabel}
+              </div>
+              <div className="text-[8px] font-medium uppercase tracking-wider text-muted-foreground/55">
+                {mainSub}
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="flex overflow-hidden rounded-full border border-border/50 text-[8px] font-semibold">
+                <span
+                  className={cn("px-1.5 py-0.5 transition-colors", isLiq ? "text-primary-foreground" : "text-muted-foreground")}
+                  style={isLiq ? { backgroundColor: themeVar } : undefined}
+                >
+                  Líquido
+                </span>
+                <span
+                  className={cn("px-1.5 py-0.5 transition-colors", !isLiq ? "text-primary-foreground" : "text-muted-foreground")}
+                  style={!isLiq ? { backgroundColor: themeVar } : undefined}
+                >
+                  Bruto
+                </span>
+              </div>
+              <button
+                type="button"
+                aria-label={hidden ? "Mostrar valores" : "Ocultar valores"}
+                onClick={() => setHidden((v) => !v)}
+                className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:text-foreground"
+              >
+                {hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </button>
+            </div>
           </div>
-          <div className="mt-1 text-[26px] font-extrabold leading-none tabular-nums">
-            <AnimatedNumber value={mainValue} format={fmtBRL} />
+
+          <div className="relative mt-2 text-[28px] font-extrabold leading-none tabular-nums">
+            {hidden ? (
+              <span>R$ •••••</span>
+            ) : (
+              <AnimatedNumber value={mainValue} format={fmtBRL} />
+            )}
           </div>
-          <div className="mt-3 border-t border-current/15 pt-2 flex items-center justify-between text-[10px]" style={{ borderColor: "hsl(var(--border) / 0.6)" }}>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Bruto
-              <span className="text-foreground font-semibold">R$ 600,00</span>
-            </span>
-            <span className="text-border">|</span>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Gastos
-              <span className="text-foreground font-semibold">R$ 250,00</span>
-            </span>
+
+          <div
+            className="relative mt-3 border-t pt-2 flex items-center justify-center gap-3 text-[10px]"
+            style={{ borderColor: `${themeSoft.replace("0.6", "0.25")}` }}
+          >
+            {isLiq ? (
+              <>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "hsl(var(--goal-gross))" }} />
+                  Bruto <span className="text-foreground font-semibold">R$ 402,00</span>
+                </span>
+                <span className="text-border/60">|</span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                  Gastos <span className="text-foreground font-semibold">R$ 87,50</span>
+                </span>
+              </>
+            ) : (
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                Líquido <span className="text-foreground font-semibold">R$ 314,50</span>
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Meta do dia */}
+        {/* Eyebrow Planejamento */}
+        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Planejamento inteligente
+        </div>
+
+        {/* Meta */}
         <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="mode-text flex items-center gap-1 font-semibold">
+            <span className="flex items-center gap-1 font-semibold" style={{ color: themeVar }}>
               <Target className="h-2.5 w-2.5" /> {metaLabel}
             </span>
-            <span className="text-muted-foreground tabular-nums">
+            <span className="flex items-center gap-1 tabular-nums">
               <span className="text-foreground font-semibold">
-                <AnimatedNumber value={metaCurrent} format={fmtBRLInt} />
-              </span>{" "}
-              / <AnimatedNumber value={metaTarget} format={fmtBRLInt} />
+                <AnimatedNumber value={metaCurrent} format={fmtBRL} />
+              </span>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="text-muted-foreground">
+                <AnimatedNumber value={metaTarget} format={fmtBRL} />
+              </span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              key={mode /* força re-anim da largura na troca */}
-              className="mode-bar h-full rounded-full"
-              style={{ width: `${metaPct}%` }}
+              key={mode}
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${metaPct}%`, backgroundColor: themeVar }}
             />
           </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>
-              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRLInt} />
+          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground">
+              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRL} />
             </span>
-            <span className="mode-text font-semibold">
+            <span className="font-semibold" style={{ color: themeVar }}>
               <AnimatedNumber value={metaPct} format={(n) => `${Math.round(n)}%`} />
             </span>
           </div>
         </div>
 
-        {/* R$/KM Inteligente — horizontal */}
-        <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-card/60 p-2.5">
-          <span className="mode-icon-bg grid h-9 w-9 place-items-center rounded-xl border">
-            <Gauge className="h-4 w-4" />
-          </span>
-          <div className="flex-1 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {kmLabel}
-            </div>
-            <div className="mt-0.5 text-[15px] font-extrabold tabular-nums">
-              <AnimatedNumber value={kmValue} format={(n) => `R$ ${n.toFixed(2).replace(".", ",")}`} />{" "}
-              <span className="text-[10px] font-medium text-muted-foreground">/ km</span>
-            </div>
+        {/* Conector vertical */}
+        <div className="mx-auto h-2 w-[1px] bg-border/40" />
+
+        {/* R$/km Inteligente — sempre verde */}
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="flex items-center gap-1 font-semibold text-success">
+              <Gauge className="h-2.5 w-2.5 animate-pulse" /> R$/km mínimo
+            </span>
+            <span className="flex items-center gap-1 tabular-nums">
+              <span className="text-foreground font-semibold">R$ 1,74</span>
+              <span className="text-[9px] text-muted-foreground">/km</span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-success transition-all duration-700" style={{ width: "89%" }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground">182 km rodados · Meta 205 km</span>
+            <span className="font-semibold text-success">89%</span>
           </div>
         </div>
 
-        {/* Performance (neutro) */}
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <Gauge className="h-2.5 w-2.5" /> Performance
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
-              <div className="text-[9px] font-semibold uppercase tracking-wider text-primary">
-                R$ / Hora
+        {/* Eyebrow Performance */}
+        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Performance
+        </div>
+
+        {/* Card único de Performance com 2 colunas */}
+        <div className="rounded-2xl border border-border/50 bg-card/60">
+          <div className="grid grid-cols-2 divide-x divide-border/60">
+            <div className="p-2.5">
+              <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
+                <Clock className="h-2.5 w-2.5" /> R$ / hora
               </div>
-              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 75,00</div>
+              <div className="mt-0.5 text-[14px] font-extrabold tabular-nums">R$ 50,25</div>
               <div className="text-[9px] text-muted-foreground">8,0h trabalhadas</div>
             </div>
-            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
-              <div className="text-[9px] font-semibold uppercase tracking-wider text-sky-400">
-                R$ / Km
+            <div className="p-2.5">
+              <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
+                <Route className="h-2.5 w-2.5" /> R$ / km
               </div>
-              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 2,31</div>
-              <div className="text-[9px] text-muted-foreground">260,0 km</div>
+              <div className="mt-0.5 text-[14px] font-extrabold tabular-nums text-success">R$ 2,21</div>
+              <div className="text-[9px] text-success">R$ 0,47 acima do mínimo</div>
             </div>
           </div>
         </div>
@@ -2501,78 +2611,6 @@ function SocialProof() {
   );
 }
 
-/* ------------------------------ testimonials ------------------------------ */
-
-type Testimonial = {
-  quote: string;
-  name: string;
-  meta: string;
-  initials: string;
-  color: string;
-};
-
-function Testimonials() {
-  const ref = useReveal<HTMLDivElement>();
-  const items: Testimonial[] = [
-    {
-      quote:
-        "Antes eu achava que tava ganhando bem. Depois que comecei a anotar gasto certinho, vi que o líquido era bem menor. Hoje sei exatamente quanto vale ligar o app.",
-      name: "Rafael",
-      meta: "Uber + 99 · São Paulo, SP",
-      initials: "R",
-      color: "#10b981",
-    },
-    {
-      quote:
-        "O que mais me ajudou foi o R$/km. Eu rejeitava corrida no olho, agora rejeito com número. Mudou meu mês.",
-      name: "Daniel",
-      meta: "Uber · Belo Horizonte, MG",
-      initials: "D",
-      color: "#3b82f6",
-    },
-    {
-      quote:
-        "Uso pra Uber, 99 e particular. Finalmente um app que entende que a gente roda em mais de uma plataforma.",
-      name: "Carlos",
-      meta: "Multi-app · Curitiba, PR",
-      initials: "C",
-      color: "#f59e0b",
-    },
-    {
-      quote:
-        "Comecei a separar combustível, manutenção e IPVA. Em duas semanas já entendi quais dias compensam rodar e quais não.",
-      name: "Marcos",
-      meta: "Uber · São Paulo, SP",
-      initials: "M",
-      color: "#a855f7",
-    },
-    {
-      quote:
-        "As metas mudaram minha rotina. Bato meta de líquido sem ficar 14h no carro. Hoje eu sei a hora de parar.",
-      name: "Lucas",
-      meta: "99 + inDrive · São Paulo, SP",
-      initials: "L",
-      color: "#ef4444",
-    },
-  ];
-  return (
-    <section className="cv-auto px-4 py-16 md:py-24">
-
-      <div ref={ref} className="reveal mx-auto max-w-6xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow icon={<Quote className="h-3 w-3" />}>Depoimentos</Eyebrow>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
-            Motoristas que já estão dirigindo com <span className="accent-text">clareza</span>.
-          </h2>
-        </div>
-
-        <TestimonialsCarousel items={items} />
-      </div>
-    </section>
-
-  );
-}
-
 /* -------------------------------- comparison ------------------------------ */
 
 function Comparison() {
@@ -2733,173 +2771,5 @@ function Faq() {
 }
 
 
-
-
-/* ----------------------------- testimonials carousel -------------------- */
-
-function TestimonialsCarousel({ items }: { items: Testimonial[] }) {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    align: "center",
-    containScroll: false,
-    skipSnaps: false,
-    dragFree: false,
-  });
-  const [selected, setSelected] = useState(0);
-  const [isHover, setIsHover] = useState(false);
-  const reducedMotion =
-    typeof window !== "undefined" &&
-    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setSelected(emblaApi.selectedScrollSnap());
-    emblaApi.on("select", onSelect);
-    emblaApi.on("reInit", onSelect);
-    onSelect();
-    return () => {
-      emblaApi.off("select", onSelect);
-      emblaApi.off("reInit", onSelect);
-    };
-  }, [emblaApi]);
-
-  // Auto-advance
-  useEffect(() => {
-    if (!emblaApi || reducedMotion || isHover) return;
-    const id = window.setInterval(() => emblaApi.scrollNext(), 6000);
-    return () => window.clearInterval(id);
-  }, [emblaApi, isHover, reducedMotion]);
-
-  // Keyboard nav
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") emblaApi.scrollPrev();
-      else if (e.key === "ArrowRight") emblaApi.scrollNext();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [emblaApi]);
-
-  return (
-    <div
-      className="relative mt-10"
-      onMouseEnter={() => setIsHover(true)}
-      onMouseLeave={() => setIsHover(false)}
-      aria-roledescription="carousel"
-      aria-label="Depoimentos de motoristas"
-    >
-      <div ref={emblaRef} className="overflow-hidden">
-        <div className="flex touch-pan-y">
-          {items.map((t, i) => {
-            const isActive = i === selected;
-            return (
-              <div
-                key={t.name}
-                className="relative min-w-0 shrink-0 grow-0 basis-[85%] px-2 sm:basis-[60%] md:basis-[42%] lg:basis-[36%]"
-                aria-roledescription="slide"
-                aria-label={`${i + 1} de ${items.length}`}
-              >
-                <div
-                  className={cn(
-                    "transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                    isActive
-                      ? "scale-100 opacity-100"
-                      : "scale-[0.82] opacity-40 blur-[2px]",
-                  )}
-                >
-                  <TestimonialCard t={t} dimmed={!isActive} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Arrows — desktop */}
-      <button
-        type="button"
-        onClick={() => emblaApi?.scrollPrev()}
-        aria-label="Depoimento anterior"
-        className="absolute left-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        onClick={() => emblaApi?.scrollNext()}
-        aria-label="Próximo depoimento"
-        className="absolute right-0 top-1/2 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/60 bg-card/80 text-foreground backdrop-blur transition hover:border-primary/40 hover:bg-card md:flex"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
-
-      {/* Dots */}
-      <div className="mt-6 flex items-center justify-center gap-2">
-        {items.map((t, i) => (
-          <button
-            key={t.name}
-            type="button"
-            onClick={() => emblaApi?.scrollTo(i)}
-            aria-label={`Ir para depoimento ${i + 1}`}
-            aria-current={i === selected}
-            className={cn(
-              "h-2 rounded-full transition-all duration-300",
-              i === selected
-                ? "w-6 bg-primary"
-                : "w-2 bg-border hover:bg-muted-foreground/50",
-            )}
-          />
-        ))}
-      </div>
-
-      {/* Mobile hint */}
-      <p className="mt-3 text-center text-[11px] text-muted-foreground md:hidden">
-        Arraste para ver mais depoimentos
-      </p>
-    </div>
-  );
-}
-
-/* ----------------------------- testimonial card -------------------------- */
-
-function TestimonialCard({
-  t,
-  dimmed = false,
-}: {
-  t: Testimonial;
-  dimmed?: boolean;
-}) {
-  return (
-    <article
-      className={cn(
-        "testimonial-card group relative rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur transition-colors duration-300",
-        !dimmed && "hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10",
-      )}
-    >
-      <Quote className="absolute right-5 top-5 h-5 w-5 text-primary/20 transition-colors group-hover:text-primary/40" aria-hidden />
-      <div className="flex items-center gap-1 text-primary">
-        {[0, 1, 2, 3, 4].map((s) => (
-          <Star key={s} className="h-3.5 w-3.5 fill-current" />
-        ))}
-      </div>
-      <p className="mt-3 text-sm leading-relaxed text-foreground/90">
-        “{t.quote}”
-      </p>
-      <div className="mt-5 flex items-center gap-3 border-t border-border/40 pt-4">
-        <div
-          className="grid h-10 w-10 place-items-center rounded-full text-sm font-bold text-white"
-          style={{ backgroundColor: t.color }}
-        >
-          {t.initials}
-        </div>
-        <div className="text-left">
-          <div className="text-sm font-semibold text-foreground">{t.name}</div>
-          <div className="text-xs text-muted-foreground">{t.meta}</div>
-        </div>
-      </div>
-    </article>
-  );
-}
 
 
