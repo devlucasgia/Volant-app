@@ -23,17 +23,18 @@ import {
   Wallet,
   Hourglass,
   Brain,
-  Star,
-  Quote,
   X as XIcon,
   HelpCircle,
   ChevronLeft,
   ChevronRight,
   Menu,
   ArrowUp,
-  
+  Bell,
+  Eye,
+  EyeOff,
+  Route,
+  CalendarRange,
 } from "lucide-react";
-import useEmblaCarousel from "embla-carousel-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { SplashScreen } from "@/components/SplashScreen";
