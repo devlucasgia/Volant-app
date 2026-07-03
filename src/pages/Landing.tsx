@@ -2005,120 +2005,235 @@ function MockBottomNav({ active = "Início" }: { active?: string }) {
 
 function HomeMockup({ mode = "liquido" }: { mode?: HeroMode }) {
   const isLiq = mode === "liquido";
-  // Valores reativos ao modo
-  const mainValue = isLiq ? 350 : 600;
-  const mainLabel = isLiq ? "Lucro Líquido" : "Faturamento Bruto";
-  const mainTag = isLiq ? "LUCRO LÍQUIDO" : "FATURAMENTO BRUTO";
+  const [hidden, setHidden] = useState(false);
 
-  const metaLabel = isLiq ? "Meta líquida do dia" : "Meta bruta do dia";
-  const metaCurrent = isLiq ? 350 : 600;
-  const metaTarget = isLiq ? 714 : 1000;
-  const metaPct = isLiq ? 49 : 60;
-  const metaRemaining = isLiq ? 364 : 400;
+  // Números fixos, coerentes entre herói e meta
+  const bruto = 402;
+  const gastos = 87.5;
+  const liquido = 314.5;
+  const rphora = 50.25;
+  const rpkmReal = 2.21;
+  const rpkmMin = 1.74;
+  const rpkmDelta = 0.47;
 
-  const kmLabel = isLiq ? "R$/KM Inteligente" : "R$/KM Bruto";
-  const kmValue = isLiq ? 2.42 : 4.15;
+  const mainValue = isLiq ? liquido : bruto;
+  const mainLabel = isLiq ? "LUCRO LÍQUIDO" : "GANHO BRUTO";
+  const mainSub = isLiq ? "DEPOIS DOS GASTOS" : "ANTES DOS GASTOS";
+
+  const metaLabel = isLiq ? "Meta líquida" : "Meta bruta";
+  const metaCurrent = isLiq ? liquido : bruto;
+  const metaTarget = isLiq ? 350 : 460;
+  const metaPct = isLiq ? 90 : 87;
+  const metaRemaining = isLiq ? 35.5 : 58;
+
+  const themeVar = isLiq ? "hsl(var(--primary))" : "hsl(var(--goal-gross))";
+  const themeSoft = isLiq ? "hsl(var(--primary) / 0.6)" : "hsl(var(--goal-gross) / 0.6)";
 
   return (
     <div data-mode={mode} className="contents">
-      <MockHeader title="Olá, Motorista 👋" subtitle="Foco, disciplina e constância!" />
-
-      {/* Toggle Líquido / Bruto (decorativo, alterna sozinho) */}
-      <div className="px-4 pt-3">
-        <div className="mode-toggle w-full">
-          <span className="mode-toggle__pill" aria-hidden />
-          <span className="mode-toggle__option" data-opt="liquido">Líquido</span>
-          <span className="mode-toggle__option" data-opt="bruto">Bruto</span>
+      {/* Header local */}
+      <div className="flex items-center gap-2 border-b border-border/40 bg-card/60 px-4 pt-7 pb-2.5">
+        <img src={volantSymbol} alt="" className="h-6 w-6 rounded-full" />
+        <div className="min-w-0 flex-1">
+          <div className="text-[12.5px] font-bold leading-tight">Olá, Motorista 👋</div>
+          <div className="text-[8px] text-muted-foreground/70 leading-tight">Quinta-feira, 2 de julho</div>
         </div>
+        <Bell className="h-3.5 w-3.5 text-muted-foreground" />
       </div>
 
-      <div className="space-y-3 px-4 pb-20 pt-3">
-        {/* Card principal — alterna Líquido / Bruto */}
-        <div className="mode-card mode-card--primary rounded-2xl border p-3">
-          <div className="mode-text flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider" aria-label={mainTag}>
-            <Gauge className="h-2.5 w-2.5" /> {mainLabel}
+      {/* Barra de período local — flat com underline */}
+      <div className="relative border-b border-border/30 bg-card/30">
+        <div className="flex items-center justify-center gap-6 px-4 py-1.5 text-[10px] font-semibold">
+          {["Hoje", "Semana", "Mês"].map((t) => {
+            const active = t === "Hoje";
+            return (
+              <span key={t} className="relative py-1">
+                <span className={cn(active ? "text-foreground" : "text-muted-foreground/70")}>{t}</span>
+                {active && (
+                  <span
+                    className="absolute left-0 right-0 -bottom-[1px] h-[2px] rounded-full transition-colors duration-500"
+                    style={{ backgroundColor: themeVar }}
+                  />
+                )}
+              </span>
+            );
+          })}
+        </div>
+        <CalendarRange className="absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+      </div>
+
+      <div className="space-y-2.5 px-4 pb-20 pt-2.5">
+        {/* Card herói */}
+        <div
+          className="relative overflow-hidden rounded-2xl border p-3 transition-colors duration-500"
+          style={{
+            borderColor: themeSoft,
+            background: `linear-gradient(160deg, ${isLiq ? "hsl(var(--primary) / 0.25)" : "hsl(var(--goal-gross) / 0.25)"} 0%, ${isLiq ? "hsl(var(--primary) / 0.12)" : "hsl(var(--goal-gross) / 0.12)"} 50%, ${isLiq ? "hsl(var(--primary) / 0.05)" : "hsl(var(--goal-gross) / 0.05)"} 100%)`,
+          }}
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -right-6 -top-6 h-20 w-20 rounded-full blur-2xl transition-colors duration-500"
+            style={{ backgroundColor: isLiq ? "hsl(var(--primary) / 0.35)" : "hsl(var(--goal-gross) / 0.35)" }}
+          />
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -left-4 -bottom-6 h-16 w-16 rounded-full blur-2xl"
+            style={{ backgroundColor: "hsl(var(--primary-glow) / 0.15)" }}
+          />
+
+          <div className="relative flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: themeVar }}>
+                <Gauge className="h-2.5 w-2.5" /> {mainLabel}
+              </div>
+              <div className="text-[8px] font-medium uppercase tracking-wider text-muted-foreground/55">
+                {mainSub}
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="flex overflow-hidden rounded-full border border-border/50 text-[8px] font-semibold">
+                <span
+                  className={cn("px-1.5 py-0.5 transition-colors", isLiq ? "text-primary-foreground" : "text-muted-foreground")}
+                  style={isLiq ? { backgroundColor: themeVar } : undefined}
+                >
+                  Líquido
+                </span>
+                <span
+                  className={cn("px-1.5 py-0.5 transition-colors", !isLiq ? "text-primary-foreground" : "text-muted-foreground")}
+                  style={!isLiq ? { backgroundColor: themeVar } : undefined}
+                >
+                  Bruto
+                </span>
+              </div>
+              <button
+                type="button"
+                aria-label={hidden ? "Mostrar valores" : "Ocultar valores"}
+                onClick={() => setHidden((v) => !v)}
+                className="grid h-5 w-5 place-items-center rounded-full text-muted-foreground hover:text-foreground"
+              >
+                {hidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              </button>
+            </div>
           </div>
-          <div className="mt-1 text-[26px] font-extrabold leading-none tabular-nums">
-            <AnimatedNumber value={mainValue} format={fmtBRL} />
+
+          <div className="relative mt-2 text-[28px] font-extrabold leading-none tabular-nums">
+            {hidden ? (
+              <span>R$ •••••</span>
+            ) : (
+              <AnimatedNumber value={mainValue} format={fmtBRL} />
+            )}
           </div>
-          <div className="mt-3 border-t border-current/15 pt-2 flex items-center justify-between text-[10px]" style={{ borderColor: "hsl(var(--border) / 0.6)" }}>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" /> Bruto
-              <span className="text-foreground font-semibold">R$ 600,00</span>
-            </span>
-            <span className="text-border">|</span>
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-red-400" /> Gastos
-              <span className="text-foreground font-semibold">R$ 250,00</span>
-            </span>
+
+          <div
+            className="relative mt-3 border-t pt-2 flex items-center justify-center gap-3 text-[10px]"
+            style={{ borderColor: `${themeSoft.replace("0.6", "0.25")}` }}
+          >
+            {isLiq ? (
+              <>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: "hsl(var(--goal-gross))" }} />
+                  Bruto <span className="text-foreground font-semibold">R$ 402,00</span>
+                </span>
+                <span className="text-border/60">|</span>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <span className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                  Gastos <span className="text-foreground font-semibold">R$ 87,50</span>
+                </span>
+              </>
+            ) : (
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                Líquido <span className="text-foreground font-semibold">R$ 314,50</span>
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Meta do dia */}
+        {/* Eyebrow Planejamento */}
+        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Planejamento inteligente
+        </div>
+
+        {/* Meta */}
         <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
           <div className="flex items-center justify-between text-[10px]">
-            <span className="mode-text flex items-center gap-1 font-semibold">
+            <span className="flex items-center gap-1 font-semibold" style={{ color: themeVar }}>
               <Target className="h-2.5 w-2.5" /> {metaLabel}
             </span>
-            <span className="text-muted-foreground tabular-nums">
+            <span className="flex items-center gap-1 tabular-nums">
               <span className="text-foreground font-semibold">
-                <AnimatedNumber value={metaCurrent} format={fmtBRLInt} />
-              </span>{" "}
-              / <AnimatedNumber value={metaTarget} format={fmtBRLInt} />
+                <AnimatedNumber value={metaCurrent} format={fmtBRL} />
+              </span>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="text-muted-foreground">
+                <AnimatedNumber value={metaTarget} format={fmtBRL} />
+              </span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
             </span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
             <div
-              key={mode /* força re-anim da largura na troca */}
-              className="mode-bar h-full rounded-full"
-              style={{ width: `${metaPct}%` }}
+              key={mode}
+              className="h-full rounded-full transition-all duration-700"
+              style={{ width: `${metaPct}%`, backgroundColor: themeVar }}
             />
           </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>
-              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRLInt} />
+          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground">
+              Faltam <AnimatedNumber value={metaRemaining} format={fmtBRL} />
             </span>
-            <span className="mode-text font-semibold">
+            <span className="font-semibold" style={{ color: themeVar }}>
               <AnimatedNumber value={metaPct} format={(n) => `${Math.round(n)}%`} />
             </span>
           </div>
         </div>
 
-        {/* R$/KM Inteligente — horizontal */}
-        <div className="flex items-center gap-2 rounded-2xl border border-border/50 bg-card/60 p-2.5">
-          <span className="mode-icon-bg grid h-9 w-9 place-items-center rounded-xl border">
-            <Gauge className="h-4 w-4" />
-          </span>
-          <div className="flex-1 text-center">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {kmLabel}
-            </div>
-            <div className="mt-0.5 text-[15px] font-extrabold tabular-nums">
-              <AnimatedNumber value={kmValue} format={(n) => `R$ ${n.toFixed(2).replace(".", ",")}`} />{" "}
-              <span className="text-[10px] font-medium text-muted-foreground">/ km</span>
-            </div>
+        {/* Conector vertical */}
+        <div className="mx-auto h-2 w-[1px] bg-border/40" />
+
+        {/* R$/km Inteligente — sempre verde */}
+        <div className="rounded-2xl border border-border/50 bg-card/60 p-3">
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="flex items-center gap-1 font-semibold text-success">
+              <Gauge className="h-2.5 w-2.5 animate-pulse" /> R$/km mínimo
+            </span>
+            <span className="flex items-center gap-1 tabular-nums">
+              <span className="text-foreground font-semibold">R$ 1,74</span>
+              <span className="text-[9px] text-muted-foreground">/km</span>
+              <ChevronRight className="h-3 w-3 text-muted-foreground/60" />
+            </span>
+          </div>
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-success transition-all duration-700" style={{ width: "89%" }} />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+            <span className="text-muted-foreground">182 km rodados · Meta 205 km</span>
+            <span className="font-semibold text-success">89%</span>
           </div>
         </div>
 
-        {/* Performance (neutro) */}
-        <div>
-          <div className="mb-1.5 flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <Gauge className="h-2.5 w-2.5" /> Performance
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
-              <div className="text-[9px] font-semibold uppercase tracking-wider text-primary">
-                R$ / Hora
+        {/* Eyebrow Performance */}
+        <div className="pt-1 text-[8.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
+          Performance
+        </div>
+
+        {/* Card único de Performance com 2 colunas */}
+        <div className="rounded-2xl border border-border/50 bg-card/60">
+          <div className="grid grid-cols-2 divide-x divide-border/60">
+            <div className="p-2.5">
+              <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
+                <Clock className="h-2.5 w-2.5" /> R$ / hora
               </div>
-              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 75,00</div>
+              <div className="mt-0.5 text-[14px] font-extrabold tabular-nums">R$ 50,25</div>
               <div className="text-[9px] text-muted-foreground">8,0h trabalhadas</div>
             </div>
-            <div className="rounded-2xl border border-border/50 bg-card/60 p-2.5">
-              <div className="text-[9px] font-semibold uppercase tracking-wider text-sky-400">
-                R$ / Km
+            <div className="p-2.5">
+              <div className="flex items-center gap-1 text-[8.5px] font-semibold uppercase tracking-wider text-success">
+                <Route className="h-2.5 w-2.5" /> R$ / km
               </div>
-              <div className="mt-0.5 text-base font-extrabold tabular-nums">R$ 2,31</div>
-              <div className="text-[9px] text-muted-foreground">260,0 km</div>
+              <div className="mt-0.5 text-[14px] font-extrabold tabular-nums text-success">R$ 2,21</div>
+              <div className="text-[9px] text-success">R$ 0,47 acima do mínimo</div>
             </div>
           </div>
         </div>
