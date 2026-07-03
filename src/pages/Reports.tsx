@@ -92,9 +92,10 @@ export default function Reports() {
   const [chart, setChart] = useState<ChartKey>("net");
   const [calOpen, setCalOpen] = useState(false);
   const [calDraft, setCalDraft] = useState<DateRange | undefined>(undefined);
+  const [calVisibleMonth, setCalVisibleMonth] = useState<Date>(() => startOfMonth(new Date()));
   const calDailyStats = useMemo(
-    () => buildDailyStats(entries, calDraft?.from ?? from),
-    [entries, calDraft?.from, from],
+    () => buildDailyStats(entries, calVisibleMonth),
+    [entries, calVisibleMonth],
   );
 
   const interval = useMemo(() => {
@@ -1154,6 +1155,7 @@ export default function Reports() {
             className="w-full justify-center font-medium text-foreground hover:bg-foreground/[0.04]"
             onClick={() => {
               setCalDraft({ from, to });
+              setCalVisibleMonth(startOfMonth(from));
               setCalOpen(true);
             }}
           >
@@ -1176,6 +1178,8 @@ export default function Reports() {
                   mode="range"
                   selected={calDraft}
                   onSelect={setCalDraft}
+                  month={calVisibleMonth}
+                  onMonthChange={setCalVisibleMonth}
                   numberOfMonths={1}
                   locale={ptBR}
                   disabled={(d) => d > new Date()}
