@@ -1209,6 +1209,22 @@ export default function Dashboard() {
 
         })()}
       </div>
+
+      {/* TEMP: ponto de entrada de teste — remover/substituir na Parte 2 */}
+      <button
+        type="button"
+        onClick={() => setShareOpen(true)}
+        className="fixed bottom-24 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 active:scale-95 transition"
+        aria-label="Compartilhar resultado (teste)"
+      >
+        <Share2 className="h-5 w-5" />
+      </button>
+      <ShareResultSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        initialMode={showGrossView ? "bruto" : "liquido"}
+        cardData={shareCardData}
+      />
     </>
   );
 }
