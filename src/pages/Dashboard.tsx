@@ -35,6 +35,8 @@ import { ensureMaintenanceNotifications } from "@/lib/notifications";
 
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
+import { ShareResultSheet, type ShareCardData } from "@/components/share/ShareResultSheet";
+import { Share2 } from "lucide-react";
 
 
 export default function Dashboard() {
