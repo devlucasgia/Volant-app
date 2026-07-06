@@ -784,8 +784,8 @@ export default function Dashboard() {
 
   // TEMP: dados para o card de compartilhamento (Parte 1). Reusa valores já calculados.
   const shareCardData: ShareCardData = useMemo(() => {
-    const periodLabelMap: Record<Period, string> = {
-      day: "Hoje", week: "Semana", month: "Mês", custom: "Período",
+    const periodLabelMap: Record<string, string> = {
+      day: "Hoje", week: "Semana", month: "Mês", custom: "Período", all: "Total",
     };
     // Meta pct por lente, usando o mesmo periodGoal.value ativo como referência.
     // (Preview de teste — Parte 2 pode refinar por lente separada se necessário.)
