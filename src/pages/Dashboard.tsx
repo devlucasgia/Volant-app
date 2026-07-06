@@ -35,6 +35,8 @@ import { ensureMaintenanceNotifications } from "@/lib/notifications";
 
 import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
+import { ShareResultSheet, type ShareCardData } from "@/components/share/ShareResultSheet";
+import { Share2 } from "lucide-react";
 
 
 export default function Dashboard() {
@@ -66,6 +68,8 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
+  // TEMP: ponto de entrada de teste — remover/substituir na Parte 2
+  const [shareOpen, setShareOpen] = useState(false);
   const planningSnapshot = useMemo(
     () => ({
       monthlyGoal: settings.monthlyGoal,
@@ -778,6 +782,71 @@ export default function Dashboard() {
 
   const greetingHasContent = widgets.greeting;
 
+  // TEMP: dados para o card de compartilhamento (Parte 1). Reusa valores já calculados.
+  const shareCardData: ShareCardData = useMemo(() => {
+    const periodLabelMap: Record<string, string> = {
+      day: "Hoje", week: "Semana", month: "Mês", custom: "Período", all: "Total",
+    };
+    // Meta pct por lente, usando o mesmo periodGoal.value ativo como referência.
+    // (Preview de teste — Parte 2 pode refinar por lente separada se necessário.)
+    const goalVal = periodGoal.value;
+    const netPct = goalVal > 0 ? Math.min(999, (s.net / goalVal) * 100) : 0;
+    const grossPct = goalVal > 0 ? Math.min(999, (s.gross / goalVal) * 100) : 0;
+    const netOver = Math.max(0, s.net - goalVal);
+    const grossOver = Math.max(0, s.gross - goalVal);
+    const metaBase = goalVal > 0 ? `Meta ${brl(goalVal)}` : "Sem meta configurada";
+
+    // Formata jornada a partir de horas decimais (ex: 8.5 -> "8h30").
+    const totalH = s.totalHours || 0;
+    const hh = Math.floor(totalH);
+    const mm = Math.round((totalH - hh) * 60);
+    const jornadaStr = totalH > 0 ? `${hh}h${String(mm).padStart(2, "0")}` : "—";
+
+    // Apps: reutiliza platformMetaFor (mesma fonte do bloco "Por app" da Home).
+    const shareApps = activeApps.slice(0, 5).map((k) => {
+      const meta = platformMetaFor(k);
+      const v = apps[k];
+      const pct = s.gross > 0 ? (v / s.gross) * 100 : 0;
+      return {
+        name: meta.label,
+        value: brl(v),
+        pct,
+        color: meta.hex,
+        initial: (meta.label || "?").trim().charAt(0).toUpperCase(),
+      };
+    });
+
+    // Gasto principal (maior categoria).
+    const topExpKey = activeExp[0];
+    const gastosLabel = topExpKey ? `Gastos · ${expenseMetaFor(topExpKey).label}` : undefined;
+    const gastosValue = s.totalExpenses > 0 ? brl(s.totalExpenses) : undefined;
+
+    return {
+      periodLabel: periodLabelMap[period],
+      dateLabel: contextualDate,
+      liquido: {
+        heroValue: brl(s.net),
+        metaBatida: goalVal > 0 && s.net >= goalVal,
+        metaExcedente: netOver > 0 ? `+${brl(netOver)}` : undefined,
+        metaLabel: metaBase,
+        metaPct: netPct,
+      },
+      bruto: {
+        heroValue: brl(s.gross),
+        metaBatida: goalVal > 0 && s.gross >= goalVal,
+        metaExcedente: grossOver > 0 ? `+${brl(grossOver)}` : undefined,
+        metaLabel: metaBase,
+        metaPct: grossPct,
+      },
+      perHour: s.perHour > 0 ? brl(s.perHour) : "—",
+      perKm: s.perKm > 0 ? brl(s.perKm) : "—",
+      jornada: jornadaStr,
+      apps: shareApps,
+      gastosLabel,
+      gastosValue,
+    };
+  }, [period, contextualDate, periodGoal.value, s, activeApps, apps, activeExp, expenseMetaFor, platformMetaFor]);
+
   return (
     <>
       {/* Header compacto da Home — símbolo do Volant + saudação clicável + sino */}
@@ -1140,6 +1209,22 @@ export default function Dashboard() {
 
         })()}
       </div>
+
+      {/* TEMP: ponto de entrada de teste — remover/substituir na Parte 2 */}
+      <button
+        type="button"
+        onClick={() => setShareOpen(true)}
+        className="fixed bottom-24 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 active:scale-95 transition"
+        aria-label="Compartilhar resultado (teste)"
+      >
+        <Share2 className="h-5 w-5" />
+      </button>
+      <ShareResultSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        initialMode={showGrossView ? "bruto" : "liquido"}
+        cardData={shareCardData}
+      />
     </>
   );
 }
