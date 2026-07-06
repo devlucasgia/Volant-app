@@ -68,6 +68,8 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
+  // TEMP: ponto de entrada de teste — remover/substituir na Parte 2
+  const [shareOpen, setShareOpen] = useState(false);
   const planningSnapshot = useMemo(
     () => ({
       monthlyGoal: settings.monthlyGoal,
