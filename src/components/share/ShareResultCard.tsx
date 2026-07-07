@@ -108,8 +108,6 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
   const goalPctLabel = `${Math.round(metaPct)}%`;
 
-  const showApps = format === "story" && apps.length > 0;
-  const showGastos = format === "story" && !!gastosValue;
   const padding = format === "story"
     ? `${px(24)} ${px(22)} ${px(18)}`
     : `${px(22)} ${px(22)} ${px(18)}`;
