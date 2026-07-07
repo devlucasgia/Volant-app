@@ -289,10 +289,10 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         <div style={{
           marginTop: px(perfMarginTop),
           display: "flex", alignItems: "center", gap: px(6),
-          fontSize: px(9), fontWeight: 800, letterSpacing: "0.16em",
+          fontSize: px(perfEyebrowFont), fontWeight: 800, letterSpacing: "0.16em",
           textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
         }}>
-          <Gauge size={11 * S} strokeWidth={2.5} />
+          <Gauge size={perfEyebrowIcon * S} strokeWidth={2.5} />
           <span>Performance</span>
         </div>
         <div style={{
