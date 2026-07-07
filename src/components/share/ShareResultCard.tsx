@@ -274,7 +274,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
 
         {/* Performance */}
         <div style={{
-          marginTop: px(20),
+          marginTop: px(perfMarginTop),
           display: "flex", alignItems: "center", gap: px(6),
           fontSize: px(9), fontWeight: 800, letterSpacing: "0.16em",
           textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
