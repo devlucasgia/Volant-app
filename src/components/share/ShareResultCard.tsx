@@ -158,30 +158,40 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       />
 
       {/* Head */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: px(14), position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: px(7) }}>
-          <img
-            src={volantSymbol}
-            alt=""
-            crossOrigin="anonymous"
-            style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0 }}
-          />
-          <span style={{ fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em" }}>VOLANT</span>
-        </div>
+      <div style={{
+        display: "flex", alignItems: "center",
+        justifyContent: isSquare ? "flex-end" : "space-between",
+        gap: px(14), position: "relative", minHeight: px(22),
+      }}>
+        {!isSquare && (
+          <div style={{ display: "flex", alignItems: "center", gap: px(7), lineHeight: 1 }}>
+            <img
+              src={volantSymbol}
+              alt=""
+              crossOrigin="anonymous"
+              style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0, display: "block" }}
+            />
+            <span style={{
+              display: "inline-flex", alignItems: "center", lineHeight: 1,
+              fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em",
+            }}>VOLANT</span>
+          </div>
+        )}
         <div style={{
           textAlign: "right",
-          fontSize: px(8),
+          fontSize: px(8.5),
           fontWeight: 700,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: "hsla(215,20%,65%,0.8)",
+          color: "hsla(215,25%,80%,0.95)",
           lineHeight: 1.5,
           whiteSpace: "nowrap",
         }}>
           <div>{periodLabel}</div>
-          <div style={{ opacity: 0.85 }}>{dateLabel}</div>
+          <div style={{ opacity: 0.9 }}>{dateLabel}</div>
         </div>
       </div>
+
 
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative" }}>
