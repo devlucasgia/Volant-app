@@ -13,26 +13,18 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 }
 
 /**
- * Gera um PNG a partir de um nó DOM já em tamanho real de exportação.
- * pixelRatio = 1 porque o nó já é 1080px de largura (evita canvas 3240×5760).
+ * Gera um PNG a partir de um nó DOM já em tamanho real de exportação (1080px).
+ * pixelRatio = 1 porque o nó já é 1080px (evita canvas 3240×5760 em celulares).
  */
 export async function generateCardImage(node: HTMLElement): Promise<Blob> {
   try {
-    if (document.fonts?.ready) {
-      await document.fonts.ready;
-    }
-  } catch {
-    /* segue sem esperar fontes */
-  }
+    if (document.fonts?.ready) await document.fonts.ready;
+  } catch { /* segue sem esperar fontes */ }
 
   let blob: Blob | null;
   try {
     blob = await withTimeout(
-      toBlob(node, {
-        pixelRatio: 1,
-        cacheBust: true,
-        backgroundColor: undefined,
-      }),
+      toBlob(node, { pixelRatio: 1, cacheBust: true, backgroundColor: undefined }),
       TIMEOUT_MS,
     );
   } catch (err) {
@@ -46,30 +38,11 @@ export async function generateCardImage(node: HTMLElement): Promise<Blob> {
   return blob;
 }
 
-export type ShareOutcome = "shared" | "saved" | "failed";
+export type SaveOutcome = "saved" | "failed";
+export type ShareOutcome = "shared" | "unsupported" | "failed";
 
-export async function shareOrSaveImage(blob: Blob, filename: string): Promise<ShareOutcome> {
-  const file = new File([blob], filename, { type: "image/png" });
-  const nav = navigator as Navigator & {
-    canShare?: (data: ShareData) => boolean;
-    share?: (data: ShareData) => Promise<void>;
-  };
-
-  // 1) Web Share API com arquivo (Android/Chrome, alguns iOS).
-  if (nav.canShare && nav.share && nav.canShare({ files: [file] })) {
-    try {
-      await nav.share({ files: [file] });
-      return "shared";
-    } catch (err) {
-      // Cancelamento do usuário não é erro.
-      if (err instanceof DOMException && err.name === "AbortError") {
-        return "shared";
-      }
-      // Cai no fallback de salvar.
-    }
-  }
-
-  // 2) Fallback: baixar como arquivo.
+/** Baixa a imagem como arquivo (Salvar). Nunca abre menu de compartilhamento. */
+export async function saveImageToDevice(blob: Blob, filename: string): Promise<SaveOutcome> {
   let url: string | null = null;
   try {
     url = URL.createObjectURL(blob);
@@ -83,9 +56,31 @@ export async function shareOrSaveImage(blob: Blob, filename: string): Promise<Sh
   } catch {
     return "failed";
   } finally {
-    if (url) {
-      // Pequeno delay para garantir que o download começou antes de revogar.
-      setTimeout(() => URL.revokeObjectURL(url!), 1000);
-    }
+    if (url) setTimeout(() => URL.revokeObjectURL(url!), 1000);
+  }
+}
+
+/** Abre o menu de compartilhamento do sistema (WhatsApp, Instagram, etc.). */
+export async function shareImageViaSystem(blob: Blob, filename: string): Promise<ShareOutcome> {
+  const file = new File([blob], filename, { type: "image/png" });
+  const nav = navigator as Navigator & {
+    canShare?: (data: ShareData) => boolean;
+    share?: (data: ShareData) => Promise<void>;
+  };
+
+  if (!nav.share || !nav.canShare || !nav.canShare({ files: [file] })) {
+    return "unsupported";
+  }
+
+  try {
+    await nav.share({
+      files: [file],
+      title: "Meu resultado no Volant",
+      text: "Confere meu resultado do período no Volant.",
+    });
+    return "shared";
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") return "shared";
+    return "failed";
   }
 }
