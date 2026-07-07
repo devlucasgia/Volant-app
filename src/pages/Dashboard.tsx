@@ -1056,18 +1056,30 @@ export default function Dashboard() {
                       {heroSubtitle}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <Segmented
-                      size="xs"
-                      tone="contextual"
-                      className="w-[124px] shrink-0"
-                      options={[
-                        { key: "liquido", label: "Líquido" },
-                        { key: "bruto", label: "Bruto" },
-                      ]}
-                      value={showGross ? "bruto" : "liquido"}
-                      onChange={(v) => { setHeroView(v === "bruto" ? "gross" : "net"); }}
-                    />
+                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
+                      onClick={(e) => { e.stopPropagation(); toggleHero(); }}
+                      className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.09] px-2.5 py-1.5 text-[10px] font-semibold text-foreground transition-colors hover:bg-white/[0.14] active:scale-95"
+                    >
+                      <span
+                        className={cn(
+                          "h-1.5 w-1.5 rounded-full",
+                          showGross ? "bg-[hsl(var(--goal-gross))]" : "bg-success",
+                        )}
+                      />
+                      {showGross ? "Bruto" : "Líquido"}
+                      <ArrowUpDown className="h-2.5 w-2.5 text-muted-foreground/70" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Compartilhar resultado"
+                      onClick={(e) => { e.stopPropagation(); setShareOpen(true); }}
+                      className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground/80 transition-colors hover:bg-white/10 hover:text-foreground active:scale-95"
+                    >
+                      <Share2 className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       aria-label={hideValues ? "Mostrar valores" : "Ocultar valores"}
@@ -1077,6 +1089,7 @@ export default function Dashboard() {
                       {hideValues ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+
                 </div>
                 <div
                   className={cn(
@@ -1227,24 +1240,23 @@ export default function Dashboard() {
         })()}
       </div>
 
-      {/* TEMP: ponto de entrada de teste — remover/substituir na Parte 2 */}
-      <button
-        type="button"
-        onClick={() => setShareOpen(true)}
-        className="fixed bottom-24 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 active:scale-95 transition"
-        aria-label="Compartilhar resultado (teste)"
-      >
-        <Share2 className="h-5 w-5" />
-      </button>
       <ShareResultSheet
         open={shareOpen}
         onClose={() => setShareOpen(false)}
         initialMode={showGrossView ? "bruto" : "liquido"}
         cardData={shareCardData}
       />
+      <ConquestModal
+        open={conquestOpen}
+        onClose={handleConquestClose}
+        onShare={() => { handleConquestClose(); setShareOpen(true); }}
+        heroValue={brl(animatedHeroValue)}
+        mode={showGrossView ? "bruto" : "liquido"}
+      />
     </>
   );
 }
+
 
 /**
  * Period selector with Hoje | Semana | Mês | Calendar icon — all four
