@@ -317,67 +317,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           ))}
         </div>
 
-        {/* Por app + gastos (só story) */}
-        {showApps && (
-          <div style={{
-            marginTop: px(14),
-            background: TOKENS.panel,
-            border: `1px solid ${TOKENS.borderSofter}`,
-            borderRadius: px(16),
-            padding: `${px(12)} ${px(13)}`,
-            display: "flex", flexDirection: "column", gap: px(9),
-          }}>
-            <div style={{
-              fontSize: px(8), fontWeight: 800, letterSpacing: "0.16em",
-              textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
-            }}>
-              Por app
-            </div>
-            {apps.slice(0, 3).map((app) => (
-              <div key={app.name} style={{ display: "flex", alignItems: "center", gap: px(8) }}>
-                <div style={{
-                  width: px(18), height: px(18), borderRadius: "999px",
-                  background: app.color, color: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: px(9), fontWeight: 800, flexShrink: 0,
-                }}>
-                  {app.initial}
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 600, minWidth: px(46) }}>{app.name}</span>
-                <div style={{ flex: 1, height: px(5), background: TOKENS.panel2, borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%", width: `${Math.max(0, Math.min(100, app.pct))}%`,
-                    background: app.color, borderRadius: "999px",
-                  }} />
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 800, minWidth: px(56), textAlign: "right", whiteSpace: "nowrap" }}>
-                  {app.value}
-                </span>
-              </div>
-            ))}
-            {showGastos && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: px(8),
-                paddingTop: px(8), borderTop: `1px solid ${TOKENS.borderSofter}`,
-              }}>
-                <div style={{
-                  width: px(18), height: px(18), borderRadius: "999px",
-                  background: "hsla(0,70%,55%,0.18)", color: TOKENS.destructive,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: px(11), fontWeight: 800, flexShrink: 0,
-                }}>
-                  −
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 600, flex: 1, color: "hsla(215,20%,65%,0.9)" }}>
-                  {gastosLabel || "Gastos"}
-                </span>
-                <span style={{ fontSize: px(10), fontWeight: 800, color: TOKENS.destructive, whiteSpace: "nowrap" }}>
-                  −{gastosValue}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Bloco de apps/gastos removido — story fica mais respirado, como na referência */}
       </div>
 
       {/* Footer */}
