@@ -314,7 +314,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                 {cell.k}
               </div>
               <div style={{
-                fontSize: px(14), fontWeight: 800, marginTop: px(5),
+                fontSize: px(perfValueFont), fontWeight: 800, marginTop: px(5),
                 whiteSpace: "nowrap", color: TOKENS.fg,
               }}>
                 {cell.v}
