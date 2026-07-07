@@ -222,7 +222,7 @@ export default function Dashboard() {
   const handleConquestClose = () => {
     try {
       const key = `volant_conquest_shown_${format(new Date(), "yyyy-MM-dd")}`;
-      sessionStorage.setItem(key, "1");
+      localStorage.setItem(key, "1");
     } catch { /* ignore */ }
     setConquestOpen(false);
   };
@@ -230,7 +230,7 @@ export default function Dashboard() {
     if (period !== "day" || s.gross <= 0 || !goalReached) return;
     try {
       const key = `volant_conquest_shown_${format(new Date(), "yyyy-MM-dd")}`;
-      if (sessionStorage.getItem(key)) return;
+      if (localStorage.getItem(key)) return;
       setConquestOpen(true);
     } catch { /* ignore */ }
   }, [goalReached, period, s.gross]);
