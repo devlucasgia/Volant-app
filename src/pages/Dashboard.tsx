@@ -33,10 +33,10 @@ import { NotificationsSheet } from "@/components/NotificationsSheet";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ensureMaintenanceNotifications } from "@/lib/notifications";
 
-import { Segmented } from "@/components/Segmented";
 import { useCountUp } from "@/hooks/useCountUp";
 import { ShareResultSheet, type ShareCardData } from "@/components/share/ShareResultSheet";
-import { Share2 } from "lucide-react";
+import { ConquestModal } from "@/components/share/ConquestModal";
+import { Share2, ArrowUpDown } from "lucide-react";
 
 
 export default function Dashboard() {
@@ -68,8 +68,8 @@ export default function Dashboard() {
   const [greetingStyle] = useGreetingStyle();
   const [greetingEmoji] = useGreetingEmoji();
   const [notifOpen, setNotifOpen] = useState(false);
-  // TEMP: ponto de entrada de teste — remover/substituir na Parte 2
   const [shareOpen, setShareOpen] = useState(false);
+  const [conquestOpen, setConquestOpen] = useState(false);
   const planningSnapshot = useMemo(
     () => ({
       monthlyGoal: settings.monthlyGoal,
