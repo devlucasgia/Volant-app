@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Check, TrendingUp, Gauge } from "lucide-react";
+import { Check, Gauge } from "lucide-react";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 
 export type ShareCardFormat = "story" | "square";
