@@ -152,14 +152,6 @@ export function ShareResultSheet({ open, onClose, initialMode = "liquido", cardD
               value={format}
               onChange={(v) => setFormat(v as ShareCardFormat)}
             />
-            <ToggleRow
-              options={[
-                { value: "liquido", label: "Líquido" },
-                { value: "bruto", label: "Bruto" },
-              ]}
-              value={mode}
-              onChange={(v) => setMode(v as ShareCardMode)}
-            />
           </div>
 
           {/* Prévia */}
