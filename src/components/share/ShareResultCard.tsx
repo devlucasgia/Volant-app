@@ -87,14 +87,14 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const cardWidth = designW * S;
   const cardHeight = designH * S;
 
-  // Background (gradientes do CSS de referência)
+  // Background (gradientes com glow reforçado, mantendo hue original)
   const bg = isLiquid
-    ? "radial-gradient(130% 75% at 78% -5%, hsla(142,71%,45%,0.30), transparent 52%), radial-gradient(90% 70% at -12% 108%, hsla(142,76%,55%,0.12), transparent 46%), linear-gradient(168deg, #0f1720, #0a0e14)"
-    : "radial-gradient(130% 75% at 78% -5%, hsla(215,70%,60%,0.32), transparent 52%), radial-gradient(90% 70% at -12% 108%, hsla(215,70%,60%,0.12), transparent 46%), linear-gradient(168deg, #0f1720, #0a0e14)";
+    ? "radial-gradient(130% 75% at 78% -5%, hsla(142,71%,45%,0.42), transparent 55%), radial-gradient(90% 70% at -12% 108%, hsla(142,76%,55%,0.16), transparent 48%), linear-gradient(168deg, #0f1720, #0a0e14)"
+    : "radial-gradient(130% 75% at 78% -5%, hsla(215,70%,60%,0.44), transparent 55%), radial-gradient(90% 70% at -12% 108%, hsla(215,70%,60%,0.16), transparent 48%), linear-gradient(168deg, #0f1720, #0a0e14)";
 
   const glow = isLiquid
-    ? "radial-gradient(circle, hsla(142,76%,55%,0.2), transparent 60%)"
-    : "radial-gradient(circle, hsla(215,70%,60%,0.22), transparent 60%)";
+    ? "radial-gradient(circle, hsla(142,76%,55%,0.32), transparent 60%)"
+    : "radial-gradient(circle, hsla(215,70%,60%,0.34), transparent 60%)";
 
   const goalFillBg = isLiquid
     ? "linear-gradient(90deg, hsla(142,71%,38%,0.9), hsla(142,76%,52%,0.85))"
