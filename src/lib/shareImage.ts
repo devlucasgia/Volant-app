@@ -73,11 +73,7 @@ export async function shareImageViaSystem(blob: Blob, filename: string): Promise
   }
 
   try {
-    await nav.share({
-      files: [file],
-      title: "Meu resultado no Volant",
-      text: "Confere meu resultado do período no Volant.",
-    });
+    await nav.share({ files: [file] });
     return "shared";
   } catch (err) {
     if (err instanceof DOMException && err.name === "AbortError") return "shared";

@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { Check, TrendingUp, Gauge } from "lucide-react";
+import { Check, Gauge } from "lucide-react";
 import volantSymbol from "@/assets/volant-symbol-header.png";
 
 export type ShareCardFormat = "story" | "square";
@@ -82,7 +82,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const themeMain = isLiquid ? TOKENS.success : TOKENS.gross;
   const themeStrong = isLiquid ? TOKENS.successStrong : TOKENS.grossStrong;
   const eyebrowText = isLiquid ? "LUCRO LÍQUIDO" : "GANHO BRUTO";
-  const EyebrowIcon = isLiquid ? Check : TrendingUp;
+  const EyebrowIcon = Gauge;
 
   const cardWidth = designW * S;
   const cardHeight = designH * S;
@@ -102,16 +102,28 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
 
   const goalInColor = isLiquid ? "#04140b" : "#041018";
 
-  const heroFontSize = format === "story" ? 45 : 39;
+  const isSquare = format === "square";
+  const heroFontSize = isSquare ? 32 : 45;
   const { rs, int, cents } = splitCurrency(heroValue);
 
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
   const goalPctLabel = `${Math.round(metaPct)}%`;
 
-  const padding = format === "story"
-    ? `${px(24)} ${px(22)} ${px(18)}`
-    : `${px(22)} ${px(22)} ${px(18)}`;
+  const padding = isSquare
+    ? `${px(16)} ${px(18)} ${px(14)}`
+    : `${px(24)} ${px(22)} ${px(18)}`;
   const radius = format === "story" ? px(26) : px(22);
+
+  // Métricas escaláveis por formato (quadrado é mais compacto).
+  const goalBarH = isSquare ? 28 : 34;
+  const goalInFont = isSquare ? 10.5 : 11.5;
+  const goalPctFont = isSquare ? 11.5 : 13;
+  const goalMarginTop = isSquare ? 14 : 20;
+  const heroMarginTop = isSquare ? 6 : 9;
+  const perfMarginTop = isSquare ? 12 : 20;
+  const perfCellPadY = isSquare ? 10 : 13;
+  const perfValueFont = isSquare ? 12 : 14;
+  const footerMarginTop = isSquare ? 10 : 16;
 
   return (
     <div
@@ -187,7 +199,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           fontWeight: 800,
           letterSpacing: "-0.025em",
           lineHeight: 1,
-          marginTop: px(9),
+          marginTop: px(heroMarginTop),
           whiteSpace: "nowrap",
         }}>
           {rs && (
@@ -202,10 +214,10 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         </div>
 
         {/* Goal — faixa de conquista */}
-        <div style={{ marginTop: px(20) }}>
+        <div style={{ marginTop: px(goalMarginTop) }}>
           <div style={{
             position: "relative",
-            height: px(34),
+            height: px(goalBarH),
             borderRadius: px(12),
             background: TOKENS.panel2,
             overflow: "hidden",
@@ -214,7 +226,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             <div style={{
               position: "absolute", top: 0, bottom: 0, left: 0,
               width: `${goalPctClamped}%`,
-              minWidth: goalPctClamped > 0 ? px(80) : 0,
+              minWidth: goalPctClamped > 0 && metaBatida ? px(80) : 0,
               borderRadius: px(11),
               background: goalFillBg,
               display: "flex", alignItems: "center",
@@ -226,26 +238,22 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                 position: "absolute", right: 0, top: 0, bottom: 0, width: px(60),
                 background: "linear-gradient(90deg, transparent, hsla(210,40%,98%,0.25))",
               }} />
-              <div style={{
-                position: "relative",
-                display: "flex", alignItems: "center", gap: px(7),
-                fontSize: px(11.5), fontWeight: 800, color: goalInColor,
-                whiteSpace: "nowrap",
-              }}>
-                {metaBatida ? (
-                  <>
-                    <Check size={14 * S} strokeWidth={3} />
-                    <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
-                  </>
-                ) : (
-                  <span>{goalPctLabel}</span>
-                )}
-              </div>
+              {metaBatida && (
+                <div style={{
+                  position: "relative",
+                  display: "flex", alignItems: "center", gap: px(7),
+                  fontSize: px(goalInFont), fontWeight: 800, color: goalInColor,
+                  whiteSpace: "nowrap",
+                }}>
+                  <Check size={14 * S} strokeWidth={3} />
+                  <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
+                </div>
+              )}
             </div>
             <div style={{
               position: "absolute", right: px(13), top: 0, bottom: 0,
               display: "flex", alignItems: "center",
-              fontSize: px(13), fontWeight: 900, color: TOKENS.fg,
+              fontSize: px(goalPctFont), fontWeight: 900, color: TOKENS.fg,
               textShadow: "0 1px 2px rgba(0,0,0,0.35)",
             }}>
               {goalPctLabel}
@@ -266,7 +274,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
 
         {/* Performance */}
         <div style={{
-          marginTop: px(20),
+          marginTop: px(perfMarginTop),
           display: "flex", alignItems: "center", gap: px(6),
           fontSize: px(9), fontWeight: 800, letterSpacing: "0.16em",
           textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
@@ -288,7 +296,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             { k: "Jornada", v: jornada },
           ].map((cell, i) => (
             <div key={cell.k} style={{
-              flex: 1, padding: `${px(13)} ${px(4)}`,
+              flex: 1, padding: `${px(perfCellPadY)} ${px(4)}`,
               position: "relative", textAlign: "center",
             }}>
               {i > 0 && (
@@ -306,7 +314,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                 {cell.k}
               </div>
               <div style={{
-                fontSize: px(14), fontWeight: 800, marginTop: px(5),
+                fontSize: px(perfValueFont), fontWeight: 800, marginTop: px(5),
                 whiteSpace: "nowrap", color: TOKENS.fg,
               }}>
                 {cell.v}
@@ -319,17 +327,19 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: px(16), textAlign: "center", lineHeight: 1.5 }}>
-        <div style={{
-          fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
-          color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
-        }}>
-          O app feito pra quem vive de app.
-        </div>
+      <div style={{ marginTop: px(footerMarginTop), textAlign: "center", lineHeight: 1.5 }}>
+        {!isSquare && (
+          <div style={{
+            fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
+            color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
+          }}>
+            O app feito pra quem vive de app.
+          </div>
+        )}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: px(6),
           fontSize: px(10), fontWeight: 700, letterSpacing: "0.04em",
-          color: "hsla(215,20%,65%,0.9)", marginTop: px(3),
+          color: "hsla(215,20%,65%,0.9)", marginTop: isSquare ? 0 : px(3),
         }}>
           <img
             src={volantSymbol}

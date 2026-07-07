@@ -46,9 +46,9 @@ const DESIGN_SQUARE_W = 300;
 const PREVIEW_STORY_W = 240;
 const PREVIEW_SQUARE_W = 300;
 
-export function ShareResultSheet({ open, onClose, cardData }: Props) {
+export function ShareResultSheet({ open, onClose, initialMode = "liquido", cardData }: Props) {
   const [format, setFormat] = useState<ShareCardFormat>("story");
-  const [mode, setMode] = useState<ShareCardMode>("liquido");
+  const [mode, setMode] = useState<ShareCardMode>(initialMode);
   const [savingLoading, setSavingLoading] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -56,9 +56,9 @@ export function ShareResultSheet({ open, onClose, cardData }: Props) {
   useEffect(() => {
     if (open) {
       setFormat("story");
-      setMode("liquido");
+      setMode(initialMode);
     }
-  }, [open]);
+  }, [open, initialMode]);
 
   const modeData = mode === "liquido" ? cardData.liquido : cardData.bruto;
 
@@ -151,14 +151,6 @@ export function ShareResultSheet({ open, onClose, cardData }: Props) {
               ]}
               value={format}
               onChange={(v) => setFormat(v as ShareCardFormat)}
-            />
-            <ToggleRow
-              options={[
-                { value: "liquido", label: "Líquido" },
-                { value: "bruto", label: "Bruto" },
-              ]}
-              value={mode}
-              onChange={(v) => setMode(v as ShareCardMode)}
             />
           </div>
 
