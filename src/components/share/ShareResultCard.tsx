@@ -156,7 +156,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             crossOrigin="anonymous"
             style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0 }}
           />
-          <span style={{ fontSize: px(14), fontWeight: 600, letterSpacing: "0.02em" }}>VOLANT</span>
+          <span style={{ fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em" }}>VOLANT</span>
         </div>
         <div style={{
           textAlign: "right",
