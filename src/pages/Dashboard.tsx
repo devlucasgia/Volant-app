@@ -832,7 +832,10 @@ export default function Dashboard() {
     } else if (period === "month") {
       shareDateLabel = format(now, "MMM yyyy", { locale: ptBR }).toUpperCase();
     } else if (period === "custom" && customRange) {
-      shareDateLabel = `${format(customRange.from, "d MMM", { locale: ptBR }).toUpperCase()}–${format(customRange.to, "d MMM yyyy", { locale: ptBR }).toUpperCase()}`;
+      const sameDay = customRange.from.toDateString() === customRange.to.toDateString();
+      shareDateLabel = sameDay
+        ? format(customRange.from, "d MMM yyyy", { locale: ptBR }).toUpperCase()
+        : `${format(customRange.from, "d MMM", { locale: ptBR }).toUpperCase()}–${format(customRange.to, "d MMM yyyy", { locale: ptBR }).toUpperCase()}`;
     }
 
     return {

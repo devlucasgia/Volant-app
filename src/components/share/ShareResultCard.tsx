@@ -103,7 +103,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const goalInColor = isLiquid ? "#04140b" : "#041018";
 
   const isSquare = format === "square";
-  const heroFontSize = isSquare ? 32 : 45;
+  const heroFontSize = isSquare ? 42 : 45;
   const { rs, int, cents } = splitCurrency(heroValue);
 
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
@@ -115,15 +115,18 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const radius = format === "story" ? px(26) : px(22);
 
   // Métricas escaláveis por formato (quadrado é mais compacto).
-  const goalBarH = isSquare ? 28 : 34;
-  const goalInFont = isSquare ? 10.5 : 11.5;
-  const goalPctFont = isSquare ? 11.5 : 13;
-  const goalMarginTop = isSquare ? 14 : 20;
-  const heroMarginTop = isSquare ? 6 : 9;
-  const perfMarginTop = isSquare ? 12 : 20;
-  const perfCellPadY = isSquare ? 10 : 13;
+  const goalBarH = isSquare ? 24 : 34;
+  const goalInFont = isSquare ? 10 : 11.5;
+  const goalPctFont = isSquare ? 11 : 13;
+  const goalMarginTop = isSquare ? 18 : 20;
+  const heroMarginTop = isSquare ? 10 : 9;
+  const perfMarginTop = isSquare ? 14 : 20;
+  const perfCellPadY = isSquare ? 9 : 13;
   const perfValueFont = isSquare ? 12 : 14;
-  const footerMarginTop = isSquare ? 10 : 16;
+  const perfEyebrowFont = isSquare ? 8 : 9;
+  const perfEyebrowIcon = isSquare ? 9 : 11;
+  const footerMarginTop = isSquare ? 12 : 16;
+
 
   return (
     <div
@@ -158,30 +161,40 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       />
 
       {/* Head */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: px(14), position: "relative" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: px(7) }}>
-          <img
-            src={volantSymbol}
-            alt=""
-            crossOrigin="anonymous"
-            style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0 }}
-          />
-          <span style={{ fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em" }}>VOLANT</span>
-        </div>
+      <div style={{
+        display: "flex", alignItems: "center",
+        justifyContent: isSquare ? "flex-end" : "space-between",
+        gap: px(14), position: "relative", minHeight: px(22),
+      }}>
+        {!isSquare && (
+          <div style={{ display: "flex", alignItems: "center", gap: px(7), lineHeight: 1 }}>
+            <img
+              src={volantSymbol}
+              alt=""
+              crossOrigin="anonymous"
+              style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0, display: "block" }}
+            />
+            <span style={{
+              display: "inline-flex", alignItems: "center", lineHeight: 1,
+              fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em",
+            }}>VOLANT</span>
+          </div>
+        )}
         <div style={{
           textAlign: "right",
-          fontSize: px(8),
+          fontSize: px(8.5),
           fontWeight: 700,
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          color: "hsla(215,20%,65%,0.8)",
+          color: "hsla(215,25%,80%,0.95)",
           lineHeight: 1.5,
           whiteSpace: "nowrap",
         }}>
           <div>{periodLabel}</div>
-          <div style={{ opacity: 0.85 }}>{dateLabel}</div>
+          <div style={{ opacity: 0.9 }}>{dateLabel}</div>
         </div>
       </div>
+
 
       {/* Main */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", position: "relative" }}>
@@ -246,7 +259,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                   whiteSpace: "nowrap",
                 }}>
                   <Check size={14 * S} strokeWidth={3} />
-                  <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
+                  <span>Meta batida</span>
                 </div>
               )}
             </div>
@@ -276,10 +289,10 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         <div style={{
           marginTop: px(perfMarginTop),
           display: "flex", alignItems: "center", gap: px(6),
-          fontSize: px(9), fontWeight: 800, letterSpacing: "0.16em",
+          fontSize: px(perfEyebrowFont), fontWeight: 800, letterSpacing: "0.16em",
           textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
         }}>
-          <Gauge size={11 * S} strokeWidth={2.5} />
+          <Gauge size={perfEyebrowIcon * S} strokeWidth={2.5} />
           <span>Performance</span>
         </div>
         <div style={{
