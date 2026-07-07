@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import { Loader2, Car, Eye, EyeOff } from "lucide-react";
 import { friendlyAuthError } from "@/lib/friendlyErrors";
 import { useDocumentMeta } from "@/lib/useDocumentMeta";
+import { isDisposableEmail } from "@/lib/disposableEmailDomains";
+import { isSignupRateLimited, recordSignupAttempt } from "@/lib/signupRateLimit";
 
 export default function Auth() {
   const { user, loading } = useAuth();
@@ -58,12 +60,39 @@ export default function Auth() {
     setBusy(true);
     try {
       if (mode === "signup") {
+        // 1) Validações locais — não consomem tentativa de rate limit
+        const emailTrim = email.trim();
+        const passOk = password.length >= 6;
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim);
+
+        if (!emailOk || !passOk) {
+          toast.error("Verifique os dados e tente novamente.");
+          setBusy(false);
+          return;
+        }
+
+        if (isDisposableEmail(emailTrim)) {
+          toast.error("Este tipo de e-mail não é aceito. Utilize um endereço de e-mail permanente.");
+          setBusy(false);
+          return;
+        }
+
+        // 2) Rate limit — verifica antes de tentar enviar
+        if (isSignupRateLimited()) {
+          toast.error("Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.");
+          setBusy(false);
+          return;
+        }
+
+        // 3) Só agora contabiliza e envia
+        recordSignupAttempt();
+
         const { error } = await supabase.auth.signUp({
-          email,
+          email: emailTrim,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/`,
-            data: { display_name: name || email.split("@")[0] },
+            data: { display_name: name || emailTrim.split("@")[0] },
           },
         });
         if (error) throw error;
