@@ -23,7 +23,7 @@ export function ConquestModal({ open, onClose, onShare, heroValue, mode }: Conqu
       role="dialog"
       aria-modal="true"
       aria-labelledby="conquest-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-[6px] animate-in fade-in duration-300"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/55 backdrop-blur-[6px] animate-in fade-in duration-300"
       onClick={onClose}
     >
       <div
