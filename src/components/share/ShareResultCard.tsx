@@ -255,13 +255,14 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           </div>
           <div style={{
             marginTop: px(9),
+            padding: `0 ${px(2)}`,
             display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: px(10),
             fontSize: px(10.5), color: "hsla(215,20%,65%,0.9)", whiteSpace: "nowrap",
           }}>
-            <span style={{ fontWeight: 600, color: "hsla(215,20%,65%,0.7)" }}>{metaLabel}</span>
             {metaBatida && metaExcedente ? (
-              <span style={{ color: themeStrong, fontWeight: 800 }}>{metaExcedente}</span>
-            ) : null}
+              <span style={{ color: themeStrong, fontWeight: 800 }}>{metaExcedente} acima</span>
+            ) : <span />}
+            <span style={{ fontWeight: 600, color: "hsla(215,20%,65%,0.7)" }}>{metaLabel}</span>
           </div>
         </div>
 
