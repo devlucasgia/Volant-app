@@ -121,7 +121,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       style={{
         width: `${cardWidth}px`,
         height: `${cardHeight}px`,
-        borderRadius: radius,
+        borderRadius: exportSize ? 0 : radius,
         padding,
         position: "relative",
         overflow: "hidden",
