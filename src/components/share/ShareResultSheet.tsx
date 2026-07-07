@@ -5,7 +5,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShareResultCard, type ShareCardFormat, type ShareCardMode, type ShareApp } from "./ShareResultCard";
-import { generateCardImage, shareOrSaveImage } from "@/lib/shareImage";
+import { generateCardImage, saveImageToDevice, shareImageViaSystem } from "@/lib/shareImage";
 
 export interface ShareCardData {
   periodLabel: string;
@@ -39,14 +39,20 @@ interface Props {
   cardData: ShareCardData;
 }
 
+// Larguras de design (mesmas do ShareResultCard) — para escala da prévia.
+const DESIGN_STORY_W = 280;
+const DESIGN_SQUARE_W = 300;
+// Largura-alvo da prévia dentro do sheet.
+const PREVIEW_STORY_W = 240;
+const PREVIEW_SQUARE_W = 300;
+
 export function ShareResultSheet({ open, onClose, cardData }: Props) {
-  // Padrão de compartilhamento: sempre story + líquido, independente da Home.
   const [format, setFormat] = useState<ShareCardFormat>("story");
   const [mode, setMode] = useState<ShareCardMode>("liquido");
-  const [loading, setLoading] = useState(false);
+  const [savingLoading, setSavingLoading] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  // Reseta pro padrão quando abre.
   useEffect(() => {
     if (open) {
       setFormat("story");
@@ -74,23 +80,54 @@ export function ShareResultSheet({ open, onClose, cardData }: Props) {
     gastosValue: cardData.gastosValue,
   };
 
-  async function handleAction() {
-    if (loading) return;
+  const previewDesignW = format === "story" ? DESIGN_STORY_W : DESIGN_SQUARE_W;
+  const previewTargetW = format === "story" ? PREVIEW_STORY_W : PREVIEW_SQUARE_W;
+  const previewScale = previewTargetW / previewDesignW;
+
+  const anyLoading = savingLoading || sharingLoading;
+
+  async function handleSave() {
+    if (anyLoading) return;
     if (!exportRef.current) {
       toast.error("Não deu pra gerar a imagem, tenta de novo.");
       return;
     }
-    setLoading(true);
+    setSavingLoading(true);
     try {
       const blob = await generateCardImage(exportRef.current);
-      const outcome = await shareOrSaveImage(blob, "volant-resultado.png");
+      const outcome = await saveImageToDevice(blob, "volant-resultado.png");
       if (outcome === "saved") toast.success("Imagem salva!");
-      else if (outcome === "failed") toast.error("Não deu pra gerar a imagem, tenta de novo.");
+      else toast.error("Não deu pra salvar a imagem.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Não deu pra gerar a imagem, tenta de novo.";
       toast.error(msg);
     } finally {
-      setLoading(false);
+      setSavingLoading(false);
+    }
+  }
+
+  async function handleShare() {
+    if (anyLoading) return;
+    if (!exportRef.current) {
+      toast.error("Não deu pra gerar a imagem, tenta de novo.");
+      return;
+    }
+    setSharingLoading(true);
+    try {
+      const blob = await generateCardImage(exportRef.current);
+      const outcome = await shareImageViaSystem(blob, "volant-resultado.png");
+      if (outcome === "shared") {
+        // sucesso silencioso — o sistema já mostrou UI
+      } else if (outcome === "unsupported") {
+        toast.info("Compartilhamento não disponível neste dispositivo. Use Salvar.");
+      } else {
+        toast.error("Não deu pra compartilhar, tenta de novo.");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Não deu pra gerar a imagem, tenta de novo.";
+      toast.error(msg);
+    } finally {
+      setSharingLoading(false);
     }
   }
 
@@ -100,72 +137,84 @@ export function ShareResultSheet({ open, onClose, cardData }: Props) {
         side="bottom"
         className="h-[92dvh] rounded-t-2xl p-0 flex flex-col overflow-hidden"
       >
-        <SheetHeader className="px-5 pt-5 pb-3">
-          <SheetTitle className="text-base">Compartilhar resultado</SheetTitle>
-        </SheetHeader>
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col overflow-hidden">
+          <SheetHeader className="px-5 pt-5 pb-3">
+            <SheetTitle className="text-base text-left">Compartilhar resultado</SheetTitle>
+          </SheetHeader>
 
-        {/* Toggles */}
-        <div className="px-5 flex flex-col gap-2">
-          <ToggleRow
-            options={[
-              { value: "story", label: "Story" },
-              { value: "square", label: "Quadrado" },
-            ]}
-            value={format}
-            onChange={(v) => setFormat(v as ShareCardFormat)}
-          />
-          <ToggleRow
-            options={[
-              { value: "liquido", label: "Líquido" },
-              { value: "bruto", label: "Bruto" },
-            ]}
-            value={mode}
-            onChange={(v) => setMode(v as ShareCardMode)}
-          />
-        </div>
+          {/* Toggles */}
+          <div className="px-5 flex flex-col gap-2">
+            <ToggleRow
+              options={[
+                { value: "story", label: "Story" },
+                { value: "square", label: "Quadrado" },
+              ]}
+              value={format}
+              onChange={(v) => setFormat(v as ShareCardFormat)}
+            />
+            <ToggleRow
+              options={[
+                { value: "liquido", label: "Líquido" },
+                { value: "bruto", label: "Bruto" },
+              ]}
+              value={mode}
+              onChange={(v) => setMode(v as ShareCardMode)}
+            />
+          </div>
 
-        {/* Prévia */}
-        <div className="flex-1 overflow-auto px-5 py-4 flex items-start justify-center">
-          <div
-            className={cn(
-              "rounded-xl overflow-hidden shadow-lg border border-border",
-              format === "story" ? "w-[220px]" : "w-[280px]",
-            )}
-          >
-            <ShareResultCard {...commonProps} exportSize={false} />
+          {/* Prévia */}
+          <div className="flex-1 overflow-auto px-5 py-4 flex items-start justify-center">
+            <div
+              className="rounded-2xl overflow-hidden shadow-lg border border-border bg-black"
+              style={{
+                width: `${previewTargetW}px`,
+                height: `${previewTargetW * (format === "story" ? 498 / DESIGN_STORY_W : 1)}px`,
+              }}
+            >
+              <div
+                style={{
+                  width: `${previewDesignW}px`,
+                  transform: `scale(${previewScale})`,
+                  transformOrigin: "top left",
+                }}
+              >
+                <ShareResultCard {...commonProps} exportSize={false} />
+              </div>
+            </div>
+          </div>
+
+          {/* Ações */}
+          <div className="border-t border-border p-4 flex gap-3 bg-background">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2"
+              onClick={handleSave}
+              disabled={anyLoading}
+            >
+              {savingLoading
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Download className="h-4 w-4" />}
+              {savingLoading ? "Salvando..." : "Salvar"}
+            </Button>
+            <Button
+              className="flex-1 gap-2"
+              onClick={handleShare}
+              disabled={anyLoading}
+            >
+              {sharingLoading
+                ? <Loader2 className="h-4 w-4 animate-spin" />
+                : <Share2 className="h-4 w-4" />}
+              {sharingLoading ? "Abrindo..." : "Compartilhar"}
+            </Button>
           </div>
         </div>
 
-        {/* Ações */}
-        <div className="border-t border-border p-4 flex gap-3 bg-background">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={handleAction}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            {loading ? "Gerando..." : "Salvar"}
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={handleAction}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-            {loading ? "Gerando..." : "Compartilhar"}
-          </Button>
-        </div>
-
-        {/* Card de exportação em tamanho real (fora da tela) */}
+        {/* Nó de exportação em tamanho real (1080px), fora da tela */}
         <div
           aria-hidden
           style={{
-            position: "fixed",
-            left: "-10000px",
-            top: 0,
-            pointerEvents: "none",
-            opacity: 1,
+            position: "fixed", left: "-10000px", top: 0,
+            pointerEvents: "none", opacity: 1,
           }}
         >
           <ShareResultCard {...commonProps} exportSize ref={exportRef} />
@@ -176,9 +225,7 @@ export function ShareResultSheet({ open, onClose, cardData }: Props) {
 }
 
 function ToggleRow({
-  options,
-  value,
-  onChange,
+  options, value, onChange,
 }: {
   options: { value: string; label: string }[];
   value: string;

@@ -1,73 +1,80 @@
-# Landing v2 — Home mockup fiel, copy, depoimentos e pricing
 
-Escopo: **somente `src/pages/Landing.tsx`**. Nenhum outro arquivo será tocado. `MockHeader` e `MockTabs` compartilhados não serão alterados — o HomeMockup terá header **e** barra de período **locais**.
+# Sprint — Compartilhar Resultado (correções pré-Parte 2)
 
----
+Escopo: **apenas** `src/components/share/ShareResultCard.tsx`, `src/components/share/ShareResultSheet.tsx` e `src/lib/shareImage.ts`. Nenhum arquivo fora dessa lista muda. `Dashboard.tsx` e a origem de `shareCardData` ficam intactos.
 
-## Bloco A — Novo HomeMockup fiel à Home real
+## Problemas atuais
 
-Substituir integralmente o corpo da função `HomeMockup` (linhas ~2007-2130), mantendo assinatura `HomeMockup({ mode })` e reusando `useHeroMode` (já vem via prop do Hero), `AnimatedNumber`, `PhoneFrame`, `fmtBRL`, `fmtBRLInt`, `volantSymbol` (já importado no arquivo).
+1. **Prévia quebrada** (mobile e desktop): o card usa `aspectRatio` + larguras em `%`, mas as fontes/paddings são em `px` absolutos calculados para um design de 360 px. Ao renderizar em um wrapper de 220 px (story) ou 280 px (quadrado), o valor "R$ 155…" transborda e o header quebra em várias linhas. O PNG final sai "menos errado" só porque o nó de exportação é renderizado à parte em 1080 px — a prévia e a saída divergem visualmente.
+2. **Salvar e Compartilhar disparam a mesma ação** (ambos chamam `handleAction` e compartilham o `loading`), e o layout atual não é o desejado.
+3. **Design divergente** do HTML de referência `volant_card_v6.2.html`: o card novo tem uma nova barra de meta ("faixa de conquista" com % dentro da barra preenchida), régua de performance com eyebrow ("PERFORMANCE"), footer com `usevolant.app` + tag, gradientes mais específicos, dimensões e proporções diferentes das atuais.
 
-**Imports a adicionar** no import de `lucide-react` (~linha 35): `Bell, Eye, EyeOff, Route, CalendarRange`. Já importados e reutilizados: `Gauge, Target, Check, ChevronRight, Clock`.
+## O que fazer
 
-**Regras duras**
-- Fonte única do modo = prop `mode`. Nenhum `useState`/`setInterval` de alternância interna. Único estado local permitido: toggle do olho (ocultar valores), decorativo.
-- Coerência numérica fixa: bruto **R$ 402,00**, gastos **R$ 87,50**, líquido **R$ 314,50**, R$/hora **R$ 50,25** (402÷8), R$/km real **R$ 2,21** (402÷182), R$/km mínimo **R$ 1,74**, meta líquida 314,50/350,00 (90%, faltam 35,50), meta bruta 402,00/460,00 (87%, faltam 58,00). Meta e herói mostram o **mesmo** valor com centavos (`fmtBRL`, não `fmtBRLInt`).
-- Sem azul fixo (`sky-400` etc.) fora da bolinha "Bruto" e do tema goal-gross no modo bruto.
-- Sem layout shift entre modos; sem text-truncate a partir de 290px de frame.
-- `prefers-reduced-motion` respeitado (já garantido por `AnimatedNumber` e classes existentes).
+### 1. Reescrever `ShareResultCard.tsx` para bater 1:1 com o HTML de referência
 
-**Anatomia (top → bottom, dentro do `PhoneFrame`)**
+Um único componente, estilos 100% inline (necessário para `html-to-image`), pintado a partir da folha de estilos do `volant_card_v6.2.html`:
 
-1. **Header local** (não usa `MockHeader` compartilhado): linha flex compacta com `<img src={volantSymbol} alt="" className="h-6 w-6 rounded-full" />` + coluna com "Olá, Motorista 👋" (bold ~12.5px) e "Quinta-feira, 2 de julho" (muted/70 ~8px). À direita, `Bell` em muted. Sem frase motivacional. Padding vertical comprimido para caber o card de Performance inteiro no frame.
-2. **Barra de período local** (não reusa `MockTabs`): trilho `border-b border-border/30`, tabs "Hoje | Semana | Mês" centralizadas, estilo **flat com underline** de 2px no ativo ("Hoje") na cor do tema (`bg-success` em líquido, `bg-[hsl(var(--goal-gross))]` em bruto, transição 500ms). Ícone `CalendarRange` pequeno absoluto à direita, em muted.
-3. **Card herói**: borda + gradiente `from-<tema>/25 via-<tema>/12 to-<tema>/5`, transição 500ms. Dois blobs blur decorativos (canto sup. dir. na cor do tema; canto inf. esq. em `primary-glow/15`). Topo esquerda: eyebrow `Gauge` + "LUCRO LÍQUIDO"/"GANHO BRUTO" (uppercase, tracking largo, cor do tema) + subtítulo "DEPOIS DOS GASTOS"/"ANTES DOS GASTOS" (muted/55). Topo direita: segmented decorativo local (Líquido | Bruto) refletindo `mode` + botão `Eye`/`EyeOff`. Valor grande ~30px bold tabular com `AnimatedNumber` (~380ms). Divisor na cor do tema. Linha secundária centralizada: líquido → "● Bruto R$ 402,00 | ● Gastos R$ 87,50" (bolinha goal-gross / destructive); bruto → "● Líquido R$ 314,50" (bolinha success). Clicar no olho borra ("R$ •••••"), estado local.
-4. **Eyebrow "PLANEJAMENTO INTELIGENTE"** (uppercase, tracking largo, muted).
-5. **Card Meta**: linha topo: `Target` + "Meta líquida"/"Meta bruta" (texto na cor do tema) à esquerda; à direita `R$ 314,50` bold + separador + `R$ 350,00` muted + `ChevronRight`. Barra `h-2` na cor do tema com `key={mode}` para re-animar. Rodapé: "Faltam R$ 35,50" muted + "90%" semibold cor do tema. Sempre com centavos, idêntico ao herói.
-6. **Conector vertical** 1×8px `bg-border/40` centralizado, entre Meta e KM.
-7. **Card R$/km Inteligente** (não muda com toggle — sempre bruto no produto): `Gauge` `text-success` com respiração sutil + "R$/km mínimo" (label curto) + "R$ 1,74" bold com "/km" muted + `ChevronRight`. Barra verde 89%. Rodapé "182 km rodados · Meta 205 km" muted + "89%" em `text-success`. Remove o antigo "R$/KM Bruto R$ 4,15".
-8. **Eyebrow "PERFORMANCE"**.
-9. **Card único de Performance**: `grid grid-cols-2 divide-x divide-border` num único card com padding pequeno. Col1: `Clock` `text-success` + "R$ / HORA" + "R$ 50,25" bold + "8,0h trabalhadas" muted. Col2: `Route` `text-success` + "R$ / KM" + "R$ 2,21" em `text-success` + "R$ 0,47 acima do mínimo" em `text-success`. Sem `sky-400`.
-10. **Bottom nav**: reusar `MockBottomNav` existente (Início ativo verde, FAB central `+`).
+- **Formatos base** (dimensões do design de referência, escaláveis):
+  - `story`: proporção 280×498 do design → exportação `1080×1920`.
+  - `square`: proporção 300×300 do design → exportação `1080×1080`.
+- **Escala única `S`**: uma constante que multiplica todos os valores em `px`. Quando `exportSize=true`, `S = 1080 / <largura-design>`. Quando `exportSize=false`, o card é renderizado sempre no tamanho de design real (280 ou 300 px de largura) e o *wrapper na prévia* aplica `transform: scale(...)` para caber — assim prévia e exportação são pixel-identicas, só escaladas.
+- **Header**: logo circular (mantém `volant-symbol-header.png` arredondado, como o usuário pediu) + wordmark "VOLANT" à esquerda; à direita, período em caixa alta + data em duas linhas se necessário, `white-space: nowrap` no eixo do período, tamanho conforme referência (`8px`/`10px` no design × S).
+- **Main (hero)**:
+  - Eyebrow "LUCRO LÍQUIDO" / "GANHO BRUTO" com pequeno ícone (Check para líquido, TrendingUp para bruto) no verde/azul.
+  - Valor grande com `R$` em superscript menor e centavos menores (`.rs` e `.cents` do CSS). Dividir `heroValue` (string tipo `R$ 155,54`) em partes: `R$` + reais + `,cents`. Fonte 45 px no story, 39 px no square (base do design).
+- **Meta revolucionada**: **barra única** (34 px de altura) preenchida do 0 até `metaPct` (limitado a 100 visualmente, mas mostrando `>100%` quando bate meta). Dentro da barra preenchida, no lado esquerdo: ícone Check + "Meta batida · +R$ x,xx" (quando batida) ou texto "R$ X,XX / R$ Y,YY" (quando ainda não). À direita da barra, o percentual em negrito. Abaixo, `.goal-sub` com "Meta R$ Y,YY" à esquerda e vazio à direita quando batida, ou hint quando não batida. Cor do preenchimento muda conforme modo (verde/azul, gradiente).
+- **Performance eyebrow + card**: "PERFORMANCE" pequeno em caixa alta acima, e uma régua com 3 células (`R$/hora`, `R$/km`, `Jornada`) com divisórias verticais internas de 64% da altura. Nos rótulos "OK" das células, a cor acompanha o modo (verde/líquido, azul/bruto), fiel ao CSS.
+- **Bloco "Por app"** (só no `story`): mesmo card, com lista de apps + barra de progresso individual (cor do app) + linha "Gastos" separada por borda superior, valor em vermelho com `−`. **Comportamento**: se `apps.length === 0`, esconde o bloco inteiro; se `gastosValue` ausente, esconde só a linha.
+- **Footer**: tag pequena ("Feito com Volant" — 8px caps) + linha com símbolo + `usevolant.app` (10 px).
+- **Sem** `.tabular` extras — aplicar `font-variant-numeric: tabular-nums` no root do card.
+- Todos os `hsl(...)` e gradientes copiados literalmente do CSS de referência para garantir paridade visual.
 
----
+### 2. Corrigir prévia — renderizar no tamanho de design + `transform: scale`
 
-## Bloco B — Subtítulo do Hero
+Em `ShareResultSheet.tsx`:
 
-No `<p>` `hero-anim hero-anim-3` (linha ~385), substituir o texto por:
+- Remover o hack de "duas árvores" (uma prévia + um export escondido). Manter apenas **um** `ShareResultCard` visível, dentro de um wrapper que:
+  - Tem `width: <largura-alvo-da-prévia>` e `height: width * aspect` (para reservar espaço no fluxo).
+  - Envolve o card em uma div com `transform: scale(k); transform-origin: top left; width/height: designSize`, onde `k = larguraPreview / larguraDesign`.
+- Para exportação: renderizar um **segundo** `ShareResultCard exportSize` **temporariamente**, fora da tela (`position: fixed; left: -10000px; top: 0; pointer-events: none`), só enquanto o botão de exportação está processando — mas ele é montado o tempo todo mesmo (custo baixo, já que é só DOM). Passa `ref` para captura.
+- Larguras da prévia: `story` = **240 px de largura** (altura ≈ 427), `square` = **300 px de largura**. Isso cabe confortavelmente no sheet em mobile (largura útil ~320) e desktop (limitar a área de prévia a `max-w-md mx-auto`).
+- Wrapper da prévia recebe `overflow: hidden` + `rounded-xl` + `border`, e um `bg-muted/20` para dar destaque.
 
-> "Meta do dia calculada sozinha e o R$/km mínimo pra corrida valer a pena. Você dirige, o Volant faz as contas."
+### 3. Layout do sheet responsivo (mobile + desktop)
 
-Nada mais no Hero muda.
+Como o sheet ocupa 100% da largura no desktop, o print 3 mostra tudo esticado. Corrigir:
 
----
+- Todo o conteúdo interno do `SheetContent` (toggles, prévia, botões) fica em um container **`max-w-md mx-auto w-full`**. O sheet em si continua ocupando a largura toda (padrão do shadcn), mas o miolo é constrito a 448 px, centralizado. Isso resolve o print 3 sem tocar em nada global.
+- Header do sheet ("Compartilhar resultado" + X) idem.
 
-## Bloco C — Remover depoimentos
+### 4. Separar Salvar × Compartilhar
 
-- Remover `<Testimonials />` (linha 109).
-- Remover a função `Testimonials`, o tipo `Testimonial`, o array de items e `TestimonialsCarousel` (só é usado dentro de `Testimonials`).
-- Grep antes de finalizar por âncoras/links para depoimentos; remover se existirem.
-- Ajustar apenas padding vertical entre `SecondaryFeatures` e `Comparison` se o corte deixar as seções coladas/ocas.
+Em `shareImage.ts`:
+- Manter `generateCardImage(node)` como está (`pixelRatio: 1`).
+- Substituir `shareOrSaveImage` por **duas funções**:
+  - `saveImageToDevice(blob, filename)`: sempre baixa via `<a download>` + `URL.createObjectURL`. Retorna `'saved'` | `'failed'`. Não tenta Web Share.
+  - `shareImageViaSystem(blob, filename)`: sempre tenta `navigator.share({ files: [file], title, text })`. Se `canShare({files})` for `false` ou `share` não existir, retorna `'unsupported'` (o chamador mostra toast "Compartilhamento não disponível neste dispositivo — use Salvar."). Trata `AbortError` como sucesso silencioso.
 
----
+Em `ShareResultSheet.tsx`:
+- Dois estados de loading independentes: `savingLoading` e `sharingLoading`. Cada botão desabilita apenas o seu próprio spinner; o outro botão só fica desabilitado (sem spinner) enquanto o primeiro está em andamento, para evitar cliques concorrentes na mesma captura.
+- `onClick` de Salvar chama `saveImageToDevice`; `onClick` de Compartilhar chama `shareImageViaSystem`. Toasts: "Imagem salva!" / "Compartilhado!" / "Compartilhamento não disponível — use Salvar." / "Não deu pra gerar a imagem, tenta de novo."
 
-## Bloco D — Card Mensal do Pricing sem azul
+### 5. Logo
 
-No `article` do card Mensal (~linhas 1609-1647):
-- `hover:border-[hsl(214,90%,60%)]/50` → `hover:border-border`.
-- Badge "Flexível": trocar `border-[hsl(214,90%,60%)]/40 bg-[hsl(214,90%,55%)]/10 text-[hsl(214,90%,75%)]` por `border-border/60 bg-muted/40 text-muted-foreground`.
-- `Check` dos benefícios: `text-[hsl(214,90%,70%)]` → `accent-text` (mesmo verde do card Anual), para consistência entre cards.
-- Botão CTA: `hover:border-[hsl(214,90%,60%)]/60` → `hover:border-border`.
-- Trust pill: `trust-pill-blue` → variante neutra/verde existente; se só existir azul, cair para `trust-pill` sem modificador. Verificado na implementação.
+- Continuar usando `volant-symbol-header.png` importado, arredondado (`border-radius: 999px`, `object-fit: cover`), sem trocar por outra arte. Só ajustar tamanho conforme S (22 px no design → 66 px no export do story).
 
-Não altera card Anual, glows ambientais (`pricing-amb-*`), preços nem textos.
+## Detalhes técnicos
 
----
+- `html-to-image` continua com `pixelRatio: 1` no nó já em 1080 px.
+- Nenhuma mudança em `Dashboard.tsx`, em `shareCardData`, em cores/tokens globais, ou em qualquer outra rota.
+- Nenhum novo asset. Nenhuma nova dependência.
+- Tipos exportados (`ShareCardData`, `ShareCardFormat`, `ShareCardMode`, `ShareApp`) permanecem estáveis para não quebrar o import do Dashboard.
 
-## Critério de aceite
-- HomeMockup visualmente equivalente ao HTML de referência, card de Performance inteiro visível dentro do frame.
-- Alternância líquido/bruto suave via prop, sem layout shift, sem azul fora do tema bruto.
-- Novo subtítulo do herói no ar, sem outras mudanças de copy.
-- Zero referência à seção de depoimentos.
-- Card Mensal sem azul decorativo.
-- Apenas `src/pages/Landing.tsx` alterado.
+## Critérios de aceite
+
+- Prévia (mobile e desktop) e imagem exportada são visualmente idênticas (só escala difere), sem valor cortado, sem header quebrado.
+- Design bate com o `volant_card_v6.2.html`: barra de meta com % dentro, régua de performance com eyebrow, footer com `usevolant.app`, gradientes e cores idênticos, logo arredondada preservada.
+- Salvar baixa arquivo (não abre menu de compartilhar). Compartilhar abre o menu de compartilhar do sistema (WhatsApp/Instagram/etc.) e, quando indisponível, mostra toast orientando usar Salvar.
+- Botões têm loading independentes; clicar em um não trava o outro visualmente com spinner.
+- Nenhum arquivo fora dos 3 listados foi tocado.
