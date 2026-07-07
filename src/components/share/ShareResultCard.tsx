@@ -143,7 +143,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         style={{
           position: "absolute", top: "-35%", right: "-25%",
           width: "75%", height: "75%", borderRadius: "999px",
-          background: glow, filter: `blur(${px(34)})`, pointerEvents: "none",
+          background: glow, filter: `blur(${px(42)})`, pointerEvents: "none",
         }}
       />
 
