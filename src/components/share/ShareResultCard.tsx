@@ -259,7 +259,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                   whiteSpace: "nowrap",
                 }}>
                   <Check size={14 * S} strokeWidth={3} />
-                  <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
+                  <span>Meta batida</span>
                 </div>
               )}
             </div>
