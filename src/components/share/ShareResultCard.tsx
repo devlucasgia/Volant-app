@@ -82,7 +82,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const themeMain = isLiquid ? TOKENS.success : TOKENS.gross;
   const themeStrong = isLiquid ? TOKENS.successStrong : TOKENS.grossStrong;
   const eyebrowText = isLiquid ? "LUCRO LÍQUIDO" : "GANHO BRUTO";
-  const EyebrowIcon = isLiquid ? Check : TrendingUp;
+  const EyebrowIcon = Gauge;
 
   const cardWidth = designW * S;
   const cardHeight = designH * S;
