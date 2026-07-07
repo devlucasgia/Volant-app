@@ -87,14 +87,14 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const cardWidth = designW * S;
   const cardHeight = designH * S;
 
-  // Background (gradientes do CSS de referência)
+  // Background (gradientes com glow reforçado, mantendo hue original)
   const bg = isLiquid
-    ? "radial-gradient(130% 75% at 78% -5%, hsla(142,71%,45%,0.30), transparent 52%), radial-gradient(90% 70% at -12% 108%, hsla(142,76%,55%,0.12), transparent 46%), linear-gradient(168deg, #0f1720, #0a0e14)"
-    : "radial-gradient(130% 75% at 78% -5%, hsla(215,70%,60%,0.32), transparent 52%), radial-gradient(90% 70% at -12% 108%, hsla(215,70%,60%,0.12), transparent 46%), linear-gradient(168deg, #0f1720, #0a0e14)";
+    ? "radial-gradient(130% 75% at 78% -5%, hsla(142,71%,45%,0.42), transparent 55%), radial-gradient(90% 70% at -12% 108%, hsla(142,76%,55%,0.16), transparent 48%), linear-gradient(168deg, #0f1720, #0a0e14)"
+    : "radial-gradient(130% 75% at 78% -5%, hsla(215,70%,60%,0.44), transparent 55%), radial-gradient(90% 70% at -12% 108%, hsla(215,70%,60%,0.16), transparent 48%), linear-gradient(168deg, #0f1720, #0a0e14)";
 
   const glow = isLiquid
-    ? "radial-gradient(circle, hsla(142,76%,55%,0.2), transparent 60%)"
-    : "radial-gradient(circle, hsla(215,70%,60%,0.22), transparent 60%)";
+    ? "radial-gradient(circle, hsla(142,76%,55%,0.32), transparent 60%)"
+    : "radial-gradient(circle, hsla(215,70%,60%,0.34), transparent 60%)";
 
   const goalFillBg = isLiquid
     ? "linear-gradient(90deg, hsla(142,71%,38%,0.9), hsla(142,76%,52%,0.85))"
@@ -108,8 +108,6 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
   const goalPctLabel = `${Math.round(metaPct)}%`;
 
-  const showApps = format === "story" && apps.length > 0;
-  const showGastos = format === "story" && !!gastosValue;
   const padding = format === "story"
     ? `${px(24)} ${px(22)} ${px(18)}`
     : `${px(22)} ${px(22)} ${px(18)}`;
@@ -121,7 +119,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       style={{
         width: `${cardWidth}px`,
         height: `${cardHeight}px`,
-        borderRadius: radius,
+        borderRadius: exportSize ? 0 : radius,
         padding,
         position: "relative",
         overflow: "hidden",
@@ -143,7 +141,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         style={{
           position: "absolute", top: "-35%", right: "-25%",
           width: "75%", height: "75%", borderRadius: "999px",
-          background: glow, filter: `blur(${px(34)})`, pointerEvents: "none",
+          background: glow, filter: `blur(${px(42)})`, pointerEvents: "none",
         }}
       />
 
@@ -156,7 +154,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             crossOrigin="anonymous"
             style={{ width: px(22), height: px(22), borderRadius: "999px", objectFit: "cover", flexShrink: 0 }}
           />
-          <span style={{ fontSize: px(14), fontWeight: 600, letterSpacing: "0.02em" }}>VOLANT</span>
+          <span style={{ fontSize: px(11.5), fontWeight: 500, letterSpacing: "0.14em" }}>VOLANT</span>
         </div>
         <div style={{
           textAlign: "right",
@@ -255,13 +253,14 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           </div>
           <div style={{
             marginTop: px(9),
+            padding: `0 ${px(2)}`,
             display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: px(10),
             fontSize: px(10.5), color: "hsla(215,20%,65%,0.9)", whiteSpace: "nowrap",
           }}>
-            <span style={{ fontWeight: 600, color: "hsla(215,20%,65%,0.7)" }}>{metaLabel}</span>
             {metaBatida && metaExcedente ? (
-              <span style={{ color: themeStrong, fontWeight: 800 }}>{metaExcedente}</span>
-            ) : null}
+              <span style={{ color: themeStrong, fontWeight: 800 }}>{metaExcedente} acima</span>
+            ) : <span />}
+            <span style={{ fontWeight: 600, color: "hsla(215,20%,65%,0.7)" }}>{metaLabel}</span>
           </div>
         </div>
 
@@ -316,67 +315,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           ))}
         </div>
 
-        {/* Por app + gastos (só story) */}
-        {showApps && (
-          <div style={{
-            marginTop: px(14),
-            background: TOKENS.panel,
-            border: `1px solid ${TOKENS.borderSofter}`,
-            borderRadius: px(16),
-            padding: `${px(12)} ${px(13)}`,
-            display: "flex", flexDirection: "column", gap: px(9),
-          }}>
-            <div style={{
-              fontSize: px(8), fontWeight: 800, letterSpacing: "0.16em",
-              textTransform: "uppercase", color: "hsla(215,20%,65%,0.8)",
-            }}>
-              Por app
-            </div>
-            {apps.slice(0, 3).map((app) => (
-              <div key={app.name} style={{ display: "flex", alignItems: "center", gap: px(8) }}>
-                <div style={{
-                  width: px(18), height: px(18), borderRadius: "999px",
-                  background: app.color, color: "#fff",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: px(9), fontWeight: 800, flexShrink: 0,
-                }}>
-                  {app.initial}
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 600, minWidth: px(46) }}>{app.name}</span>
-                <div style={{ flex: 1, height: px(5), background: TOKENS.panel2, borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{
-                    height: "100%", width: `${Math.max(0, Math.min(100, app.pct))}%`,
-                    background: app.color, borderRadius: "999px",
-                  }} />
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 800, minWidth: px(56), textAlign: "right", whiteSpace: "nowrap" }}>
-                  {app.value}
-                </span>
-              </div>
-            ))}
-            {showGastos && (
-              <div style={{
-                display: "flex", alignItems: "center", gap: px(8),
-                paddingTop: px(8), borderTop: `1px solid ${TOKENS.borderSofter}`,
-              }}>
-                <div style={{
-                  width: px(18), height: px(18), borderRadius: "999px",
-                  background: "hsla(0,70%,55%,0.18)", color: TOKENS.destructive,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: px(11), fontWeight: 800, flexShrink: 0,
-                }}>
-                  −
-                </div>
-                <span style={{ fontSize: px(10), fontWeight: 600, flex: 1, color: "hsla(215,20%,65%,0.9)" }}>
-                  {gastosLabel || "Gastos"}
-                </span>
-                <span style={{ fontSize: px(10), fontWeight: 800, color: TOKENS.destructive, whiteSpace: "nowrap" }}>
-                  −{gastosValue}
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Bloco de apps/gastos removido — story fica mais respirado, como na referência */}
       </div>
 
       {/* Footer */}
@@ -385,7 +324,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
           color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
         }}>
-          Feito com Volant
+          O app feito pra quem vive de app.
         </div>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: px(6),
