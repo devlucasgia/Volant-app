@@ -327,17 +327,19 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
       </div>
 
       {/* Footer */}
-      <div style={{ marginTop: px(16), textAlign: "center", lineHeight: 1.5 }}>
-        <div style={{
-          fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
-          color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
-        }}>
-          O app feito pra quem vive de app.
-        </div>
+      <div style={{ marginTop: px(footerMarginTop), textAlign: "center", lineHeight: 1.5 }}>
+        {!isSquare && (
+          <div style={{
+            fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
+            color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
+          }}>
+            O app feito pra quem vive de app.
+          </div>
+        )}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: px(6),
           fontSize: px(10), fontWeight: 700, letterSpacing: "0.04em",
-          color: "hsla(215,20%,65%,0.9)", marginTop: px(3),
+          color: "hsla(215,20%,65%,0.9)", marginTop: isSquare ? 0 : px(3),
         }}>
           <img
             src={volantSymbol}
