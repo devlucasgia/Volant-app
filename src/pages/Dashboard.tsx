@@ -859,7 +859,7 @@ export default function Dashboard() {
       gastosLabel,
       gastosValue,
     };
-  }, [period, contextualDate, periodGoal.value, s, activeApps, apps, activeExp, expenseMetaFor, platformMetaFor]);
+  }, [period, customRange, settings.weekStartsOn, periodGoal.value, s, activeApps, apps, activeExp, expenseMetaFor, platformMetaFor]);
 
   return (
     <>
