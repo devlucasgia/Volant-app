@@ -326,7 +326,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           fontSize: px(8), fontWeight: 600, letterSpacing: "0.1em",
           color: "hsla(215,20%,65%,0.65)", textTransform: "uppercase",
         }}>
-          Feito com Volant
+          O app feito pra quem vive de app.
         </div>
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center", gap: px(6),
