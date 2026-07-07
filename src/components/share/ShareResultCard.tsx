@@ -199,7 +199,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
           fontWeight: 800,
           letterSpacing: "-0.025em",
           lineHeight: 1,
-          marginTop: px(9),
+          marginTop: px(heroMarginTop),
           whiteSpace: "nowrap",
         }}>
           {rs && (
