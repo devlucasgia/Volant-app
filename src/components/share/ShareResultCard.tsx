@@ -296,7 +296,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             { k: "Jornada", v: jornada },
           ].map((cell, i) => (
             <div key={cell.k} style={{
-              flex: 1, padding: `${px(13)} ${px(4)}`,
+              flex: 1, padding: `${px(perfCellPadY)} ${px(4)}`,
               position: "relative", textAlign: "center",
             }}>
               {i > 0 && (
