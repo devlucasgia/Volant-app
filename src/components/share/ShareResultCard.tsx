@@ -102,16 +102,28 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
 
   const goalInColor = isLiquid ? "#04140b" : "#041018";
 
-  const heroFontSize = format === "story" ? 45 : 39;
+  const isSquare = format === "square";
+  const heroFontSize = isSquare ? 32 : 45;
   const { rs, int, cents } = splitCurrency(heroValue);
 
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
   const goalPctLabel = `${Math.round(metaPct)}%`;
 
-  const padding = format === "story"
-    ? `${px(24)} ${px(22)} ${px(18)}`
-    : `${px(22)} ${px(22)} ${px(18)}`;
+  const padding = isSquare
+    ? `${px(16)} ${px(18)} ${px(14)}`
+    : `${px(24)} ${px(22)} ${px(18)}`;
   const radius = format === "story" ? px(26) : px(22);
+
+  // Métricas escaláveis por formato (quadrado é mais compacto).
+  const goalBarH = isSquare ? 28 : 34;
+  const goalInFont = isSquare ? 10.5 : 11.5;
+  const goalPctFont = isSquare ? 11.5 : 13;
+  const goalMarginTop = isSquare ? 14 : 20;
+  const heroMarginTop = isSquare ? 6 : 9;
+  const perfMarginTop = isSquare ? 12 : 20;
+  const perfCellPadY = isSquare ? 10 : 13;
+  const perfValueFont = isSquare ? 12 : 14;
+  const footerMarginTop = isSquare ? 10 : 16;
 
   return (
     <div
