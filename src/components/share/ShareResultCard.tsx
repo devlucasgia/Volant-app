@@ -214,10 +214,10 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
         </div>
 
         {/* Goal — faixa de conquista */}
-        <div style={{ marginTop: px(20) }}>
+        <div style={{ marginTop: px(goalMarginTop) }}>
           <div style={{
             position: "relative",
-            height: px(34),
+            height: px(goalBarH),
             borderRadius: px(12),
             background: TOKENS.panel2,
             overflow: "hidden",
@@ -226,7 +226,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
             <div style={{
               position: "absolute", top: 0, bottom: 0, left: 0,
               width: `${goalPctClamped}%`,
-              minWidth: goalPctClamped > 0 ? px(80) : 0,
+              minWidth: goalPctClamped > 0 && metaBatida ? px(80) : 0,
               borderRadius: px(11),
               background: goalFillBg,
               display: "flex", alignItems: "center",
@@ -238,26 +238,22 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
                 position: "absolute", right: 0, top: 0, bottom: 0, width: px(60),
                 background: "linear-gradient(90deg, transparent, hsla(210,40%,98%,0.25))",
               }} />
-              <div style={{
-                position: "relative",
-                display: "flex", alignItems: "center", gap: px(7),
-                fontSize: px(11.5), fontWeight: 800, color: goalInColor,
-                whiteSpace: "nowrap",
-              }}>
-                {metaBatida ? (
-                  <>
-                    <Check size={14 * S} strokeWidth={3} />
-                    <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
-                  </>
-                ) : (
-                  <span>{goalPctLabel}</span>
-                )}
-              </div>
+              {metaBatida && (
+                <div style={{
+                  position: "relative",
+                  display: "flex", alignItems: "center", gap: px(7),
+                  fontSize: px(goalInFont), fontWeight: 800, color: goalInColor,
+                  whiteSpace: "nowrap",
+                }}>
+                  <Check size={14 * S} strokeWidth={3} />
+                  <span>Meta batida{metaExcedente ? ` · ${metaExcedente}` : ""}</span>
+                </div>
+              )}
             </div>
             <div style={{
               position: "absolute", right: px(13), top: 0, bottom: 0,
               display: "flex", alignItems: "center",
-              fontSize: px(13), fontWeight: 900, color: TOKENS.fg,
+              fontSize: px(goalPctFont), fontWeight: 900, color: TOKENS.fg,
               textShadow: "0 1px 2px rgba(0,0,0,0.35)",
             }}>
               {goalPctLabel}
