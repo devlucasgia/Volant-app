@@ -103,7 +103,7 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const goalInColor = isLiquid ? "#04140b" : "#041018";
 
   const isSquare = format === "square";
-  const heroFontSize = isSquare ? 32 : 45;
+  const heroFontSize = isSquare ? 42 : 45;
   const { rs, int, cents } = splitCurrency(heroValue);
 
   const goalPctClamped = Math.max(0, Math.min(100, metaPct));
@@ -115,15 +115,18 @@ export const ShareResultCard = forwardRef<HTMLDivElement, ShareResultCardProps>(
   const radius = format === "story" ? px(26) : px(22);
 
   // Métricas escaláveis por formato (quadrado é mais compacto).
-  const goalBarH = isSquare ? 28 : 34;
-  const goalInFont = isSquare ? 10.5 : 11.5;
-  const goalPctFont = isSquare ? 11.5 : 13;
-  const goalMarginTop = isSquare ? 14 : 20;
-  const heroMarginTop = isSquare ? 6 : 9;
-  const perfMarginTop = isSquare ? 12 : 20;
-  const perfCellPadY = isSquare ? 10 : 13;
+  const goalBarH = isSquare ? 24 : 34;
+  const goalInFont = isSquare ? 10 : 11.5;
+  const goalPctFont = isSquare ? 11 : 13;
+  const goalMarginTop = isSquare ? 18 : 20;
+  const heroMarginTop = isSquare ? 10 : 9;
+  const perfMarginTop = isSquare ? 14 : 20;
+  const perfCellPadY = isSquare ? 9 : 13;
   const perfValueFont = isSquare ? 12 : 14;
-  const footerMarginTop = isSquare ? 10 : 16;
+  const perfEyebrowFont = isSquare ? 8 : 9;
+  const perfEyebrowIcon = isSquare ? 9 : 11;
+  const footerMarginTop = isSquare ? 12 : 16;
+
 
   return (
     <div
