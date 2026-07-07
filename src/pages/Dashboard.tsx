@@ -821,9 +821,23 @@ export default function Dashboard() {
     const gastosLabel = topExpKey ? `Gastos · ${expenseMetaFor(topExpKey).label}` : undefined;
     const gastosValue = s.totalExpenses > 0 ? brl(s.totalExpenses) : undefined;
 
+    // Data compacta para o card de compartilhamento (ex: "6 JUL 2026").
+    const now = new Date();
+    let shareDateLabel = format(now, "d MMM yyyy", { locale: ptBR }).toUpperCase();
+    if (period === "week") {
+      const wso = (settings.weekStartsOn ?? 1) as 0 | 1;
+      const ws = startOfWeek(now, { weekStartsOn: wso });
+      const we = endOfWeek(now, { weekStartsOn: wso });
+      shareDateLabel = `${format(ws, "d", { locale: ptBR })}–${format(we, "d MMM yyyy", { locale: ptBR }).toUpperCase()}`;
+    } else if (period === "month") {
+      shareDateLabel = format(now, "MMM yyyy", { locale: ptBR }).toUpperCase();
+    } else if (period === "custom" && customRange) {
+      shareDateLabel = `${format(customRange.from, "d MMM", { locale: ptBR }).toUpperCase()}–${format(customRange.to, "d MMM yyyy", { locale: ptBR }).toUpperCase()}`;
+    }
+
     return {
       periodLabel: periodLabelMap[period],
-      dateLabel: contextualDate,
+      dateLabel: shareDateLabel,
       liquido: {
         heroValue: brl(s.net),
         metaBatida: goalVal > 0 && s.net >= goalVal,
