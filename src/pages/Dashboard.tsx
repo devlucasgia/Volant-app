@@ -218,6 +218,24 @@ export default function Dashboard() {
   const overAmount = Math.max(0, goalProgressValue - periodGoal.value);
   const overPct = periodGoal.value > 0 && overAmount > 0 ? (overAmount / periodGoal.value) * 100 : 0;
 
+  // Modal de conquista — dispara 1× por dia quando a meta do dia é batida.
+  const handleConquestClose = () => {
+    try {
+      const key = `volant_conquest_shown_${format(new Date(), "yyyy-MM-dd")}`;
+      sessionStorage.setItem(key, "1");
+    } catch { /* ignore */ }
+    setConquestOpen(false);
+  };
+  useEffect(() => {
+    if (period !== "day" || s.gross <= 0 || !goalReached) return;
+    try {
+      const key = `volant_conquest_shown_${format(new Date(), "yyyy-MM-dd")}`;
+      if (sessionStorage.getItem(key)) return;
+      setConquestOpen(true);
+    } catch { /* ignore */ }
+  }, [goalReached, period, s.gross]);
+
+
   // Folga programada — o dia ativo (hoje no "day", dia único em "custom")
   // não está em planningSelectedDates. Mantém progresso semanal/mensal intacto.
   const todayIsoStr = useMemo(() => toIsoDate(plStartOfDay(new Date())), []);
