@@ -13,6 +13,16 @@ import { AppName, Entry, EarningEntry, ExpenseCategory, MaintenanceType } from "
 import { toast } from "sonner";
 import { CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Segmented } from "@/components/Segmented";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
