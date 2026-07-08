@@ -249,8 +249,20 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [pendingAppend, setPendingAppend] = useState(false);
+  const [pendingSimpleKey, setPendingSimpleKey] = useState<string | null>(null);
 
   const unusedPlatforms = earningPlatforms.filter((p) => p.type === "ride" && !usedKeys.includes(p.key));
+  const simplePlatforms = earningPlatforms.filter((p) => p.type === "simple");
+
+  const switchToSimple = (key: string) => {
+    setPlatforms([newRow(key)]);
+    setAddedExtra(false);
+  };
+  const requestSwitchToSimple = (key: string) => {
+    const hasContent = platforms.some((p) => (p.gross || 0) > 0 || (p.rides || 0) > 0);
+    if (hasContent) setPendingSimpleKey(key);
+    else switchToSimple(key);
+  };
 
   const submit = async () => {
     if (submitting) return;
