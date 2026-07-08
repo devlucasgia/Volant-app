@@ -396,7 +396,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     : (tab === "earning" ? "Novo ganho" : "Novo gasto");
 
   return (
-    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false}>
       <DrawerContent className={cn(
         "flex flex-col",
         tab === "earning" ? "max-h-[100dvh] h-[100dvh]" : (keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]"),

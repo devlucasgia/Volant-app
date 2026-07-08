@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -6,14 +6,16 @@ import { cn } from "@/lib/utils";
  *
  * - 2 colunas roláveis (horas | minutos) com snap.
  * - Faixa central destaca o valor selecionado.
- * - Link "digitar" troca pra 2 campos numéricos (sem armadilha decimal: 6 e 30 = 6h30, nunca 6.30).
- * - Comunica o valor como `hours` decimal (h + m/60), com 2 casas.
+ * - Rolagem em LOOP (23→0 e 0→23; 59→0 e 0→59), como relógios de apps robustos.
+ * - Link "digitar" troca pra 2 campos numéricos.
  * - Respeita `prefers-reduced-motion` em qualquer scroll programático.
  */
 
 const ITEM_H = 28; // px por item
 const VISIBLE = 3; // 1 central + 1 acima + 1 abaixo
 const CONTAINER_H = ITEM_H * VISIBLE; // 84px
+const REPEATS = 41; // ímpar para termos um bloco central exato
+const MID = Math.floor(REPEATS / 2);
 
 interface Props {
   /** Valor atual em horas decimais (ex.: 6.5 = 6h30). null = vazio. */
@@ -21,7 +23,7 @@ interface Props {
   onChange: (decimalHours: number | null) => void;
   /** Faixa de horas exibidas (default 0..23). */
   maxHours?: number;
-  /** Passo dos minutos em min (default 5). */
+  /** Passo dos minutos em min (default 1). */
   minuteStep?: number;
 }
 
@@ -43,6 +45,10 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function mod(n: number, m: number): number {
+  return ((n % m) + m) % m;
+}
+
 function Wheel({
   values,
   value,
@@ -56,31 +62,58 @@ function Wheel({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const settleTimer = useRef<number | null>(null);
+  const L = values.length;
+  const total = REPEATS * L;
 
-  // Scroll para a posição correta quando `value` muda externamente.
+  // Posição inicial no bloco central.
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const idx = Math.max(0, values.indexOf(value));
+    el.scrollTop = (MID * L + idx) * ITEM_H;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync quando `value` muda externamente — snap para a ocorrência mais próxima.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const idx = values.indexOf(value);
     if (idx < 0) return;
-    const target = idx * ITEM_H;
-    if (Math.abs(el.scrollTop - target) > 1) {
-      el.scrollTo({ top: target, behavior: prefersReducedMotion() ? "auto" : "smooth" });
-    }
-  }, [value, values]);
+    const currentAbs = Math.round(el.scrollTop / ITEM_H);
+    const currentVal = values[mod(currentAbs, L)];
+    if (currentVal === value) return;
+    const base = Math.floor(currentAbs / L) * L;
+    const candidates = [base - L + idx, base + idx, base + L + idx];
+    const nearest = candidates.reduce((a, b) =>
+      Math.abs(b - currentAbs) < Math.abs(a - currentAbs) ? b : a,
+    );
+    const clamped = Math.max(0, Math.min(total - 1, nearest));
+    el.scrollTo({
+      top: clamped * ITEM_H,
+      behavior: prefersReducedMotion() ? "auto" : "smooth",
+    });
+  }, [value, values, total, L]);
 
   const handleScroll = () => {
     const el = ref.current;
     if (!el) return;
     if (settleTimer.current) window.clearTimeout(settleTimer.current);
     settleTimer.current = window.setTimeout(() => {
-      const idx = Math.round(el.scrollTop / ITEM_H);
-      const v = values[Math.max(0, Math.min(values.length - 1, idx))];
-      if (v !== undefined && v !== value) onSelect(v);
+      const idx = Math.max(0, Math.min(total - 1, Math.round(el.scrollTop / ITEM_H)));
+      const v = values[mod(idx, L)];
+      if (v !== value) onSelect(v);
       // Snap suave se ficou levemente fora.
-      const snap = Math.max(0, Math.min(values.length - 1, idx)) * ITEM_H;
+      const snap = idx * ITEM_H;
       if (Math.abs(el.scrollTop - snap) > 0.5) {
         el.scrollTo({ top: snap, behavior: prefersReducedMotion() ? "auto" : "smooth" });
+      }
+      // Recentraliza no bloco do meio se aproximou das bordas — invisível pro usuário
+      // pois os itens são idênticos.
+      if (idx < L || idx > total - L) {
+        const modIdx = mod(idx, L);
+        const newAbs = MID * L + modIdx;
+        el.scrollTop = newAbs * ITEM_H;
       }
     }, 90);
   };
@@ -92,21 +125,32 @@ function Wheel({
       className="relative h-[84px] flex-1 overflow-y-scroll snap-y snap-mandatory scrollbar-none"
       style={{ scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch" }}
     >
-      {/* padding top/bottom para permitir o item das pontas ficar centralizado */}
+      {/* padding top/bottom para alinhar o snap-center com o item ativo. */}
       <div style={{ paddingTop: ITEM_H, paddingBottom: ITEM_H }}>
-        {values.map((v) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => onSelect(v)}
-            className={cn(
-              "flex h-[28px] w-full snap-center items-center justify-center text-base tabular-nums transition-all",
-              v === value ? "font-bold text-foreground" : "text-muted-foreground/60",
-            )}
-          >
-            {format(v)}
-          </button>
-        ))}
+        {Array.from({ length: total }, (_, i) => {
+          const v = values[i % L];
+          return (
+            <button
+              key={i}
+              type="button"
+              tabIndex={-1}
+              onClick={() => {
+                const el = ref.current;
+                if (!el) return;
+                el.scrollTo({
+                  top: i * ITEM_H,
+                  behavior: prefersReducedMotion() ? "auto" : "smooth",
+                });
+              }}
+              className={cn(
+                "flex h-[28px] w-full snap-center items-center justify-center text-base tabular-nums transition-all",
+                v === value ? "font-bold text-foreground" : "text-muted-foreground/60",
+              )}
+            >
+              {format(v)}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
