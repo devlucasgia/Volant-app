@@ -506,7 +506,7 @@ export default function Dashboard() {
                         ? `${brl(overAmount)} acima da meta`
                         : "Meta atingida"
                       : `Faltam ${brl(goalRemaining)}`
-                    : "Defina sua meta mensal em Ajustes"}
+                    : "Toque aqui para configurar seu plano"}
               </span>
               {periodGoal.value > 0 && !isFolgaEffective && (
                 <div className="flex shrink-0 items-center gap-1.5">

@@ -118,7 +118,7 @@ export function PlatformRow({ row, onChange, onRemove, usedKeys = [], onCreateNe
         <div className="space-y-1">
           <label className="text-[11px] font-medium text-muted-foreground">Corridas</label>
           <NumberField
-            placeholder="—"
+            placeholder=""
             value={row.rides}
             onChange={(v) => onChange({ ...row, rides: v })}
             decimal={false}

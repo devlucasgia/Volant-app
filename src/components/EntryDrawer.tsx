@@ -13,6 +13,16 @@ import { AppName, Entry, EarningEntry, ExpenseCategory, MaintenanceType } from "
 import { toast } from "sonner";
 import { CalendarIcon, Plus, Loader2 } from "lucide-react";
 import { CategoryDialog } from "@/components/CategoryDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Segmented } from "@/components/Segmented";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -249,8 +259,20 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
   const [addPickerOpen, setAddPickerOpen] = useState(false);
   const [pendingAppend, setPendingAppend] = useState(false);
+  const [pendingSimpleKey, setPendingSimpleKey] = useState<string | null>(null);
 
   const unusedPlatforms = earningPlatforms.filter((p) => p.type === "ride" && !usedKeys.includes(p.key));
+  const simplePlatforms = earningPlatforms.filter((p) => p.type === "simple");
+
+  const switchToSimple = (key: string) => {
+    setPlatforms([newRow(key)]);
+    setAddedExtra(false);
+  };
+  const requestSwitchToSimple = (key: string) => {
+    const hasContent = platforms.some((p) => (p.gross || 0) > 0 || (p.rides || 0) > 0);
+    if (hasContent) setPendingSimpleKey(key);
+    else switchToSimple(key);
+  };
 
   const submit = async () => {
     if (submitting) return;
@@ -396,7 +418,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     : (tab === "earning" ? "Novo ganho" : "Novo gasto");
 
   return (
-    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }}>
+    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false}>
       <DrawerContent className={cn(
         "flex flex-col",
         tab === "earning" ? "max-h-[100dvh] h-[100dvh]" : (keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]"),
@@ -538,6 +560,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                               setPlatDialogOpen(true);
                               return;
                             }
+                            if (simplePlatforms.some((p) => p.key === v)) {
+                              requestSwitchToSimple(v);
+                              return;
+                            }
                             setPlatforms([...platforms, newRow(v)]);
                             setAddedExtra(true);
                           }}
@@ -554,6 +580,11 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             Adicionar plataforma
                           </SelectTrigger>
                           <SelectContent>
+                            {unusedPlatforms.length > 0 && (
+                              <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                                Plataformas operacionais
+                              </div>
+                            )}
                             {unusedPlatforms.map((p) => (
                               <SelectItem key={p.key} value={p.key}>
                                 <div className="flex items-center gap-2.5">
@@ -565,6 +596,24 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             {unusedPlatforms.length === 0 && (
                               <div className="px-2 py-1.5 text-sm text-muted-foreground">Todas as plataformas já adicionadas</div>
                             )}
+                            {simplePlatforms.length > 0 && (
+                              <>
+                                <div className="mt-1 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                                  Receitas simples
+                                </div>
+                                {simplePlatforms.map((p) => (
+                                  <SelectItem key={p.key} value={p.key}>
+                                    <div className="flex items-center gap-2.5">
+                                      <span className="text-base leading-none">{p.emoji}</span>
+                                      <span>{p.label}</span>
+                                      <span className="ml-1 rounded-full border border-border/60 bg-muted/50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                        Ganho avulso
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </>
+                            )}
                             <SelectItem value="__new__">
                               <div className="flex items-center gap-2 text-primary">
                                 <Plus className="h-4 w-4" /> Criar nova plataforma
@@ -572,6 +621,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             </SelectItem>
                           </SelectContent>
                         </Select>
+
 
                         {totalGross > 0 && platforms.length > 1 && (
                           <div className="flex items-center justify-between rounded-xl bg-success/10 px-3 py-2 text-sm">
@@ -721,6 +771,27 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           }
         }}
       />
+      <AlertDialog open={pendingSimpleKey !== null} onOpenChange={(v) => { if (!v) setPendingSimpleKey(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Trocar para receita simples?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ganhos avulsos não usam KM, horas ou corridas. A jornada em andamento será descartada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter jornada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSimpleKey) switchToSimple(pendingSimpleKey);
+                setPendingSimpleKey(null);
+              }}
+            >
+              Trocar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Drawer>
   );
 }
