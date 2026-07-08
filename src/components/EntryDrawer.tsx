@@ -761,6 +761,27 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           }
         }}
       />
+      <AlertDialog open={pendingSimpleKey !== null} onOpenChange={(v) => { if (!v) setPendingSimpleKey(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Trocar para receita simples?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ganhos avulsos não usam KM, horas ou corridas. A jornada em andamento será descartada.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter jornada</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSimpleKey) switchToSimple(pendingSimpleKey);
+                setPendingSimpleKey(null);
+              }}
+            >
+              Trocar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Drawer>
   );
 }
