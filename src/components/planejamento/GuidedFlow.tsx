@@ -10,10 +10,11 @@ import {
   Car as CarIcon,
   Route,
   Gauge,
-  AlertTriangle,
   Loader2,
   Pencil,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
@@ -144,7 +145,8 @@ export function GuidedFlow({
 }: Props) {
   const isNext = targetMonth != null;
   const navigate = useNavigate();
-  const { settings, cars, updateSettings, entries } = useData();
+  const { settings, cars, updateSettings, entries, refreshCars } = useData();
+  const { user } = useAuth();
   const { useHideChrome } = useUI();
   useHideChrome();
   const activeCar = useMemo(
@@ -217,6 +219,38 @@ export function GuidedFlow({
     return saved ? { ...base, ...saved } : base;
   });
   const [saving, setSaving] = useState(false);
+  const [carFormOpen, setCarFormOpen] = useState(false);
+
+  const handleAddCarInline = async (fields: {
+    brand: string;
+    model: string;
+    plate: string;
+    initialKm: string;
+  }): Promise<{ ok: boolean }> => {
+    if (!user) return { ok: false };
+    const brand = fields.brand.trim();
+    const model = fields.model.trim();
+    if (!brand && !model) {
+      toast.error("Preencha ao menos marca e modelo");
+      return { ok: false };
+    }
+    const isFirst = cars.length === 0;
+    const { error } = await supabase.from("cars").insert({
+      brand: brand || null,
+      model: model || null,
+      plate: fields.plate.trim() || null,
+      initial_km: parseFloat(fields.initialKm) || 0,
+      user_id: user.id,
+      is_active: isFirst,
+    });
+    if (error) {
+      toast.error("Erro ao salvar veículo");
+      return { ok: false };
+    }
+    await refreshCars();
+    toast.success("Veículo cadastrado!");
+    return { ok: true };
+  };
 
   // Persiste step + draft (debounce) enquanto o wizard está aberto.
   const snapshot = useMemo<PlanningDraftSnapshot>(() => ({ step, draft }), [step, draft]);
@@ -284,7 +318,7 @@ export function GuidedFlow({
     }
     if (step === 3) return draft.selectedDates.length > 0;
     if (step === 4) return draft.avgKmPerDay > 0;
-    if (step === 5) return true;
+    if (step === 5) return !carFormOpen;
     return true;
   })();
 
@@ -493,6 +527,8 @@ export function GuidedFlow({
                 },
               })
             }
+            onAddCarInline={handleAddCarInline}
+            onFormOpenChange={setCarFormOpen}
             isNext={isNext}
             nextCostFields={draft.nextCostFields ?? null}
             onChangeNextCostFields={(f) => setDraft((d) => ({ ...d, nextCostFields: f }))}
@@ -829,6 +865,8 @@ function Step5({
   variableTotal,
   variableItems,
   onAddCar,
+  onAddCarInline,
+  onFormOpenChange,
   onEditCosts,
   isNext,
   nextCostFields,
@@ -842,6 +880,8 @@ function Step5({
   variableTotal: number;
   variableItems: { label: string; value: number }[];
   onAddCar: () => void;
+  onAddCarInline: (fields: { brand: string; model: string; plate: string; initialKm: string }) => Promise<{ ok: boolean }>;
+  onFormOpenChange?: (open: boolean) => void;
   onEditCosts: () => void;
   isNext?: boolean;
   nextCostFields?: NextPlanCostFields | null;
@@ -849,34 +889,54 @@ function Step5({
   nextMonthLabel?: string;
   currentMonthLabel?: string;
 }) {
+  const [showCarForm, setShowCarForm] = useState(false);
+  const [savingCar, setSavingCar] = useState(false);
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [plate, setPlate] = useState("");
+  const [initialKm, setInitialKm] = useState("");
+
+  useEffect(() => {
+    onFormOpenChange?.(showCarForm && !car);
+  }, [showCarForm, car, onFormOpenChange]);
+
   // Pré-preenchimento no fluxo isNext: se ainda não existe, inicializa a partir do carro ativo
   const editorFields = isNext
     ? (nextCostFields ?? extractCostFields(car))
     : null;
-  if (!car) {
+
+  const handleSaveInline = async () => {
+    setSavingCar(true);
+    try {
+      const res = await onAddCarInline({ brand, model, plate, initialKm });
+      if (res.ok) {
+        setShowCarForm(false);
+        setBrand(""); setModel(""); setPlate(""); setInitialKm("");
+      }
+    } finally {
+      setSavingCar(false);
+    }
+  };
+
+  if (!car && !showCarForm) {
     return (
       <div>
         <StepHeader
           icon={CarIcon}
-          title="Você tem um veículo cadastrado?"
-          subtitle="O veículo melhora o planejamento porque consideramos seus custos fixos. Variáveis (combustível/alimentação) viram só referência."
+          title="Custos considerados"
+          subtitle="Custos fixos entram na meta. Variáveis ficam apenas como referência."
         />
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-            <div className="space-y-2">
-              <p className="text-[13px] leading-snug text-foreground/90">
-                Sem veículo cadastrado, calculamos seu planejamento sem custos. Os números ficam menos precisos.
-              </p>
-              <button
-                type="button"
-                onClick={onAddCar}
-                className="text-[12.5px] font-semibold text-primary hover:underline"
-              >
-                Cadastrar veículo na Central de Veículos →
-              </button>
-            </div>
-          </div>
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-3">
+          <p className="text-[13px] leading-snug text-foreground/90">
+            Cadastre seu veículo, e na sequência os custos dele, pra entrarem na sua meta. Configurar agora deixa seus números certos desde o começo.
+          </p>
+          <Button
+            type="button"
+            onClick={() => setShowCarForm(true)}
+            className="w-full"
+          >
+            Cadastrar veículo
+          </Button>
         </div>
         <p className="mt-3 text-center text-[11.5px] text-muted-foreground">
           Você pode continuar sem veículo. Toque em "Continuar" abaixo.
@@ -884,6 +944,86 @@ function Step5({
       </div>
     );
   }
+
+  if (!car && showCarForm) {
+    return (
+      <div>
+        <StepHeader
+          icon={CarIcon}
+          title="Cadastre seu veículo"
+          subtitle="Depois você lança os custos dele pra entrarem na meta."
+        />
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-medium text-foreground/85">Marca</label>
+              <input
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                placeholder="Toyota"
+                className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-[14px] outline-none focus:border-primary/60"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-medium text-foreground/85">Modelo</label>
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Corolla"
+                className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-[14px] outline-none focus:border-primary/60"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-medium text-foreground/85">Placa</label>
+            <input
+              value={plate}
+              onChange={(e) => setPlate(e.target.value.toUpperCase())}
+              placeholder="ABC1D23"
+              className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-[14px] outline-none focus:border-primary/60"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-medium text-foreground/85">Quilometragem inicial</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={initialKm}
+              onChange={(e) => setInitialKm(e.target.value)}
+              placeholder="Ex: 45000"
+              className="w-full rounded-lg border border-border/60 bg-background px-3 py-2 text-[14px] outline-none focus:border-primary/60"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowCarForm(false)}
+              disabled={savingCar}
+              className="flex-1"
+            >
+              Pular
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveInline}
+              disabled={savingCar}
+              className="flex-1"
+            >
+              {savingCar ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Salvando...</>
+              ) : (
+                "Salvar veículo"
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!car) return null;
+
 
   const carName = `${car.brand ?? ""} ${car.model ?? ""}`.trim() || "Veículo";
 
@@ -943,9 +1083,9 @@ function Step5({
       </div>
 
       {costsItems.length === 0 && !combustivelItem && outrosVariaveis.length === 0 ? (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.05] p-4">
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
           <p className="text-[12.5px] leading-snug text-foreground/85">
-            Nenhum custo cadastrado pra esse veículo ainda.
+            Cadastre os custos desse veículo. Lançando eles, a gente considera na sua meta e os números ficam mais precisos.
           </p>
           <button
             type="button"
