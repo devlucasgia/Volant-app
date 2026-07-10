@@ -180,7 +180,7 @@ function HomeOrganizer() {
                       </Button>
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
                         disabled={isLast}
-                        onClick={() => { moveHome(k, 1); notifySaved(); }}
+                        onClick={() => { moveHome(k, 1); notifySaved(); void markPersonalized(); }}
                         aria-label={`Mover ${meta.label} para baixo`}>
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>
