@@ -374,6 +374,7 @@ export default function Reports() {
 
       doc.save(`volant-${format(new Date(), "yyyyMMdd")}.pdf`);
       toast.success("PDF exportado!");
+      void markExported();
     } catch (err) {
       console.error(err);
       toast.error("Não foi possível exportar PDF agora.");
