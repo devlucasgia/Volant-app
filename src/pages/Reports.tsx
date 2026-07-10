@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, isHeroKey, type ReportCardKey } from "@/lib/reportOrder";
 import { useAccess } from "@/context/AccessContext";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
