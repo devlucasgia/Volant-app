@@ -174,7 +174,7 @@ function HomeOrganizer() {
                     <div className="flex shrink-0 items-center gap-0.5 pl-1">
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
                         disabled={i === 0}
-                        onClick={() => { moveHome(k, -1); notifySaved(); }}
+                        onClick={() => { moveHome(k, -1); notifySaved(); void markPersonalized(); }}
                         aria-label={`Mover ${meta.label} para cima`}>
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
