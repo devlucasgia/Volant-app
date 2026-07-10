@@ -20,17 +20,27 @@ export function useKeyboardAwareScroll<T extends HTMLElement = HTMLDivElement>()
     const vv = typeof window !== "undefined" ? window.visualViewport : null;
     if (!vv) return;
 
-    const update = () => {
+    let settleTimer: number | null = null;
+    const measure = () => {
       const diff = window.innerHeight - vv.height;
       // Threshold proporcional: teclado costuma cobrir >20% da altura.
       // Evita falsos positivos com address-bar/barra de navegação no Android.
       const threshold = Math.max(150, window.innerHeight * 0.2);
       setKeyboardHeight(diff > threshold ? Math.round(diff) : 0);
     };
+    const update = () => {
+      measure();
+      // Reconfirma após a animação do teclado terminar. Cobre o caso do teclado
+      // fechar por abertura de dropdown/select, quando o último evento chega
+      // durante a animação e o valor "congelaria" errado.
+      if (settleTimer) window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(measure, 250);
+    };
     update();
     vv.addEventListener("resize", update);
     vv.addEventListener("scroll", update);
     return () => {
+      if (settleTimer) window.clearTimeout(settleTimer);
       vv.removeEventListener("resize", update);
       vv.removeEventListener("scroll", update);
     };
