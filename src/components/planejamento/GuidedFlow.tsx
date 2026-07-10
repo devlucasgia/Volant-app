@@ -1083,7 +1083,7 @@ function Step5({
       </div>
 
       {costsItems.length === 0 && !combustivelItem && outrosVariaveis.length === 0 ? (
-        <div className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.05] p-4">
+        <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
           <p className="text-[12.5px] leading-snug text-foreground/85">
             Nenhum custo cadastrado pra esse veículo ainda.
           </p>
