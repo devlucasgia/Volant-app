@@ -931,8 +931,10 @@ function Step5({
           </p>
           <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setShowCarForm(true)}
-            className="w-full"
+            className="mt-1 inline-flex w-auto rounded-full border border-border bg-transparent px-4 text-primary font-semibold hover:bg-primary/5"
           >
             Cadastrar veículo
           </Button>
@@ -1088,9 +1090,10 @@ function Step5({
           </p>
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
+            size="sm"
             onClick={onEditCosts}
-            className="mt-2 w-full"
+            className="mt-2 inline-flex w-auto rounded-full border border-border bg-transparent px-4 text-primary font-semibold hover:bg-primary/5"
           >
             Cadastrar custos do veículo
           </Button>
@@ -1161,9 +1164,10 @@ function Step5({
               </p>
               <Button
                 type="button"
-                variant="secondary"
+                variant="ghost"
+                size="sm"
                 onClick={onEditCosts}
-                className="mt-2 w-full"
+                className="mt-2 inline-flex w-auto rounded-full border border-border bg-transparent px-4 text-primary font-semibold hover:bg-primary/5"
               >
                 Cadastrar custos fixos
               </Button>
