@@ -11,7 +11,6 @@ import {
   Route,
   Gauge,
   Loader2,
-  Pencil,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -1087,13 +1086,14 @@ function Step5({
           <p className="text-[12.5px] leading-snug text-foreground/85">
             Cadastre os custos desse veículo. Lançando eles, a gente considera na sua meta e os números ficam mais precisos.
           </p>
-          <button
+          <Button
             type="button"
+            variant="secondary"
             onClick={onEditCosts}
-            className="mt-1 text-[12.5px] font-semibold text-primary hover:underline"
+            className="mt-2 w-full"
           >
-            Cadastrar custos do veículo →
-          </button>
+            Cadastrar custos do veículo
+          </Button>
         </div>
       ) : (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
@@ -1155,17 +1155,18 @@ function Step5({
               ))}
             </ul>
           ) : (
-            <div className="mt-3 rounded-xl border border-amber-500/25 bg-amber-500/[0.05] p-3">
+            <div className="mt-3 rounded-xl border border-border/60 bg-card/40 p-3">
               <p className="text-[12px] leading-snug text-foreground/85">
                 Nenhum custo fixo cadastrado.
               </p>
-              <button
+              <Button
                 type="button"
+                variant="secondary"
                 onClick={onEditCosts}
-                className="mt-1 text-[12px] font-semibold text-primary hover:underline"
+                className="mt-2 w-full"
               >
-                Cadastrar custos fixos →
-              </button>
+                Cadastrar custos fixos
+              </Button>
             </div>
           )}
 
@@ -1198,13 +1199,6 @@ function Step5({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={onEditCosts}
-        className="mt-3 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-primary hover:underline"
-      >
-        <Pencil className="h-3.5 w-3.5" /> Editar na Central de Veículos
-      </button>
     </div>
   );
 }
