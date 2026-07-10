@@ -1027,6 +1027,13 @@ export default function SettingsPage() {
       <FontSizeSheet open={fontOpen} onOpenChange={setFontOpen} />
 
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
+      <FirstStepsSheet
+        open={firstStepsOpen}
+        onOpenChange={setFirstStepsOpen}
+        tasks={firstSteps.tasks}
+        done={firstSteps.done}
+        total={firstSteps.total}
+      />
       <SuggestionDialog open={suggestionOpen} onOpenChange={setSuggestionOpen} />
       <SubscriptionSheet
         open={subscriptionOpen}
