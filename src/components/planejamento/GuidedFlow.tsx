@@ -318,7 +318,7 @@ export function GuidedFlow({
     }
     if (step === 3) return draft.selectedDates.length > 0;
     if (step === 4) return draft.avgKmPerDay > 0;
-    if (step === 5) return true;
+    if (step === 5) return !carFormOpen;
     return true;
   })();
 
