@@ -557,6 +557,7 @@ export default function Reports() {
 
       XLSX.writeFile(wb, `volant-${format(new Date(), "yyyyMMdd")}.xlsx`);
       toast.success("Excel exportado!");
+      void markExported();
     } catch (err) {
       console.error(err);
       toast.error("Não foi possível exportar Excel agora.");
