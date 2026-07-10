@@ -33,7 +33,7 @@ export function computeFirstSteps(input: FirstStepsInput): FirstStepTask[] {
       key: "entries",
       label: "Lançar seus primeiros registros",
       done: hasEarning && hasExpense,
-      route: "/app",
+      action: "openEntryDrawer",
     },
     {
       key: "personalize",
