@@ -73,6 +73,8 @@ export default function Dashboard() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [conquestOpen, setConquestOpen] = useState(false);
+  const [firstStepsOpen, setFirstStepsOpen] = useState(false);
+  const firstSteps = useFirstSteps();
   const planningSnapshot = useMemo(
     () => ({
       monthlyGoal: settings.monthlyGoal,
