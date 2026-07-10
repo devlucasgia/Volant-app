@@ -86,6 +86,7 @@ export function useFirstSteps(): UseFirstStepsResult {
         .eq("id", user.id);
       if (!error) {
         setProfile((p) => (p ? { ...p, fs_all_done_at: nowIso } : p));
+        window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
       }
     })();
   }, [allDone, profile, user]);
@@ -98,6 +99,7 @@ export function useFirstSteps(): UseFirstStepsResult {
       .eq("id", user.id);
     if (!error) {
       setProfile((p) => (p ? { ...p, fs_personalized: true } : p));
+      window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
     }
   }, [user, profile]);
 
@@ -109,6 +111,7 @@ export function useFirstSteps(): UseFirstStepsResult {
       .eq("id", user.id);
     if (!error) {
       setProfile((p) => (p ? { ...p, fs_exported: true } : p));
+      window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
     }
   }, [user, profile]);
 
