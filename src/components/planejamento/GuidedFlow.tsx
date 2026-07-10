@@ -10,10 +10,11 @@ import {
   Car as CarIcon,
   Route,
   Gauge,
-  AlertTriangle,
   Loader2,
   Pencil,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useData } from "@/context/DataContext";
