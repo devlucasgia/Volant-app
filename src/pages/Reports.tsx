@@ -83,6 +83,7 @@ function AnimatedNumber({ value, format, duration = 500 }: { value: number; form
 export default function Reports() {
   const { entries, settings, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isLimited } = useAccess();
+  const { markExported } = useFirstSteps();
   const [widgets] = useReportWidgets();
   const [reportOrder] = useReportOrder();
   const [mode, setMode] = useState<RangeMode>("month");
