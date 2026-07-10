@@ -145,7 +145,8 @@ export function GuidedFlow({
 }: Props) {
   const isNext = targetMonth != null;
   const navigate = useNavigate();
-  const { settings, cars, updateSettings, entries } = useData();
+  const { settings, cars, updateSettings, entries, refreshCars } = useData();
+  const { user } = useAuth();
   const { useHideChrome } = useUI();
   useHideChrome();
   const activeCar = useMemo(
