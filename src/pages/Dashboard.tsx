@@ -37,6 +37,9 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { ShareResultSheet, type ShareCardData } from "@/components/share/ShareResultSheet";
 import { ConquestModal } from "@/components/share/ConquestModal";
 import { Share2, ArrowUpDown } from "lucide-react";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
+import { FirstStepsStrip } from "@/components/firstSteps/FirstStepsStrip";
+import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 
 
 export default function Dashboard() {
