@@ -33,30 +33,36 @@ export function useFirstSteps(): UseFirstStepsResult {
   const [loading, setLoading] = useState(true);
   const allDoneWrittenRef = useRef(false);
 
-  // Fetch flags on user change.
-  useEffect(() => {
+  // Fetch flags (reusable).
+  const refetch = useCallback(async () => {
     if (!user) {
       setProfile(null);
       setLoading(false);
       return;
     }
-    let active = true;
-    setLoading(true);
-    (async () => {
-      const { data } = await (supabase.from("profiles") as any)
-        .select("fs_personalized, fs_exported, fs_all_done_at")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (!active) return;
-      setProfile({
-        fs_personalized: Boolean((data as any)?.fs_personalized),
-        fs_exported: Boolean((data as any)?.fs_exported),
-        fs_all_done_at: ((data as any)?.fs_all_done_at ?? null) as string | null,
-      });
-      setLoading(false);
-    })();
-    return () => { active = false; };
+    const { data } = await (supabase.from("profiles") as any)
+      .select("fs_personalized, fs_exported, fs_all_done_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    setProfile({
+      fs_personalized: Boolean((data as any)?.fs_personalized),
+      fs_exported: Boolean((data as any)?.fs_exported),
+      fs_all_done_at: ((data as any)?.fs_all_done_at ?? null) as string | null,
+    });
+    setLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    setLoading(true);
+    refetch();
+  }, [refetch]);
+
+  // Sync across hook instances (Dashboard, Reports, OrganizacaoCards, Settings).
+  useEffect(() => {
+    const handler = () => { refetch(); };
+    window.addEventListener("volant:first-steps-changed", handler);
+    return () => window.removeEventListener("volant:first-steps-changed", handler);
+  }, [refetch]);
 
   const tasks = computeFirstSteps({
     planningStatus: settings.planningStatus,
@@ -80,6 +86,7 @@ export function useFirstSteps(): UseFirstStepsResult {
         .eq("id", user.id);
       if (!error) {
         setProfile((p) => (p ? { ...p, fs_all_done_at: nowIso } : p));
+        window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
       }
     })();
   }, [allDone, profile, user]);
@@ -92,6 +99,7 @@ export function useFirstSteps(): UseFirstStepsResult {
       .eq("id", user.id);
     if (!error) {
       setProfile((p) => (p ? { ...p, fs_personalized: true } : p));
+      window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
     }
   }, [user, profile]);
 
@@ -103,6 +111,7 @@ export function useFirstSteps(): UseFirstStepsResult {
       .eq("id", user.id);
     if (!error) {
       setProfile((p) => (p ? { ...p, fs_exported: true } : p));
+      window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
     }
   }, [user, profile]);
 

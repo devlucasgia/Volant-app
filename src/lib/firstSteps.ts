@@ -7,7 +7,8 @@ export interface FirstStepTask {
   key: FirstStepKey;
   label: string;
   done: boolean;
-  route: string;
+  route?: string;
+  action?: "openEntryDrawer";
 }
 
 export interface FirstStepsInput {
@@ -32,7 +33,7 @@ export function computeFirstSteps(input: FirstStepsInput): FirstStepTask[] {
       key: "entries",
       label: "Lançar seus primeiros registros",
       done: hasEarning && hasExpense,
-      route: "/app",
+      action: "openEntryDrawer",
     },
     {
       key: "personalize",

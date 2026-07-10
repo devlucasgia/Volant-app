@@ -8,6 +8,7 @@ import {
   DrawerDescription,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
+import { useUI } from "@/context/UIContext";
 import type { FirstStepTask } from "@/lib/firstSteps";
 
 export interface FirstStepsSheetProps {
@@ -20,12 +21,20 @@ export interface FirstStepsSheetProps {
 
 export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: FirstStepsSheetProps) {
   const navigate = useNavigate();
+  const { openDrawer } = useUI();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
-  const goTo = (route: string) => {
-    // Fecha ANTES de navegar pra sheet não ficar por cima da nova tela.
+  const handleTaskClick = (task: FirstStepTask) => {
+    if (task.done) return;
+    // Fecha ANTES de navegar/abrir drawer pra sheet não ficar por cima.
     onOpenChange(false);
-    setTimeout(() => navigate(route), 60);
+    setTimeout(() => {
+      if (task.action === "openEntryDrawer") {
+        openDrawer();
+        return;
+      }
+      if (task.route) navigate(task.route);
+    }, 60);
   };
 
   return (
@@ -54,7 +63,7 @@ export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: Firs
               <li key={task.key}>
                 <button
                   type="button"
-                  onClick={isDone ? undefined : () => goTo(task.route)}
+                  onClick={isDone ? undefined : () => handleTaskClick(task)}
                   disabled={isDone}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors",
