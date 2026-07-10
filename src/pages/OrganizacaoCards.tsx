@@ -125,6 +125,7 @@ function HomeOrganizer() {
     if (!over || active.id === over.id) return;
     reorderHome(active.id as HomeCardKey, over.id as HomeCardKey);
     notifySaved();
+    void markPersonalized();
   };
 
   return (
