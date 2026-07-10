@@ -92,6 +92,7 @@ export default function OrganizacaoCards() {
 function HomeOrganizer() {
   const { settings, updateSettings } = useData();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
+  const { markPersonalized } = useFirstSteps();
   
   const widgets = settings.dashboardWidgets;
 
