@@ -1085,7 +1085,7 @@ function Step5({
       {costsItems.length === 0 && !combustivelItem && outrosVariaveis.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-card/60 p-4">
           <p className="text-[12.5px] leading-snug text-foreground/85">
-            Nenhum custo cadastrado pra esse veículo ainda.
+            Cadastre os custos desse veículo. Lançando eles, a gente considera na sua meta e os números ficam mais precisos.
           </p>
           <button
             type="button"
