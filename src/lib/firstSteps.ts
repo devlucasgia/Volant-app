@@ -7,7 +7,8 @@ export interface FirstStepTask {
   key: FirstStepKey;
   label: string;
   done: boolean;
-  route: string;
+  route?: string;
+  action?: "openEntryDrawer";
 }
 
 export interface FirstStepsInput {
