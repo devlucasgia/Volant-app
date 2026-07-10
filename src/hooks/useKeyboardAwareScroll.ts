@@ -22,8 +22,10 @@ export function useKeyboardAwareScroll<T extends HTMLElement = HTMLDivElement>()
 
     const update = () => {
       const diff = window.innerHeight - vv.height;
-      // Threshold conservador para não confundir com address-bar no Android.
-      setKeyboardHeight(diff > 150 ? Math.round(diff) : 0);
+      // Threshold proporcional: teclado costuma cobrir >20% da altura.
+      // Evita falsos positivos com address-bar/barra de navegação no Android.
+      const threshold = Math.max(150, window.innerHeight * 0.2);
+      setKeyboardHeight(diff > threshold ? Math.round(diff) : 0);
     };
     update();
     vv.addEventListener("resize", update);
