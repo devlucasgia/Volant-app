@@ -1,52 +1,72 @@
-## Sprint — Formulário de ganhos: teclado fluido + scrollbar do timepicker
+## Adendo — corrigir drawer "encolhido" ao fechar teclado sem novo foco
 
-Escopo: 4 arquivos. Nada de lógica de save, DataContext, cálculos, HoursWheel ou NumberField.
+Escopo: 2 arquivos. Sem tocar em lógica de save, cálculos ou outros campos.
 
-### Diagnóstico
+### Causa
 
-1. **Campo "Corridas" não rola acima do teclado.** `PlatformRow.tsx` linha ~126 tem `onFocusCapture={(e) => e.stopPropagation()}`, o que bloqueia o `focusin` global do `useKeyboardAwareScroll` e impede o auto-scroll pra esse campo. É o único campo do form com esse stop.
-2. **Detecção de teclado frágil no Android.** Threshold fixo de 150px em `useKeyboardAwareScroll` + ausência de `interactive-widget=resizes-content` no viewport meta.
-3. **Scrollbar visível no timepicker.** `HoursWheel.tsx` usa a classe `scrollbar-none`, mas ela não está definida em lugar nenhum do projeto (nem plugin Tailwind, nem CSS). Classe fantasma.
+1. `DrawerContent` em modo earning usa `h-[100dvh]` fixo. Em WebView Android o recálculo do `dvh` não dispara de forma confiável quando o teclado fecha por abertura de dropdown (em vez de blur normal) — a altura congela reduzida.
+2. `useKeyboardAwareScroll` só mede em `resize`/`scroll` do visualViewport. O último evento pode chegar durante a animação com valor intermediário e nunca zerar.
 
-### Correção 1 — `src/components/entry/PlatformRow.tsx` (~linha 126)
+### Correção 1 — `src/components/EntryDrawer.tsx` (~linha 422-425)
 
-Trocar `onFocusCapture={(e) => e.stopPropagation()}` do campo Corridas por um `onFocus` que faz `scrollIntoView({ block: "center", behavior: "smooth" })` com delay de 120ms — replica o hook diretamente no campo, sem bloquear propagação e sem risco de reintroduzir efeito colateral com o Select ao lado. Idempotente se o listener global também disparar.
+Altura com teclado aberto passa a ser controlada via `style` explícito baseado em `keyboardHeight`, em vez de depender do recálculo automático do `dvh`:
 
-### Correção 2 — enrijecer detecção de teclado
-
-**2a. `index.html` linha 5:** adicionar `interactive-widget=resizes-content` à meta viewport. Ignorado por navegadores sem suporte.
-
-**2b. `src/hooks/useKeyboardAwareScroll.ts` linhas ~24-26:** threshold vira `Math.max(150, window.innerHeight * 0.2)`. Mantém o piso atual (nunca fica mais frouxo), fica mais robusto em telas altas.
-
-### Correção 3 — `src/index.css`
-
-Adicionar dentro de `@layer utilities`:
-
-```css
-.scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.scrollbar-none::-webkit-scrollbar { display: none; }
+```tsx
+<DrawerContent
+  className={cn(
+    "flex flex-col",
+    tab === "earning" ? "h-[100dvh] max-h-[100dvh]" : "max-h-[92dvh]",
+  )}
+  style={
+    tab === "earning" && keyboardHeight > 0
+      ? { height: `calc(100dvh - ${keyboardHeight}px)`, maxHeight: `calc(100dvh - ${keyboardHeight}px)` }
+      : undefined
+  }
+>
 ```
 
-Faz a classe já referenciada pelo `HoursWheel` funcionar. Não toca o componente.
+Quando `keyboardHeight === 0`, `style` some e a className volta ao 100dvh cheio. Modo expense (ramo `else`) intacto.
+
+Nota sobre `paddingBottom` (linha ~436): se surgir vão duplo entre último campo e Salvar (porque o container já desconta o teclado), trocar `paddingBottom: keyboardHeight > 0 ? keyboardHeight + 24 : undefined` por `paddingBottom: keyboardHeight > 0 ? 24 : undefined`. Aplicar só se o vão duplo for observado.
+
+### Correção 2 — `src/hooks/useKeyboardAwareScroll.ts`
+
+Adicionar medição final agendada (~250ms) após cada evento do visualViewport, para reconfirmar o valor depois da animação do teclado terminar:
+
+```ts
+let settleTimer: number | null = null;
+const measure = () => {
+  const diff = window.innerHeight - vv.height;
+  const threshold = Math.max(150, window.innerHeight * 0.2);
+  setKeyboardHeight(diff > threshold ? Math.round(diff) : 0);
+};
+const update = () => {
+  measure();
+  if (settleTimer) window.clearTimeout(settleTimer);
+  settleTimer = window.setTimeout(measure, 250);
+};
+update();
+vv.addEventListener("resize", update);
+vv.addEventListener("scroll", update);
+return () => {
+  if (settleTimer) window.clearTimeout(settleTimer);
+  vv.removeEventListener("resize", update);
+  vv.removeEventListener("scroll", update);
+};
+```
+
+Corrige o caso do teclado fechar por abertura de dropdown, quando o último evento chega durante a animação. A medição final lê `diff ≈ 0` e zera `keyboardHeight`, restaurando a altura cheia via correção 1.
 
 ### Blindagem
 
-- Correção 1: campo continua recebendo foco/digitação normalmente; só passa a rolar sozinho como os outros.
-- Correção 2b: piso de 150px preservado via `Math.max`.
-- Correção 3: puramente aditiva; `scrollbar-none` só é usada nos wheels.
-- `interactive-widget`: progressive enhancement.
+- Correção 1: `style` `undefined` quando sem teclado — sem estado preso.
+- Correção 2: timer limpo no cleanup e a cada novo evento; medição idempotente.
+- Modo expense não é afetado (não usa `h-[100dvh]`).
 
 ### Validação (device real)
 
-1. "Novo ganho" → tocar Corridas: rola pra área visível, sem vão gigante nem topo inacessível.
-2. Alternar Valor recebido ↔ Corridas: comportamento simétrico.
-3. Abrir/fechar teclado várias vezes: layout estabiliza, Salvar volta pro lugar.
-4. HoursWheel: sem barra lateral ao rolar horas/minutos.
-5. Textarea de observações e demais campos: sem regressão.
-
-### Fora de escopo (avaliar depois)
-
-Se sobrar jitter em aparelho específico, sincronizar scroll ao evento `resize` do visualViewport em vez de delay fixo de 120ms.
+1. "Novo ganho" → focar Valor recebido: botões acima do teclado.
+2. Com teclado aberto, tocar "Adicionar plataforma" (abre dropdown, fecha teclado): drawer volta à altura cheia.
+3. Repetir várias vezes: altura sempre estabiliza.
+4. Sem vão duplo entre último campo e Salvar (aplicar nota do paddingBottom se necessário).
+5. Modo gasto: sem regressão.

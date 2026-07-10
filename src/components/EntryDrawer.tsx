@@ -419,10 +419,17 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
   return (
     <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false}>
-      <DrawerContent className={cn(
-        "flex flex-col",
-        tab === "earning" ? "max-h-[100dvh] h-[100dvh]" : (keyboardHeight > 0 ? "max-h-[100dvh]" : "max-h-[92dvh]"),
-      )}>
+      <DrawerContent
+        className={cn(
+          "flex flex-col",
+          tab === "earning" ? "h-[100dvh] max-h-[100dvh]" : "max-h-[92dvh]",
+        )}
+        style={
+          tab === "earning" && keyboardHeight > 0
+            ? { height: `calc(100dvh - ${keyboardHeight}px)`, maxHeight: `calc(100dvh - ${keyboardHeight}px)` }
+            : undefined
+        }
+      >
         <div className="mx-auto flex w-full max-w-md flex-1 min-h-0 flex-col">
           <DrawerHeader className="pb-2 shrink-0">
             <DrawerTitle>{titleText}</DrawerTitle>
