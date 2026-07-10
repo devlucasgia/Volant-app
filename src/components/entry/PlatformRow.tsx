@@ -123,7 +123,16 @@ export function PlatformRow({ row, onChange, onRemove, usedKeys = [], onCreateNe
             onChange={(v) => onChange({ ...row, rides: v })}
             decimal={false}
             className="h-11 text-center"
-            onFocusCapture={(e) => e.stopPropagation()}
+            onFocus={(e) => {
+              const el = e.currentTarget;
+              window.setTimeout(() => {
+                try {
+                  el.scrollIntoView({ block: "center", behavior: "smooth" });
+                } catch {
+                  el.scrollIntoView();
+                }
+              }, 120);
+            }}
           />
         </div>
       </div>
