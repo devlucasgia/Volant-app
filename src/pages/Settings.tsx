@@ -28,6 +28,9 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
   Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
 } from "lucide-react";
+import { ListChecks } from "lucide-react";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
+import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 import { Segmented } from "@/components/Segmented";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
@@ -418,6 +421,8 @@ export default function SettingsPage() {
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
+  const [firstStepsOpen, setFirstStepsOpen] = useState(false);
+  const firstSteps = useFirstSteps();
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [subscriptionInitialView, setSubscriptionInitialView] = useState<"auto" | "plans">("auto");
@@ -947,6 +952,27 @@ export default function SettingsPage() {
 
 
         {/* ============== FEEDBACK ============== */}
+        <SectionGroup title="Primeiros passos">
+          <button
+            type="button"
+            onClick={() => setFirstStepsOpen(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-colors hover:bg-muted/30 active:scale-[0.995]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <ListChecks className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-semibold">Primeiros passos</div>
+              <p className="text-[11px] text-muted-foreground">
+                {firstSteps.allDone
+                  ? "Tudo concluído — revise quando quiser."
+                  : `${firstSteps.done} de ${firstSteps.total} concluídos`}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </SectionGroup>
+
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">
           <div className="mb-3 flex items-center gap-2.5">
@@ -1001,6 +1027,13 @@ export default function SettingsPage() {
       <FontSizeSheet open={fontOpen} onOpenChange={setFontOpen} />
 
       <BugReportDialog open={bugOpen} onOpenChange={setBugOpen} />
+      <FirstStepsSheet
+        open={firstStepsOpen}
+        onOpenChange={setFirstStepsOpen}
+        tasks={firstSteps.tasks}
+        done={firstSteps.done}
+        total={firstSteps.total}
+      />
       <SuggestionDialog open={suggestionOpen} onOpenChange={setSuggestionOpen} />
       <SubscriptionSheet
         open={subscriptionOpen}

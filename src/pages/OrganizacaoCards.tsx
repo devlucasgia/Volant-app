@@ -17,6 +17,7 @@ import { useData } from "@/context/DataContext";
 import { useHomeOrder, type HomeCardKey } from "@/lib/homeOrder";
 import { useReportWidgets, type ReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, isHeroKey, type ReportCardKey } from "@/lib/reportOrder";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
 
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ export default function OrganizacaoCards() {
 function HomeOrganizer() {
   const { settings, updateSettings } = useData();
   const [homeOrder, moveHome, reorderHome] = useHomeOrder();
+  const { markPersonalized } = useFirstSteps();
   
   const widgets = settings.dashboardWidgets;
 
@@ -123,6 +125,7 @@ function HomeOrganizer() {
     if (!over || active.id === over.id) return;
     reorderHome(active.id as HomeCardKey, over.id as HomeCardKey);
     notifySaved();
+    void markPersonalized();
   };
 
   return (
@@ -171,13 +174,13 @@ function HomeOrganizer() {
                     <div className="flex shrink-0 items-center gap-0.5 pl-1">
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
                         disabled={i === 0}
-                        onClick={() => { moveHome(k, -1); notifySaved(); }}
+                        onClick={() => { moveHome(k, -1); notifySaved(); void markPersonalized(); }}
                         aria-label={`Mover ${meta.label} para cima`}>
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
                       <Button type="button" variant="ghost" size="icon" className="h-7 w-7"
                         disabled={isLast}
-                        onClick={() => { moveHome(k, 1); notifySaved(); }}
+                        onClick={() => { moveHome(k, 1); notifySaved(); void markPersonalized(); }}
                         aria-label={`Mover ${meta.label} para baixo`}>
                         <ArrowDown className="h-3.5 w-3.5" />
                       </Button>

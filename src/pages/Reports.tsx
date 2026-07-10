@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useReportWidgets } from "@/lib/reportWidgets";
 import { useReportOrder, isHeroKey, type ReportCardKey } from "@/lib/reportOrder";
 import { useAccess } from "@/context/AccessContext";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
 import {
   format, startOfMonth, endOfMonth, isWithinInterval, eachDayOfInterval,
@@ -82,6 +83,7 @@ function AnimatedNumber({ value, format, duration = 500 }: { value: number; form
 export default function Reports() {
   const { entries, settings, expenseMetaFor, platformMetaFor, isSimplePlatform } = useData();
   const { isLimited } = useAccess();
+  const { markExported } = useFirstSteps();
   const [widgets] = useReportWidgets();
   const [reportOrder] = useReportOrder();
   const [mode, setMode] = useState<RangeMode>("month");
@@ -197,6 +199,7 @@ export default function Reports() {
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado!");
+    void markExported();
   };
 
   const loadLogoDataUrl = async (): Promise<string | null> => {
@@ -371,6 +374,7 @@ export default function Reports() {
 
       doc.save(`volant-${format(new Date(), "yyyyMMdd")}.pdf`);
       toast.success("PDF exportado!");
+      void markExported();
     } catch (err) {
       console.error(err);
       toast.error("Não foi possível exportar PDF agora.");
@@ -553,6 +557,7 @@ export default function Reports() {
 
       XLSX.writeFile(wb, `volant-${format(new Date(), "yyyyMMdd")}.xlsx`);
       toast.success("Excel exportado!");
+      void markExported();
     } catch (err) {
       console.error(err);
       toast.error("Não foi possível exportar Excel agora.");

@@ -37,6 +37,9 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { ShareResultSheet, type ShareCardData } from "@/components/share/ShareResultSheet";
 import { ConquestModal } from "@/components/share/ConquestModal";
 import { Share2, ArrowUpDown } from "lucide-react";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
+import { FirstStepsStrip } from "@/components/firstSteps/FirstStepsStrip";
+import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 
 
 export default function Dashboard() {
@@ -70,6 +73,8 @@ export default function Dashboard() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [conquestOpen, setConquestOpen] = useState(false);
+  const [firstStepsOpen, setFirstStepsOpen] = useState(false);
+  const firstSteps = useFirstSteps();
   const planningSnapshot = useMemo(
     () => ({
       monthlyGoal: settings.monthlyGoal,
@@ -948,9 +953,23 @@ export default function Dashboard() {
             )}
           </button>
         </div>
+        {!firstSteps.loading && !firstSteps.allDone && (
+          <FirstStepsStrip
+            done={firstSteps.done}
+            total={firstSteps.total}
+            onClick={() => setFirstStepsOpen(true)}
+          />
+        )}
       </header>
 
       <NotificationsSheet open={notifOpen} onOpenChange={setNotifOpen} />
+      <FirstStepsSheet
+        open={firstStepsOpen}
+        onOpenChange={setFirstStepsOpen}
+        tasks={firstSteps.tasks}
+        done={firstSteps.done}
+        total={firstSteps.total}
+      />
 
       <div className={cn("px-4", topPadding)}>
 
