@@ -527,6 +527,8 @@ export function GuidedFlow({
                 },
               })
             }
+            onAddCarInline={handleAddCarInline}
+            onFormOpenChange={setCarFormOpen}
             isNext={isNext}
             nextCostFields={draft.nextCostFields ?? null}
             onChangeNextCostFields={(f) => setDraft((d) => ({ ...d, nextCostFields: f }))}
