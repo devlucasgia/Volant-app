@@ -199,6 +199,7 @@ export default function Reports() {
     a.click();
     URL.revokeObjectURL(url);
     toast.success("CSV exportado!");
+    void markExported();
   };
 
   const loadLogoDataUrl = async (): Promise<string | null> => {
