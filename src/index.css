@@ -157,6 +157,13 @@
 }
 
 @layer utilities {
+  .scrollbar-none {
+    -ms-overflow-style: none;      /* IE/Edge legacy */
+    scrollbar-width: none;         /* Firefox */
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;                 /* Chrome/Safari/WebView Android */
+  }
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
