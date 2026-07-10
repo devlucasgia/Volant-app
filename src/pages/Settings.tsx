@@ -421,6 +421,8 @@ export default function SettingsPage() {
   const [pwdOpen, setPwdOpen] = useState(false);
   const [fontOpen, setFontOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
+  const [firstStepsOpen, setFirstStepsOpen] = useState(false);
+  const firstSteps = useFirstSteps();
   const [suggestionOpen, setSuggestionOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
   const [subscriptionInitialView, setSubscriptionInitialView] = useState<"auto" | "plans">("auto");
