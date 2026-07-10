@@ -63,7 +63,7 @@ export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: Firs
               <li key={task.key}>
                 <button
                   type="button"
-                  onClick={isDone ? undefined : () => goTo(task.route)}
+                  onClick={isDone ? undefined : () => handleTaskClick(task)}
                   disabled={isDone}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-xl border border-border/60 bg-card px-3 py-3 text-left transition-colors",
