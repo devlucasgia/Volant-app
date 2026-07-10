@@ -219,6 +219,38 @@ export function GuidedFlow({
     return saved ? { ...base, ...saved } : base;
   });
   const [saving, setSaving] = useState(false);
+  const [carFormOpen, setCarFormOpen] = useState(false);
+
+  const handleAddCarInline = async (fields: {
+    brand: string;
+    model: string;
+    plate: string;
+    initialKm: string;
+  }): Promise<{ ok: boolean }> => {
+    if (!user) return { ok: false };
+    const brand = fields.brand.trim();
+    const model = fields.model.trim();
+    if (!brand && !model) {
+      toast.error("Preencha ao menos marca e modelo");
+      return { ok: false };
+    }
+    const isFirst = cars.length === 0;
+    const { error } = await supabase.from("cars").insert({
+      brand: brand || null,
+      model: model || null,
+      plate: fields.plate.trim() || null,
+      initial_km: parseFloat(fields.initialKm) || 0,
+      user_id: user.id,
+      is_active: isFirst,
+    });
+    if (error) {
+      toast.error("Erro ao salvar veículo");
+      return { ok: false };
+    }
+    await refreshCars();
+    toast.success("Veículo cadastrado!");
+    return { ok: true };
+  };
 
   // Persiste step + draft (debounce) enquanto o wizard está aberto.
   const snapshot = useMemo<PlanningDraftSnapshot>(() => ({ step, draft }), [step, draft]);
