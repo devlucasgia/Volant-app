@@ -953,9 +953,23 @@ export default function Dashboard() {
             )}
           </button>
         </div>
+        {!firstSteps.loading && !firstSteps.allDone && (
+          <FirstStepsStrip
+            done={firstSteps.done}
+            total={firstSteps.total}
+            onClick={() => setFirstStepsOpen(true)}
+          />
+        )}
       </header>
 
       <NotificationsSheet open={notifOpen} onOpenChange={setNotifOpen} />
+      <FirstStepsSheet
+        open={firstStepsOpen}
+        onOpenChange={setFirstStepsOpen}
+        tasks={firstSteps.tasks}
+        done={firstSteps.done}
+        total={firstSteps.total}
+      />
 
       <div className={cn("px-4", topPadding)}>
 
