@@ -153,13 +153,6 @@
     @apply bg-background text-foreground antialiased;
     -webkit-tap-highlight-color: transparent;
   }
-  .scrollbar-none {
-    -ms-overflow-style: none;      /* IE/Edge legacy */
-    scrollbar-width: none;         /* Firefox */
-  }
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;                 /* Chrome/Safari/WebView Android */
-  }
 
 }
 
