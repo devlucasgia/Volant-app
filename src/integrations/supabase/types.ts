@@ -379,6 +379,9 @@ export type Database = {
           costs_onboarded: boolean
           created_at: string
           display_name: string | null
+          fs_all_done_at: string | null
+          fs_exported: boolean
+          fs_personalized: boolean
           goal_onboarded: boolean
           greeting_message: string | null
           id: string
@@ -402,6 +405,9 @@ export type Database = {
           costs_onboarded?: boolean
           created_at?: string
           display_name?: string | null
+          fs_all_done_at?: string | null
+          fs_exported?: boolean
+          fs_personalized?: boolean
           goal_onboarded?: boolean
           greeting_message?: string | null
           id: string
@@ -425,6 +431,9 @@ export type Database = {
           costs_onboarded?: boolean
           created_at?: string
           display_name?: string | null
+          fs_all_done_at?: string | null
+          fs_exported?: boolean
+          fs_personalized?: boolean
           goal_onboarded?: boolean
           greeting_message?: string | null
           id?: string
