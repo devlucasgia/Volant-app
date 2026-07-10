@@ -28,6 +28,9 @@ import {
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
   Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
 } from "lucide-react";
+import { ListChecks } from "lucide-react";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
+import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 import { Segmented } from "@/components/Segmented";
 import { SmartKmSection } from "@/components/account/SmartKmSection";
 import { SubscriptionSheet } from "@/components/account/SubscriptionSheet";
