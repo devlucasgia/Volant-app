@@ -317,6 +317,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         }
         const cb = preset?.onAfterSave;
         const wasMaint = isMaint;
+        notifyAction("saved-expense");
         reset(); onOpenChange(false);
         if (wasMaint && cb) cb();
         return;
@@ -351,6 +352,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           await addEntry(entry);
         }
         toast.success(isEditing ? "Registro atualizado!" : "Ganho registrado!");
+        notifyAction("saved-earning");
         reset(); onOpenChange(false);
         return;
       }
@@ -405,6 +407,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       }
 
       toast.success(isEditing ? "Jornada atualizada!" : "Ganho registrado!");
+      notifyAction("saved-earning");
       reset(); onOpenChange(false);
     } catch (err) {
       console.error("[entry save]", err);
