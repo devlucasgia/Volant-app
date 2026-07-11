@@ -33,7 +33,7 @@ export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: Firs
         openDrawer();
         return;
       }
-      if (task.route) navigate(task.route);
+      if (task.route) navigate(task.route, { state: { returnTo: "/app" } });
     }, 60);
   };
 
