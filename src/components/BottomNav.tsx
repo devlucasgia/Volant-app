@@ -130,6 +130,7 @@ export function BottomNav() {
 
         {/* Central FAB */}
         <button
+          data-tour="fab-new-entry"
           aria-label={open ? "Fechar" : "Novo registro"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
