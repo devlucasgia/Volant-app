@@ -86,6 +86,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     expenseCategories, earningPlatforms, isSimplePlatform,
   } = useData();
   const { requirePremium } = useAccess();
+  const { notifyAction } = useTour();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
