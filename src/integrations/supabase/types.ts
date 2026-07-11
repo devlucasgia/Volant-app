@@ -389,6 +389,10 @@ export type Database = {
           nickname: string | null
           onboarded: boolean
           planning_onboarded: boolean
+          tour_entries_seen: boolean
+          tour_export_seen: boolean
+          tour_personalize_seen: boolean
+          tour_planning_seen: boolean
           trial_access_granted: boolean
           trial_ends_at: string | null
           trial_started_at: string | null
@@ -415,6 +419,10 @@ export type Database = {
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
+          tour_entries_seen?: boolean
+          tour_export_seen?: boolean
+          tour_personalize_seen?: boolean
+          tour_planning_seen?: boolean
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
@@ -441,6 +449,10 @@ export type Database = {
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
+          tour_entries_seen?: boolean
+          tour_export_seen?: boolean
+          tour_personalize_seen?: boolean
+          tour_planning_seen?: boolean
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
