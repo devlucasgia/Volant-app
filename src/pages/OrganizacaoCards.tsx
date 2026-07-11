@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, LayoutGrid, Target, Brain, Gauge, BarChart3, Receipt, Timer as TimerIcon,
   Wallet, CalendarDays, Route, Flag, Clock, LineChart, Lightbulb,
@@ -60,6 +60,8 @@ const notifySaveError = () =>
 
 export default function OrganizacaoCards() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
   const [tab, setTab] = useState<Tab>("home");
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function OrganizacaoCards() {
 
   return (
     <div className="min-h-screen">
-      <ScreenHeader onBack={() => navigate("/ajustes/personalizacao")} />
+      <ScreenHeader onBack={() => navigate(returnTo ?? "/ajustes/personalizacao")} />
       <div className="space-y-4 px-4 py-6">
         <Segmented<Tab>
           options={[

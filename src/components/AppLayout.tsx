@@ -9,31 +9,37 @@ import { TimerFab } from "./TimerFab";
 import { InstallPromptManager } from "./pwa/InstallPromptManager";
 import { TrialEndingModal } from "./TrialEndingModal";
 import { useUI } from "@/context/UIContext";
+import { TourProvider } from "@/context/TourContext";
+import { TourOverlay } from "@/components/tour/TourOverlay";
 
 export function AppLayout() {
   const { drawerOpen, setDrawerOpen, drawerPreset, chromeHidden } = useUI();
   const location = useLocation();
   return (
-    <div className="min-h-screen bg-background">
-      <main
-        className={`mx-auto max-w-md ${chromeHidden ? "pb-0" : "pb-32"}`}
-        style={{ paddingTop: "env(safe-area-inset-top)" }}
-      >
-        <div key={location.pathname}>
-          <Outlet />
-        </div>
-      </main>
-      {!chromeHidden && <TimerFab />}
-      <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
-      {!chromeHidden && <BottomNav />}
-      <CarOnboardingDialog />
-      <VehicleCostsOnboardingDialog />
-      <PlanningOnboardingDialog />
-      <OnboardingFlow />
-      <InstallPromptManager />
-      <TrialEndingModal />
-    </div>
+    <TourProvider>
+      <div className="min-h-screen bg-background">
+        <main
+          className={`mx-auto max-w-md ${chromeHidden ? "pb-0" : "pb-32"}`}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div key={location.pathname}>
+            <Outlet />
+          </div>
+        </main>
+        {!chromeHidden && <TimerFab />}
+        <EntryDrawer open={drawerOpen} onOpenChange={setDrawerOpen} preset={drawerPreset} />
+        {!chromeHidden && <BottomNav />}
+        <CarOnboardingDialog />
+        <VehicleCostsOnboardingDialog />
+        <PlanningOnboardingDialog />
+        <OnboardingFlow />
+        <InstallPromptManager />
+        <TrialEndingModal />
+        <TourOverlay />
+      </div>
+    </TourProvider>
   );
 }
+
 
 

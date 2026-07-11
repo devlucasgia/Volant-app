@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUI } from "@/context/UIContext";
+import { useTour } from "@/context/TourContext";
 import { prefetchRoute, routeForPath } from "@/lib/prefetchRoute";
 
 const navItems = [
@@ -17,6 +18,7 @@ const navItems = [
 
 export function BottomNav() {
   const { openDrawer } = useUI();
+  const { notifyAction } = useTour();
   const [open, setOpen] = useState(false);
   const fabRef = useRef<HTMLDivElement>(null);
 
@@ -36,6 +38,7 @@ export function BottomNav() {
   const pick = (kind: "earning" | "expense") => {
     setOpen(false);
     openDrawer({ tab: kind });
+    notifyAction("open-entry-drawer");
   };
 
   return (
@@ -127,6 +130,7 @@ export function BottomNav() {
 
         {/* Central FAB */}
         <button
+          data-tour="fab-new-entry"
           aria-label={open ? "Fechar" : "Novo registro"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}

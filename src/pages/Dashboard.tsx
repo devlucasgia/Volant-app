@@ -40,6 +40,8 @@ import { Share2, ArrowUpDown } from "lucide-react";
 import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { FirstStepsStrip } from "@/components/firstSteps/FirstStepsStrip";
 import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
+import { useTour } from "@/context/TourContext";
+import { entriesTourSteps } from "@/lib/tours/entriesTour";
 
 
 export default function Dashboard() {
@@ -91,6 +93,19 @@ export default function Dashboard() {
   });
 
 
+
+  const { startTour } = useTour();
+  // Dispara o tour de registros na Home apenas se ainda não foi visto e a tarefa está pendente.
+  useEffect(() => {
+    if (dataLoading || firstSteps.loading) return;
+    const entriesTask = firstSteps.tasks.find((t) => t.key === "entries");
+    if (!entriesTask || entriesTask.done) return;
+    const id = window.setTimeout(() => {
+      startTour("entries", entriesTourSteps);
+    }, 800);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataLoading, firstSteps.loading, firstSteps.tasks.find((t) => t.key === "entries")?.done]);
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }

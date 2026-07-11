@@ -29,6 +29,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useDraftPersistence } from "@/hooks/useDraftPersistence";
 import { useKeyboardAwareScroll } from "@/hooks/useKeyboardAwareScroll";
+import { useTour } from "@/context/TourContext";
 import { HoursWheel } from "@/components/entry/HoursWheel";
 import { PlatformRow, type PlatformRowData } from "@/components/entry/PlatformRow";
 import { PlatformLogo } from "@/components/PlatformLogo";
@@ -85,6 +86,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     expenseCategories, earningPlatforms, isSimplePlatform,
   } = useData();
   const { requirePremium } = useAccess();
+  const { notifyAction } = useTour();
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
@@ -315,6 +317,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
         }
         const cb = preset?.onAfterSave;
         const wasMaint = isMaint;
+        notifyAction("saved-expense");
         reset(); onOpenChange(false);
         if (wasMaint && cb) cb();
         return;
@@ -349,6 +352,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           await addEntry(entry);
         }
         toast.success(isEditing ? "Registro atualizado!" : "Ganho registrado!");
+        notifyAction("saved-earning");
         reset(); onOpenChange(false);
         return;
       }
@@ -403,6 +407,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
       }
 
       toast.success(isEditing ? "Jornada atualizada!" : "Ganho registrado!");
+      notifyAction("saved-earning");
       reset(); onOpenChange(false);
     } catch (err) {
       console.error("[entry save]", err);
@@ -537,7 +542,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     </div>
 
                     {/* Lista de plataformas */}
-                    <div>
+                    <div data-tour="entry-earning-value">
                       <div className="mb-3 text-sm font-bold text-foreground">
                         Em quais apps você rodou hoje?
                       </div>
@@ -721,7 +726,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                 {/* Valor herói — vermelho */}
                 <div className="space-y-2">
                   <Label className="text-center block">Valor do gasto</Label>
-                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
+                  <div data-tour="entry-expense-value" className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
                     <NumberField
                       currency
                       value={amount}
@@ -741,7 +746,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
           <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
             <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
-            <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={submit} disabled={submitting}>
+            <Button data-tour="entry-save" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={submit} disabled={submitting}>
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</>
               ) : (
