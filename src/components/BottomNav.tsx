@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUI } from "@/context/UIContext";
+import { useTour } from "@/context/TourContext";
 import { prefetchRoute, routeForPath } from "@/lib/prefetchRoute";
 
 const navItems = [
