@@ -542,7 +542,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     </div>
 
                     {/* Lista de plataformas */}
-                    <div>
+                    <div data-tour="entry-earning-value">
                       <div className="mb-3 text-sm font-bold text-foreground">
                         Em quais apps você rodou hoje?
                       </div>
