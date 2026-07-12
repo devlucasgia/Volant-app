@@ -2,34 +2,37 @@ import type { TourStep } from "@/context/TourContext";
 
 /**
  * Tour de registros — 6 passos.
- * Espera as ações reais nos passos 1-5 (open-entry-drawer, saved-earning, saved-expense).
- * Último passo é informativo com botão "Concluir".
+ * Passos informativos usam `advance: "next"` (botão Próximo).
+ * Só passos com ação real e detectável usam `advance: "action"`.
  */
 export const entriesTourSteps: TourStep[] = [
+  // 1. Home: aponta pro +, espera abrir o drawer
   {
     target: '[data-tour="fab-new-entry"]',
     title: "Bora lançar seu primeiro ganho",
-    body: "Toca no + pra registrar quanto você fez hoje.",
+    body: "Toca no + e escolhe Ganho pra registrar quanto você fez hoje.",
     advance: "action",
     actionId: "open-entry-drawer",
     placement: "top",
   },
+  // 2. Drawer ganho: explica o campo (informativo)
   {
     target: '[data-tour="entry-earning-value"]',
     title: "Quanto você recebeu",
-    body: "Digita o valor que ganhou na plataforma. Dá pra somar mais de um app.",
-    advance: "action",
-    actionId: "saved-earning",
+    body: "Aqui você digita o valor de cada app. Dá pra somar mais de uma plataforma.",
+    advance: "next",
     placement: "top",
   },
+  // 3. Drawer ganho: aponta pro Salvar, espera salvar
   {
     target: '[data-tour="entry-save"]',
     title: "Salva e pronto",
-    body: "Toca em Salvar pra registrar. Seus números aparecem na Home na hora.",
+    body: "Preenche o valor e toca em Salvar. Seus números aparecem na Home na hora.",
     advance: "action",
     actionId: "saved-earning",
     placement: "top",
   },
+  // 4. Home de novo: aponta pro +, espera abrir de novo (agora pro gasto)
   {
     target: '[data-tour="fab-new-entry"]',
     title: "Agora um gasto",
@@ -38,14 +41,16 @@ export const entriesTourSteps: TourStep[] = [
     actionId: "open-entry-drawer",
     placement: "top",
   },
+  // 5. Drawer gasto: aponta pro Salvar, espera salvar o gasto
   {
-    target: '[data-tour="entry-expense-value"]',
-    title: "Quanto gastou",
-    body: "Registra o valor do gasto. Isso deixa seu lucro real certinho.",
+    target: '[data-tour="entry-save"]',
+    title: "Salva o gasto",
+    body: "Registra o valor do gasto e toca em Salvar. Isso deixa seu lucro real certinho.",
     advance: "action",
     actionId: "saved-expense",
     placement: "top",
   },
+  // 6. Conclusão (informativo)
   {
     target: '[data-tour="fab-new-entry"]',
     title: "Prontinho!",
