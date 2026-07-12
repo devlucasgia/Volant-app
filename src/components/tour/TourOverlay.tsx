@@ -142,8 +142,10 @@ export function TourOverlay() {
       className="pointer-events-none fixed inset-0 z-[9998]"
       aria-live="polite"
     >
-      {/* Camadas escuras (com pointer-events próprios, para bloquear cliques fora do alvo) */}
-      {rect
+      {/* Camadas escuras (com pointer-events próprios, para bloquear cliques fora do alvo).
+          Dentro de drawers/dialogs, pulamos as camadas pra não travar a interação — o backdrop
+          nativo do drawer já provê o dimming. */}
+      {insideDrawer ? null : rect
         ? parts.map((p, i) =>
             p ? (
               <div
