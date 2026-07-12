@@ -94,7 +94,7 @@ function useAutoSkipMissingActionTarget(hasRect: boolean, isActionStep: boolean,
 }
 
 export function TourOverlay() {
-  const { activeTour, currentStepIndex, steps, next, skip } = useTour();
+  const { activeTour, currentStepIndex, steps, next, prev, skip } = useTour();
   const step = activeTour ? steps[currentStepIndex] ?? null : null;
   const rect = useTargetRect(step?.target ?? null);
   useAutoSkipMissingActionTarget(!!rect, step?.advance === "action", skip);
