@@ -1,54 +1,40 @@
-# Adendo 2 — Corrigir tour que trava ao abrir drawer
+# Adendo 3 à Sprint 2 — tour reconhece o menu radial do FAB
 
-Dois bugs independentes, ambos corrigidos com mudanças pequenas e cirúrgicas. Zero alteração no motor (`TourContext`).
+## Causa
+O `+` (`data-tour="fab-new-entry"`) não abre o drawer direto: abre um menu radial com "Novo ganho" / "Novo gasto". O `notifyAction("open-entry-drawer")` só dispara ao escolher um deles. Resultado: o tour trava no passo 1, a sombra continua no `+`, e os botões radiais ficam no escuro sem como clicar.
 
-## Bug 1 — Roteiro espera ações inexistentes
+## Mudanças
 
-**Causa:** passos 2 e 3 do `entriesTour.ts` usam `advance: "action"` com `actionId: "saved-earning"`, mas o passo 2 é sobre *digitar valor* — não existe evento para isso. Só salvar dispara `saved-earning`. O passo 2 trava eternamente.
+### 1. `src/components/BottomNav.tsx`
+- Adicionar `data-tour="fab-earning"` no botão "Novo ganho".
+- Adicionar `data-tour="fab-expense"` no botão "Novo gasto".
+- No `onClick` do FAB central, disparar `notifyAction("open-fab-menu")` quando o menu abre (transição `false → true`).
 
-**Fix:** passos meramente explicativos dentro do formulário viram `advance: "next"` (botão Próximo). Só passos que correspondem a uma ação real e detectável mantêm `advance: "action"`.
+### 2. `src/context/TourContext.tsx`
+- Adicionar método `prev()` que decrementa `currentStepIndex` (mínimo 0), sem finalizar o tour.
+- Expor `prev` no `TourContextValue` e no `value` do provider.
+- Observação: voltar não desfaz ações já executadas (drawer aberto, registro salvo). É navegação de leitura do tutorial, não undo.
 
-**Arquivo:** `src/lib/tours/entriesTour.ts` — reescrever para 6 passos com lógica válida:
+### 3. `src/components/tour/TourOverlay.tsx`
+- Consumir `prev` do `useTour()`.
+- Renderizar botão "Voltar" à esquerda quando `currentStepIndex > 0`.
+- Manter "Pular" e (quando `advance === "next"`) "Próximo" à direita.
+- Não mostrar "Próximo" em passos `advance: "action"` (pra não pular a ação).
+- Nenhuma mudança no motor de recorte: ele já remede o alvo quando `step.target` muda, então a sombra segue sozinha do `+` pro botão radial.
 
-1. Home → aponta `[data-tour="fab-new-entry"]`, `action: open-entry-drawer`
-2. Drawer ganho → aponta `[data-tour="entry-earning-value"]`, **`next`** (informativo)
-3. Drawer ganho → aponta `[data-tour="entry-save"]`, `action: saved-earning`
-4. Home de novo → aponta `[data-tour="fab-new-entry"]`, `action: open-entry-drawer`
-5. Drawer gasto → aponta `[data-tour="entry-save"]`, `action: saved-expense` (sem passo redundante no campo de valor — pessoa já aprendeu no ganho)
-6. Home → aponta `[data-tour="fab-new-entry"]`, `next` ("Prontinho!" / Concluir)
-
-## Bug 2 — Overlay do tour bloqueia interação no drawer
-
-**Causa:** `TourOverlay` renderiza 4 divs escuras `pointer-events-auto` em `z-[9998]`. O Vaul drawer sobe em `z-50` (menor). O overlay fica na frente e captura todos os cliques/foco antes de chegarem ao drawer. Usuário abre o drawer mas não consegue digitar nem tocar em Salvar.
-
-**Fix:** quando o alvo do passo está dentro de um drawer Vaul, o overlay do tour renderiza SÓ o balão (Popover) — sem as camadas escuras bloqueantes. O próprio drawer já tem backdrop `bg-black/60`, então o efeito visual de foco se mantém.
-
-**Arquivo:** `src/components/tour/TourOverlay.tsx` — adicionar detecção:
-
-```tsx
-const targetEl = rect ? document.querySelector(step.target) : null;
-const insideDrawer = !!targetEl?.closest('[data-vaul-drawer], [role="dialog"]');
-
-// nas camadas escuras:
-{rect && !insideDrawer
-  ? parts.map(...)   // camadas escuras + recorte (comportamento atual)
-  : null}            // dentro do drawer: sem camadas, só o balão
-```
-
-Verificar em runtime qual seletor o Vaul do projeto expõe de fato (`data-vaul-drawer` costuma existir; `[role="dialog"]` é fallback seguro). Se nenhum casar, fallback: usar `drawerOpen` do `UIContext` combinado com prefixo `entry-` no `step.target`.
-
-O balão (Popover) segue ancorado no alvo e renderizando nos dois casos.
+### 4. `src/lib/tours/entriesTour.ts` — roteiro reescrito (8 passos)
+1. `fab-new-entry` — "Toca no + pra começar." → aguarda `open-fab-menu`.
+2. `fab-earning` — "Escolhe Novo ganho." → aguarda `open-entry-drawer`.
+3. `entry-earning-value` — informativo, `advance: "next"`.
+4. `entry-save` — aguarda `saved-earning`.
+5. `fab-new-entry` — "Agora um gasto." → aguarda `open-fab-menu`.
+6. `fab-expense` — "Escolhe Novo gasto." → aguarda `open-entry-drawer`.
+7. `entry-save` — aguarda `saved-expense`.
+8. `fab-new-entry` — "Prontinho!", `advance: "next"`.
 
 ## Validação
-
-1. Tocar em + → drawer abre → balão "Quanto você recebeu" aponta pro campo e **o campo aceita digitação** (não bloqueado).
-2. Balão de valor mostra "Próximo" → avança pro Salvar.
-3. Preencher e salvar ganho → volta pra Home, balão "Agora um gasto" no +.
-4. Abrir drawer de gasto → balão "Salva o gasto", interação livre.
-5. Salvar gasto → "Prontinho!" com Concluir.
-6. Concluir → tarefa "registros" marcada, faixa atualiza.
-7. Nenhum passo trava; "Pular" funciona em qualquer momento.
-
-## Fora do escopo
-
-Motor (`TourContext`), disparo no Dashboard, `data-tour` markers já colocados, integração de `notifyAction` no `EntryDrawer`. Nada disso muda.
+- Toca `+` → menu abre → sombra vai pro "Novo ganho" (visível/clicável) → balão "Escolhe Novo ganho".
+- Toca "Novo ganho" → drawer abre → balão "Quanto você recebeu" com "Próximo".
+- Salva ganho → volta Home no passo do gasto; repete pro gasto.
+- Botão "Voltar" reexibe passo anterior; "Pular" encerra.
+- Nenhum passo com sombra em posição errada.

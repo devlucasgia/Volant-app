@@ -32,6 +32,7 @@ interface TourContextValue {
   steps: TourStep[];
   startTour: (id: TourId, steps: TourStep[]) => Promise<void>;
   next: () => void;
+  prev: () => void;
   skip: () => void;
   finish: () => void;
   notifyAction: (actionId: string) => void;
@@ -136,6 +137,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
     });
   }, [activeTour, steps.length, finish]);
 
+  const prev = useCallback(() => {
+    setCurrentStepIndex((i) => Math.max(0, i - 1));
+  }, []);
+
   const skip = useCallback(() => {
     finish();
   }, [finish]);
@@ -153,8 +158,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo<TourContextValue>(
-    () => ({ activeTour, currentStepIndex, steps, startTour, next, skip, finish, notifyAction }),
-    [activeTour, currentStepIndex, steps, startTour, next, skip, finish, notifyAction],
+    () => ({ activeTour, currentStepIndex, steps, startTour, next, prev, skip, finish, notifyAction }),
+    [activeTour, currentStepIndex, steps, startTour, next, prev, skip, finish, notifyAction],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

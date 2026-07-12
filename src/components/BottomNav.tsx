@@ -96,6 +96,7 @@ export function BottomNav() {
         <button
           onClick={() => pick("earning")}
           aria-label="Novo ganho"
+          data-tour="fab-earning"
           className={cn(
             "absolute left-1/2 top-1/2 flex items-center gap-2 rounded-full border border-border/60 bg-card/95 px-3.5 py-2 text-sm font-semibold shadow-elevated backdrop-blur-md whitespace-nowrap",
             "transition-all duration-300 ease-out origin-bottom-right",
@@ -114,6 +115,7 @@ export function BottomNav() {
         <button
           onClick={() => pick("expense")}
           aria-label="Novo gasto"
+          data-tour="fab-expense"
           className={cn(
             "absolute left-1/2 top-1/2 flex items-center gap-2 rounded-full border border-border/60 bg-card/95 px-3.5 py-2 text-sm font-semibold shadow-elevated backdrop-blur-md whitespace-nowrap",
             "transition-all duration-300 ease-out origin-bottom-left",
@@ -133,7 +135,11 @@ export function BottomNav() {
           data-tour="fab-new-entry"
           aria-label={open ? "Fechar" : "Novo registro"}
           aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
+          onClick={() => setOpen((v) => {
+            const next = !v;
+            if (next) notifyAction("open-fab-menu");
+            return next;
+          })}
           className={cn(
             "relative grid h-12 w-12 place-items-center rounded-full text-primary-foreground",
             "bg-gradient-to-b from-success to-success/85",
