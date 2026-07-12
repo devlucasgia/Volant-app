@@ -828,7 +828,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
 
-              {/* Reset onboarding (test environment only) */}
+              {/* Reset completo para simular usuário novo — apenas em ambiente de teste */}
               {(() => {
                 const host = typeof window !== "undefined" ? window.location.hostname : "";
                 const isTestEnv =
@@ -844,11 +844,24 @@ export default function SettingsPage() {
                       className="w-full border-dashed"
                       onClick={async () => {
                         if (!user) return;
-                        if (!window.confirm("Resetar onboarding? Os cadastros de veículos e a meta mensal serão apagados para simular um usuário novo.")) return;
+                        if (!window.confirm("Resetar para usuário novo? Isso apaga os veículos cadastrados, zera a meta mensal e reativa todos os onboardings, tutoriais e Primeiros Passos. Ação de teste, não reversível.")) return;
                         const [{ error: profErr }, { error: carsErr }, { error: setErr }] = await Promise.all([
                           supabase
                             .from("profiles")
-                            .update({ onboarded: false, car_onboarded: false, goal_onboarded: false } as any)
+                            .update({
+                              onboarded: false,
+                              car_onboarded: false,
+                              goal_onboarded: false,
+                              costs_onboarded: false,
+                              planning_onboarded: false,
+                              fs_personalized: false,
+                              fs_exported: false,
+                              fs_all_done_at: null,
+                              tour_entries_seen: false,
+                              tour_planning_seen: false,
+                              tour_personalize_seen: false,
+                              tour_export_seen: false,
+                            } as any)
                             .eq("id", user.id),
                           supabase.from("cars").delete().eq("user_id", user.id),
                           supabase
@@ -857,14 +870,14 @@ export default function SettingsPage() {
                             .eq("user_id", user.id),
                         ]);
                         if (profErr || carsErr || setErr) {
-                          toast.error("Não foi possível resetar o onboarding.");
+                          toast.error("Não foi possível resetar.");
                           return;
                         }
-                        toast.success("Onboarding resetado. Recarregando...");
+                        toast.success("Resetado para usuário novo. Recarregando...");
                         setTimeout(() => window.location.reload(), 600);
                       }}
                     >
-                      <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" /> Resetar onboarding (teste)
+                      <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" /> Usuário novo (reset)
                     </Button>
                   </div>
                 );
