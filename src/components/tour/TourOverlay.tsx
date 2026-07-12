@@ -195,18 +195,31 @@ export function TourOverlay() {
           <p className="text-[13px] leading-snug text-muted-foreground">{step.body}</p>
 
           <div className="mt-3 flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={skip}
-              className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
-            >
-              Pular
-            </button>
-            {showNext && (
-              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-                {isLast ? "Concluir" : "Próximo"}
-              </Button>
-            )}
+            <div className="flex items-center gap-3">
+              {currentStepIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={prev}
+                  className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
+                >
+                  Voltar
+                </button>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={skip}
+                className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Pular
+              </button>
+              {showNext && (
+                <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+                  {isLast ? "Concluir" : "Próximo"}
+                </Button>
+              )}
+            </div>
           </div>
         </PopoverContent>
       </Popover>
