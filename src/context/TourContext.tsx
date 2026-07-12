@@ -32,6 +32,7 @@ interface TourContextValue {
   steps: TourStep[];
   startTour: (id: TourId, steps: TourStep[]) => Promise<void>;
   next: () => void;
+  prev: () => void;
   skip: () => void;
   finish: () => void;
   notifyAction: (actionId: string) => void;
