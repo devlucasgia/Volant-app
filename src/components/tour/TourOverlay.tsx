@@ -104,6 +104,14 @@ export function TourOverlay() {
   const isLast = currentStepIndex >= steps.length - 1;
   const showNext = step.advance === "next";
 
+  // Se o alvo está dentro de um drawer/dialog (Vaul, Radix), NÃO renderizamos as camadas
+  // escuras bloqueantes — elas capturariam cliques/foco e travariam a interação.
+  // O próprio drawer já tem backdrop, então o efeito visual de foco se mantém.
+  const targetEl = rect ? document.querySelector(step.target) : null;
+  const insideDrawer = !!targetEl?.closest(
+    '[data-vaul-drawer], [vaul-drawer], [role="dialog"]',
+  );
+
   // Recorte: 4 divs escuras cercando o alvo. Se não temos rect ainda, escurece tudo.
   const parts: Array<{ top: number; left: number; width: number; height: number } | null> = rect
     ? [
@@ -134,8 +142,10 @@ export function TourOverlay() {
       className="pointer-events-none fixed inset-0 z-[9998]"
       aria-live="polite"
     >
-      {/* Camadas escuras (com pointer-events próprios, para bloquear cliques fora do alvo) */}
-      {rect
+      {/* Camadas escuras (com pointer-events próprios, para bloquear cliques fora do alvo).
+          Dentro de drawers/dialogs, pulamos as camadas pra não travar a interação — o backdrop
+          nativo do drawer já provê o dimming. */}
+      {insideDrawer ? null : rect
         ? parts.map((p, i) =>
             p ? (
               <div
