@@ -7,6 +7,7 @@ import { computeFirstSteps, firstStepsProgress, type FirstStepTask } from "@/lib
 interface FsProfile {
   fs_personalized: boolean;
   fs_exported: boolean;
+  fs_history_visited: boolean;
   fs_all_done_at: string | null;
 }
 
@@ -18,6 +19,7 @@ export interface UseFirstStepsResult {
   loading: boolean;
   markPersonalized: () => Promise<void>;
   markExported: () => Promise<void>;
+  markHistoryVisited: () => Promise<void>;
 }
 
 /**
@@ -41,12 +43,13 @@ export function useFirstSteps(): UseFirstStepsResult {
       return;
     }
     const { data } = await (supabase.from("profiles") as any)
-      .select("fs_personalized, fs_exported, fs_all_done_at")
+      .select("fs_personalized, fs_exported, fs_history_visited, fs_all_done_at")
       .eq("id", user.id)
       .maybeSingle();
     setProfile({
       fs_personalized: Boolean((data as any)?.fs_personalized),
       fs_exported: Boolean((data as any)?.fs_exported),
+      fs_history_visited: Boolean((data as any)?.fs_history_visited),
       fs_all_done_at: ((data as any)?.fs_all_done_at ?? null) as string | null,
     });
     setLoading(false);
@@ -69,6 +72,7 @@ export function useFirstSteps(): UseFirstStepsResult {
     entries,
     fsPersonalized: profile?.fs_personalized ?? false,
     fsExported: profile?.fs_exported ?? false,
+    fsHistoryVisited: profile?.fs_history_visited ?? false,
   });
   const { done, total, allDone } = firstStepsProgress(tasks);
 
@@ -115,5 +119,17 @@ export function useFirstSteps(): UseFirstStepsResult {
     }
   }, [user, profile]);
 
-  return { tasks, done, total, allDone, loading, markPersonalized, markExported };
+  const markHistoryVisited = useCallback(async () => {
+    if (!user || !profile) return;
+    if (profile.fs_history_visited) return;
+    const { error } = await (supabase.from("profiles") as any)
+      .update({ fs_history_visited: true })
+      .eq("id", user.id);
+    if (!error) {
+      setProfile((p) => (p ? { ...p, fs_history_visited: true } : p));
+      window.dispatchEvent(new CustomEvent("volant:first-steps-changed"));
+    }
+  }, [user, profile]);
+
+  return { tasks, done, total, allDone, loading, markPersonalized, markExported, markHistoryVisited };
 }
