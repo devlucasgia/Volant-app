@@ -11,7 +11,14 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
-export type TourId = "entries" | "planning" | "personalize" | "export";
+export type TourId =
+  | "earnings"
+  | "expenses"
+  | "history"
+  | "planning"
+  | "personalize"
+  | "export"
+  | "entries"; // legado — não use em código novo
 
 export interface TourStep {
   /** CSS selector for the element to highlight (typically `[data-tour="..."]`). */
@@ -58,12 +65,17 @@ export function TourProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     (async () => {
       const { data } = await (supabase.from("profiles") as any)
-        .select("tour_entries_seen, tour_planning_seen, tour_personalize_seen, tour_export_seen")
+        .select(
+          "tour_entries_seen, tour_earnings_seen, tour_expenses_seen, tour_history_seen, tour_planning_seen, tour_personalize_seen, tour_export_seen",
+        )
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled || !data) return;
       seenCacheRef.current = {
         tour_entries_seen: Boolean(data.tour_entries_seen),
+        tour_earnings_seen: Boolean(data.tour_earnings_seen),
+        tour_expenses_seen: Boolean(data.tour_expenses_seen),
+        tour_history_seen: Boolean(data.tour_history_seen),
         tour_planning_seen: Boolean(data.tour_planning_seen),
         tour_personalize_seen: Boolean(data.tour_personalize_seen),
         tour_export_seen: Boolean(data.tour_export_seen),
