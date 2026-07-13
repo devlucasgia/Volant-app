@@ -636,7 +636,6 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                         >
                           <SelectTrigger
                             data-tour="entry-add-platform"
-                            onClick={() => notifyAction("used-add-platform")}
                             className={cn(
                               "flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-transparent px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-success hover:text-success hover:bg-success/5 focus:ring-0",
                               platforms.length === 1 && "animate-breath",

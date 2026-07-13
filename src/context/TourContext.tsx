@@ -171,8 +171,8 @@ export function TourProvider({ children }: { children: ReactNode }) {
       const lockKey = `${activeTour}:${currentStepIndex}:${actionId}`;
       if (actionAdvanceLockRef.current === lockKey) return;
       actionAdvanceLockRef.current = lockKey;
-      // Avança no próximo tick pra dar tempo do DOM da próxima etapa aparecer.
-      setTimeout(() => next(), 60);
+      // Avança com folga pra dar respiro visual e tempo do DOM da próxima etapa aparecer.
+      setTimeout(() => next(), 350);
     },
     [activeTour, steps, currentStepIndex, next],
   );
