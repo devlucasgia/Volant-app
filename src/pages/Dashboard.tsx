@@ -95,7 +95,7 @@ export default function Dashboard() {
 
 
 
-  const { startTour } = useTour();
+  const { startTour, notifyAction } = useTour();
   // Dispara os tours de Ganhos/Gastos em cascata, um por vez, respeitando pendências.
   useEffect(() => {
     if (dataLoading || firstSteps.loading) return;
@@ -758,7 +758,10 @@ export default function Dashboard() {
     byExpense: widgets.byExpense ? (() => {
       const insideUnified = Boolean(widgets.byApp);
       const block = (
-        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div
+          data-tour="home-expenses-section"
+          className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}
+        >
           {insideUnified && (
             <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por gastos</div>
           )}
@@ -1086,9 +1089,11 @@ export default function Dashboard() {
               ];
           const toggleHero = () => {
             setHeroView(showGross ? "net" : "gross");
+            notifyAction("toggle-hero");
           };
           return (
             <div
+              data-tour="hero-metric"
               role="button"
               tabIndex={0}
               aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
@@ -1121,6 +1126,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
+                      data-tour="hero-toggle"
                       aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
                       onClick={(e) => { e.stopPropagation(); toggleHero(); }}
                       className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.09] px-2.5 py-1.5 text-[10px] font-semibold text-foreground transition-colors hover:bg-white/[0.14] active:scale-95"
