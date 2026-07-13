@@ -96,23 +96,54 @@ export default function Dashboard() {
 
 
   const { startTour, notifyAction } = useTour();
+  // Só libera os tours quando o onboarding inicial estiver concluído.
+  const [onboardedReady, setOnboardedReady] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const check = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarded")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      setOnboardedReady(Boolean((data as any)?.onboarded));
+    };
+    void check();
+    const onFinished = () => setOnboardedReady(true);
+    const onOpen = () => setOnboardedReady(false);
+    window.addEventListener("volant:onboarding-finished", onFinished);
+    window.addEventListener("volant:onboarding-open", onOpen);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("volant:onboarding-finished", onFinished);
+      window.removeEventListener("volant:onboarding-open", onOpen);
+    };
+  }, [user]);
+
   // Dispara os tours de Ganhos/Gastos em cascata, um por vez, respeitando pendências.
   useEffect(() => {
     if (dataLoading || firstSteps.loading) return;
+    if (!onboardedReady) return;
+    // Guarda extra: se o overlay do onboarding ainda está no DOM, adia.
+    if (typeof document !== "undefined" && document.querySelector("[data-onboarding-root]")) return;
     const earningsTask = firstSteps.tasks.find((t) => t.key === "earnings");
     const expensesTask = firstSteps.tasks.find((t) => t.key === "expenses");
     const id = window.setTimeout(() => {
+      if (document.querySelector("[data-onboarding-root]")) return;
       if (earningsTask && !earningsTask.done) {
         startTour("earnings", earningsTourSteps);
       } else if (expensesTask && !expensesTask.done) {
         startTour("expenses", expensesTourSteps);
       }
-    }, 800);
+    }, 1200);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     dataLoading,
     firstSteps.loading,
+    onboardedReady,
     firstSteps.tasks.find((t) => t.key === "earnings")?.done,
     firstSteps.tasks.find((t) => t.key === "expenses")?.done,
   ]);

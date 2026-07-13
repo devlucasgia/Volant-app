@@ -86,7 +86,8 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     expenseCategories, earningPlatforms, isSimplePlatform,
   } = useData();
   const { requirePremium } = useAccess();
-  const { notifyAction } = useTour();
+  const { notifyAction, activeTour } = useTour();
+  const tourLocksDrawer = activeTour === "earnings" || activeTour === "expenses";
   const [platDialogOpen, setPlatDialogOpen] = useState(false);
   const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [date, setDate] = useState<Date>(new Date());
@@ -423,7 +424,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     : (tab === "earning" ? "Novo ganho" : "Novo gasto");
 
   return (
-    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false} repositionInputs={false} modal={false}>
+    <Drawer open={open} onOpenChange={(v) => { if (!v && tourLocksDrawer) return; onOpenChange(v); if (!v) reset(); }} dismissible={false} repositionInputs={false} modal={false}>
       <DrawerContent
         className={cn(
           "flex flex-col",
@@ -746,7 +747,9 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
           </div>
 
           <div className="shrink-0 border-t bg-background px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+            {!tourLocksDrawer && (
+              <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)} disabled={submitting}>Cancelar</Button>
+            )}
             <Button data-tour="entry-save" className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={submit} disabled={submitting}>
               {submitting ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Salvando…</>
