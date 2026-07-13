@@ -55,6 +55,11 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps, setSteps] = useState<TourStep[]>([]);
   const seenCacheRef = useRef<Record<string, boolean>>({});
+  const actionAdvanceLockRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    actionAdvanceLockRef.current = null;
+  }, [activeTour, currentStepIndex]);
 
   // Cache tour_*_seen flags for the current user (avoid re-fetching per start).
   useEffect(() => {
@@ -163,6 +168,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
       const step = steps[currentStepIndex];
       if (!step || step.advance !== "action") return;
       if (step.actionId !== actionId) return;
+      const lockKey = `${activeTour}:${currentStepIndex}:${actionId}`;
+      if (actionAdvanceLockRef.current === lockKey) return;
+      actionAdvanceLockRef.current = lockKey;
       // Avança no próximo tick pra dar tempo do DOM da próxima etapa aparecer.
       setTimeout(() => next(), 60);
     },

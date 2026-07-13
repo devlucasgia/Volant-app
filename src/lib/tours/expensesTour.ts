@@ -26,14 +26,16 @@ export const expensesTourSteps: TourStep[] = [
     target: '[data-tour="entry-expense-category"]',
     title: "Categoria do gasto",
     body: "Escolhe onde encaixa: combustível, manutenção, alimentação, e por aí vai.",
-    advance: "next",
+    advance: "action",
+    actionId: "selected-expense-category",
     placement: "bottom",
   },
   {
     target: '[data-tour="entry-expense-value"]',
     title: "Valor do gasto",
     body: "Digita quanto saiu do bolso.",
-    advance: "next",
+    advance: "action",
+    actionId: "filled-expense-value",
     placement: "top",
   },
   {

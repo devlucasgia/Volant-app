@@ -1,36 +1,48 @@
-## Correções do Tour
+## Plano
 
-### 1. Tour dispara durante o Onboarding (print 1)
-**Causa:** `Dashboard.tsx` chama `startTour(...)` num `useEffect` com timeout de 800ms assim que `dataLoading` termina. Isso acontece mesmo quando o `OnboardingFlow` ainda está aberto por cima da Home.
+### Objetivo
+Corrigir definitivamente o tour de Ganhos/Gastos removendo a dependência do botão **Próximo** nas etapas dentro do formulário. O tour deve avançar conforme o usuário interage de verdade com os campos.
 
-**Fix:**
-- Em `src/components/onboarding/OnboardingFlow.tsx`, expor o estado "onboarding aberto" via evento (`volant:onboarding-finished` já é disparado no `finish`; adicionar também `volant:onboarding-open` quando `setOpen(true)`).
-- Em `src/pages/Dashboard.tsx`:
-  - Ler `profiles.onboarded` (mesma query que já faz em outros pontos) e só disparar o cascade quando `onboarded === true`.
-  - Adicionar guarda extra: se `document.querySelector('[data-onboarding-root]')` existir (marcador novo no `OnboardingFlow`), adiar. Ouvir `volant:onboarding-finished` pra re-tentar.
-  - Aumentar o delay pra 1200ms pra dar tempo da Home pintar 100%.
+### Mudanças propostas
 
-### 2. Botão "Próximo" travado no passo 3 (Horas)
-**Causa real (vista no print 2):** o drawer de ganhos fechou antes do passo 3 aparecer (o glow ficou preso em elementos da Home). O seletor `[data-tour="entry-hours"]` não existe mais no DOM, mas o `TourOverlay` mantém o popover com anchor central e o "Próximo" fica visível. Como o step atual referencia um alvo que sumiu, algo re-renderiza em loop e o clique não avança (o `useTargetRect` fica em polling e mede `null` continuamente, mas o `Next` em si deveria funcionar — o problema visível é que o tour continua fora de contexto).
+1. **Ganhos: avanço 100% por ação no formulário**
+   - Horas: ao alterar a roda de horas, o tour avança.
+   - KM: ao preencher/alterar KM total, inicial ou final, o tour avança.
+   - Valor e corridas: ao preencher valor/corridas de uma plataforma, o tour avança.
+   - Adicionar plataforma: ao tocar em adicionar plataforma/criar outra, o tour avança.
+   - Salvar: ao salvar ganho, o tour avança para a Home.
+   - Na Home, manter ação real no chip Bruto/Líquido para avançar.
 
-**Fix combinado com item 3:** se o drawer fechar durante um passo cujo alvo está dentro dele, o tour finaliza (`finish()`). Isso remove o estado inconsistente que trava a UX. Além disso:
-- Em `TourOverlay.tsx`: quando `mode !== "none"` e `rect === null` por mais de ~800ms consecutivos, chamar `skip()` pra não deixar o tour órfão.
-- Garantir que `next()` no `TourContext` sempre execute — hoje ele depende de `steps.length` no `useCallback`; validar que nada bloqueia (nenhuma alteração esperada, apenas verificação).
+2. **Gastos: avanço 100% por ação no formulário**
+   - Categoria: ao escolher categoria, o tour avança.
+   - Valor: ao preencher valor do gasto, o tour avança.
+   - Salvar: ao salvar gasto, o tour avança para a seção “Por gastos”.
 
-### 3. Fechar o formulário mata o contexto do tour
-**Escolha do usuário:** impedir o fechamento enquanto o tour estiver ativo (opção 2).
+3. **Remover/ocultar botão Próximo onde ele causa problema**
+   - Etapas do formulário deixarão de mostrar **Próximo**.
+   - O balão passa a orientar a ação esperada.
+   - Manter **Pular** como escape seguro.
+   - Manter **Concluir** apenas em etapas finais informativas, fora do formulário.
 
-**Fix em `src/components/EntryDrawer.tsx`:**
-- Ler `activeTour` via `useTour()`.
-- Quando `activeTour === "earnings" || activeTour === "expenses"`:
-  - Esconder o botão **Cancelar** (linha ~749). Só resta "Salvar" ou "Pular" (do balão do tour).
-  - Manter `dismissible={false}` (já está) e bloquear `onOpenChange(false)` vindo de qualquer origem que não seja `notifyAction("saved-*")`.
-- Como salvaguarda: no `TourContext`, se o tour estiver ativo e o passo atual apontar pra um alvo dentro do drawer, e o drawer for desmontado, executar `finish()` (via o timeout no `TourOverlay` proposto acima).
+4. **Instrumentar ações no `EntryDrawer`**
+   - Adicionar `notifyAction(...)` nos pontos certos:
+     - `filled-hours`
+     - `filled-km`
+     - `filled-earning-values`
+     - `used-add-platform`
+     - `selected-expense-category`
+     - `filled-expense-value`
+   - Usar pequenos guards para não avançar com campo vazio ou interação acidental.
 
-### Arquivos a alterar
-- `src/components/onboarding/OnboardingFlow.tsx` — disparar evento `volant:onboarding-open` e marcar root com `data-onboarding-root`.
-- `src/pages/Dashboard.tsx` — gate por `profiles.onboarded` + escuta de `volant:onboarding-finished` antes do `startTour`.
-- `src/components/EntryDrawer.tsx` — esconder botão Cancelar enquanto tour ativo; travar `onOpenChange`.
-- `src/components/tour/TourOverlay.tsx` — auto-`skip()` se o alvo sumir por mais de ~800ms (tour órfão).
+5. **Revisar scripts dos tours**
+   - Atualizar `earningsTourSteps` e `expensesTourSteps` para trocar etapas `advance: "next"` por `advance: "action"` dentro do formulário.
+   - Ajustar textos para indicar claramente “faça isso” em vez de “toque em Próximo”.
 
-Nada de mudança em banco, cálculos, RLS ou visual fora do tour.
+### Arquivos envolvidos
+- `src/lib/tours/earningsTour.ts`
+- `src/lib/tours/expensesTour.ts`
+- `src/components/EntryDrawer.tsx`
+- Possivelmente `src/components/tour/TourOverlay.tsx` apenas para esconder o botão em etapas de ação e manter fallback seguro.
+
+### Resultado esperado
+O tour não dependerá mais do botão **Próximo** durante o preenchimento. Ele seguirá o fluxo natural: o usuário preenche/interage, o tour avança sozinho; se sair do contexto, continua protegido pelas travas já implementadas.
