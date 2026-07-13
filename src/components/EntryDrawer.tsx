@@ -487,13 +487,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                       </div>
                       <div className="grid gap-4">
                         {/* Horas */}
-                        <div className="space-y-2">
+                        <div className="space-y-2" data-tour="entry-hours">
                           <Label className="text-xs">Horas trabalhadas</Label>
                           <HoursWheel value={hours} onChange={setHours} />
                         </div>
 
                         {/* Quilometragem */}
-                        <div className="space-y-2">
+                        <div className="space-y-2" data-tour="entry-km">
                           <Label className="text-xs">Quilometragem</Label>
                           <Segmented
                             options={[{ key: "total", label: "Total" }, { key: "range", label: "Inicial / Final" }]}
@@ -581,6 +581,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                           }}
                         >
                           <SelectTrigger
+                            data-tour="entry-add-platform"
                             className={cn(
                               "flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-transparent px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-success hover:text-success hover:bg-success/5 focus:ring-0",
                               platforms.length === 1 && "animate-breath",
@@ -688,7 +689,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
             ) : (
               // ─── GASTO ───
               <div className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-2" data-tour="entry-expense-category">
                   <div className="flex items-center justify-between">
                     <Label>Categoria</Label>
                     <button type="button" onClick={() => setCatDialogOpen(true)}
