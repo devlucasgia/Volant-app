@@ -1,15 +1,17 @@
 import type { TourStep } from "@/context/TourContext";
 
 /**
- * Tour de Ganhos — 9 passos.
+ * Tour de Ganhos — 10 passos.
  * Ensina o usuário a preencher horas → KM → valores/corridas → adicionar plataforma
- * → salvar → e a interagir com o herói (Bruto ↔ Líquido) na Home.
+ * → preencher a nova plataforma → salvar → e a interagir com o herói (Bruto ↔ Líquido).
  */
 export const earningsTourSteps: TourStep[] = [
   {
     target: '[data-tour="fab-new-entry"]',
     title: "Bora registrar seu primeiro ganho",
     body: "Toca no + pra começar.",
+    icon: "🚀",
+    hint: "Toca no +",
     advance: "action",
     actionId: "open-fab-menu",
     placement: "top",
@@ -18,6 +20,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="fab-earning"]',
     title: "Escolhe Novo ganho",
     body: "Toca aqui pra abrir o formulário.",
+    icon: "💰",
+    hint: "Escolhe Novo ganho",
     advance: "action",
     actionId: "open-entry-drawer",
     placement: "top",
@@ -26,6 +30,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="entry-hours"]',
     title: "Horas trabalhadas",
     body: "Gira a roda pra registrar quanto tempo você rodou.",
+    icon: "⏱️",
+    hint: "Registra suas horas",
     advance: "action",
     actionId: "filled-hours",
     placement: "bottom",
@@ -34,6 +40,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="entry-km"]',
     title: "Quilometragem do dia",
     body: "Registra o KM total ou informa o inicial e o final.",
+    icon: "🛣️",
+    hint: "Digita o km do dia",
     advance: "action",
     actionId: "filled-km",
     placement: "bottom",
@@ -42,6 +50,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="entry-earning-value"]',
     title: "Valor e corridas por app",
     body: "Preencha valor e número de corridas em cada plataforma que você usou.",
+    icon: "💰",
+    hint: "Preenche valor e corridas",
     advance: "action",
     actionId: "filled-earning-values",
     placement: "top",
@@ -50,14 +60,28 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="entry-add-platform"]',
     title: "Rodou em outro app?",
     body: "Toca aqui pra somar outra plataforma — ou só conhecer essa opção.",
+    icon: "➕",
+    hint: "Adiciona outro app",
     advance: "action",
     actionId: "used-add-platform",
+    placement: "top",
+  },
+  {
+    target: '[data-tour="entry-platform-last"]',
+    title: "Preenche o outro app",
+    body: "Coloca o valor e as corridas da nova plataforma também.",
+    icon: "🚗",
+    hint: "Preenche os valores da nova plataforma",
+    advance: "action",
+    actionId: "filled-second-platform",
     placement: "top",
   },
   {
     target: '[data-tour="entry-save"]',
     title: "Salva e pronto",
     body: "Confere os dados e toca em Salvar. Seus números aparecem na Home na hora.",
+    icon: "✅",
+    hint: "Toca em Salvar",
     advance: "action",
     actionId: "saved-earning",
     placement: "top",
@@ -66,6 +90,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="hero-metric"]',
     title: "Seu ganho já está aqui",
     body: "Toca no chip Bruto/Líquido pra alternar entre faturamento e lucro real.",
+    icon: "👀",
+    hint: "Alterna Bruto/Líquido",
     advance: "action",
     actionId: "toggle-hero",
     placement: "bottom",
@@ -74,6 +100,8 @@ export const earningsTourSteps: TourStep[] = [
     target: '[data-tour="hero-metric"]',
     title: "Prontinho!",
     body: "Você registrou seu primeiro ganho e viu o impacto na Home. Bora ver os gastos agora.",
+    icon: "🎉",
+    spotlight: false,
     advance: "next",
     placement: "bottom",
   },

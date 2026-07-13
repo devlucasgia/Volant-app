@@ -31,7 +31,14 @@ export interface TourStep {
   actionId?: string;
   /** Optional preferred placement (auto if omitted). */
   placement?: "top" | "bottom" | "left" | "right";
+  /** Ícone emoji temático no cabeçalho do balão. */
+  icon?: string;
+  /** Micro-instrução exibida como pílula no balão (passos de ação). */
+  hint?: string;
+  /** Default true. Quando false, o balão aparece centralizado sem glow/spotlight. */
+  spotlight?: boolean;
 }
+
 
 interface TourContextValue {
   activeTour: TourId | null;
@@ -140,7 +147,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
     setSteps([]);
     setCurrentStepIndex(0);
     void markSeen(id);
+    // Emite evento pra que a Home encadeie ganho→gasto sem esperar navegação.
+    try {
+      window.dispatchEvent(new CustomEvent("volant:tour-finished", { detail: { id } }));
+    } catch { /* noop */ }
   }, [activeTour, markSeen]);
+
 
   const next = useCallback(() => {
     if (!activeTour) return;

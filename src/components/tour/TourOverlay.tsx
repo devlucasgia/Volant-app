@@ -124,8 +124,10 @@ export function TourOverlay() {
     '[data-vaul-drawer], [vaul-drawer], [role="dialog"]',
   );
 
+  // "noHighlight" desliga glow/spotlight (balão flutua central). Default: com destaque.
+  const noHighlight = step.spotlight === false || !rect;
   const mode: "spotlight" | "glow" | "none" =
-    isLast ? "none" : insideDrawer ? "glow" : "spotlight";
+    noHighlight ? "none" : insideDrawer ? "glow" : "spotlight";
 
   // 4 camadas escuras recortando o alvo (só usadas no modo spotlight).
   const parts = rect
@@ -152,8 +154,8 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Anchor: no modo "glow" (dentro de drawer) fixamos o balão perto do topo
-  // pra não sobrepor o campo/formulário conforme o usuário rola.
+  // Anchor: em "glow" (dentro de drawer) fixa o balão perto do topo pra não
+  // sobrepor o campo/formulário conforme o usuário rola.
   // Em spotlight, ancoramos no alvo. Em "none", centro da tela.
   const anchorStyle =
     mode === "none" || !rect
@@ -165,6 +167,9 @@ export function TourOverlay() {
   const popoverSide =
     mode === "none" ? "bottom" : mode === "glow" ? "bottom" : (step.placement ?? "top");
   const popoverSideOffset = mode === "none" ? 0 : mode === "glow" ? 8 : 12;
+
+  const progress = ((currentStepIndex + 1) / steps.length) * 100;
+  const showHint = step.advance === "action" && !!step.hint;
 
   return createPortal(
     <div
@@ -198,21 +203,52 @@ export function TourOverlay() {
           sideOffset={popoverSideOffset}
 
           collisionPadding={16}
-          className="pointer-events-auto z-[9999] w-[min(88vw,320px)] rounded-2xl border border-border bg-card p-4 shadow-elevated"
+          className="pointer-events-auto z-[9999] w-[min(88vw,340px)] rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]"
+          style={{ backgroundColor: "hsl(var(--card))" }}
           onOpenAutoFocus={(e) => e.preventDefault()}
           onCloseAutoFocus={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            Passo {currentStepIndex + 1} de {steps.length}
+          {/* Cabeçalho: ícone + eyebrow/título */}
+          <div className="flex items-start gap-3 px-4 pt-4">
+            {step.icon && (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
+                <span aria-hidden>{step.icon}</span>
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Passo {currentStepIndex + 1} de {steps.length}
+              </div>
+              <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
+                {step.title}
+              </div>
+            </div>
           </div>
-          <div className="mb-1.5 text-[15px] font-bold leading-tight text-foreground">
-            {step.title}
-          </div>
-          <p className="text-[13px] leading-snug text-muted-foreground">{step.body}</p>
 
-          <div className="mt-3 flex items-center justify-between gap-3">
+          {/* Corpo */}
+          <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
+            {step.body}
+          </p>
+
+          {/* Pílula de dica (só passos de ação) */}
+          {showHint && (
+            <div className="px-4 pt-3">
+              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
+                {step.hint}
+              </span>
+            </div>
+          )}
+
+          {/* Rodapé: progresso + ações */}
+          <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
             <button
               type="button"
               onClick={skip}
@@ -220,23 +256,21 @@ export function TourOverlay() {
             >
               Pular
             </button>
-            <div className="flex items-center gap-2">
-              {showPrev && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={prev}
-                  className="h-8 rounded-full px-3 text-[12px]"
-                >
-                  Voltar
-                </Button>
-              )}
-              {showNext && (
-                <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-                  {isLast ? "Concluir" : "Próximo"}
-                </Button>
-              )}
-            </div>
+            {showPrev && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={prev}
+                className="h-8 rounded-full px-3 text-[12px]"
+              >
+                Voltar
+              </Button>
+            )}
+            {showNext && (
+              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+                {isLast ? "Concluir" : "Próximo"}
+              </Button>
+            )}
           </div>
         </PopoverContent>
       </Popover>
@@ -244,3 +278,4 @@ export function TourOverlay() {
     document.body,
   );
 }
+
