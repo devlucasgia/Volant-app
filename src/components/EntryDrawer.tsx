@@ -423,7 +423,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     : (tab === "earning" ? "Novo ganho" : "Novo gasto");
 
   return (
-    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false} repositionInputs={false}>
+    <Drawer open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) reset(); }} dismissible={false} repositionInputs={false} modal={false}>
       <DrawerContent
         className={cn(
           "flex flex-col",

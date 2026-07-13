@@ -201,6 +201,15 @@
     .animate-breath-soft { animation: none; }
   }
 
+  @keyframes tour-glow-pulse {
+    0%, 100% { box-shadow: 0 0 0 3px hsl(var(--primary)), 0 0 14px 3px hsl(var(--primary) / 0.5); }
+    50%      { box-shadow: 0 0 0 3px hsl(var(--primary)), 0 0 24px 7px hsl(var(--primary) / 0.75); }
+  }
+  .tour-glow { animation: tour-glow-pulse 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) {
+    .tour-glow { animation: none; }
+  }
+
 }
 
 @layer base {
