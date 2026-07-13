@@ -1309,7 +1309,7 @@ export default function Dashboard() {
             if (k === unifiedSlotKey) {
               const bothEmpty = activeApps.length === 0 && activeExp.length === 0;
               block = (
-                <section key="appsExpenses">
+                <section key="appsExpenses" data-tour="home-earnings-expenses">
                   <div className="mb-2 flex items-center gap-2 px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                     <ArrowLeftRight className="h-3.5 w-3.5" /> Ganhos e gastos
                   </div>
