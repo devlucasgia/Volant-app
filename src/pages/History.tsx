@@ -1,7 +1,8 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/ui-bits";
 import { Segmented } from "@/components/Segmented";
 import { useData } from "@/context/DataContext";
+import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { useUI } from "@/context/UIContext";
 import { useAccess } from "@/context/AccessContext";
 import { PremiumLockOverlay } from "@/components/PremiumLockOverlay";
@@ -143,6 +144,7 @@ export default function History() {
   const { entries, removeEntry, removeGroup, platformMetaFor, expenseMetaFor } = useData();
   const { openDrawer } = useUI();
   const { isLimited, requirePremium } = useAccess();
+  const { markHistoryVisited } = useFirstSteps();
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -151,6 +153,11 @@ export default function History() {
     | { kind: "session"; groupId: string; count: number }
     | null
   >(null);
+
+  // Marca a task "Aprender sobre o histórico" como concluída ao visitar a tela.
+  useEffect(() => {
+    void markHistoryVisited();
+  }, [markHistoryVisited]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
