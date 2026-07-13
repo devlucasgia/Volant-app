@@ -45,7 +45,7 @@ function useTargetRect(selector: string | null): Rect | null {
         return;
       }
       if (Date.now() - started > POLL_TIMEOUT_MS) {
-        setRect(null); // desiste; a camada pai decide o que fazer
+        setRect(null);
         return;
       }
       window.setTimeout(tick, POLL_INTERVAL_MS);
@@ -62,7 +62,6 @@ function useTargetRect(selector: string | null): Rect | null {
     window.addEventListener("resize", onResizeOrScroll);
     window.addEventListener("scroll", onResizeOrScroll, true);
 
-    // Reavalia periodicamente enquanto o passo estiver ativo (drawer abrindo, layout mudando).
     const interval = window.setInterval(() => {
       const el = document.querySelector(selector);
       if (el) measure(el);
@@ -80,40 +79,26 @@ function useTargetRect(selector: string | null): Rect | null {
   return rect;
 }
 
-/** Auto-skip: se o passo "action" tem alvo que sumiu por mais de 3s, avança sem trancar. */
-function useAutoSkipMissingActionTarget(hasRect: boolean, isActionStep: boolean, skip: () => void) {
-  useEffect(() => {
-    if (!isActionStep) return;
-    if (hasRect) return;
-    // Só age depois do POLL_TIMEOUT que o hook já espera → esse timer é backup extra.
-    const t = window.setTimeout(() => {
-      // no-op: preferimos manter o usuário no controle; "Pular" está sempre visível.
-    }, POLL_TIMEOUT_MS + 500);
-    return () => window.clearTimeout(t);
-  }, [hasRect, isActionStep, skip]);
-}
-
 export function TourOverlay() {
-  const { activeTour, currentStepIndex, steps, next, prev, skip } = useTour();
+  const { activeTour, currentStepIndex, steps, next, skip } = useTour();
   const step = activeTour ? steps[currentStepIndex] ?? null : null;
   const rect = useTargetRect(step?.target ?? null);
-  useAutoSkipMissingActionTarget(!!rect, step?.advance === "action", skip);
 
   if (!step) return null;
 
   const isLast = currentStepIndex >= steps.length - 1;
   const showNext = step.advance === "next";
 
-  // Se o alvo está dentro de um drawer/dialog (Vaul, Radix), NÃO renderizamos as camadas
-  // escuras bloqueantes — elas capturariam cliques/foco e travariam a interação.
-  // O próprio drawer já tem backdrop, então o efeito visual de foco se mantém.
   const targetEl = rect ? document.querySelector(step.target) : null;
   const insideDrawer = !!targetEl?.closest(
     '[data-vaul-drawer], [vaul-drawer], [role="dialog"]',
   );
 
-  // Recorte: 4 divs escuras cercando o alvo. Se não temos rect ainda, escurece tudo.
-  const parts: Array<{ top: number; left: number; width: number; height: number } | null> = rect
+  const mode: "spotlight" | "glow" | "none" =
+    isLast ? "none" : insideDrawer ? "glow" : "spotlight";
+
+  // 4 camadas escuras recortando o alvo (só usadas no modo spotlight).
+  const parts = rect
     ? [
         { top: 0, left: 0, width: window.innerWidth, height: Math.max(0, rect.top) },
         {
@@ -135,50 +120,44 @@ export function TourOverlay() {
           height: Math.max(0, window.innerHeight - (rect.top + rect.height)),
         },
       ]
-    : [null];
+    : [];
+
+  // Anchor: no rect quando temos alvo; no centro da viewport pro modo "none".
+  const anchorStyle =
+    mode === "none" || !rect
+      ? { top: "50vh", left: "50vw", width: 0, height: 0 } as const
+      : { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 
   return createPortal(
     <div
       className="pointer-events-none fixed inset-0 z-[9998]"
       aria-live="polite"
     >
-      {/* Camadas escuras (com pointer-events próprios, para bloquear cliques fora do alvo).
-          Dentro de drawers/dialogs, pulamos as camadas pra não travar a interação — o backdrop
-          nativo do drawer já provê o dimming. */}
-      {insideDrawer ? null : rect
-        ? parts.map((p, i) =>
-            p ? (
-              <div
-                key={i}
-                className="pointer-events-auto absolute bg-black/60 transition-opacity duration-200 motion-reduce:transition-none"
-                style={{ top: p.top, left: p.left, width: p.width, height: p.height }}
-                onClick={step.advance === "next" ? () => {} : undefined}
-              />
-            ) : null,
-          )
-        : (
-          <div className="pointer-events-auto absolute inset-0 bg-black/60" />
-        )}
+      {/* Spotlight: 4 camadas pretas recortando o alvo. NÃO bloqueiam cliques. */}
+      {mode === "spotlight" && rect && parts.map((p, i) => (
+        <div
+          key={i}
+          className="pointer-events-none absolute bg-black/70 transition-opacity duration-200 motion-reduce:transition-none"
+          style={{ top: p.top, left: p.left, width: p.width, height: p.height }}
+        />
+      ))}
 
-      {/* Anchor invisível no alvo para posicionar o balão */}
+      {/* Glow pulsante no alvo: em spotlight e glow. */}
+      {mode !== "none" && rect && (
+        <div
+          className="tour-glow pointer-events-none absolute rounded-[14px]"
+          style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
+        />
+      )}
+
       <Popover open={true}>
-        {rect && (
-          <PopoverAnchor asChild>
-            <div
-              className="pointer-events-none absolute"
-              style={{
-                top: rect.top,
-                left: rect.left,
-                width: rect.width,
-                height: rect.height,
-              }}
-            />
-          </PopoverAnchor>
-        )}
+        <PopoverAnchor asChild>
+          <div className="pointer-events-none absolute" style={anchorStyle} />
+        </PopoverAnchor>
         <PopoverContent
-          side={step.placement ?? "top"}
+          side={mode === "none" ? "bottom" : (step.placement ?? "top")}
           align="center"
-          sideOffset={12}
+          sideOffset={mode === "none" ? 0 : 12}
           collisionPadding={16}
           className="pointer-events-auto z-[9999] w-[min(88vw,320px)] rounded-2xl border border-border bg-card p-4 shadow-elevated"
           onOpenAutoFocus={(e) => e.preventDefault()}
@@ -194,32 +173,19 @@ export function TourOverlay() {
           </div>
           <p className="text-[13px] leading-snug text-muted-foreground">{step.body}</p>
 
-          <div className="mt-3 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              {currentStepIndex > 0 && (
-                <button
-                  type="button"
-                  onClick={prev}
-                  className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
-                >
-                  Voltar
-                </button>
-              )}
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={skip}
-                className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
-              >
-                Pular
-              </button>
-              {showNext && (
-                <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-                  {isLast ? "Concluir" : "Próximo"}
-                </Button>
-              )}
-            </div>
+          <div className="mt-3 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={skip}
+              className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
+            >
+              Pular
+            </button>
+            {showNext && (
+              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+                {isLast ? "Concluir" : "Próximo"}
+              </Button>
+            )}
           </div>
         </PopoverContent>
       </Popover>
