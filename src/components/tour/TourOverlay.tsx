@@ -84,6 +84,19 @@ export function TourOverlay() {
   const step = activeTour ? steps[currentStepIndex] ?? null : null;
   const rect = useTargetRect(step?.target ?? null);
 
+  // Auto-finaliza tour órfão: se o alvo sumiu do DOM por mais de 900ms, encerra.
+  // (Hook precisa vir antes de qualquer early return.)
+  const isLastForHook = step ? currentStepIndex >= steps.length - 1 : true;
+  useEffect(() => {
+    if (!step || isLastForHook) return;
+    if (rect) return;
+    const t = window.setTimeout(() => {
+      const stillMissing = !document.querySelector(step.target);
+      if (stillMissing) skip();
+    }, 900);
+    return () => window.clearTimeout(t);
+  }, [rect, step, isLastForHook, skip]);
+
   if (!step) return null;
 
   const isLast = currentStepIndex >= steps.length - 1;
@@ -100,17 +113,6 @@ export function TourOverlay() {
 
   const mode: "spotlight" | "glow" | "none" =
     isLast ? "none" : insideDrawer ? "glow" : "spotlight";
-
-  // Auto-finaliza tour órfão: se o alvo sumiu do DOM por mais de 800ms, encerra.
-  useEffect(() => {
-    if (isLast) return;
-    if (rect) return;
-    const t = window.setTimeout(() => {
-      const stillMissing = !document.querySelector(step.target);
-      if (stillMissing) skip();
-    }, 900);
-    return () => window.clearTimeout(t);
-  }, [rect, step.target, isLast, skip]);
 
   // 4 camadas escuras recortando o alvo (só usadas no modo spotlight).
   const parts = rect
