@@ -41,7 +41,8 @@ import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { FirstStepsStrip } from "@/components/firstSteps/FirstStepsStrip";
 import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 import { useTour } from "@/context/TourContext";
-import { entriesTourSteps } from "@/lib/tours/entriesTour";
+import { earningsTourSteps } from "@/lib/tours/earningsTour";
+import { expensesTourSteps } from "@/lib/tours/expensesTour";
 
 
 export default function Dashboard() {
@@ -95,17 +96,26 @@ export default function Dashboard() {
 
 
   const { startTour } = useTour();
-  // Dispara o tour de registros na Home apenas se ainda não foi visto e a tarefa está pendente.
+  // Dispara os tours de Ganhos/Gastos em cascata, um por vez, respeitando pendências.
   useEffect(() => {
     if (dataLoading || firstSteps.loading) return;
-    const entriesTask = firstSteps.tasks.find((t) => t.key === "entries");
-    if (!entriesTask || entriesTask.done) return;
+    const earningsTask = firstSteps.tasks.find((t) => t.key === "earnings");
+    const expensesTask = firstSteps.tasks.find((t) => t.key === "expenses");
     const id = window.setTimeout(() => {
-      startTour("entries", entriesTourSteps);
+      if (earningsTask && !earningsTask.done) {
+        startTour("earnings", earningsTourSteps);
+      } else if (expensesTask && !expensesTask.done) {
+        startTour("expenses", expensesTourSteps);
+      }
     }, 800);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataLoading, firstSteps.loading, firstSteps.tasks.find((t) => t.key === "entries")?.done]);
+  }, [
+    dataLoading,
+    firstSteps.loading,
+    firstSteps.tasks.find((t) => t.key === "earnings")?.done,
+    firstSteps.tasks.find((t) => t.key === "expenses")?.done,
+  ]);
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
