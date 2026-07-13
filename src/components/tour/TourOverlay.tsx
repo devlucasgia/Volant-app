@@ -101,6 +101,17 @@ export function TourOverlay() {
   const mode: "spotlight" | "glow" | "none" =
     isLast ? "none" : insideDrawer ? "glow" : "spotlight";
 
+  // Auto-finaliza tour órfão: se o alvo sumiu do DOM por mais de 800ms, encerra.
+  useEffect(() => {
+    if (isLast) return;
+    if (rect) return;
+    const t = window.setTimeout(() => {
+      const stillMissing = !document.querySelector(step.target);
+      if (stillMissing) skip();
+    }, 900);
+    return () => window.clearTimeout(t);
+  }, [rect, step.target, isLast, skip]);
+
   // 4 camadas escuras recortando o alvo (só usadas no modo spotlight).
   const parts = rect
     ? [
