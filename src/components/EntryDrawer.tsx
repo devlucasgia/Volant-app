@@ -620,24 +620,33 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                         Em quais apps você rodou hoje?
                       </div>
                       <div className="space-y-2">
-                        {platforms.map((row, idx) => (
-                          <PlatformRow
-                            key={row.uid}
-                            row={row}
-                            usedKeys={usedKeys}
-                            hideRemove={platforms.length === 1}
-                            onChange={(next) => {
-                              const arr = [...platforms];
-                              arr[idx] = next;
-                              setPlatforms(arr);
-                              notifyFilledEarningValues(arr);
-                            }}
-                            onRemove={() => {
-                              setPlatforms(platforms.filter((_, i) => i !== idx));
-                            }}
-                            onCreateNewPlatform={() => setPlatDialogOpen(true)}
-                          />
-                        ))}
+                        {platforms.map((row, idx) => {
+                          const isLastRow = idx === platforms.length - 1;
+                          return (
+                            <div
+                              key={row.uid}
+                              data-tour={isLastRow && platforms.length > 1 ? "entry-platform-last" : undefined}
+                            >
+                              <PlatformRow
+                                row={row}
+                                usedKeys={usedKeys}
+                                hideRemove={platforms.length === 1}
+                                onChange={(next) => {
+                                  const arr = [...platforms];
+                                  arr[idx] = next;
+                                  setPlatforms(arr);
+                                  notifyFilledEarningValues(arr);
+                                  notifyFilledSecondPlatform(arr);
+                                }}
+                                onRemove={() => {
+                                  setPlatforms(platforms.filter((_, i) => i !== idx));
+                                }}
+                                onCreateNewPlatform={() => setPlatDialogOpen(true)}
+                              />
+                            </div>
+                          );
+                        })}
+
 
                         <Select
                           onValueChange={(v) => {
