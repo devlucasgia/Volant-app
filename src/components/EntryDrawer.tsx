@@ -752,10 +752,16 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                       <Plus className="h-3 w-3" /> Nova categoria
                     </button>
                   </div>
-                  <Select value={category} onValueChange={(v) => {
-                    setCategory(v as ExpenseCategory);
-                    notifyAction("selected-expense-category");
-                  }}>
+                  <Select
+                    value={category}
+                    onOpenChange={(v) => {
+                      if (v) notifyAction("selected-expense-category");
+                    }}
+                    onValueChange={(v) => {
+                      setCategory(v as ExpenseCategory);
+                      notifyAction("selected-expense-category");
+                    }}
+                  >
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {expenseCategories.map((c) => (
