@@ -25,6 +25,7 @@ function useTargetRect(selector: string | null): Rect | null {
     }
     let cancelled = false;
     let raf = 0;
+    let scrolled = false;
     const started = Date.now();
 
     const measure = (el: Element) => {
@@ -41,6 +42,17 @@ function useTargetRect(selector: string | null): Rect | null {
       if (cancelled) return;
       const el = document.querySelector(selector);
       if (el) {
+        if (!scrolled) {
+          scrolled = true;
+          try {
+            (el as HTMLElement).scrollIntoView({ block: "center", behavior: "smooth" });
+          } catch {
+            /* noop */
+          }
+          window.setTimeout(() => {
+            if (!cancelled) measure(el);
+          }, 380);
+        }
         measure(el);
         return;
       }
@@ -51,6 +63,7 @@ function useTargetRect(selector: string | null): Rect | null {
       window.setTimeout(tick, POLL_INTERVAL_MS);
     };
     tick();
+
 
     const onResizeOrScroll = () => {
       if (cancelled) return;
