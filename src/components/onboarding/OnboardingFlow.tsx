@@ -57,6 +57,7 @@ export function OnboardingFlow() {
           setSteps(withInstall);
           setStepIdx(0);
           setOpen(true);
+          window.dispatchEvent(new CustomEvent("volant:onboarding-open"));
         }
       });
   }, [user]);
@@ -67,6 +68,7 @@ export function OnboardingFlow() {
       setSteps(BASE_STEPS);
       setStepIdx(0);
       setOpen(true);
+      window.dispatchEvent(new CustomEvent("volant:onboarding-open"));
     };
     window.addEventListener(ONBOARDING_OPEN_EVENT, handler);
     return () => window.removeEventListener(ONBOARDING_OPEN_EVENT, handler);
@@ -115,6 +117,7 @@ export function OnboardingFlow() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
+          data-onboarding-root=""
           className="fixed inset-0 z-[100] flex flex-col overflow-hidden bg-background"
           style={{
             paddingTop: "env(safe-area-inset-top)",
