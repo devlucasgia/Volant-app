@@ -381,6 +381,7 @@ export type Database = {
           display_name: string | null
           fs_all_done_at: string | null
           fs_exported: boolean
+          fs_history_visited: boolean
           fs_personalized: boolean
           goal_onboarded: boolean
           greeting_message: string | null
@@ -389,8 +390,11 @@ export type Database = {
           nickname: string | null
           onboarded: boolean
           planning_onboarded: boolean
+          tour_earnings_seen: boolean
           tour_entries_seen: boolean
+          tour_expenses_seen: boolean
           tour_export_seen: boolean
+          tour_history_seen: boolean
           tour_personalize_seen: boolean
           tour_planning_seen: boolean
           trial_access_granted: boolean
@@ -411,6 +415,7 @@ export type Database = {
           display_name?: string | null
           fs_all_done_at?: string | null
           fs_exported?: boolean
+          fs_history_visited?: boolean
           fs_personalized?: boolean
           goal_onboarded?: boolean
           greeting_message?: string | null
@@ -419,8 +424,11 @@ export type Database = {
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
+          tour_earnings_seen?: boolean
           tour_entries_seen?: boolean
+          tour_expenses_seen?: boolean
           tour_export_seen?: boolean
+          tour_history_seen?: boolean
           tour_personalize_seen?: boolean
           tour_planning_seen?: boolean
           trial_access_granted?: boolean
@@ -441,6 +449,7 @@ export type Database = {
           display_name?: string | null
           fs_all_done_at?: string | null
           fs_exported?: boolean
+          fs_history_visited?: boolean
           fs_personalized?: boolean
           goal_onboarded?: boolean
           greeting_message?: string | null
@@ -449,8 +458,11 @@ export type Database = {
           nickname?: string | null
           onboarded?: boolean
           planning_onboarded?: boolean
+          tour_earnings_seen?: boolean
           tour_entries_seen?: boolean
+          tour_expenses_seen?: boolean
           tour_export_seen?: boolean
+          tour_history_seen?: boolean
           tour_personalize_seen?: boolean
           tour_planning_seen?: boolean
           trial_access_granted?: boolean

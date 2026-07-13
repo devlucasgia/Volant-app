@@ -1,168 +1,146 @@
+## Objetivo
 
-# Sprint — Tours interativos de Novo ganho e Novo gasto + reorganização dos Primeiros passos
+1. Separar "Lançar registros" em duas tarefas independentes de Primeiros Passos: **Ganhos** e **Gastos**.
+2. Adicionar tarefa nova: **Histórico** (visitar a tela pelo menos uma vez).
+3. Reordenar Primeiros Passos para: Ganhos → Gastos → Histórico → Planejamento → Exportar → Personalizar.
+4. Redesenhar dois tours interativos e detalhados que **guiam o usuário passo a passo pelas funções reais** do formulário (horas, KM, valores, adicionar plataforma, salvar, e interagir com o herói/seção "Por gastos" da Home).
+5. Manter o visual atual (glow pulsante nos alvos dentro do drawer, spotlight nos alvos da Home) e garantir que o tooltip **nunca cubra** o campo que o usuário precisa preencher/ler.
 
-Objetivo: o usuário aprende de fato o app, campo a campo, dentro do drawer, e vê o resultado aparecer na Home antes de terminar. Histórico entra como task nos Primeiros passos (o tour dele fica pra sprint futura).
-
----
-
-## 1) Primeiros passos — nova estrutura
-
-### Ordem final (6 tasks)
-
-1. Aprender a registrar ganhos
-2. Aprender a registrar gastos
-3. Aprender sobre histórico
-4. Montar seu Planejamento Inteligente
-5. Exportar um relatório
-6. Personalizar a Home
-
-### Como cada task é considerada concluída
-
-| Task | Regra |
-|---|---|
-| Ganho | tour `earnings` visto **ou** já existe entry `type=earning` |
-| Gasto | tour `expenses` visto **ou** já existe entry `type=expense` |
-| Histórico | usuário visitou `/historico` (nova flag `fs_history_visited`) |
-| Planejamento | `settings.planningStatus === "configured"` (igual hoje) |
-| Exportar | `fs_exported` (igual hoje) |
-| Personalizar | `fs_personalized` (igual hoje) |
-
-Isso separa ganho de gasto (hoje contam como uma coisa só) e garante que só clicar em "Salvar" durante o tour já marca a task, sem precisar de segunda passada.
-
-### Migração banco (Lovable Cloud)
-
-- Adicionar em `profiles`:
-  - `fs_history_visited boolean default false`
-  - `tour_earnings_seen boolean default false`
-  - `tour_expenses_seen boolean default false`
-  - `tour_history_seen boolean default false` (reservado; sem tour ainda)
-- Manter `tour_entries_seen` (legado) — evita perder o estado de quem já viu o tour antigo.
+Nenhuma tabela nova. Só colunas novas em `profiles` para os flags dos novos tours e da tarefa "Histórico".
 
 ---
 
-## 2) Tour de Novo ganho (interativo, dentro do drawer)
+## 1) Backend — migração leve
 
-Passos (o balão nunca cobre o campo — ancoragem `top` quando o campo está na metade de baixo, `bottom` quando está no topo do drawer):
+Uma migração adiciona ao `profiles`:
 
-1. **Home — FAB `+`** · glow no botão · avança quando abre menu radial.
-2. **Menu radial — "Novo ganho"** · glow no chip · avança ao clicar (abre drawer).
-3. **Horas trabalhadas** · balão "Comece pelas horas rodadas" · glow no `HoursWheel` · **Próximo**.
-4. **Quilometragem** · balão "Agora o KM do dia — Total ou Inicial/Final" · glow no bloco de KM · **Próximo**.
-5. **Valores e corridas** · balão "Digita quanto recebeu em cada app e o número de corridas" · glow no card da primeira plataforma · **Próximo**.
-6. **Adicionar plataforma** · balão "Rodou em mais de um app? Toca aqui pra somar outra plataforma" · glow no botão "Adicionar plataforma" · **Próximo** (não obriga adicionar).
-7. **Salvar** · balão "Tá pronto. Salva pra ver aparecer na Home" · glow no botão Salvar · avança ao salvar (`notifyAction("saved-earning")`).
-8. **Home — Herói (Líquido/Bruto)** · com o drawer fechado, glow no valor do herói · balão "Seu ganho já entrou aqui. Toca em Bruto/Líquido pra alternar a visão" · avança ao tocar no toggle (`notifyAction("toggled-hero")`).
-9. **Conclusão** · balão central "Prontinho! É assim que seus números crescem." · botão **Concluir**.
+- `fs_history_visited boolean not null default false`
+- `tour_earnings_seen boolean not null default false`
+- `tour_expenses_seen boolean not null default false`
+- `tour_history_seen boolean not null default false` (fica pronto pra Sprint futura)
 
-### Novos `data-tour` no EntryDrawer
+Sem alterar RLS, GRANT ou policies — a tabela `profiles` já as tem.
 
-- `entry-hours` → wrapper das horas (linhas 490-493)
-- `entry-km` → wrapper do bloco KM (linhas 495-540)
-- `entry-earning-value` (já existe) → reutilizado no passo 5
-- `entry-add-platform` → `SelectTrigger` do "Adicionar plataforma" (linha 583)
-- `entry-save` (já existe) → passo 7
-
-### Novos `data-tour` na Home (`Dashboard.tsx`)
-
-- `hero-metric` → card do valor herói (líquido/bruto)
-- `hero-toggle` → botão que alterna Líquido↔Bruto (dispara `notifyAction("toggled-hero")`)
+Não removemos `tour_entries_seen` / `entries` do modelo lógico agora (evita quebrar reset antigo); apenas paramos de usar.
 
 ---
 
-## 3) Tour de Novo gasto
+## 2) Primeiros Passos — nova estrutura
 
-1. **Home — FAB `+`** · glow · avança ao abrir menu.
-2. **Menu — "Novo gasto"** · glow no chip vermelho · avança ao abrir drawer.
-3. **Categoria de gasto** · balão "Escolhe a categoria — combustível, comida, manutenção…" · glow no Select de categoria · **Próximo**.
-4. **Valor** · balão "Digita quanto saiu do bolso" · glow no card vermelho do valor · **Próximo**.
-5. **Salvar** · glow no botão Salvar · avança ao salvar (`saved-expense`).
-6. **Home — "Por gastos"** · glow na seção de gastos por categoria · balão "Teu gasto entrou aqui, agrupado por categoria" · **Concluir**.
+`src/lib/firstSteps.ts`:
 
-### Novos `data-tour`
+- `FirstStepKey`: `"earnings" | "expenses" | "history" | "planning" | "export" | "personalize"`.
+- `FirstStepTask` ganha novos `action`: `"startEarningsTour"`, `"startExpensesTour"`.
+- `computeFirstSteps({ hasEarning, hasExpense, historyVisited, planningStatus, fsExported, fsPersonalized })` retorna, **nesta ordem**:
 
-- `entry-expense-category` → wrapper do Select de categoria no drawer
-- `entry-expense-value` (já existe) → passo 4
-- `home-expenses-section` → container do card "Por Gastos" no Dashboard
+  1. **Aprender a registrar ganhos** — done quando `hasEarning === true`. Action: `startEarningsTour`.
+  2. **Aprender a registrar gastos** — done quando `hasExpense === true`. Action: `startExpensesTour`.
+  3. **Aprender sobre o histórico** — done quando `fs_history_visited === true`. Rota: `/historico`.
+  4. **Montar seu Planejamento Inteligente** — done quando `planningStatus === "configured"`. Rota: `/ajustes/planejamento`.
+  5. **Exportar um relatório** — done quando `fs_exported === true`. Rota: `/relatorios`.
+  6. **Personalizar a Home** — done quando `fs_personalized === true`. Rota: `/ajustes/personalizacao/cards`.
 
----
+`src/hooks/useFirstSteps.ts`:
 
-## 4) Motor do tour — ajustes
+- Passa a ler também `fs_history_visited` e a expor `markHistoryVisited`.
+- Recalcula `hasEarning`/`hasExpense` a partir de `entries`.
+- Mantém o `CustomEvent("volant:first-steps-changed")` pra sincronizar entre telas.
 
-Arquivo: `src/context/TourContext.tsx`
+`src/components/firstSteps/FirstStepsSheet.tsx`:
 
-- Expandir `TourId`: `"earnings" | "expenses" | "planning" | "personalize" | "export" | "history"`.
-- `flagColumnFor` mapeia:
-  - earnings → `tour_earnings_seen`
-  - expenses → `tour_expenses_seen`
-  - history → `tour_history_seen` (só reservado)
-  - planning, personalize, export → como hoje.
-- Leitura defensiva de `tour_entries_seen`: se `true`, não roda earnings nem expenses (usuário antigo que já viu o tour unificado não é bombardeado).
+- Ao clicar numa task pendente, além de rota/`openEntryDrawer`, trata `action === "startEarningsTour" | "startExpensesTour"`: fecha o sheet, navega pra `/app` (se necessário) e chama `startTour("earnings", …)` / `startTour("expenses", …)` do `useTour`.
 
-Arquivo: `src/components/tour/TourOverlay.tsx` — sem mudança visual, três modos (spotlight/glow/none) permanecem.
+`src/pages/History.tsx`:
 
----
+- Em `useEffect` de montagem, chama `markHistoryVisited()` (idempotente — só grava se ainda `false`).
 
-## 5) Disparo dos tours na Home
+`src/pages/Settings.tsx`:
 
-Arquivo: `src/pages/Dashboard.tsx`
-
-Substituir o disparo único de `entries` por lógica sequencial:
-
-```text
-se task "ganhos" pendente → dispara tour "earnings"
-senão se task "gastos" pendente → dispara tour "expenses"
-```
-
-Delay de 800ms mantido. Só um tour por vez (guard `activeTour` já existe no context).
+- Botão "Usuário novo (reset)" passa a limpar também:
+  - `fs_history_visited: false`
+  - `tour_earnings_seen: false`, `tour_expenses_seen: false`, `tour_history_seen: false`
+  - Mantém os flags antigos por retrocompatibilidade.
 
 ---
 
-## 6) Continuidade após salvar (drawer → Home)
+## 3) Motor do tour
 
-O tour não pode morrer quando o drawer fecha. Fluxo:
+`src/context/TourContext.tsx`:
 
-1. Usuário toca Salvar → drawer chama `notifyAction("saved-earning")` (já existe) → `onOpenChange(false)`.
-2. O passo 7 é `advance: "action"` → context avança pro passo 8 automaticamente.
-3. Passo 8 tem `target: '[data-tour="hero-metric"]'` na Home. O `useTargetRect` já faz polling por 3s — tempo de sobra pra Home reconciliar.
-4. Passo 8 avança em `notifyAction("toggled-hero")`, disparado pelo botão de troca Líquido/Bruto (Dashboard).
+- `TourId` expande para: `"earnings" | "expenses" | "history" | "planning" | "personalize" | "export"` (mantém `entries` como alias temporário pra não quebrar imports).
+- `flagColumnFor` mapeia corretamente para as novas colunas.
+- Cache inicial de flags inclui as novas colunas.
+- Sem mudança na assinatura de `startTour` / `notifyAction` / `next` / `skip`.
 
-Mesma mecânica pra gasto (passo 5 → 6, alvo `home-expenses-section`).
+`src/components/tour/TourOverlay.tsx`:
 
----
-
-## 7) Task "Histórico" (sem tour ainda)
-
-- Marca automática: no `mount` de `src/pages/History.tsx`, se `fs_history_visited === false`, faz update no `profiles` e dispara `volant:first-steps-changed`.
-- No `FirstStepsSheet`, task com `route: "/historico"` (comportamento padrão já existe).
-
-Nada de tour agora — sprint futura.
+- **Anti-sobreposição**: quando `mode === "glow"` (alvo dentro do drawer), o Popover já usa `collisionPadding` — reforçamos usando `placement: step.placement ?? "bottom"` e `sideOffset={14}` pra o tooltip sempre ficar acima ou abaixo do campo, nunca por cima. Se o alvo for um input alto (horas, KM), forçamos `placement="bottom"` nos steps do script.
+- Adicionamos um botão "Voltar" discreto (só aparece quando `currentStepIndex > 0` e o step anterior era `advance: "next"` — evita voltar por cima de ações já cumpridas).
+- Mantém o `tour-glow-pulse` já existente no `index.css`.
 
 ---
 
-## 8) Reset de "Usuário novo (reset)"
+## 4) Tour de **Ganhos** (`src/lib/tours/earningsTour.ts`)
 
-Arquivo: `src/pages/Settings.tsx` — incluir as novas flags na limpeza:
+9 passos, todos com placement calibrado pra não cobrir o campo:
 
-- `tour_earnings_seen`, `tour_expenses_seen`, `tour_history_seen`, `fs_history_visited` → false/null.
-- Manter `tour_entries_seen` no reset (limpa junto, pra QA voltar do zero).
+1. **Home / FAB** — alvo `[data-tour="fab-new-entry"]`, spotlight. "Bora registrar seu primeiro ganho — toca no +". `advance: action / open-fab-menu`.
+2. **Menu radial** — alvo `[data-tour="fab-earning"]`. "Escolhe Novo ganho". `advance: action / open-entry-drawer`.
+3. **Horas trabalhadas** — alvo novo `[data-tour="entry-hours"]` (envolve o `HoursWheel`), glow, placement `bottom`. "Quantas horas você rodou hoje. Gira a roda e toque em Próximo." `advance: next`.
+4. **KM do dia** — alvo novo `[data-tour="entry-km"]` (bloco que engloba o `Segmented` + `NumberField`), placement `bottom`. "Registra a quilometragem do dia — total ou início/fim." `advance: next`.
+5. **Valores e corridas por app** — alvo já existente `[data-tour="entry-earning-value"]` (bloco de plataformas), placement `top`. "Preencha valor e corridas em cada app usado. Você pode somar quantos precisar." `advance: next`.
+6. **Adicionar plataforma** — alvo novo `[data-tour="entry-add-platform"]` no `SelectTrigger` "Adicionar plataforma", placement `top`. "Rodou em outro app? Toca aqui pra somar (ou criar um novo)." `advance: next`.
+7. **Salvar** — alvo `[data-tour="entry-save"]`, placement `top`. "Confere e toca em Salvar." `advance: action / saved-earning`.
+8. **Herói da Home** — alvo `[data-tour="hero-metric"]` (o card do lucro líquido), spotlight, placement `bottom`. "Seu ganho já entrou aqui. Toca no chip pra alternar Bruto ↔ Líquido." `advance: action / toggle-hero`.
+9. **Concluir** — sem target (mode `none`, tooltip central). "Prontinho! Você registrou seu ganho e viu o impacto na Home." `advance: next`.
+
+Novos `data-tour` no `EntryDrawer.tsx`:
+- `data-tour="entry-hours"` no wrapper do `HoursWheel`.
+- `data-tour="entry-km"` no wrapper do bloco de quilometragem.
+- `data-tour="entry-add-platform"` no `SelectTrigger` "Adicionar plataforma".
+
+Novos `data-tour` no `Dashboard.tsx`:
+- `data-tour="hero-metric"` no card do herói.
+- `data-tour="hero-toggle"` no botão do chip Bruto/Líquido.
+- Toggle dispara `notifyAction("toggle-hero")`.
 
 ---
 
-## 9) Copy dos balões (PT-BR, curto, direto)
+## 5) Tour de **Gastos** (`src/lib/tours/expensesTour.ts`)
 
-Tom Volant: informal-profissional, sem exclamação exagerada. Sempre 1 frase de contexto + 1 ação clara.
+6 passos:
+
+1. **Home / FAB** — `[data-tour="fab-new-entry"]`. "Agora um gasto." `advance: action / open-fab-menu`.
+2. **Menu radial** — `[data-tour="fab-expense"]`. "Escolhe Novo gasto." `advance: action / open-entry-drawer`.
+3. **Categoria** — alvo novo `[data-tour="entry-expense-category"]` no wrapper do `Select` de categoria, glow, placement `bottom`. "Escolhe a categoria (combustível, comida, manutenção…)." `advance: next`.
+4. **Valor do gasto** — alvo já existente `[data-tour="entry-expense-value"]`, placement `top`. "Digita quanto saiu do bolso." `advance: next`.
+5. **Salvar** — `[data-tour="entry-save"]`. "Toca em Salvar pra manter seu lucro real certinho." `advance: action / saved-expense`.
+6. **Por gastos na Home** — alvo novo `[data-tour="home-expenses-section"]` (envolve a seção "Por gastos"), spotlight, placement `top`. "Seu gasto entrou aqui — vê como fica distribuído por categoria." `advance: next`.
+
+Novos `data-tour` no `EntryDrawer.tsx`:
+- `data-tour="entry-expense-category"` no wrapper do `Select` de categoria.
+
+Novos `data-tour` no `Dashboard.tsx`:
+- `data-tour="home-expenses-section"` no bloco "Por gastos" (seção `byExpense`).
 
 ---
 
-## 10) Critérios de validação
+## 6) Disparo automático dos tours
 
-1. Reset "Usuário novo" → Home dispara tour de ganhos automaticamente.
-2. Tour de ganhos: 9 passos, cada campo do drawer é destacado sem sobrepor input, e ao salvar o tour continua na Home mostrando o herói e o toggle.
-3. Trocar Líquido↔Bruto avança o passo 8; "Concluir" fecha o tour.
-4. Task "Ganho" marca concluída.
-5. Novo disparo automático inicia tour de gastos (6 passos, mesma mecânica).
-6. Task "Gasto" marca concluída após salvar.
-7. Visitar `/historico` marca task "Histórico" (sem tour).
-8. Primeiros passos exibe 6 tasks na ordem: Ganhos, Gastos, Histórico, Planejamento, Exportar, Personalização.
-9. Balão nunca cobre o campo ativo em nenhum passo (verificar iPhone SE-width e Pixel-width).
-10. `prefers-reduced-motion`: glow estático, sem pulse.
+`src/pages/Dashboard.tsx`:
+
+- Substitui o único gatilho de `entriesTourSteps` por uma cascata:
+  - Se **ganhos** ainda não foi visto E a tarefa está pendente → `startTour("earnings", earningsTourSteps)` depois de 800ms.
+  - Senão, se **gastos** ainda não foi visto E pendente → `startTour("expenses", expensesTourSteps)`.
+- Só um tour ativo por vez (o `TourContext` já bloqueia).
+- Também aceita disparo manual via `FirstStepsSheet` (clique em tarefa).
+
+---
+
+## 7) Verificação após implementação
+
+- Reset "Usuário novo" → recarrega → aparece tour de Ganhos na Home.
+- Cumprir o tour de Ganhos até o passo 8 (toggle hero) → passo 9 aparece central → concluir → tour de Gastos dispara na próxima renderização.
+- Visitar `/historico` marca a task Histórico como feita e sincroniza entre telas.
+- Nenhum tooltip cobre input de horas, KM, valor ou botão Salvar (testar em viewport 375×812).
+- Build passa; sem regressão em `entriesTour.ts` (mantido só como shim que re-exporta `earningsTourSteps` pra evitar quebra de import antigo).

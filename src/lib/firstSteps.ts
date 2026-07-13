@@ -1,14 +1,25 @@
 import type { Entry } from "@/types";
 import type { PlanningStatus } from "@/types";
 
-export type FirstStepKey = "planning" | "entries" | "personalize" | "export";
+export type FirstStepKey =
+  | "earnings"
+  | "expenses"
+  | "history"
+  | "planning"
+  | "export"
+  | "personalize";
+
+export type FirstStepAction =
+  | "openEntryDrawer"
+  | "startEarningsTour"
+  | "startExpensesTour";
 
 export interface FirstStepTask {
   key: FirstStepKey;
   label: string;
   done: boolean;
   route?: string;
-  action?: "openEntryDrawer";
+  action?: FirstStepAction;
 }
 
 export interface FirstStepsInput {
@@ -16,6 +27,7 @@ export interface FirstStepsInput {
   entries: Entry[];
   fsPersonalized: boolean;
   fsExported: boolean;
+  fsHistoryVisited: boolean;
 }
 
 export function computeFirstSteps(input: FirstStepsInput): FirstStepTask[] {
@@ -24,28 +36,40 @@ export function computeFirstSteps(input: FirstStepsInput): FirstStepTask[] {
 
   return [
     {
+      key: "earnings",
+      label: "Aprender a registrar ganhos",
+      done: hasEarning,
+      action: "startEarningsTour",
+    },
+    {
+      key: "expenses",
+      label: "Aprender a registrar gastos",
+      done: hasExpense,
+      action: "startExpensesTour",
+    },
+    {
+      key: "history",
+      label: "Aprender sobre o histórico",
+      done: input.fsHistoryVisited,
+      route: "/historico",
+    },
+    {
       key: "planning",
       label: "Montar seu Planejamento Inteligente",
       done: input.planningStatus === "configured",
       route: "/ajustes/planejamento",
     },
     {
-      key: "entries",
-      label: "Lançar seus primeiros registros",
-      done: hasEarning && hasExpense,
-      action: "openEntryDrawer",
+      key: "export",
+      label: "Exportar um relatório",
+      done: input.fsExported,
+      route: "/relatorios",
     },
     {
       key: "personalize",
       label: "Personalizar a Home",
       done: input.fsPersonalized,
       route: "/ajustes/personalizacao/cards",
-    },
-    {
-      key: "export",
-      label: "Exportar um relatório",
-      done: input.fsExported,
-      route: "/relatorios",
     },
   ];
 }

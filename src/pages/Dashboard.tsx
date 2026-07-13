@@ -41,7 +41,8 @@ import { useFirstSteps } from "@/hooks/useFirstSteps";
 import { FirstStepsStrip } from "@/components/firstSteps/FirstStepsStrip";
 import { FirstStepsSheet } from "@/components/firstSteps/FirstStepsSheet";
 import { useTour } from "@/context/TourContext";
-import { entriesTourSteps } from "@/lib/tours/entriesTour";
+import { earningsTourSteps } from "@/lib/tours/earningsTour";
+import { expensesTourSteps } from "@/lib/tours/expensesTour";
 
 
 export default function Dashboard() {
@@ -94,18 +95,27 @@ export default function Dashboard() {
 
 
 
-  const { startTour } = useTour();
-  // Dispara o tour de registros na Home apenas se ainda não foi visto e a tarefa está pendente.
+  const { startTour, notifyAction } = useTour();
+  // Dispara os tours de Ganhos/Gastos em cascata, um por vez, respeitando pendências.
   useEffect(() => {
     if (dataLoading || firstSteps.loading) return;
-    const entriesTask = firstSteps.tasks.find((t) => t.key === "entries");
-    if (!entriesTask || entriesTask.done) return;
+    const earningsTask = firstSteps.tasks.find((t) => t.key === "earnings");
+    const expensesTask = firstSteps.tasks.find((t) => t.key === "expenses");
     const id = window.setTimeout(() => {
-      startTour("entries", entriesTourSteps);
+      if (earningsTask && !earningsTask.done) {
+        startTour("earnings", earningsTourSteps);
+      } else if (expensesTask && !expensesTask.done) {
+        startTour("expenses", expensesTourSteps);
+      }
     }, 800);
     return () => window.clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dataLoading, firstSteps.loading, firstSteps.tasks.find((t) => t.key === "entries")?.done]);
+  }, [
+    dataLoading,
+    firstSteps.loading,
+    firstSteps.tasks.find((t) => t.key === "earnings")?.done,
+    firstSteps.tasks.find((t) => t.key === "expenses")?.done,
+  ]);
 
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
@@ -748,7 +758,10 @@ export default function Dashboard() {
     byExpense: widgets.byExpense ? (() => {
       const insideUnified = Boolean(widgets.byApp);
       const block = (
-        <div className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}>
+        <div
+          data-tour="home-expenses-section"
+          className={insideUnified ? "" : "rounded-2xl border border-border bg-card p-4"}
+        >
           {insideUnified && (
             <div className="mb-2 text-[10px] font-medium text-muted-foreground">Por gastos</div>
           )}
@@ -1076,9 +1089,11 @@ export default function Dashboard() {
               ];
           const toggleHero = () => {
             setHeroView(showGross ? "net" : "gross");
+            notifyAction("toggle-hero");
           };
           return (
             <div
+              data-tour="hero-metric"
               role="button"
               tabIndex={0}
               aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
@@ -1111,6 +1126,7 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
+                      data-tour="hero-toggle"
                       aria-label={`Alternar para ${showGross ? "Lucro líquido" : "Ganho bruto"}`}
                       onClick={(e) => { e.stopPropagation(); toggleHero(); }}
                       className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/[0.14] bg-white/[0.09] px-2.5 py-1.5 text-[10px] font-semibold text-foreground transition-colors hover:bg-white/[0.14] active:scale-95"

@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Check, ChevronRight } from "lucide-react";
 import {
   Drawer,
@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import { useUI } from "@/context/UIContext";
+import { useTour } from "@/context/TourContext";
+import { earningsTourSteps } from "@/lib/tours/earningsTour";
+import { expensesTourSteps } from "@/lib/tours/expensesTour";
 import type { FirstStepTask } from "@/lib/firstSteps";
 
 export interface FirstStepsSheetProps {
@@ -21,7 +24,9 @@ export interface FirstStepsSheetProps {
 
 export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: FirstStepsSheetProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { openDrawer } = useUI();
+  const { startTour } = useTour();
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   const handleTaskClick = (task: FirstStepTask) => {
@@ -31,6 +36,23 @@ export function FirstStepsSheet({ open, onOpenChange, tasks, done, total }: Firs
     setTimeout(() => {
       if (task.action === "openEntryDrawer") {
         openDrawer();
+        return;
+      }
+      if (task.action === "startEarningsTour" || task.action === "startExpensesTour") {
+        const run = () => {
+          if (task.action === "startEarningsTour") {
+            startTour("earnings", earningsTourSteps);
+          } else {
+            startTour("expenses", expensesTourSteps);
+          }
+        };
+        if (location.pathname !== "/app") {
+          navigate("/app");
+          // aguarda a Home montar
+          window.setTimeout(run, 500);
+        } else {
+          window.setTimeout(run, 200);
+        }
         return;
       }
       if (task.route) navigate(task.route, { state: { returnTo: "/app" } });

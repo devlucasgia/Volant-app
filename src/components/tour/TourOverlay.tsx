@@ -80,7 +80,7 @@ function useTargetRect(selector: string | null): Rect | null {
 }
 
 export function TourOverlay() {
-  const { activeTour, currentStepIndex, steps, next, skip } = useTour();
+  const { activeTour, currentStepIndex, steps, next, prev, skip } = useTour();
   const step = activeTour ? steps[currentStepIndex] ?? null : null;
   const rect = useTargetRect(step?.target ?? null);
 
@@ -88,6 +88,10 @@ export function TourOverlay() {
 
   const isLast = currentStepIndex >= steps.length - 1;
   const showNext = step.advance === "next";
+  const prevStep = currentStepIndex > 0 ? steps[currentStepIndex - 1] : null;
+  // Só permite "Voltar" quando o passo anterior era "next" (informativo).
+  // Voltar por cima de uma ação já cumprida (drawer aberto, salvo etc.) quebra o tour.
+  const showPrev = showNext && !!prevStep && prevStep.advance === "next";
 
   const targetEl = rect ? document.querySelector(step.target) : null;
   const insideDrawer = !!targetEl?.closest(
@@ -173,7 +177,7 @@ export function TourOverlay() {
           </div>
           <p className="text-[13px] leading-snug text-muted-foreground">{step.body}</p>
 
-          <div className="mt-3 flex items-center justify-end gap-3">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={skip}
@@ -181,11 +185,23 @@ export function TourOverlay() {
             >
               Pular
             </button>
-            {showNext && (
-              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-                {isLast ? "Concluir" : "Próximo"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {showPrev && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={prev}
+                  className="h-8 rounded-full px-3 text-[12px]"
+                >
+                  Voltar
+                </Button>
+              )}
+              {showNext && (
+                <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+                  {isLast ? "Concluir" : "Próximo"}
+                </Button>
+              )}
+            </div>
           </div>
         </PopoverContent>
       </Popover>
