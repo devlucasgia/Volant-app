@@ -147,7 +147,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
     setSteps([]);
     setCurrentStepIndex(0);
     void markSeen(id);
+    // Emite evento pra que a Home encadeie ganho→gasto sem esperar navegação.
+    try {
+      window.dispatchEvent(new CustomEvent("volant:tour-finished", { detail: { id } }));
+    } catch { /* noop */ }
   }, [activeTour, markSeen]);
+
 
   const next = useCallback(() => {
     if (!activeTour) return;
