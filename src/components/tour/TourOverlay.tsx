@@ -25,6 +25,7 @@ function useTargetRect(selector: string | null): Rect | null {
     }
     let cancelled = false;
     let raf = 0;
+    let scrolled = false;
     const started = Date.now();
 
     const measure = (el: Element) => {
@@ -41,6 +42,17 @@ function useTargetRect(selector: string | null): Rect | null {
       if (cancelled) return;
       const el = document.querySelector(selector);
       if (el) {
+        if (!scrolled) {
+          scrolled = true;
+          try {
+            (el as HTMLElement).scrollIntoView({ block: "center", behavior: "smooth" });
+          } catch {
+            /* noop */
+          }
+          window.setTimeout(() => {
+            if (!cancelled) measure(el);
+          }, 380);
+        }
         measure(el);
         return;
       }
@@ -51,6 +63,7 @@ function useTargetRect(selector: string | null): Rect | null {
       window.setTimeout(tick, POLL_INTERVAL_MS);
     };
     tick();
+
 
     const onResizeOrScroll = () => {
       if (cancelled) return;
@@ -139,11 +152,19 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Anchor: no rect quando temos alvo; no centro da viewport pro modo "none".
+  // Anchor: no modo "glow" (dentro de drawer) fixamos o balão perto do topo
+  // pra não sobrepor o campo/formulário conforme o usuário rola.
+  // Em spotlight, ancoramos no alvo. Em "none", centro da tela.
   const anchorStyle =
     mode === "none" || !rect
-      ? { top: "50vh", left: "50vw", width: 0, height: 0 } as const
-      : { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+      ? ({ top: "50vh", left: "50vw", width: 0, height: 0 } as const)
+      : mode === "glow"
+        ? ({ top: 24, left: "50vw", width: 0, height: 0 } as const)
+        : { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+
+  const popoverSide =
+    mode === "none" ? "bottom" : mode === "glow" ? "bottom" : (step.placement ?? "top");
+  const popoverSideOffset = mode === "none" ? 0 : mode === "glow" ? 8 : 12;
 
   return createPortal(
     <div
@@ -172,9 +193,10 @@ export function TourOverlay() {
           <div className="pointer-events-none absolute" style={anchorStyle} />
         </PopoverAnchor>
         <PopoverContent
-          side={mode === "none" ? "bottom" : (step.placement ?? "top")}
+          side={popoverSide}
           align="center"
-          sideOffset={mode === "none" ? 0 : 12}
+          sideOffset={popoverSideOffset}
+
           collisionPadding={16}
           className="pointer-events-auto z-[9999] w-[min(88vw,320px)] rounded-2xl border border-border bg-card p-4 shadow-elevated"
           onOpenAutoFocus={(e) => e.preventDefault()}
