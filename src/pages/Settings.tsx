@@ -850,10 +850,6 @@ export default function SettingsPage() {
                             .from("profiles")
                             .update({
                               onboarded: false,
-                              car_onboarded: false,
-                              goal_onboarded: false,
-                              costs_onboarded: false,
-                              planning_onboarded: false,
                               fs_personalized: false,
                               fs_exported: false,
                               fs_all_done_at: null,
