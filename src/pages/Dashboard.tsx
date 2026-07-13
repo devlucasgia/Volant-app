@@ -148,6 +148,20 @@ export default function Dashboard() {
     firstSteps.tasks.find((t) => t.key === "expenses")?.done,
   ]);
 
+  // Encadeia ganho → gasto assim que o tour de ganhos termina, sem depender de navegação.
+  useEffect(() => {
+    const onFinished = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ id?: string }>).detail;
+      if (detail?.id !== "earnings") return;
+      window.setTimeout(() => {
+        void startTour("expenses", expensesTourSteps);
+      }, 500);
+    };
+    window.addEventListener("volant:tour-finished", onFinished);
+    return () => window.removeEventListener("volant:tour-finished", onFinished);
+  }, [startTour]);
+
+
   useEffect(() => {
     try { window.localStorage.setItem("volant.hideValues", hideValues ? "1" : "0"); } catch { /* ignore */ }
   }, [hideValues]);
