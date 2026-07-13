@@ -271,6 +271,29 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     setPlatforms([newRow(key)]);
     setAddedExtra(false);
   };
+
+  const notifyFilledHours = (next: number | null) => {
+    if ((next ?? 0) > 0) notifyAction("filled-hours");
+  };
+
+  const notifyFilledKm = (next: number | null, field: "total" | "start" | "end") => {
+    const nextTotal = field === "total" ? next : kmTotal;
+    const nextStart = field === "start" ? next : kmStart;
+    const nextEnd = field === "end" ? next : kmEnd;
+    const hasTotal = kmMode === "total" && (nextTotal ?? 0) > 0;
+    const hasRange = kmMode === "range" && nextStart != null && nextEnd != null && nextEnd > nextStart;
+    if (hasTotal || hasRange) notifyAction("filled-km");
+  };
+
+  const notifyFilledEarningValues = (nextPlatforms: PlatformRowData[]) => {
+    const hasValidRow = nextPlatforms.some((p) => (p.gross ?? 0) > 0 && (p.rides ?? 0) > 0);
+    if (hasValidRow) notifyAction("filled-earning-values");
+  };
+
+  const notifyFilledExpenseValue = (next: number | null) => {
+    if ((next ?? 0) > 0) notifyAction("filled-expense-value");
+  };
+
   const requestSwitchToSimple = (key: string) => {
     const hasContent = platforms.some((p) => (p.gross || 0) > 0 || (p.rides || 0) > 0);
     if (hasContent) setPendingSimpleKey(key);
@@ -490,7 +513,13 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                         {/* Horas */}
                         <div className="space-y-2" data-tour="entry-hours">
                           <Label className="text-xs">Horas trabalhadas</Label>
-                          <HoursWheel value={hours} onChange={setHours} />
+                          <HoursWheel
+                            value={hours}
+                            onChange={(v) => {
+                              setHours(v);
+                              notifyFilledHours(v);
+                            }}
+                          />
                         </div>
 
                         {/* Quilometragem */}
@@ -504,7 +533,14 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             size="sm"
                           />
                           {kmMode === "total" ? (
-                            <NumberField placeholder="Km rodados" value={kmTotal} onChange={setKmTotal} />
+                            <NumberField
+                              placeholder="Km rodados"
+                              value={kmTotal}
+                              onChange={(v) => {
+                                setKmTotal(v);
+                                notifyFilledKm(v, "total");
+                              }}
+                            />
                           ) : (
                             <>
                               <div className="grid grid-cols-2 gap-2">
@@ -513,7 +549,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                                     KM inicial {suggestedStartKm > 0 && (
                                       <button
                                         type="button"
-                                        onClick={() => setKmStart(suggestedStartKm)}
+                                          onClick={() => {
+                                            setKmStart(suggestedStartKm);
+                                            notifyFilledKm(suggestedStartKm, "start");
+                                          }}
                                         className="ml-1 font-medium text-primary hover:underline"
                                       >
                                         Usar {suggestedStartKm.toLocaleString("pt-BR")} km
@@ -523,12 +562,22 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                                   <NumberField
                                     placeholder={suggestedStartKm > 0 ? String(suggestedStartKm) : "Km inicial"}
                                     value={kmStart}
-                                    onChange={setKmStart}
+                                    onChange={(v) => {
+                                      setKmStart(v);
+                                      notifyFilledKm(v, "start");
+                                    }}
                                   />
                                 </div>
                                 <div className="space-y-1">
                                   <div className="text-[10px] text-muted-foreground">KM final</div>
-                                  <NumberField placeholder="Km final" value={kmEnd} onChange={setKmEnd} />
+                                  <NumberField
+                                    placeholder="Km final"
+                                    value={kmEnd}
+                                    onChange={(v) => {
+                                      setKmEnd(v);
+                                      notifyFilledKm(v, "end");
+                                    }}
+                                  />
                                 </div>
                               </div>
                               {liveKm !== null && liveKm > 0 && (
@@ -558,6 +607,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                               const arr = [...platforms];
                               arr[idx] = next;
                               setPlatforms(arr);
+                              notifyFilledEarningValues(arr);
                             }}
                             onRemove={() => {
                               setPlatforms(platforms.filter((_, i) => i !== idx));
@@ -569,20 +619,24 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                         <Select
                           onValueChange={(v) => {
                             if (v === "__new__") {
+                                notifyAction("used-add-platform");
                               setPendingAppend(true);
                               setPlatDialogOpen(true);
                               return;
                             }
                             if (simplePlatforms.some((p) => p.key === v)) {
+                                notifyAction("used-add-platform");
                               requestSwitchToSimple(v);
                               return;
                             }
                             setPlatforms([...platforms, newRow(v)]);
                             setAddedExtra(true);
+                              notifyAction("used-add-platform");
                           }}
                         >
                           <SelectTrigger
                             data-tour="entry-add-platform"
+                            onClick={() => notifyAction("used-add-platform")}
                             className={cn(
                               "flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-transparent px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-success hover:text-success hover:bg-success/5 focus:ring-0",
                               platforms.length === 1 && "animate-breath",
@@ -698,7 +752,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                       <Plus className="h-3 w-3" /> Nova categoria
                     </button>
                   </div>
-                  <Select value={category} onValueChange={(v) => setCategory(v as ExpenseCategory)}>
+                  <Select value={category} onValueChange={(v) => {
+                    setCategory(v as ExpenseCategory);
+                    notifyAction("selected-expense-category");
+                  }}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {expenseCategories.map((c) => (
@@ -732,7 +789,10 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     <NumberField
                       currency
                       value={amount}
-                      onChange={setAmount}
+                      onChange={(v) => {
+                        setAmount(v);
+                        notifyFilledExpenseValue(v);
+                      }}
                       className="h-14 border-0 bg-transparent text-center text-2xl font-bold text-destructive shadow-none focus-visible:ring-0 [&]:pl-2"
                     />
                   </div>
