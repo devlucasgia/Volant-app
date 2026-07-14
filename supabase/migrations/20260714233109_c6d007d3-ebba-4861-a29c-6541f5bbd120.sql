@@ -1,0 +1,1 @@
+DELETE FROM public.signup_notifications WHERE user_id='07609016-6c96-4897-a5fc-d318e1b4b845';
