@@ -154,6 +154,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const finish = useCallback(() => {
     if (!activeTour) return;
     const id = activeTour;
+    clearValidating();
     setActiveTour(null);
     setSteps([]);
     setCurrentStepIndex(0);
@@ -162,11 +163,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
     try {
       window.dispatchEvent(new CustomEvent("volant:tour-finished", { detail: { id } }));
     } catch { /* noop */ }
-  }, [activeTour, markSeen]);
+  }, [activeTour, markSeen, clearValidating]);
 
 
   const next = useCallback(() => {
     if (!activeTour) return;
+    clearValidating();
     setCurrentStepIndex((i) => {
       if (i + 1 >= steps.length) {
         // último passo → finaliza (usa timeout pra evitar setState em cascata).
@@ -175,11 +177,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
       }
       return i + 1;
     });
-  }, [activeTour, steps.length, finish]);
+  }, [activeTour, steps.length, finish, clearValidating]);
 
   const prev = useCallback(() => {
+    clearValidating();
     setCurrentStepIndex((i) => Math.max(0, i - 1));
-  }, []);
+  }, [clearValidating]);
 
   const skip = useCallback(() => {
     finish();
@@ -194,15 +197,21 @@ export function TourProvider({ children }: { children: ReactNode }) {
       const lockKey = `${activeTour}:${currentStepIndex}:${actionId}`;
       if (actionAdvanceLockRef.current === lockKey) return;
       actionAdvanceLockRef.current = lockKey;
-      // Avança com folga pra dar respiro visual e tempo do DOM da próxima etapa aparecer.
-      setTimeout(() => next(), 350);
+      // Mostra micro-feedback de validação no balão antes de avançar.
+      setValidating(true);
+      if (validateTimerRef.current) window.clearTimeout(validateTimerRef.current);
+      validateTimerRef.current = window.setTimeout(() => {
+        validateTimerRef.current = null;
+        setValidating(false);
+        next();
+      }, 1300);
     },
     [activeTour, steps, currentStepIndex, next],
   );
 
   const value = useMemo<TourContextValue>(
-    () => ({ activeTour, currentStepIndex, steps, startTour, next, prev, skip, finish, notifyAction }),
-    [activeTour, currentStepIndex, steps, startTour, next, prev, skip, finish, notifyAction],
+    () => ({ activeTour, currentStepIndex, steps, validating, startTour, next, prev, skip, finish, notifyAction }),
+    [activeTour, currentStepIndex, steps, validating, startTour, next, prev, skip, finish, notifyAction],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
