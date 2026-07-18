@@ -66,6 +66,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const seenCacheRef = useRef<Record<string, boolean>>({});
   const actionAdvanceLockRef = useRef<string | null>(null);
   const validateTimerRef = useRef<number | null>(null);
+  // Espelha activeTour em ref pra evitar stale closure no startTour (encadeamento
+  // ganho→gasto: quando o listener chama startTour("expenses") ~500ms após o
+  // finish, o valor do state atual precisa ser lido, não o congelado no fecho).
+  const activeTourRef = useRef<TourId | null>(null);
+  useEffect(() => { activeTourRef.current = activeTour; }, [activeTour]);
+
 
   const clearValidating = useCallback(() => {
     if (validateTimerRef.current) {
@@ -135,7 +141,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const startTour = useCallback<TourContextValue["startTour"]>(
     async (id, tourSteps) => {
       if (!user) return;
-      if (activeTour) return;
+      if (activeTourRef.current) return;
       const col = flagColumnFor(id);
       // Fallback: caso o cache ainda não tenha carregado, consulta uma vez.
       if (seenCacheRef.current[col] === undefined) {
@@ -155,8 +161,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setCurrentStepIndex(0);
       setActiveTour(id);
     },
-    [user, activeTour],
+    [user],
   );
+
 
   const finish = useCallback(() => {
     if (!activeTour) return;

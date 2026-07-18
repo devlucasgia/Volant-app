@@ -31,6 +31,10 @@ function useTargetRect(selector: string | null): Rect | null {
     let cancelled = false;
     let raf = 0;
     let scrolled = false;
+    // Só passa a valer medições depois que o alvo assentou (380ms após 1ª
+    // detecção). Antes disso, o elemento pode existir em posição transitória
+    // (drawer animando), e medir agora pinta o glow no lugar errado.
+    let settled = false;
     const started = Date.now();
 
     const measure = (el: Element) => {
@@ -55,10 +59,13 @@ function useTargetRect(selector: string | null): Rect | null {
             /* noop */
           }
           window.setTimeout(() => {
-            if (!cancelled) measure(el);
+            if (cancelled) return;
+            settled = true;
+            measure(el);
           }, 380);
+          return; // NÃO mede imediato — evita capturar posição transitória.
         }
-        measure(el);
+        if (settled) measure(el);
         return;
       }
       if (Date.now() - started > POLL_TIMEOUT_MS) {
@@ -71,7 +78,7 @@ function useTargetRect(selector: string | null): Rect | null {
 
 
     const onResizeOrScroll = () => {
-      if (cancelled) return;
+      if (cancelled || !settled) return;
       const el = document.querySelector(selector);
       if (!el) return;
       cancelAnimationFrame(raf);
@@ -81,6 +88,7 @@ function useTargetRect(selector: string | null): Rect | null {
     window.addEventListener("scroll", onResizeOrScroll, true);
 
     const interval = window.setInterval(() => {
+      if (!settled) return;
       const el = document.querySelector(selector);
       if (el) measure(el);
     }, 300);
@@ -96,6 +104,7 @@ function useTargetRect(selector: string | null): Rect | null {
 
   return rect;
 }
+
 
 export function TourOverlay() {
   const { activeTour, currentStepIndex, steps, validating, next, prev, skip } = useTour();
