@@ -80,32 +80,39 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, [activeTour, currentStepIndex]);
 
   // Cache tour_*_seen flags for the current user (avoid re-fetching per start).
-  useEffect(() => {
+  const refetchSeenFlags = useCallback(async () => {
     if (!user) {
       seenCacheRef.current = {};
       return;
     }
-    let cancelled = false;
-    (async () => {
-      const { data } = await (supabase.from("profiles") as any)
-        .select(
-          "tour_entries_seen, tour_earnings_seen, tour_expenses_seen, tour_history_seen, tour_planning_seen, tour_personalize_seen, tour_export_seen",
-        )
-        .eq("id", user.id)
-        .maybeSingle();
-      if (cancelled || !data) return;
-      seenCacheRef.current = {
-        tour_entries_seen: Boolean(data.tour_entries_seen),
-        tour_earnings_seen: Boolean(data.tour_earnings_seen),
-        tour_expenses_seen: Boolean(data.tour_expenses_seen),
-        tour_history_seen: Boolean(data.tour_history_seen),
-        tour_planning_seen: Boolean(data.tour_planning_seen),
-        tour_personalize_seen: Boolean(data.tour_personalize_seen),
-        tour_export_seen: Boolean(data.tour_export_seen),
-      };
-    })();
-    return () => { cancelled = true; };
+    const { data } = await (supabase.from("profiles") as any)
+      .select(
+        "tour_entries_seen, tour_earnings_seen, tour_expenses_seen, tour_history_seen, tour_planning_seen, tour_personalize_seen, tour_export_seen",
+      )
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!data) return;
+    seenCacheRef.current = {
+      tour_entries_seen: Boolean(data.tour_entries_seen),
+      tour_earnings_seen: Boolean(data.tour_earnings_seen),
+      tour_expenses_seen: Boolean(data.tour_expenses_seen),
+      tour_history_seen: Boolean(data.tour_history_seen),
+      tour_planning_seen: Boolean(data.tour_planning_seen),
+      tour_personalize_seen: Boolean(data.tour_personalize_seen),
+      tour_export_seen: Boolean(data.tour_export_seen),
+    };
   }, [user]);
+
+  useEffect(() => { void refetchSeenFlags(); }, [refetchSeenFlags]);
+
+  // Reset "Usuário novo" (ou qualquer mudança em Primeiros Passos) dispara
+  // este evento — recarrega o cache pra o encadeamento funcionar sem reload.
+  useEffect(() => {
+    const handler = () => { void refetchSeenFlags(); };
+    window.addEventListener("volant:first-steps-changed", handler);
+    return () => window.removeEventListener("volant:first-steps-changed", handler);
+  }, [refetchSeenFlags]);
+
 
   const markSeen = useCallback(
     async (id: TourId) => {

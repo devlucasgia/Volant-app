@@ -654,6 +654,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
 
 
                         <Select
+                          onOpenChange={(v) => { if (v) notifyAction("opened-add-platform"); }}
                           onValueChange={(v) => {
                             if (v === "__new__") {
                                 notifyAction("used-add-platform");
@@ -683,7 +684,8 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                             </div>
                             Adicionar plataforma
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent data-tour="entry-add-platform-list">
+
                             {unusedPlatforms.length > 0 && (
                               <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                                 Plataformas operacionais
