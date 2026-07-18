@@ -63,7 +63,7 @@ const Row = ({ label, value, mono }: { label: string; value: string; mono?: bool
 export const template = {
   component: NewUserSignupEmail,
   subject: (d: Record<string, any>) => `[Volant] Novo cadastro: ${d.email || d.name || 'usuário'}`,
-  to: 'suporte@usevolant.com.br',
+  to: 'suporte.volant@gmail.com',
   displayName: 'Volant · Novo cadastro',
   previewData: {
     name: 'João Silva',
