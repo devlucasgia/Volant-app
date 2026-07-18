@@ -62,8 +62,18 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const [activeTour, setActiveTour] = useState<TourId | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [steps, setSteps] = useState<TourStep[]>([]);
+  const [validating, setValidating] = useState(false);
   const seenCacheRef = useRef<Record<string, boolean>>({});
   const actionAdvanceLockRef = useRef<string | null>(null);
+  const validateTimerRef = useRef<number | null>(null);
+
+  const clearValidating = useCallback(() => {
+    if (validateTimerRef.current) {
+      window.clearTimeout(validateTimerRef.current);
+      validateTimerRef.current = null;
+    }
+    setValidating(false);
+  }, []);
 
   useEffect(() => {
     actionAdvanceLockRef.current = null;
