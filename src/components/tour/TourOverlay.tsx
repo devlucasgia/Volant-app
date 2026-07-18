@@ -94,12 +94,11 @@ function useTargetRect(selector: string | null): Rect | null {
 }
 
 export function TourOverlay() {
-  const { activeTour, currentStepIndex, steps, next, prev, skip } = useTour();
+  const { activeTour, currentStepIndex, steps, validating, next, prev, skip } = useTour();
   const step = activeTour ? steps[currentStepIndex] ?? null : null;
   const rect = useTargetRect(step?.target ?? null);
 
   // Auto-finaliza tour órfão: se o alvo sumiu do DOM por mais de 900ms, encerra.
-  // (Hook precisa vir antes de qualquer early return.)
   const isLastForHook = step ? currentStepIndex >= steps.length - 1 : true;
   useEffect(() => {
     if (!step || isLastForHook) return;
@@ -116,21 +115,13 @@ export function TourOverlay() {
   const isLast = currentStepIndex >= steps.length - 1;
   const showNext = step.advance === "next";
   const prevStep = currentStepIndex > 0 ? steps[currentStepIndex - 1] : null;
-  // Só permite "Voltar" quando o passo anterior era "next" (informativo).
-  // Voltar por cima de uma ação já cumprida (drawer aberto, salvo etc.) quebra o tour.
   const showPrev = showNext && !!prevStep && prevStep.advance === "next";
 
-  const targetEl = rect ? document.querySelector(step.target) : null;
-  const insideDrawer = !!targetEl?.closest(
-    '[data-vaul-drawer], [vaul-drawer], [role="dialog"]',
-  );
-
-  // "noHighlight" desliga glow/spotlight (balão flutua central). Default: com destaque.
+  // Spotlight em TODAS as etapas quando há alvo; só desliga se spotlight===false.
   const noHighlight = step.spotlight === false || !rect;
-  const mode: "spotlight" | "glow" | "none" =
-    noHighlight ? "none" : insideDrawer ? "glow" : "spotlight";
+  const mode: "spotlight" | "none" = noHighlight ? "none" : "spotlight";
 
-  // 4 camadas escuras recortando o alvo (só usadas no modo spotlight).
+  // 4 camadas escuras recortando o alvo.
   const parts = rect
     ? [
         { top: 0, left: 0, width: window.innerWidth, height: Math.max(0, rect.top) },
@@ -155,22 +146,22 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Anchor: em "glow" (dentro de drawer) fixa o balão perto do topo pra não
-  // sobrepor o campo/formulário conforme o usuário rola.
-  // Em spotlight, ancoramos no alvo. Em "none", centro da tela.
+  // Posição do balão: se o alvo está na metade superior da tela, o balão vai
+  // pro rodapé (evita cobrir). Caso contrário, fica no topo. Sem alvo → centro.
+  const targetInTopHalf = !!rect && rect.top < window.innerHeight * 0.45;
   const anchorStyle =
     mode === "none" || !rect
       ? ({ top: "50vh", left: "50vw", width: 0, height: 0 } as const)
-      : mode === "glow"
-        ? ({ top: 24, left: "50vw", width: 0, height: 0 } as const)
-        : { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+      : targetInTopHalf
+        ? ({ top: window.innerHeight - 24, left: "50vw", width: 0, height: 0 } as const)
+        : ({ top: 24, left: "50vw", width: 0, height: 0 } as const);
 
   const popoverSide =
-    mode === "none" ? "bottom" : mode === "glow" ? "bottom" : (step.placement ?? "top");
-  const popoverSideOffset = mode === "none" ? 0 : mode === "glow" ? 8 : 12;
+    mode === "none" ? "bottom" : targetInTopHalf ? "top" : "bottom";
+  const popoverSideOffset = 8;
 
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
-  const showHint = step.advance === "action" && !!step.hint;
+  const showHint = !validating && step.advance === "action" && !!step.hint;
 
   return createPortal(
     <div
