@@ -20,10 +20,14 @@ function useTargetRect(selector: string | null): Rect | null {
   const [rect, setRect] = useState<Rect | null>(null);
 
   useEffect(() => {
+    // Limpa o rect anterior imediatamente ao trocar de alvo pra evitar
+    // "glow fantasma" na posição antiga enquanto o novo alvo ainda não
+    // foi medido (ex.: drawer abrindo entre passos).
+    setRect(null);
     if (!selector) {
-      setRect(null);
       return;
     }
+
     let cancelled = false;
     let raf = 0;
     let scrolled = false;
