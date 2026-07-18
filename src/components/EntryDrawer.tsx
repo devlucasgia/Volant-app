@@ -791,7 +791,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                   <Select
                     value={category}
                     onOpenChange={(v) => {
-                      if (v) notifyAction("selected-expense-category");
+                      if (v) notifyAction("opened-expense-category");
                     }}
                     onValueChange={(v) => {
                       setCategory(v as ExpenseCategory);
@@ -799,7 +799,7 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
                     }}
                   >
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
+                    <SelectContent data-tour="entry-expense-category-list">
                       {expenseCategories.map((c) => (
                         <SelectItem key={c.key} value={c.key}>
                           <span className="mr-2">{c.emoji}</span>{c.label}
