@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { useTour } from "@/context/TourContext";
+import { Loader2 } from "lucide-react";
 
 interface Rect {
   top: number;
