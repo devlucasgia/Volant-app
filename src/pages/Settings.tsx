@@ -874,7 +874,9 @@ export default function SettingsPage() {
                           return;
                         }
                         toast.success("Resetado para usuário novo. Recarregando...");
+                        try { window.dispatchEvent(new CustomEvent("volant:first-steps-changed")); } catch { /* noop */ }
                         setTimeout(() => window.location.reload(), 600);
+
                       }}
                     >
                       <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" /> Usuário novo (reset)

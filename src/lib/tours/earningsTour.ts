@@ -59,13 +59,24 @@ export const earningsTourSteps: TourStep[] = [
   {
     target: '[data-tour="entry-add-platform"]',
     title: "Rodou em outro app?",
-    body: "Toca aqui pra somar outra plataforma — ou só conhecer essa opção.",
+    body: "Dá pra somar mais de uma plataforma no mesmo registro. Toca aqui pra ver as opções.",
     icon: "➕",
-    hint: "Adiciona outro app",
+    hint: "Abre as plataformas",
+    advance: "action",
+    actionId: "opened-add-platform",
+    placement: "top",
+  },
+  {
+    target: '[data-tour="entry-add-platform-list"]',
+    title: "Escolhe a plataforma",
+    body: "Toca no app que você também rodou. Ele entra no mesmo registro.",
+    icon: "➕",
+    hint: "Toca numa plataforma",
     advance: "action",
     actionId: "used-add-platform",
     placement: "top",
   },
+
   {
     target: '[data-tour="entry-platform-last"]',
     title: "Preenche o outro app",
