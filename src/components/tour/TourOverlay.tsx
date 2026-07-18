@@ -224,14 +224,21 @@ export function TourOverlay() {
             {step.body}
           </p>
 
-          {/* Pílula de dica (só passos de ação) */}
-          {showHint && (
+          {/* Pílula: feedback de validação OU dica normal */}
+          {validating ? (
+            <div className="px-4 pt-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Certo! Avançando...
+              </span>
+            </div>
+          ) : showHint ? (
             <div className="px-4 pt-3">
               <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
                 {step.hint}
               </span>
             </div>
-          )}
+          ) : null}
 
           {/* Rodapé: progresso + ações */}
           <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
