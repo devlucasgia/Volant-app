@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SUPPORT_EMAIL = "suporte@usevolant.com.br";
+const SUPPORT_EMAIL = "suporte.volant@gmail.com";
 const FROM_EMAIL = "Volant Feedback <onboarding@resend.dev>";
 
 interface DeviceInfo {

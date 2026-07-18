@@ -58,7 +58,7 @@ const Row = ({ label, value, mono }: { label: string; value: string; mono?: bool
 export const template = {
   component: PaymentFailedInternalEmail,
   subject: (d: Record<string, any>) => `[Volant] Pagamento recusado: ${d.email || 'usuário'}`,
-  to: 'suporte@usevolant.com.br',
+  to: 'suporte.volant@gmail.com',
   displayName: 'Volant · Pagamento falhou',
   previewData: {
     email: 'joao@example.com', userId: '00000000-0000-0000-0000-000000000000',
