@@ -141,7 +141,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const startTour = useCallback<TourContextValue["startTour"]>(
     async (id, tourSteps) => {
       if (!user) return;
-      if (activeTour) return;
+      if (activeTourRef.current) return;
       const col = flagColumnFor(id);
       // Fallback: caso o cache ainda não tenha carregado, consulta uma vez.
       if (seenCacheRef.current[col] === undefined) {
@@ -161,8 +161,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
       setCurrentStepIndex(0);
       setActiveTour(id);
     },
-    [user, activeTour],
+    [user],
   );
+
 
   const finish = useCallback(() => {
     if (!activeTour) return;
