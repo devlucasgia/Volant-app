@@ -44,6 +44,7 @@ interface TourContextValue {
   activeTour: TourId | null;
   currentStepIndex: number;
   steps: TourStep[];
+  validating: boolean;
   startTour: (id: TourId, steps: TourStep[]) => Promise<void>;
   next: () => void;
   prev: () => void;
