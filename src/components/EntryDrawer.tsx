@@ -279,18 +279,23 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     Object.values(advanceTimers.current).forEach((t) => window.clearTimeout(t));
     advanceTimers.current = {};
   }, []);
-  const debouncedNotify = (actionId: string, ready: boolean) => {
+  const debouncedNotify = (actionId: string, ready: boolean, delay = 900) => {
     const existing = advanceTimers.current[actionId];
     if (existing) window.clearTimeout(existing);
     if (!ready) { delete advanceTimers.current[actionId]; return; }
     advanceTimers.current[actionId] = window.setTimeout(() => {
       notifyAction(actionId);
       delete advanceTimers.current[actionId];
-    }, 900);
+    }, delay);
   };
 
+  // Preenchimentos contínuos (roda de horas, digitação de km/valores) usam
+  // debounce mais generoso pra dar tempo de ajustar horas + minutos, ou digitar
+  // "150" sem disparar no "1". Toque único (categoria) usa o padrão de 900ms.
+  const SLOW_DEBOUNCE = 1400;
+
   const notifyFilledHours = (next: number | null) => {
-    debouncedNotify("filled-hours", (next ?? 0) > 0);
+    debouncedNotify("filled-hours", (next ?? 0) > 0, SLOW_DEBOUNCE);
   };
 
   const notifyFilledKm = (next: number | null, field: "total" | "start" | "end") => {
@@ -299,21 +304,21 @@ export function EntryDrawer({ open, onOpenChange, preset }: Props) {
     const nextEnd = field === "end" ? next : kmEnd;
     const hasTotal = kmMode === "total" && (nextTotal ?? 0) > 0;
     const hasRange = kmMode === "range" && nextStart != null && nextEnd != null && nextEnd > nextStart;
-    debouncedNotify("filled-km", hasTotal || hasRange);
+    debouncedNotify("filled-km", hasTotal || hasRange, SLOW_DEBOUNCE);
   };
 
   const notifyFilledEarningValues = (nextPlatforms: PlatformRowData[]) => {
     const hasValidRow = nextPlatforms.some((p) => (p.gross ?? 0) > 0 && (p.rides ?? 0) > 0);
-    debouncedNotify("filled-earning-values", hasValidRow);
+    debouncedNotify("filled-earning-values", hasValidRow, SLOW_DEBOUNCE);
   };
 
   const notifyFilledSecondPlatform = (nextPlatforms: PlatformRowData[]) => {
     const validRows = nextPlatforms.filter((p) => (p.gross ?? 0) > 0 && (p.rides ?? 0) > 0);
-    debouncedNotify("filled-second-platform", validRows.length >= 2);
+    debouncedNotify("filled-second-platform", validRows.length >= 2, SLOW_DEBOUNCE);
   };
 
   const notifyFilledExpenseValue = (next: number | null) => {
-    debouncedNotify("filled-expense-value", (next ?? 0) > 0);
+    debouncedNotify("filled-expense-value", (next ?? 0) > 0, SLOW_DEBOUNCE);
   };
 
 
