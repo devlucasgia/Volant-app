@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTour } from "@/context/TourContext";
 import { Loader2 } from "lucide-react";
+
 
 interface Rect {
   top: number;
