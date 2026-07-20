@@ -207,7 +207,7 @@ export function TourOverlay() {
       {/* Balão: posição fixa, sem Popover (nada de reposicionamento automático). */}
       <div
         className={cn(
-          "pointer-events-auto fixed z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
+          "pointer-events-auto fixed left-1/2 z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
           balloonAnchor === "top" && "top-[calc(env(safe-area-inset-top)+16px)]",
           balloonAnchor === "bottom" && "bottom-[calc(env(safe-area-inset-bottom)+16px)]",
           balloonAnchor === "center" && "top-1/2 -translate-y-1/2",
