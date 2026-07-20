@@ -212,85 +212,88 @@ export function TourOverlay() {
       )}
 
       {/* Balão: posição fixa, sem Popover (nada de reposicionamento automático). */}
-      <div
-        className={cn(
-          "pointer-events-auto fixed left-1/2 z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
-          balloonAnchor === "top" && "top-[calc(env(safe-area-inset-top)+16px)]",
-          balloonAnchor === "bottom" && "bottom-[calc(env(safe-area-inset-bottom)+16px)]",
-          balloonAnchor === "center" && "top-1/2 -translate-y-1/2",
-        )}
-        style={balloonAnchor === "center" ? { backgroundColor: "hsl(var(--card))" } : undefined}
-      >
-        {/* Cabeçalho: ícone + eyebrow/título */}
-        <div className="flex items-start gap-3 px-4 pt-4">
-          {step.icon && (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
-              <span aria-hidden>{step.icon}</span>
-            </div>
+      {!awaitingRect && (
+        <div
+          className={cn(
+            "pointer-events-auto fixed left-1/2 z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
+            balloonAnchor === "top" && "top-[calc(env(safe-area-inset-top)+16px)]",
+            balloonAnchor === "bottom" && "bottom-[calc(env(safe-area-inset-bottom)+16px)]",
+            balloonAnchor === "center" && "top-1/2 -translate-y-1/2",
           )}
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              Passo {currentStepIndex + 1} de {steps.length}
+          style={balloonAnchor === "center" ? { backgroundColor: "hsl(var(--card))" } : undefined}
+        >
+          {/* Cabeçalho: ícone + eyebrow/título */}
+          <div className="flex items-start gap-3 px-4 pt-4">
+            {step.icon && (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
+                <span aria-hidden>{step.icon}</span>
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                Passo {currentStepIndex + 1} de {steps.length}
+              </div>
+              <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
+                {step.title}
+              </div>
             </div>
-            <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
-              {step.title}
+          </div>
+
+          {/* Corpo */}
+          <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
+            {step.body}
+          </p>
+
+          {/* Pílula: feedback de validação OU dica normal */}
+          {validating ? (
+            <div className="px-4 pt-3">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Certo! Avançando...
+              </span>
             </div>
-          </div>
-        </div>
+          ) : showHint ? (
+            <div className="px-4 pt-3">
+              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
+                {step.hint}
+              </span>
+            </div>
+          ) : null}
 
-        {/* Corpo */}
-        <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
-          {step.body}
-        </p>
-
-        {/* Pílula: feedback de validação OU dica normal */}
-        {validating ? (
-          <div className="px-4 pt-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Certo! Avançando...
-            </span>
-          </div>
-        ) : showHint ? (
-          <div className="px-4 pt-3">
-            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
-              {step.hint}
-            </span>
-          </div>
-        ) : null}
-
-        {/* Rodapé: progresso + ações */}
-        <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={skip}
-            className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
-          >
-            Pular
-          </button>
-          {showPrev && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={prev}
-              className="h-8 rounded-full px-3 text-[12px]"
+          {/* Rodapé: progresso + ações */}
+          <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={skip}
+              className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
             >
-              Voltar
-            </Button>
-          )}
-          {showNext && (
-            <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-              {isLast ? "Concluir" : "Próximo"}
-            </Button>
-          )}
+              Pular
+            </button>
+            {showPrev && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={prev}
+                className="h-8 rounded-full px-3 text-[12px]"
+              >
+                Voltar
+              </Button>
+            )}
+            {showNext && (
+              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+                {isLast ? "Concluir" : "Próximo"}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
     </div>,
     document.body,
   );
