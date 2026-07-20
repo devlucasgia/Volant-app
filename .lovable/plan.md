@@ -1,69 +1,95 @@
-# Posicionamento definitivo do balão do tour
+## Problema
 
-Escopo: apenas `src/components/tour/TourOverlay.tsx`. Nenhuma outra alteração.
+Hoje o balão do tour em `src/components/tour/TourOverlay.tsx` é fixado nas **bordas do viewport** (`top-16` ou `bottom-16`), independente de onde o alvo está. Consequências:
 
-## O que muda
+- Em telas do drawer (ganho/gasto), o balão no topo/rodapé **cobre outros campos importantes** (ex.: no passo "horas" o balão no rodapé cobre KM/valor/salvar).
+- A altura é **estimada** em 240px; quando o balão real é maior, sobra pouco espaço e ele encosta ou cobre o alvo.
+- Em passos com alvo no meio da tela (ex.: `entry-earning-value`, `home-earnings-expenses`), o balão pode ficar longe demais do alvo, quebrando a fluidez UX.
+- Sem clamp horizontal em telas estreitas (406px) o padding parece cru.
 
-### 1. Remover Radix Popover
-O balão hoje usa `Popover`/`PopoverAnchor`/`PopoverContent`. O Radix tem `avoidCollisions` ligado por padrão e reposiciona sozinho, ignorando a âncora manual — por isso o balão às vezes para no meio da tela cobrindo cards.
+Não há indício de "dois balões" no código (só um `<div>` renderiza). A percepção pode vir do balão antigo + glow novo durante a transição — vamos garantir single-source-of-truth medindo antes de renderizar.
 
-Substituir todo o bloco `<Popover>…</PopoverContent>` (linhas ~201-287) por um `<div>` com `position: fixed`, preservando o conteúdo interno intacto:
-- Cabeçalho (ícone + "Passo X de Y" + título)
-- Corpo (`step.body`)
-- Pílula (validating spinner OU hint)
-- Rodapé (barra de progresso + Pular + Voltar + Próximo)
+## Objetivo
 
-Remover imports/vars não utilizados: `Popover`, `PopoverContent`, `PopoverAnchor`, `anchorStyle`, `popoverSide`, `popoverSideOffset`, e handlers do Popover (`onOpenAutoFocus`, `onCloseAutoFocus`, `onPointerDownOutside`, `onEscapeKeyDown`).
+Balão único por step, sempre legível, **nunca sobrepondo o alvo em evidência**, adjacente a ele com folga, no estilo de tours de apps polidos (Nubank, Duolingo, Notion).
 
-### 2. Adicionar import do `cn`
-O bloco do novo balão usará `cn(...)` para as classes condicionais. Adicionar no topo do arquivo:
+## Escopo
+
+Apenas `src/components/tour/TourOverlay.tsx`. Zero mudança em contexto, tours, drawer ou lógica de avanço.
+
+## Mudanças
+
+### 1. Medir altura real do balão
+- Criar `balloonRef = useRef<HTMLDivElement>(null)` e `useLayoutEffect` que atualiza `balloonSize` (largura/altura) sempre que `step`, `rect`, `validating` ou `steps.length` mudam.
+- Primeiro render usa medida provisória (invisível via `opacity-0`) → segundo render aplica posição correta. Sem flicker porque `awaitingRect` já esconde durante transição.
+
+### 2. Calcular posição adjacente ao alvo
+Substituir o bloco atual de `balloonAnchor` por:
 
 ```ts
-import { cn } from "@/lib/utils";
-```
-
-### 3. Escolher topo/rodapé pelo espaço real
-Substituir a regra binária `targetInTopHalf = rect.top < innerHeight * 0.45` por cálculo baseado em espaço disponível acima/abaixo do alvo, com altura estimada de 240px:
-
-```ts
+const GAP = 14;                       // folga alvo↔balão
+const MARGIN = 12;                    // margem viewport
+const W = window.innerWidth;
 const H = window.innerHeight;
-const BALLOON_H = 240;
+const bw = balloonSize.width;
+const bh = balloonSize.height;
 
-let balloonAnchor: "top" | "bottom" | "center";
+let top: number;
+let left: number;
+
 if (mode === "none" || !rect) {
-  balloonAnchor = "center";
+  // Passo de conclusão / sem alvo → centro
+  top = (H - bh) / 2;
+  left = (W - bw) / 2;
 } else {
-  const spaceAbove = rect.top;
-  const spaceBelow = H - (rect.top + rect.height);
-  if (spaceBelow >= BALLOON_H && spaceBelow >= spaceAbove) {
-    balloonAnchor = "bottom";
-  } else if (spaceAbove >= BALLOON_H) {
-    balloonAnchor = "top";
+  const spaceBelow = H - (rect.top + rect.height) - MARGIN;
+  const spaceAbove = rect.top - MARGIN;
+
+  // Preferir lado com mais espaço; garantir que o balão CABE sem tocar o alvo.
+  if (spaceBelow >= bh + GAP && spaceBelow >= spaceAbove) {
+    top = rect.top + rect.height + GAP;
+  } else if (spaceAbove >= bh + GAP) {
+    top = rect.top - bh - GAP;
   } else {
-    balloonAnchor = spaceAbove >= spaceBelow ? "top" : "bottom";
+    // Alvo enorme (drawer inteiro) → fixar no lado com mais folga, sem sobrepor.
+    top = spaceBelow >= spaceAbove
+      ? Math.min(rect.top + rect.height + GAP, H - bh - MARGIN)
+      : Math.max(rect.top - bh - GAP, MARGIN);
   }
+
+  // Horizontal: tentar centralizar sobre o alvo, com clamp no viewport.
+  const targetCenter = rect.left + rect.width / 2;
+  left = Math.round(targetCenter - bw / 2);
+  left = Math.max(MARGIN, Math.min(left, W - bw - MARGIN));
+
+  // Respeitar safe-area vertical.
+  top = Math.max(MARGIN, Math.min(top, H - bh - MARGIN));
 }
 ```
 
-Aplicar no div via classes condicionais:
-- `top`: `top-[calc(env(safe-area-inset-top)+16px)]`
-- `bottom`: `bottom-[calc(env(safe-area-inset-bottom)+16px)]`
-- `center`: `top-1/2 -translate-y-1/2`
+### 3. Aplicar via `style`, remover classes de posição
+- Trocar as classes condicionais `top-[…]`, `bottom-[…]`, `left-1/2 -translate-x-1/2`, `top-1/2 -translate-y-1/2` por `style={{ top, left }}`.
+- Manter `position: fixed`, `z-[9999]`, `pointer-events-auto`.
+- Enquanto `balloonSize` ainda não foi medido, renderizar com `opacity-0 pointer-events-none` para evitar flash na posição errada.
 
-Centralizar horizontal sempre com `left-1/2 -translate-x-1/2`.
+### 4. Legibilidade e polimento
+- Aumentar corpo: `text-[13.5px] leading-[1.45]`.
+- Título: `text-[15.5px]` e `text-foreground` já mantido.
+- Borda: trocar `border-white/10` por `border-border/60` (funciona em dark e light).
+- Largura: `w-[min(92vw,340px)]` para respirar melhor no 406px.
+- Pequena seta triangular (12px) apontando ao alvo (só quando `mode === "spotlight"`): `div` absoluto no balão, `border-8` sólido cor do card, posicionada `top: -6px` ou `bottom: -6px` conforme o balão estiver abaixo/acima do alvo.
 
-## Blindagem
-- Balão continua `pointer-events-auto`; overlay/spotlight/glow permanecem `pointer-events-none`.
-- `z-[9999]` no balão, `z-[9998]` no overlay.
-- Sem Popover = zero reposicionamento automático.
-- Fallback para alvos muito grandes: vai pro lado com mais espaço.
+### 5. Reagir a resize/scroll
+O balão precisa reposicionar quando o teclado abre/fecha. Já existe listener de resize/scroll no `useTargetRect` que refaz `measure(el)`; como `rect` muda, o cálculo de `top/left` já refaz automaticamente.
 
-## Validação após implementação
-Confirmar nos 18 passos (11 ganho + 7 gasto):
-1. Nenhum balão no meio sobre cards.
-2. Passos km (ganho 4) e valor do gasto (gasto 5): balão no lado oposto.
-3. Dropdowns abertos (plataforma/categoria): balão não cobre a lista.
-4. Passos da Home: balão no lado oposto ao alvo destacado.
-5. Passo de conclusão (spotlight:false): balão centralizado.
-6. Pular/Voltar/Próximo clicáveis em todos.
-7. Testar 360x640 e viewport maior.
+## Validação
+
+Reset "Usuário novo" e percorrer:
+
+1. **Todos os 11 passos de ganho + 7 de gasto**: balão sempre visível inteiro, sem cortes.
+2. **Nenhum balão sobrepõe o card destacado** (com glow) — sempre GAP≥14px.
+3. **Adjacente ao alvo**: balão logo acima/abaixo, não colado nas bordas do viewport.
+4. **Drawer aberto**: no passo "horas", balão fica abaixo (não cobre KM/valor/salvar); no passo "salvar", balão fica acima (não cobre o botão).
+5. **Passo de conclusão** (`spotlight:false`): centralizado.
+6. **Viewport 406×748 e desktop**: balão nunca vaza lateralmente; clamp de 12px nas bordas.
+7. **Rotação/resize**: balão realoja suavemente.
