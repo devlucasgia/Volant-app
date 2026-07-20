@@ -134,6 +134,13 @@ export function TourOverlay() {
   const noHighlight = step.spotlight === false || !rect;
   const mode: "spotlight" | "none" = noHighlight ? "none" : "spotlight";
 
+  // Step espera um alvo mas o rect ainda não assentou (transição entre steps).
+  // Esconde o balão nesse intervalo para evitar que ele pule do centro para
+  // o topo/rodapé depois de ~380ms. Conclusão real (mode === "none") não entra.
+  const awaitingRect =
+    !!step && step.spotlight !== false && !!step.target && !rect && mode !== "none";
+
+
   // 4 camadas escuras recortando o alvo.
   const parts = rect
     ? [
