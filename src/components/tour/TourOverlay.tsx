@@ -124,7 +124,33 @@ export function TourOverlay() {
     return () => window.clearTimeout(t);
   }, [rect, step, isLastForHook, skip]);
 
+  // Medição real do balão — declarado antes de qualquer early return pra manter ordem dos hooks.
+  const balloonRef = useRef<HTMLDivElement>(null);
+  const [balloonSize, setBalloonSize] = useState<{ w: number; h: number } | null>(null);
+  const awaitingRectForHook =
+    !!step && step.spotlight !== false && !!step.target && !rect;
+  useLayoutEffect(() => {
+    if (!balloonRef.current || awaitingRectForHook || !step) {
+      setBalloonSize(null);
+      return;
+    }
+    const el = balloonRef.current;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setBalloonSize((prev) =>
+        prev && Math.abs(prev.w - r.width) < 0.5 && Math.abs(prev.h - r.height) < 0.5
+          ? prev
+          : { w: r.width, h: r.height },
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [awaitingRectForHook, step, validating, currentStepIndex]);
+
   if (!step) return null;
+
 
   const isLast = currentStepIndex >= steps.length - 1;
   const showNext = step.advance === "next";
@@ -167,28 +193,8 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Medição real do balão (evita estimar altura e cobrir o alvo).
-  const balloonRef = useRef<HTMLDivElement>(null);
-  const [balloonSize, setBalloonSize] = useState<{ w: number; h: number } | null>(null);
-  useLayoutEffect(() => {
-    if (!balloonRef.current || awaitingRect) {
-      setBalloonSize(null);
-      return;
-    }
-    const el = balloonRef.current;
-    const measure = () => {
-      const r = el.getBoundingClientRect();
-      setBalloonSize((prev) =>
-        prev && Math.abs(prev.w - r.width) < 0.5 && Math.abs(prev.h - r.height) < 0.5
-          ? prev
-          : { w: r.width, h: r.height },
-      );
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [awaitingRect, step, validating, currentStepIndex]);
+
+
 
   // Posição adjacente ao alvo, nunca sobrepondo, com clamp no viewport.
   const GAP = 14;
