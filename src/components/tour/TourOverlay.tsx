@@ -167,25 +167,79 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Posição do balão: escolher topo/rodapé pelo espaço real disponível acima
-  // ou abaixo do alvo. Altura estimada de 240px. Sem alvo → centro.
-  const H = window.innerHeight;
-  const BALLOON_H = 240;
-
-  let balloonAnchor: "top" | "bottom" | "center";
-  if (mode === "none" || !rect) {
-    balloonAnchor = "center";
-  } else {
-    const spaceAbove = rect.top;
-    const spaceBelow = H - (rect.top + rect.height);
-    if (spaceBelow >= BALLOON_H && spaceBelow >= spaceAbove) {
-      balloonAnchor = "bottom";
-    } else if (spaceAbove >= BALLOON_H) {
-      balloonAnchor = "top";
-    } else {
-      balloonAnchor = spaceAbove >= spaceBelow ? "top" : "bottom";
+  // Medição real do balão (evita estimar altura e cobrir o alvo).
+  const balloonRef = useRef<HTMLDivElement>(null);
+  const [balloonSize, setBalloonSize] = useState<{ w: number; h: number } | null>(null);
+  useLayoutEffect(() => {
+    if (!balloonRef.current || awaitingRect) {
+      setBalloonSize(null);
+      return;
     }
+    const el = balloonRef.current;
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      setBalloonSize((prev) =>
+        prev && Math.abs(prev.w - r.width) < 0.5 && Math.abs(prev.h - r.height) < 0.5
+          ? prev
+          : { w: r.width, h: r.height },
+      );
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [awaitingRect, step, validating, currentStepIndex]);
+
+  // Posição adjacente ao alvo, nunca sobrepondo, com clamp no viewport.
+  const GAP = 14;
+  const MARGIN = 12;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const bw = balloonSize?.w ?? 320;
+  const bh = balloonSize?.h ?? 220;
+
+  let balloonTop: number;
+  let balloonLeft: number;
+  let arrowSide: "top" | "bottom" | null = null;
+
+  if (mode === "none" || !rect) {
+    balloonTop = (H - bh) / 2;
+    balloonLeft = (W - bw) / 2;
+  } else {
+    const spaceBelow = H - (rect.top + rect.height) - MARGIN;
+    const spaceAbove = rect.top - MARGIN;
+
+    if (spaceBelow >= bh + GAP && spaceBelow >= spaceAbove) {
+      balloonTop = rect.top + rect.height + GAP;
+      arrowSide = "top";
+    } else if (spaceAbove >= bh + GAP) {
+      balloonTop = rect.top - bh - GAP;
+      arrowSide = "bottom";
+    } else {
+      // Alvo grande demais (drawer inteiro): coloca no lado com mais folga.
+      if (spaceBelow >= spaceAbove) {
+        balloonTop = Math.min(rect.top + rect.height + GAP, H - bh - MARGIN);
+        arrowSide = "top";
+      } else {
+        balloonTop = Math.max(rect.top - bh - GAP, MARGIN);
+        arrowSide = "bottom";
+      }
+    }
+
+    const targetCenter = rect.left + rect.width / 2;
+    balloonLeft = Math.round(targetCenter - bw / 2);
+    balloonLeft = Math.max(MARGIN, Math.min(balloonLeft, W - bw - MARGIN));
+    balloonTop = Math.max(MARGIN, Math.min(balloonTop, H - bh - MARGIN));
   }
+
+  // Seta apontando pro alvo (só em spotlight). Posição horizontal alinhada ao centro do alvo.
+  let arrowLeft = bw / 2;
+  if (rect && arrowSide) {
+    const targetCenter = rect.left + rect.width / 2;
+    arrowLeft = Math.max(16, Math.min(bw - 16, targetCenter - balloonLeft));
+  }
+
+  const measured = balloonSize !== null;
 
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
   const showHint = !validating && step.advance === "action" && !!step.hint;
@@ -204,7 +258,7 @@ export function TourOverlay() {
         />
       ))}
 
-      {/* Glow pulsante no alvo: em spotlight e glow. */}
+      {/* Glow pulsante no alvo. */}
       {mode !== "none" && rect && (
         <div
           className="tour-glow pointer-events-none absolute rounded-[14px]"
@@ -212,18 +266,33 @@ export function TourOverlay() {
         />
       )}
 
-      {/* Balão: posição fixa, sem Popover (nada de reposicionamento automático). */}
+      {/* Balão: posicionado adjacente ao alvo, nunca cobre. */}
       {!awaitingRect && (
         <div
+          ref={balloonRef}
           className={cn(
-            "pointer-events-auto fixed left-1/2 z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
-            balloonAnchor === "top" && "top-[calc(env(safe-area-inset-top)+16px)]",
-            balloonAnchor === "bottom" && "bottom-[calc(env(safe-area-inset-bottom)+16px)]",
-            balloonAnchor === "center" && "top-1/2 -translate-y-1/2",
+            "fixed z-[9999] w-[min(92vw,340px)] rounded-2xl border border-border/60 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)] transition-opacity duration-150",
+            measured ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
           )}
-          style={balloonAnchor === "center" ? { backgroundColor: "hsl(var(--card))" } : undefined}
+          style={{ top: balloonTop, left: balloonLeft }}
         >
-          {/* Cabeçalho: ícone + eyebrow/título */}
+          {/* Seta apontando pro alvo */}
+          {arrowSide && (
+            <div
+              className="pointer-events-none absolute h-3 w-3 rotate-45 border border-border/60 bg-[hsl(var(--card))]"
+              style={{
+                left: arrowLeft - 6,
+                top: arrowSide === "top" ? -6 : undefined,
+                bottom: arrowSide === "bottom" ? -6 : undefined,
+                borderRight: arrowSide === "top" ? "none" : undefined,
+                borderBottom: arrowSide === "top" ? "none" : undefined,
+                borderLeft: arrowSide === "bottom" ? "none" : undefined,
+                borderTop: arrowSide === "bottom" ? "none" : undefined,
+              }}
+            />
+          )}
+
+          {/* Cabeçalho */}
           <div className="flex items-start gap-3 px-4 pt-4">
             {step.icon && (
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
@@ -234,18 +303,18 @@ export function TourOverlay() {
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 Passo {currentStepIndex + 1} de {steps.length}
               </div>
-              <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
+              <div className="mt-0.5 text-[15.5px] font-bold leading-tight text-foreground">
                 {step.title}
               </div>
             </div>
           </div>
 
           {/* Corpo */}
-          <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
+          <p className="px-4 pt-2 text-[13.5px] leading-[1.45] text-muted-foreground">
             {step.body}
           </p>
 
-          {/* Pílula: feedback de validação OU dica normal */}
+          {/* Pílula: validação ou dica */}
           {validating ? (
             <div className="px-4 pt-3">
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
@@ -261,9 +330,9 @@ export function TourOverlay() {
             </div>
           ) : null}
 
-          {/* Rodapé: progresso + ações */}
-          <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+          {/* Rodapé */}
+          <div className="mt-4 flex items-center gap-3 border-t border-border/40 px-4 py-3">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
                 style={{ width: `${progress}%` }}
@@ -299,4 +368,5 @@ export function TourOverlay() {
     document.body,
   );
 }
+
 
