@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Popover, PopoverContent, PopoverAnchor } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useTour } from "@/context/TourContext";
 import { Loader2 } from "lucide-react";
@@ -159,19 +159,25 @@ export function TourOverlay() {
       ]
     : [];
 
-  // Posição do balão: se o alvo está na metade superior da tela, o balão vai
-  // pro rodapé (evita cobrir). Caso contrário, fica no topo. Sem alvo → centro.
-  const targetInTopHalf = !!rect && rect.top < window.innerHeight * 0.45;
-  const anchorStyle =
-    mode === "none" || !rect
-      ? ({ top: "50vh", left: "50vw", width: 0, height: 0 } as const)
-      : targetInTopHalf
-        ? ({ top: window.innerHeight - 24, left: "50vw", width: 0, height: 0 } as const)
-        : ({ top: 24, left: "50vw", width: 0, height: 0 } as const);
+  // Posição do balão: escolher topo/rodapé pelo espaço real disponível acima
+  // ou abaixo do alvo. Altura estimada de 240px. Sem alvo → centro.
+  const H = window.innerHeight;
+  const BALLOON_H = 240;
 
-  const popoverSide =
-    mode === "none" ? "bottom" : targetInTopHalf ? "top" : "bottom";
-  const popoverSideOffset = 8;
+  let balloonAnchor: "top" | "bottom" | "center";
+  if (mode === "none" || !rect) {
+    balloonAnchor = "center";
+  } else {
+    const spaceAbove = rect.top;
+    const spaceBelow = H - (rect.top + rect.height);
+    if (spaceBelow >= BALLOON_H && spaceBelow >= spaceAbove) {
+      balloonAnchor = "bottom";
+    } else if (spaceAbove >= BALLOON_H) {
+      balloonAnchor = "top";
+    } else {
+      balloonAnchor = spaceAbove >= spaceBelow ? "top" : "bottom";
+    }
+  }
 
   const progress = ((currentStepIndex + 1) / steps.length) * 100;
   const showHint = !validating && step.advance === "action" && !!step.hint;
@@ -198,94 +204,86 @@ export function TourOverlay() {
         />
       )}
 
-      <Popover open={true}>
-        <PopoverAnchor asChild>
-          <div className="pointer-events-none absolute" style={anchorStyle} />
-        </PopoverAnchor>
-        <PopoverContent
-          side={popoverSide}
-          align="center"
-          sideOffset={popoverSideOffset}
-
-          collisionPadding={16}
-          className="pointer-events-auto z-[9999] w-[min(88vw,340px)] rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]"
-          style={{ backgroundColor: "hsl(var(--card))" }}
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          onCloseAutoFocus={(e) => e.preventDefault()}
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          {/* Cabeçalho: ícone + eyebrow/título */}
-          <div className="flex items-start gap-3 px-4 pt-4">
-            {step.icon && (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
-                <span aria-hidden>{step.icon}</span>
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                Passo {currentStepIndex + 1} de {steps.length}
-              </div>
-              <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
-                {step.title}
-              </div>
+      {/* Balão: posição fixa, sem Popover (nada de reposicionamento automático). */}
+      <div
+        className={cn(
+          "pointer-events-auto fixed z-[9999] w-[min(88vw,340px)] -translate-x-1/2 rounded-2xl border border-white/10 bg-[hsl(var(--card))] p-0 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.75),0_4px_12px_-2px_rgba(0,0,0,0.5)]",
+          balloonAnchor === "top" && "top-[calc(env(safe-area-inset-top)+16px)]",
+          balloonAnchor === "bottom" && "bottom-[calc(env(safe-area-inset-bottom)+16px)]",
+          balloonAnchor === "center" && "top-1/2 -translate-y-1/2",
+        )}
+        style={balloonAnchor === "center" ? { backgroundColor: "hsl(var(--card))" } : undefined}
+      >
+        {/* Cabeçalho: ícone + eyebrow/título */}
+        <div className="flex items-start gap-3 px-4 pt-4">
+          {step.icon && (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/15 text-lg leading-none">
+              <span aria-hidden>{step.icon}</span>
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Passo {currentStepIndex + 1} de {steps.length}
+            </div>
+            <div className="mt-0.5 text-[15px] font-bold leading-tight text-foreground">
+              {step.title}
             </div>
           </div>
+        </div>
 
-          {/* Corpo */}
-          <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
-            {step.body}
-          </p>
+        {/* Corpo */}
+        <p className="px-4 pt-2 text-[13px] leading-snug text-muted-foreground">
+          {step.body}
+        </p>
 
-          {/* Pílula: feedback de validação OU dica normal */}
-          {validating ? (
-            <div className="px-4 pt-3">
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                Certo! Avançando...
-              </span>
-            </div>
-          ) : showHint ? (
-            <div className="px-4 pt-3">
-              <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
-                {step.hint}
-              </span>
-            </div>
-          ) : null}
+        {/* Pílula: feedback de validação OU dica normal */}
+        {validating ? (
+          <div className="px-4 pt-3">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[12px] font-semibold text-primary">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Certo! Avançando...
+            </span>
+          </div>
+        ) : showHint ? (
+          <div className="px-4 pt-3">
+            <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[12px] font-medium text-primary">
+              {step.hint}
+            </span>
+          </div>
+        ) : null}
 
-          {/* Rodapé: progresso + ações */}
-          <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={skip}
-              className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
+        {/* Rodapé: progresso + ações */}
+        <div className="mt-4 flex items-center gap-3 border-t border-white/5 px-4 py-3">
+          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-primary/60 transition-all duration-300 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={skip}
+            className="text-[12px] font-medium text-muted-foreground underline-offset-2 hover:underline"
+          >
+            Pular
+          </button>
+          {showPrev && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={prev}
+              className="h-8 rounded-full px-3 text-[12px]"
             >
-              Pular
-            </button>
-            {showPrev && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={prev}
-                className="h-8 rounded-full px-3 text-[12px]"
-              >
-                Voltar
-              </Button>
-            )}
-            {showNext && (
-              <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
-                {isLast ? "Concluir" : "Próximo"}
-              </Button>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+              Voltar
+            </Button>
+          )}
+          {showNext && (
+            <Button size="sm" onClick={next} className="h-8 rounded-full px-4 text-[12px]">
+              {isLast ? "Concluir" : "Próximo"}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>,
     document.body,
   );
