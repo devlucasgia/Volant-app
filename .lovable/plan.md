@@ -1,46 +1,69 @@
-# Adendo — 3 correções no tour
+# Posicionamento definitivo do balão do tour
 
-## 1. Encadeamento ganho→gasto (cache stale)
+Escopo: apenas `src/components/tour/TourOverlay.tsx`. Nenhuma outra alteração.
 
-**Arquivo:** `src/context/TourContext.tsx`
+## O que muda
 
-- Extrair o fetch das flags `tour_*_seen` numa função `refetchSeenFlags` memoizada por `user`.
-- Manter o `useEffect` inicial chamando `refetchSeenFlags()`.
-- Adicionar um segundo `useEffect` que escuta `window` → `volant:first-steps-changed` e chama `refetchSeenFlags()` — assim o reset "Usuário novo" recarrega o cache sem precisar reload.
+### 1. Remover Radix Popover
+O balão hoje usa `Popover`/`PopoverAnchor`/`PopoverContent`. O Radix tem `avoidCollisions` ligado por padrão e reposiciona sozinho, ignorando a âncora manual — por isso o balão às vezes para no meio da tela cobrindo cards.
 
-**Arquivo:** `src/pages/Settings.tsx`
+Substituir todo o bloco `<Popover>…</PopoverContent>` (linhas ~201-287) por um `<div>` com `position: fixed`, preservando o conteúdo interno intacto:
+- Cabeçalho (ícone + "Passo X de Y" + título)
+- Corpo (`step.body`)
+- Pílula (validating spinner OU hint)
+- Rodapé (barra de progresso + Pular + Voltar + Próximo)
 
-- Confirmar que o botão de reset dispara `window.dispatchEvent(new CustomEvent("volant:first-steps-changed"))` após o update. Se não disparar, adicionar.
+Remover imports/vars não utilizados: `Popover`, `PopoverContent`, `PopoverAnchor`, `anchorStyle`, `popoverSide`, `popoverSideOffset`, e handlers do Popover (`onOpenAutoFocus`, `onCloseAutoFocus`, `onPointerDownOutside`, `onEscapeKeyDown`).
 
-## 2. Glow fantasma na transição de passo
+### 2. Adicionar import do `cn`
+O bloco do novo balão usará `cn(...)` para as classes condicionais. Adicionar no topo do arquivo:
 
-**Arquivo:** `src/components/tour/TourOverlay.tsx` (hook `useTargetRect`)
+```ts
+import { cn } from "@/lib/utils";
+```
 
-- No início do `useEffect([selector])`, chamar `setRect(null)` imediatamente antes de qualquer poll. Isso garante tela sem glow durante a transição até o novo alvo ser medido.
+### 3. Escolher topo/rodapé pelo espaço real
+Substituir a regra binária `targetInTopHalf = rect.top < innerHeight * 0.45` por cálculo baseado em espaço disponível acima/abaixo do alvo, com altura estimada de 240px:
 
-## 3. "Adicionar plataforma" — dois passos (padrão categoria)
+```ts
+const H = window.innerHeight;
+const BALLOON_H = 240;
 
-**Arquivo:** `src/components/EntryDrawer.tsx` (~656)
+let balloonAnchor: "top" | "bottom" | "center";
+if (mode === "none" || !rect) {
+  balloonAnchor = "center";
+} else {
+  const spaceAbove = rect.top;
+  const spaceBelow = H - (rect.top + rect.height);
+  if (spaceBelow >= BALLOON_H && spaceBelow >= spaceAbove) {
+    balloonAnchor = "bottom";
+  } else if (spaceAbove >= BALLOON_H) {
+    balloonAnchor = "top";
+  } else {
+    balloonAnchor = spaceAbove >= spaceBelow ? "top" : "bottom";
+  }
+}
+```
 
-- No `Select` de adicionar plataforma: adicionar `onOpenChange={(v) => { if (v) notifyAction("opened-add-platform"); }}`.
-- Manter `onValueChange` intacto (continua chamando `notifyAction("used-add-platform")`).
-- No `SelectContent`, adicionar `data-tour="entry-add-platform-list"`.
+Aplicar no div via classes condicionais:
+- `top`: `top-[calc(env(safe-area-inset-top)+16px)]`
+- `bottom`: `bottom-[calc(env(safe-area-inset-bottom)+16px)]`
+- `center`: `top-1/2 -translate-y-1/2`
 
-**Arquivo:** `src/lib/tours/earningsTour.ts`
+Centralizar horizontal sempre com `left-1/2 -translate-x-1/2`.
 
-- Substituir o passo único "Rodou em outro app?" por dois passos:
-  - A) `target: entry-add-platform`, `actionId: "opened-add-platform"`, hint "Abre as plataformas".
-  - B) `target: entry-add-platform-list`, `actionId: "used-add-platform"`, hint "Toca numa plataforma".
-- Demais passos (preencher 2ª plataforma → salvar → hero) inalterados.
+## Blindagem
+- Balão continua `pointer-events-auto`; overlay/spotlight/glow permanecem `pointer-events-none`.
+- `z-[9999]` no balão, `z-[9998]` no overlay.
+- Sem Popover = zero reposicionamento automático.
+- Fallback para alvos muito grandes: vai pro lado com mais espaço.
 
-## Escopo preservado
-
-- Sem mudanças de schema, RLS, cálculos, filtros, dados.
-- Sem redesign — apenas fixes de estado/timing no motor do tour e um split de passo do add-platform.
-
-## Validação manual
-
-1. Reset "Usuário novo" → concluir tour de ganho → tour de gasto abre sozinho, sem reload.
-2. Transição passo 2→3 do ganho: nenhum glow no Salvar; glow surge direto no campo de valor quando o drawer assenta.
-3. Passo "Rodou em outro app?": glow no botão; abrir → glow migra pra lista; escolher app → avança.
-4. Tour de gasto (categoria) continua funcionando igual.
+## Validação após implementação
+Confirmar nos 18 passos (11 ganho + 7 gasto):
+1. Nenhum balão no meio sobre cards.
+2. Passos km (ganho 4) e valor do gasto (gasto 5): balão no lado oposto.
+3. Dropdowns abertos (plataforma/categoria): balão não cobre a lista.
+4. Passos da Home: balão no lado oposto ao alvo destacado.
+5. Passo de conclusão (spotlight:false): balão centralizado.
+6. Pular/Voltar/Próximo clicáveis em todos.
+7. Testar 360x640 e viewport maior.
