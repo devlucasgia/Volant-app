@@ -1,7 +1,9 @@
-// Fonte da verdade dos vídeos tutoriais da Central de Tutoriais.
-// Adicionar um novo vídeo = adicionar um objeto aqui.
+import { Smartphone, Brain, type LucideIcon } from "lucide-react";
 
-export type TutorialSectionKey = "instalacao" | "planejamento" | "uso_diario";
+// Fonte da verdade dos vídeos tutoriais da Central de Tutoriais.
+// Adicionar um novo vídeo = adicionar um objeto em TUTORIAL_VIDEOS.
+
+export type TutorialSectionKey = "comece" | "funcoes";
 
 // Prep p/ Sprint 2 (chip nos Primeiros Passos). Não usado agora.
 export type FirstStepKey =
@@ -19,54 +21,45 @@ export interface TutorialVideo {
   title: string;
   description?: string;
   youtubeId: string;
+  /** afeta SÓ o player (portrait abre estreito). A thumb é sempre banner 16/7.5. */
   orientation: TutorialOrientation;
-  durationLabel: string; // ex: "0:38", "2:14"
+  durationLabel: string; // ex: "0:49", "5:26"
+  /** ícone usado como marca d'água na thumbnail. */
+  Icon: LucideIcon;
   firstStep?: FirstStepKey; // futuro (Sprint 2)
 }
 
 export interface TutorialSection {
   key: TutorialSectionKey;
   title: string;
-  description?: string;
 }
 
 export const TUTORIAL_SECTIONS: TutorialSection[] = [
-  {
-    key: "instalacao",
-    title: "Instalação e primeiros passos",
-    description: "Deixe o Volant sempre à mão no seu celular.",
-  },
-  {
-    key: "planejamento",
-    title: "Planejamento inteligente",
-    description: "Descubra quanto rodar por dia para bater sua meta.",
-  },
-  {
-    key: "uso_diario",
-    title: "Uso diário",
-    description: "Registre ganhos, gastos e acompanhe sua performance.",
-  },
+  { key: "comece", title: "Comece por aqui" },
+  { key: "funcoes", title: "Aprenda cada função" },
 ];
 
 export const TUTORIAL_VIDEOS: TutorialVideo[] = [
   {
     id: "install-android",
-    section: "instalacao",
+    section: "comece",
     title: "Como instalar o Volant no Android",
     description: "Adicione o app à tela inicial em poucos toques.",
-    youtubeId: "dQw4w9WgXcQ", // placeholder — trocar pelo Short real
+    youtubeId: "8iBQwbRZZyw", // Short real — NÃO trocar
     orientation: "portrait",
-    durationLabel: "0:38",
+    durationLabel: "0:49",
+    Icon: Smartphone,
     firstStep: "install",
   },
   {
     id: "planejamento-inteligente",
-    section: "planejamento",
+    section: "funcoes",
     title: "Planejamento Inteligente",
     description: "Como definir sua meta, custos e ver quanto rodar por dia.",
-    youtubeId: "dQw4w9WgXcQ", // placeholder — trocar pelo vídeo real
+    youtubeId: "Pq8LPSFkG9o", // vídeo real — NÃO trocar
     orientation: "landscape",
-    durationLabel: "2:14",
+    durationLabel: "5:26",
+    Icon: Brain,
   },
 ];
 
