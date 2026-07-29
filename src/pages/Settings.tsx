@@ -26,7 +26,7 @@ import {
   Calendar as CalendarIcon,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
-  Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
+  Brain, Warehouse, Paintbrush, Settings as SettingsIcon, GraduationCap,
 } from "lucide-react";
 import { ListChecks } from "lucide-react";
 import { useFirstSteps } from "@/hooks/useFirstSteps";
@@ -921,6 +921,35 @@ export default function SettingsPage() {
           <PersonalizacaoRow />
         </SectionGroup>
 
+        {/* ============== APRENDIZADO ============== */}
+        <SectionGroup title="Aprendizado">
+          <HubRow
+            to="/ajustes/tutoriais"
+            icon={<GraduationCap className="h-4 w-4" />}
+            title="Central de Tutoriais"
+            subtitle="Vídeos curtos e apresentação do Volant."
+            iconTone="bg-muted/50 text-foreground/70"
+          />
+          <button
+            type="button"
+            onClick={() => setFirstStepsOpen(true)}
+            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-colors hover:bg-muted/30 active:scale-[0.995]"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <ListChecks className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <div className="text-[15px] font-semibold">Primeiros passos</div>
+              <p className="text-[11px] text-muted-foreground">
+                {firstSteps.allDone
+                  ? "Tudo concluído — revise quando quiser."
+                  : `${firstSteps.done} de ${firstSteps.total} concluídos`}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </SectionGroup>
+
         {/* ============== CONFIGURAÇÕES ============== */}
         <SectionGroup title="Configurações">
           <Accordion type="multiple" className="space-y-2.5">
@@ -952,41 +981,12 @@ export default function SettingsPage() {
                     />
                   </div>
                 </div>
-
-                <Button
-                  variant="outline"
-                  className="w-full justify-start gap-2"
-                  onClick={() => window.dispatchEvent(new CustomEvent("volant:open-onboarding"))}
-                >
-                  <Sparkles className="h-4 w-4 text-primary" /> Refazer tour de boas-vindas
-                </Button>
               </div>
             </SettingsCard>
           </Accordion>
         </SectionGroup>
 
 
-        {/* ============== FEEDBACK ============== */}
-        <SectionGroup title="Primeiros passos">
-          <button
-            type="button"
-            onClick={() => setFirstStepsOpen(true)}
-            className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)] transition-colors hover:bg-muted/30 active:scale-[0.995]"
-          >
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <ListChecks className="h-4 w-4" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="text-[15px] font-semibold">Primeiros passos</div>
-              <p className="text-[11px] text-muted-foreground">
-                {firstSteps.allDone
-                  ? "Tudo concluído — revise quando quiser."
-                  : `${firstSteps.done} de ${firstSteps.total} concluídos`}
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </SectionGroup>
 
         <SectionGroup title="Feedback">
           <div className="rounded-2xl border border-border bg-card p-4 shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]">

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tutorials_watched jsonb NOT NULL DEFAULT '[]'::jsonb;

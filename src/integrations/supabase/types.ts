@@ -400,6 +400,7 @@ export type Database = {
           trial_access_granted: boolean
           trial_ends_at: string | null
           trial_started_at: string | null
+          tutorials_watched: Json
           updated_at: string
         }
         Insert: {
@@ -434,6 +435,7 @@ export type Database = {
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
+          tutorials_watched?: Json
           updated_at?: string
         }
         Update: {
@@ -468,6 +470,7 @@ export type Database = {
           trial_access_granted?: boolean
           trial_ends_at?: string | null
           trial_started_at?: string | null
+          tutorials_watched?: Json
           updated_at?: string
         }
         Relationships: []
