@@ -26,7 +26,7 @@ import {
   Calendar as CalendarIcon,
   Route, Clock, Flag, LineChart, ArrowUp, ArrowDown, Timer as TimerIcon, GripVertical,
   Sparkles, Bold, Italic, Type as TypeIcon, Info, Bell, Camera, Crown, Check, ArrowLeftRight,
-  Brain, Warehouse, Paintbrush, Settings as SettingsIcon,
+  Brain, Warehouse, Paintbrush, Settings as SettingsIcon, GraduationCap,
 } from "lucide-react";
 import { ListChecks } from "lucide-react";
 import { useFirstSteps } from "@/hooks/useFirstSteps";

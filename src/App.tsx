@@ -34,6 +34,7 @@ const PlanejamentoInteligente = lazy(() => import("./pages/PlanejamentoInteligen
 const MetasInteligentes = lazy(() => import("./pages/MetasInteligentes"));
 const KmInteligente = lazy(() => import("./pages/KmInteligente"));
 const CentralVeiculos = lazy(() => import("./pages/CentralVeiculos"));
+const CentralTutoriais = lazy(() => import("./pages/CentralTutoriais"));
 const MeusCarros = lazy(() => import("./pages/MeusCarros"));
 const CustosVeiculo = lazy(() => import("./pages/CustosVeiculo"));
 const ManutencaoPreventiva = lazy(() => import("./pages/ManutencaoPreventiva"));
@@ -171,6 +172,7 @@ const App = () => (
                         <Route path="/ajustes/categorias" element={<Categorias />} />
                         <Route path="/ajustes/categorias/ganhos" element={<CategoriasGanhos />} />
                         <Route path="/ajustes/categorias/gastos" element={<CategoriasGastos />} />
+                        <Route path="/ajustes/tutoriais" element={<CentralTutoriais />} />
                       </Route>
                       <Route path="*" element={<NotFound />} />
                     </Routes>
