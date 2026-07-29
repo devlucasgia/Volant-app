@@ -1,95 +1,45 @@
-## Problema
-
-Hoje o balão do tour em `src/components/tour/TourOverlay.tsx` é fixado nas **bordas do viewport** (`top-16` ou `bottom-16`), independente de onde o alvo está. Consequências:
-
-- Em telas do drawer (ganho/gasto), o balão no topo/rodapé **cobre outros campos importantes** (ex.: no passo "horas" o balão no rodapé cobre KM/valor/salvar).
-- A altura é **estimada** em 240px; quando o balão real é maior, sobra pouco espaço e ele encosta ou cobre o alvo.
-- Em passos com alvo no meio da tela (ex.: `entry-earning-value`, `home-earnings-expenses`), o balão pode ficar longe demais do alvo, quebrando a fluidez UX.
-- Sem clamp horizontal em telas estreitas (406px) o padding parece cru.
-
-Não há indício de "dois balões" no código (só um `<div>` renderiza). A percepção pode vir do balão antigo + glow novo durante a transição — vamos garantir single-source-of-truth medindo antes de renderizar.
+# Sprint 1 — Central de Tutoriais (fundação)
 
 ## Objetivo
 
-Balão único por step, sempre legível, **nunca sobrepondo o alvo em evidência**, adjacente a ele com folga, no estilo de tours de apps polidos (Nubank, Duolingo, Notion).
+Criar a Central de Tutoriais: tela nova acessível pelo "Mais" (Ajustes), reunindo vídeos tutoriais (embed do YouTube) e a opção de rever a apresentação do Volant. Arquitetura data-driven: adicionar um vídeo no futuro = editar um único arquivo de config.
 
-## Escopo
+**Fora de escopo (Sprint 2):** chip de vídeo nos Primeiros Passos, link no rodapé do sheet de Primeiros Passos, botões "Refazer tour de ganhos/gastos" na central. Nada do sistema de Primeiros Passos ou de Tours é tocado agora.
 
-Apenas `src/components/tour/TourOverlay.tsx`. Zero mudança em contexto, tours, drawer ou lógica de avanço.
+## O que muda
 
-## Mudanças
+### Arquivos novos
+1. `supabase/migrations/<timestamp>_tutorials_watched.sql` — adiciona coluna `tutorials_watched jsonb not null default '[]'` em `profiles`.
+2. `src/lib/tutorials/videos.ts` — config dos vídeos (fonte da verdade), com tipos `TutorialVideo`, `TutorialSectionKey`, `FirstStepKey` (o último já preparado pra Sprint 2 mas não usado agora). Seed: "Instalar no Android" (Short) + "Planejamento Inteligente".
+3. `src/hooks/useTutorialsWatched.ts` — lê/grava a coluna nova; atualização otimista, idempotente, resiliente a null.
+4. `src/components/tutorials/TutorialThumb.tsx` — thumbnail desenhada no app (Padrão A: gradiente + ícone marca d'água + play central + duração + selo "Assistido").
+5. `src/components/tutorials/TutorialPlayerSheet.tsx` — bottom sheet com YouTube IFrame Player API (script carregado uma vez, player destruído ao fechar, marca como assistido em ENDED ou 90%).
+6. `src/pages/CentralTutoriais.tsx` — tela da central: header no padrão `CentralVeiculos`, seções renderizadas a partir da config (esconde seção vazia), seção final "Boas-vindas" com botão que dispara o evento `volant:open-onboarding` (já existente).
 
-### 1. Medir altura real do balão
-- Criar `balloonRef = useRef<HTMLDivElement>(null)` e `useLayoutEffect` que atualiza `balloonSize` (largura/altura) sempre que `step`, `rect`, `validating` ou `steps.length` mudam.
-- Primeiro render usa medida provisória (invisível via `opacity-0`) → segundo render aplica posição correta. Sem flicker porque `awaitingRect` já esconde durante transição.
+### Arquivos alterados (só o trecho indicado)
+7. `src/App.tsx` — `const CentralTutoriais = lazy(() => import("./pages/CentralTutoriais"))` + `<Route path="/ajustes/tutoriais" element={<CentralTutoriais />} />` dentro do grupo autenticado.
+8. `src/pages/Settings.tsx` —
+   - Criar seção "Aprendizado" contendo a entrada existente "Primeiros passos" (movida) + nova entrada "Central de Tutoriais" que navega pra `/ajustes/tutoriais`.
+   - Remover o botão "Refazer tour de boas-vindas" (linhas ~959-961). O rever-apresentação agora vive na Central.
 
-### 2. Calcular posição adjacente ao alvo
-Substituir o bloco atual de `balloonAnchor` por:
+### Não altera
+`DataContext`, `AuthContext`, `TourContext`, `TourOverlay`, `EntryDrawer`, `useFirstSteps`, `FirstStepsSheet`, `FirstStepsStrip`, `Dashboard`, `OnboardingFlow`, hooks DnD, admin, `planningEngine`, `smartKm`, queries Supabase existentes, `client.ts`, `types.ts`.
 
-```ts
-const GAP = 14;                       // folga alvo↔balão
-const MARGIN = 12;                    // margem viewport
-const W = window.innerWidth;
-const H = window.innerHeight;
-const bw = balloonSize.width;
-const bh = balloonSize.height;
+## Detalhes técnicos
 
-let top: number;
-let left: number;
-
-if (mode === "none" || !rect) {
-  // Passo de conclusão / sem alvo → centro
-  top = (H - bh) / 2;
-  left = (W - bw) / 2;
-} else {
-  const spaceBelow = H - (rect.top + rect.height) - MARGIN;
-  const spaceAbove = rect.top - MARGIN;
-
-  // Preferir lado com mais espaço; garantir que o balão CABE sem tocar o alvo.
-  if (spaceBelow >= bh + GAP && spaceBelow >= spaceAbove) {
-    top = rect.top + rect.height + GAP;
-  } else if (spaceAbove >= bh + GAP) {
-    top = rect.top - bh - GAP;
-  } else {
-    // Alvo enorme (drawer inteiro) → fixar no lado com mais folga, sem sobrepor.
-    top = spaceBelow >= spaceAbove
-      ? Math.min(rect.top + rect.height + GAP, H - bh - MARGIN)
-      : Math.max(rect.top - bh - GAP, MARGIN);
-  }
-
-  // Horizontal: tentar centralizar sobre o alvo, com clamp no viewport.
-  const targetCenter = rect.left + rect.width / 2;
-  left = Math.round(targetCenter - bw / 2);
-  left = Math.max(MARGIN, Math.min(left, W - bw - MARGIN));
-
-  // Respeitar safe-area vertical.
-  top = Math.max(MARGIN, Math.min(top, H - bh - MARGIN));
-}
-```
-
-### 3. Aplicar via `style`, remover classes de posição
-- Trocar as classes condicionais `top-[…]`, `bottom-[…]`, `left-1/2 -translate-x-1/2`, `top-1/2 -translate-y-1/2` por `style={{ top, left }}`.
-- Manter `position: fixed`, `z-[9999]`, `pointer-events-auto`.
-- Enquanto `balloonSize` ainda não foi medido, renderizar com `opacity-0 pointer-events-none` para evitar flash na posição errada.
-
-### 4. Legibilidade e polimento
-- Aumentar corpo: `text-[13.5px] leading-[1.45]`.
-- Título: `text-[15.5px]` e `text-foreground` já mantido.
-- Borda: trocar `border-white/10` por `border-border/60` (funciona em dark e light).
-- Largura: `w-[min(92vw,340px)]` para respirar melhor no 406px.
-- Pequena seta triangular (12px) apontando ao alvo (só quando `mode === "spotlight"`): `div` absoluto no balão, `border-8` sólido cor do card, posicionada `top: -6px` ou `bottom: -6px` conforme o balão estiver abaixo/acima do alvo.
-
-### 5. Reagir a resize/scroll
-O balão precisa reposicionar quando o teclado abre/fecha. Já existe listener de resize/scroll no `useTargetRect` que refaz `measure(el)`; como `rect` muda, o cálculo de `top/left` já refaz automaticamente.
+- **Migration:** RLS de `profiles` já cobre owner select/update; nenhuma policy nova. Default `'[]'::jsonb` garante compatibilidade com perfis antigos.
+- **Types Supabase:** como `types.ts` é auto-gerado e a coluna é nova, o hook usa cast `(supabase.from("profiles") as any)` até o próximo regen — mesmo padrão já utilizado em outros lugares do projeto.
+- **YouTube API:** carregada via `<script src="https://www.youtube.com/iframe_api">` com promise global cacheada. Player criado ao abrir o sheet, destruído no cleanup do `useEffect`. Marca assistido via `onStateChange`: ENDED imediato ou polling 1s pra detectar `currentTime/duration >= 0.9`. Flag `markedRef` impede dupla gravação.
+- **Orientação:** `landscape` → `aspect-video w-full`; `portrait` (Shorts) → `aspect-[9/16] max-w-[260px]` centralizado.
+- **PlayerVars:** `rel=0, modestbranding=1, playsinline=1`.
+- **Thumb assistido:** substitui marca "VOLANT" por pill verde com check.
+- **Central:** seções vindas de `TUTORIAL_SECTIONS`, `videosBySection(key)` filtra; seção sem vídeo não renderiza.
 
 ## Validação
 
-Reset "Usuário novo" e percorrer:
-
-1. **Todos os 11 passos de ganho + 7 de gasto**: balão sempre visível inteiro, sem cortes.
-2. **Nenhum balão sobrepõe o card destacado** (com glow) — sempre GAP≥14px.
-3. **Adjacente ao alvo**: balão logo acima/abaixo, não colado nas bordas do viewport.
-4. **Drawer aberto**: no passo "horas", balão fica abaixo (não cobre KM/valor/salvar); no passo "salvar", balão fica acima (não cobre o botão).
-5. **Passo de conclusão** (`spotlight:false`): centralizado.
-6. **Viewport 406×748 e desktop**: balão nunca vaza lateralmente; clamp de 12px nas bordas.
-7. **Rotação/resize**: balão realoja suavemente.
+- Build passa; rota `/ajustes/tutoriais` abre.
+- Seed exibe os dois vídeos nas seções corretas; player abre em 16:9 e 9:16 conforme orientação.
+- Ao terminar (ou passar 90%), a thumb passa a mostrar "Assistido" após reabrir.
+- Fechar o sheet no meio do vídeo interrompe o áudio (player destruído).
+- "Primeiros passos" continua funcional na nova seção Aprendizado; botão antigo "Refazer tour de boas-vindas" removido do Settings.
+- Botão "Rever apresentação" na Central dispara o onboarding.
