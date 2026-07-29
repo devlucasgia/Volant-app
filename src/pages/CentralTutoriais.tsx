@@ -80,15 +80,15 @@ function VideoCard({ video, watched, onOpen }: VideoCardProps) {
 export default function CentralTutoriais() {
   const navigate = useNavigate();
   const { isWatched, markWatched } = useTutorialsWatched();
-  const [openVideo, setOpenVideoState] = useState<TutorialVideo | null>(null);
+  const [activeVideo, setActiveVideo] = useState<TutorialVideo | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, []);
 
-  function openVideo(v: TutorialVideo) {
-    setOpenVideoState(v);
+  function handleOpen(v: TutorialVideo) {
+    setActiveVideo(v);
     setSheetOpen(true);
   }
 
