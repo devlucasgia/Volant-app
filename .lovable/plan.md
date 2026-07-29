@@ -19,7 +19,9 @@ Criar a Central de Tutoriais: tela nova acessível pelo "Mais" (Ajustes), reunin
 ### Arquivos alterados (só o trecho indicado)
 7. `src/App.tsx` — `const CentralTutoriais = lazy(() => import("./pages/CentralTutoriais"))` + `<Route path="/ajustes/tutoriais" element={<CentralTutoriais />} />` dentro do grupo autenticado.
 8. `src/pages/Settings.tsx` —
-   - Criar seção "Aprendizado" contendo a entrada existente "Primeiros passos" (movida) + nova entrada "Central de Tutoriais" que navega pra `/ajustes/tutoriais`.
+   - Adicionar `GraduationCap` na lista de imports do `lucide-react` (usado pela nova entrada). **Manter** `Sparkles` importado — segue em uso pelo botão "Usuário novo (reset)".
+   - Criar `SectionGroup title="Aprendizado"` **entre "Personalização" e "Configurações"**, com dois itens nesta ordem: (1) **Central de Tutoriais** → `/ajustes/tutoriais`; (2) **Primeiros passos** (movido da seção solta atual).
+   - Remover a `SectionGroup title="Primeiros passos"` solta (perto do Feedback) para não duplicar. O comentário `{/* ============== FEEDBACK ============== */}` mal rotulado logo acima pode sair junto.
    - Remover o botão "Refazer tour de boas-vindas" (linhas ~959-961). O rever-apresentação agora vive na Central.
 
 ### Não altera
