@@ -31,7 +31,7 @@ function ScreenHeader({ onBack }: { onBack: () => void }) {
             Central de Tutoriais
           </h1>
           <p className="text-[11px] leading-tight text-muted-foreground/80">
-            Vídeos curtos pra você tirar o máximo do Volant.
+            Aprenda a usar o Volant no seu ritmo.
           </p>
         </div>
       </div>
@@ -51,28 +51,21 @@ function VideoCard({ video, watched, onOpen }: VideoCardProps) {
       type="button"
       onClick={onOpen}
       className={cn(
-        "group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left",
+        "group w-full overflow-hidden rounded-2xl border border-border bg-card text-left",
         "shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]",
-        "transition-colors hover:bg-muted/30 active:scale-[0.995]",
+        "transition-transform active:scale-[0.985]",
       )}
     >
-      <div className="w-[92px] shrink-0">
-        <TutorialThumb video={video} watched={watched} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="line-clamp-2 text-[14px] font-semibold leading-snug text-foreground">
-          {video.title}
-        </div>
-        {video.description ? (
-          <p className="mt-1 line-clamp-2 text-[11.5px] leading-snug text-muted-foreground">
+      <TutorialThumb video={video} watched={watched} />
+      {video.description ? (
+        <div className="px-3.5 pb-3 pt-2.5">
+          <p className="text-[11.5px] leading-snug text-muted-foreground">
             {video.description}
           </p>
-        ) : null}
-        <div className="mt-1 text-[10.5px] text-muted-foreground/70">
-          {video.durationLabel}
         </div>
-      </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
+      ) : (
+        <div className="pb-1.5" />
+      )}
     </button>
   );
 }
@@ -101,17 +94,10 @@ export default function CentralTutoriais() {
           if (vids.length === 0) return null;
           return (
             <section key={section.key} className="space-y-2.5">
-              <div className="px-1">
-                <h2 className="text-[13px] font-semibold text-foreground">
-                  {section.title}
-                </h2>
-                {section.description ? (
-                  <p className="text-[11px] text-muted-foreground/80">
-                    {section.description}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex flex-col gap-2.5">
+              <h2 className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {section.title}
+              </h2>
+              <div className="flex flex-col gap-3">
                 {vids.map((v) => (
                   <VideoCard
                     key={v.id}
@@ -127,14 +113,9 @@ export default function CentralTutoriais() {
 
         {/* Boas-vindas — rever apresentação (evento já existente no app) */}
         <section className="space-y-2.5">
-          <div className="px-1">
-            <h2 className="text-[13px] font-semibold text-foreground">
-              Boas-vindas
-            </h2>
-            <p className="text-[11px] text-muted-foreground/80">
-              Reveja a apresentação inicial do Volant quando quiser.
-            </p>
-          </div>
+          <h2 className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Boas-vindas
+          </h2>
           <button
             type="button"
             onClick={() =>
@@ -154,7 +135,7 @@ export default function CentralTutoriais() {
                 Rever apresentação do Volant
               </div>
               <p className="text-[11.5px] text-muted-foreground">
-                Refaça o tour de boas-vindas do zero.
+                A introdução que você viu no primeiro acesso.
               </p>
             </div>
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />

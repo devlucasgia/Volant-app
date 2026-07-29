@@ -48,13 +48,15 @@ export function TutorialPlayerSheet({ video, open, onOpenChange, onMarkWatched }
     void loadYouTubeApi().then(() => {
       if (cancelled || !containerRef.current) return;
       const w = window as any;
-      // Cria o elemento host dentro do container (a API substitui esse nó pelo iframe).
+      // Cria o host dentro do container (a API substitui esse nó pelo iframe).
       const host = document.createElement("div");
       host.id = `yt-host-${video.id}-${Date.now()}`;
       containerRef.current.innerHTML = "";
       containerRef.current.appendChild(host);
 
       playerRef.current = new w.YT.Player(host.id, {
+        width: "100%",
+        height: "100%",
         videoId: video.youtubeId,
         playerVars: {
           rel: 0,
@@ -72,7 +74,7 @@ export function TutorialPlayerSheet({ video, open, onOpenChange, onMarkWatched }
         },
       });
 
-      // Polling 90% (para casos em que o usuário fecha antes do ENDED).
+      // Polling 90% (caso feche antes do ENDED).
       pollRef.current = window.setInterval(() => {
         if (markedRef.current) return;
         const p = playerRef.current;
@@ -128,13 +130,14 @@ export function TutorialPlayerSheet({ video, open, onOpenChange, onMarkWatched }
         <div className="flex justify-center px-4 pb-6">
           <div
             className={cn(
-              "w-full overflow-hidden rounded-xl bg-black",
+              "relative w-full overflow-hidden rounded-xl bg-black",
+              "[&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full",
               isPortrait ? "max-w-[260px] aspect-[9/16]" : "aspect-video",
             )}
           >
             <div
               ref={containerRef}
-              className="h-full w-full"
+              className="absolute inset-0 h-full w-full"
               aria-hidden={!ready}
             />
           </div>
