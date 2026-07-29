@@ -117,7 +117,7 @@ export default function CentralTutoriais() {
                     key={v.id}
                     video={v}
                     watched={isWatched(v.id)}
-                    onOpen={() => openVideo(v)}
+                    onOpen={() => handleOpen(v)}
                   />
                 ))}
               </div>
@@ -163,11 +163,11 @@ export default function CentralTutoriais() {
       </div>
 
       <TutorialPlayerSheet
-        video={openVideo}
+        video={activeVideo}
         open={sheetOpen}
         onOpenChange={(o) => {
           setSheetOpen(o);
-          if (!o) setOpenVideoState(null);
+          if (!o) setActiveVideo(null);
         }}
         onMarkWatched={markWatched}
       />
