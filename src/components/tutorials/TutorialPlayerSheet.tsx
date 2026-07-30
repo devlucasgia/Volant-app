@@ -127,12 +127,12 @@ export function TutorialPlayerSheet({ video, open, onOpenChange, onMarkWatched }
             </p>
           ) : null}
         </DrawerHeader>
-        <div className="flex justify-center px-4 pb-6">
+        <div className="flex justify-center px-2 pb-6">
           <div
             className={cn(
               "relative w-full overflow-hidden rounded-xl bg-black",
               "[&_iframe]:absolute [&_iframe]:inset-0 [&_iframe]:h-full [&_iframe]:w-full",
-              isPortrait ? "max-w-[260px] aspect-[9/16]" : "aspect-video",
+              isPortrait ? "max-w-[min(78vw,320px)] aspect-[9/16]" : "aspect-video",
             )}
           >
             <div
