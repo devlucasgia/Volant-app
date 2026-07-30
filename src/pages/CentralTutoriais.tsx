@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, GraduationCap, Sparkles, ChevronRight } from "lucide-react";
+import { ArrowLeft, GraduationCap, RotateCcw, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   TUTORIAL_SECTIONS,
@@ -128,7 +128,7 @@ export default function CentralTutoriais() {
             )}
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Sparkles className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
             </span>
             <div className="min-w-0 flex-1">
               <div className="text-[14px] font-semibold text-foreground">
