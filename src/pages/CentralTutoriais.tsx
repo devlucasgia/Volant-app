@@ -158,7 +158,61 @@ export default function CentralTutoriais() {
             <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
           </button>
         </section>
+
+        <section className="space-y-2.5">
+          <h2 className="px-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Tours interativos
+          </h2>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => handleReplayTour("earnings")}
+              className={cn(
+                "group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left",
+                "shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]",
+                "transition-colors hover:bg-muted/30 active:scale-[0.995]",
+              )}
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-info/10 text-info">
+                <Wallet className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14px] font-semibold text-foreground">
+                  Refazer tour de lançamento de ganhos
+                </div>
+                <p className="text-[11.5px] text-muted-foreground">
+                  Passo a passo guiado, na prática.
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleReplayTour("expenses")}
+              className={cn(
+                "group flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left",
+                "shadow-[0_1px_0_0_hsl(var(--border)),0_8px_21px_-18px_rgba(0,0,0,0.40)]",
+                "transition-colors hover:bg-muted/30 active:scale-[0.995]",
+              )}
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+                <Receipt className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[14px] font-semibold text-foreground">
+                  Refazer tour de lançamento de gastos
+                </div>
+                <p className="text-[11.5px] text-muted-foreground">
+                  Passo a passo guiado, na prática.
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
+        </section>
       </div>
+
 
       <TutorialPlayerSheet
         video={activeVideo}
