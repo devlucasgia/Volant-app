@@ -77,6 +77,19 @@ function VideoCard({ video, watched, onOpen }: VideoCardProps) {
 export default function CentralTutoriais() {
   const navigate = useNavigate();
   const { isWatched, markWatched } = useTutorialsWatched();
+  const { startTour } = useTour();
+
+  function handleReplayTour(kind: "earnings" | "expenses") {
+    navigate("/app");
+    window.setTimeout(() => {
+      if (kind === "earnings") {
+        startTour("earnings", earningsTourSteps, { force: true });
+      } else {
+        startTour("expenses", expensesTourSteps, { force: true });
+      }
+    }, 500);
+  }
+
   const [activeVideo, setActiveVideo] = useState<TutorialVideo | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
