@@ -45,7 +45,7 @@ interface TourContextValue {
   currentStepIndex: number;
   steps: TourStep[];
   validating: boolean;
-  startTour: (id: TourId, steps: TourStep[]) => Promise<void>;
+  startTour: (id: TourId, steps: TourStep[], opts?: { force?: boolean }) => Promise<void>;
   next: () => void;
   prev: () => void;
   skip: () => void;
@@ -139,23 +139,26 @@ export function TourProvider({ children }: { children: ReactNode }) {
   );
 
   const startTour = useCallback<TourContextValue["startTour"]>(
-    async (id, tourSteps) => {
+    async (id, tourSteps, opts) => {
       if (!user) return;
       if (activeTourRef.current) return;
+      const force = opts?.force ?? false;
       const col = flagColumnFor(id);
-      // Fallback: caso o cache ainda não tenha carregado, consulta uma vez.
-      if (seenCacheRef.current[col] === undefined) {
-        try {
-          const { data } = await (supabase.from("profiles") as any)
-            .select(col)
-            .eq("id", user.id)
-            .maybeSingle();
-          seenCacheRef.current[col] = Boolean((data as any)?.[col]);
-        } catch {
-          seenCacheRef.current[col] = false;
+      if (!force) {
+        // Fallback: caso o cache ainda não tenha carregado, consulta uma vez.
+        if (seenCacheRef.current[col] === undefined) {
+          try {
+            const { data } = await (supabase.from("profiles") as any)
+              .select(col)
+              .eq("id", user.id)
+              .maybeSingle();
+            seenCacheRef.current[col] = Boolean((data as any)?.[col]);
+          } catch {
+            seenCacheRef.current[col] = false;
+          }
         }
+        if (seenCacheRef.current[col]) return;
       }
-      if (seenCacheRef.current[col]) return;
       if (!tourSteps.length) return;
       setSteps(tourSteps);
       setCurrentStepIndex(0);
@@ -163,6 +166,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     },
     [user],
   );
+
 
 
   const finish = useCallback(() => {
