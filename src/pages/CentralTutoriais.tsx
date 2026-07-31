@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, GraduationCap, RotateCcw, ChevronRight } from "lucide-react";
+import { ArrowLeft, GraduationCap, RotateCcw, ChevronRight, Wallet, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   TUTORIAL_SECTIONS,
@@ -10,6 +10,10 @@ import {
 import { useTutorialsWatched } from "@/hooks/useTutorialsWatched";
 import { TutorialThumb } from "@/components/tutorials/TutorialThumb";
 import { TutorialPlayerSheet } from "@/components/tutorials/TutorialPlayerSheet";
+import { useTour } from "@/context/TourContext";
+import { earningsTourSteps } from "@/lib/tours/earningsTour";
+import { expensesTourSteps } from "@/lib/tours/expensesTour";
+
 
 function ScreenHeader({ onBack }: { onBack: () => void }) {
   return (
